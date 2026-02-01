@@ -31,6 +31,10 @@ class AutoTradingScheduler:
         self.risk_manager = RiskManager(db)
         self.trading_engine = TradingEngine(db)
         
+        # Portfolio allocation manager for isolated trading
+        from services.portfolio_allocation_manager import PortfolioAllocationManager
+        self.allocation_manager = PortfolioAllocationManager(db)
+        
         # Initialize Kraken for real trading
         self.kraken_api_key = os.getenv('KRAKEN_API_KEY')
         self.kraken_api_secret = os.getenv('KRAKEN_API_SECRET')
@@ -43,6 +47,7 @@ class AutoTradingScheduler:
             self.real_trading_enabled = False
         
         print(f"🤖 Auto Trading Scheduler initialized")
+        print(f"💰 Portfolio Isolation: ENABLED ✓")
         print(f"📊 Real Trading: {'ENABLED ✓' if self.real_trading_enabled else 'DISABLED (Configure Kraken API keys)'}")
     
     async def start(self):
