@@ -182,10 +182,10 @@ const Settings = () => {
                 <p className="text-sm text-[#007AFF]">
                   <strong>How to get your API keys:</strong><br />
                   1. Log into your Kraken account<br />
-                  2. Go to Settings → API<br />
-                  3. Click "Generate New Key"<br />
-                  4. Enable: Query Funds, Create & Modify Orders, Cancel/Close Orders<br />
-                  5. Never enable "Withdraw" permission
+                  2. Go to Settings then API<br />
+                  3. Click Generate New Key<br />
+                  4. Enable: Query Funds, Create and Modify Orders, Cancel/Close Orders<br />
+                  5. Never enable Withdraw permission
                 </p>
               </div>
 
