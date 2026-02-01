@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
@@ -19,8 +19,6 @@ import { Toaster } from "./components/ui/sonner";
 import { motion } from "framer-motion";
 
 function App() {
-  const [userId, setUserId] = useState('');
-
   useEffect(() => {
     // Initialize user session
     let uid = localStorage.getItem('user_id');
@@ -28,7 +26,6 @@ function App() {
       uid = 'demo_user_' + Math.random().toString(36).substr(2, 9);
       localStorage.setItem('user_id', uid);
     }
-    setUserId(uid);
 
     // Register service worker for background execution
     if ('serviceWorker' in navigator) {
@@ -55,7 +52,6 @@ function App() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            {/* Mobile top padding for menu button */}
             <div className="md:hidden h-16" />
             <Routes>
               <Route path="/" element={<Dashboard />} />
