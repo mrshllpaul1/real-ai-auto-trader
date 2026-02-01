@@ -145,10 +145,17 @@ class SocialTradingService:
         
         results = await self.db.social_trades.aggregate(pipeline).to_list(limit)
         
-        # Enrich with profile data
-        for result in results:
-            profile = await self.get_trader_profile(result['_id'])
-            if profile:
+        # Batch fetch all profiles to avoid N+1 queries
+        user_ids = [r['_id'] for r in results]
+        if user_ids:
+            profiles_list = await self.db.trader_profiles.find(
+                {'user_id': {'$in': user_ids}},
+                {'_id': 0}
+            ).to_list(len(user_ids))
+            profile_map = {p['user_id']: p for p in profiles_list}
+            
+            for result in results:
+                profile = profile_map.get(result['_id'], {})
                 result['display_name'] = profile.get('display_name', 'Anonymous')
                 result['badges'] = profile.get('badges', [])
         
