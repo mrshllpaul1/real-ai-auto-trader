@@ -13,11 +13,12 @@ class AutoExecutionEngine:
     when HIGH priority gems are detected matching risk profile
     """
     
-    def __init__(self, db, scanner, ai_engine, kraken_service=None):
+    def __init__(self, db, scanner, ai_engine, kraken_service=None, notification_service=None):
         self.db = db
         self.scanner = scanner
         self.ai_engine = ai_engine
         self.kraken_service = kraken_service
+        self.notification_service = notification_service
         self.is_running = False
         self.execution_interval = 60  # Check every 60 seconds
         
