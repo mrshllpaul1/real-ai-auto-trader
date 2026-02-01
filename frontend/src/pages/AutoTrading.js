@@ -32,7 +32,7 @@ const AutoTrading = () => {
   useEffect(() => {
     loadConfig();
     loadStatus();
-    const interval = setInterval(loadStatus, 30000); // Update every 30s
+    const interval = setInterval(loadStatus, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -77,7 +77,6 @@ const AutoTrading = () => {
       setLoading(true);
       const userId = localStorage.getItem('user_id') || 'demo_user';
       
-      // Filter out zero allocations
       const nonZeroAllocations = Object.fromEntries(
         Object.entries(allocation).filter(([_, value]) => value > 0)
       );
@@ -141,36 +140,36 @@ const AutoTrading = () => {
 
   if (loading) {
     return (
-      <div className=\"flex items-center justify-center h-screen\">
-        <div className=\"animate-spin rounded-full h-12 w-12 border-t-2 border-[#00FF94]\" />
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#00FF94]" />
       </div>
     );
   }
 
   return (
-    <div className=\"p-6 lg:p-12 space-y-6\" data-testid=\"auto-trading\">
+    <div className="p-6 lg:p-12 space-y-6" data-testid="auto-trading">
       {/* Header */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
       >
-        <h1 className=\"text-4xl lg:text-5xl font-heading font-black tracking-tight mb-2\" data-testid=\"auto-trading-title\">
-          <Zap className=\"inline mr-3\" size={48} className=\"text-[#00FF94]\" />
-          <span className=\"text-[#00FF94]\">Auto</span> Trading
+        <h1 className="text-4xl lg:text-5xl font-heading font-black tracking-tight mb-2" data-testid="auto-trading-title">
+          <Zap className="inline mr-3 text-[#00FF94]" size={48} />
+          <span className="text-[#00FF94]">Auto</span> Trading
         </h1>
-        <p className=\"text-[#A1A1AA]\">
-          Configure automated trading with real money • Runs 24/7 in background on your phone
+        <p className="text-[#A1A1AA]">
+          Configure automated trading with real money - Runs 24/7 in background on your phone
         </p>
       </motion.div>
 
       {/* Status Card */}
-      <Card className=\"bg-[#0A0A0A] border-[#1F1F1F]\" data-testid=\"status-card\">
+      <Card className="bg-[#0A0A0A] border-[#1F1F1F]" data-testid="status-card">
         <CardHeader>
-          <div className=\"flex items-center justify-between\">
+          <div className="flex items-center justify-between">
             <div>
-              <CardTitle className=\"text-2xl font-heading flex items-center gap-3\">
+              <CardTitle className="text-2xl font-heading flex items-center gap-3">
                 <div 
-                  className=\"w-3 h-3 rounded-full animate-pulse\"
+                  className="w-3 h-3 rounded-full animate-pulse"
                   style={{ backgroundColor: isRunning ? '#00FF94' : '#FF0055' }}
                 />
                 Auto-Trading Status
@@ -182,49 +181,49 @@ const AutoTrading = () => {
             {isRunning ? (
               <Button
                 onClick={stopAutoTrading}
-                className=\"bg-[#FF0055] hover:bg-[#CC0044] text-white rounded-full\"
-                data-testid=\"stop-btn\"
+                className="bg-[#FF0055] hover:bg-[#CC0044] text-white rounded-full"
+                data-testid="stop-btn"
               >
-                <Square size={16} className=\"mr-2\" />
+                <Square size={16} className="mr-2" />
                 Stop
               </Button>
             ) : (
               <Button
                 onClick={startAutoTrading}
-                className=\"bg-[#00FF94] hover:bg-[#00CC76] text-black font-bold rounded-full glow-profit\"
-                data-testid=\"start-btn\"
+                className="bg-[#00FF94] hover:bg-[#00CC76] text-black font-bold rounded-full glow-profit"
+                data-testid="start-btn"
               >
-                <Play size={16} className=\"mr-2\" />
+                <Play size={16} className="mr-2" />
                 Start Auto-Trading
               </Button>
             )}
           </div>
         </CardHeader>
         <CardContent>
-          <div className=\"grid grid-cols-2 md:grid-cols-4 gap-4\">
-            <div className=\"p-3 bg-[#121212] rounded-lg\">
-              <div className=\"text-xs text-[#A1A1AA] mb-1\">Status</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="p-3 bg-[#121212] rounded-lg">
+              <div className="text-xs text-[#A1A1AA] mb-1">Status</div>
               <Badge className={`${isRunning ? 'bg-[#00FF94]/20 text-[#00FF94] border-[#00FF94]/30' : 'bg-[#FF0055]/20 text-[#FF0055] border-[#FF0055]/30'}`}>
                 {isRunning ? 'RUNNING' : 'STOPPED'}
               </Badge>
             </div>
-            <div className=\"p-3 bg-[#121212] rounded-lg\">
-              <div className=\"text-xs text-[#A1A1AA] mb-1\">Real Trading</div>
+            <div className="p-3 bg-[#121212] rounded-lg">
+              <div className="text-xs text-[#A1A1AA] mb-1">Real Trading</div>
               <Badge className={`${status?.real_trading_enabled ? 'bg-[#00FF94]/20 text-[#00FF94]' : 'bg-[#007AFF]/20 text-[#007AFF]'} border-[#1F1F1F]`}>
                 {status?.real_trading_enabled ? 'ENABLED' : 'DISABLED'}
               </Badge>
             </div>
-            <div className=\"p-3 bg-[#121212] rounded-lg\">
-              <div className=\"text-xs text-[#A1A1AA] mb-1\">Background Mode</div>
-              <Badge className=\"bg-[#9D00FF]/20 text-[#9D00FF] border-[#9D00FF]/30\">
-                <Smartphone size={12} className=\"mr-1\" />
+            <div className="p-3 bg-[#121212] rounded-lg">
+              <div className="text-xs text-[#A1A1AA] mb-1">Background Mode</div>
+              <Badge className="bg-[#9D00FF]/20 text-[#9D00FF] border-[#9D00FF]/30">
+                <Smartphone size={12} className="mr-1" />
                 ACTIVE
               </Badge>
             </div>
-            <div className=\"p-3 bg-[#121212] rounded-lg\">
-              <div className=\"text-xs text-[#A1A1AA] mb-1\">Mobile Compatible</div>
-              <Badge className=\"bg-[#007AFF]/20 text-[#007AFF] border-[#007AFF]/30\">
-                Galaxy S22 ✓
+            <div className="p-3 bg-[#121212] rounded-lg">
+              <div className="text-xs text-[#A1A1AA] mb-1">Mobile Compatible</div>
+              <Badge className="bg-[#007AFF]/20 text-[#007AFF] border-[#007AFF]/30">
+                Galaxy S22
               </Badge>
             </div>
           </div>
@@ -232,73 +231,73 @@ const AutoTrading = () => {
       </Card>
 
       {/* Configuration */}
-      <Card className=\"bg-[#0A0A0A] border-[#1F1F1F]\" data-testid=\"config-card\">
+      <Card className="bg-[#0A0A0A] border-[#1F1F1F]" data-testid="config-card">
         <CardHeader>
-          <CardTitle className=\"text-2xl font-heading\">Trading Configuration</CardTitle>
+          <CardTitle className="text-2xl font-heading">Trading Configuration</CardTitle>
           <CardDescription>
-            Configure auto-trading parameters • Both paper and real trading can run simultaneously
+            Configure auto-trading parameters - Both paper and real trading can run simultaneously
           </CardDescription>
         </CardHeader>
-        <CardContent className=\"space-y-6\">
+        <CardContent className="space-y-6">
           {/* Toggle Switches */}
-          <div className=\"grid grid-cols-1 md:grid-cols-2 gap-6\">
-            <div className=\"flex items-center justify-between p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]\">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex items-center justify-between p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]">
               <div>
-                <Label className=\"text-base font-bold text-white\">Paper Trading</Label>
-                <p className=\"text-sm text-[#A1A1AA] mt-1\">Risk-free simulation mode</p>
+                <Label className="text-base font-bold text-white">Paper Trading</Label>
+                <p className="text-sm text-[#A1A1AA] mt-1">Risk-free simulation mode</p>
               </div>
               <Switch
                 checked={config.paper_trading_enabled}
                 onCheckedChange={(checked) => setConfig({...config, paper_trading_enabled: checked})}
-                data-testid=\"paper-trading-switch\"
+                data-testid="paper-trading-switch"
               />
             </div>
 
-            <div className=\"flex items-center justify-between p-4 bg-[#121212] rounded-lg border border-[#FF0055]/30]\">
+            <div className="flex items-center justify-between p-4 bg-[#121212] rounded-lg border border-[#FF0055]/30">
               <div>
-                <Label className=\"text-base font-bold text-white\">Real Trading</Label>
-                <p className=\"text-sm text-[#FF0055] mt-1\">⚠️ Uses real money on Kraken</p>
+                <Label className="text-base font-bold text-white">Real Trading</Label>
+                <p className="text-sm text-[#FF0055] mt-1">Uses real money on Kraken</p>
               </div>
               <Switch
                 checked={config.real_trading_enabled}
                 onCheckedChange={(checked) => setConfig({...config, real_trading_enabled: checked})}
-                data-testid=\"real-trading-switch\"
+                data-testid="real-trading-switch"
               />
             </div>
           </div>
 
           {/* Trade Parameters */}
-          <div className=\"grid grid-cols-1 md:grid-cols-3 gap-4\">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label className=\"text-[#A1A1AA]\">Amount Per Trade (USD)</Label>
+              <Label className="text-[#A1A1AA]">Amount Per Trade (USD)</Label>
               <Input
-                type=\"number\"
+                type="number"
                 value={config.amount_per_trade}
                 onChange={(e) => setConfig({...config, amount_per_trade: parseFloat(e.target.value)})}
-                className=\"bg-[#121212] border-[#1F1F1F] font-data mt-1\"
-                data-testid=\"amount-input\"
+                className="bg-[#121212] border-[#1F1F1F] font-data mt-1"
+                data-testid="amount-input"
               />
             </div>
 
             <div>
-              <Label className=\"text-[#A1A1AA]\">Min Confidence (%)</Label>
+              <Label className="text-[#A1A1AA]">Min Confidence (%)</Label>
               <Input
-                type=\"number\"
+                type="number"
                 value={config.min_confidence}
                 onChange={(e) => setConfig({...config, min_confidence: parseFloat(e.target.value)})}
-                className=\"bg-[#121212] border-[#1F1F1F] font-data mt-1\"
-                data-testid=\"confidence-input\"
+                className="bg-[#121212] border-[#1F1F1F] font-data mt-1"
+                data-testid="confidence-input"
               />
             </div>
 
             <div>
-              <Label className=\"text-[#A1A1AA]\">Max Daily Trades</Label>
+              <Label className="text-[#A1A1AA]">Max Daily Trades</Label>
               <Input
-                type=\"number\"
+                type="number"
                 value={config.max_daily_trades}
                 onChange={(e) => setConfig({...config, max_daily_trades: parseInt(e.target.value)})}
-                className=\"bg-[#121212] border-[#1F1F1F] font-data mt-1\"
-                data-testid=\"max-trades-input\"
+                className="bg-[#121212] border-[#1F1F1F] font-data mt-1"
+                data-testid="max-trades-input"
               />
             </div>
           </div>
@@ -306,28 +305,28 @@ const AutoTrading = () => {
           {/* Save Button */}
           <Button
             onClick={saveConfig}
-            className=\"w-full bg-[#00FF94] hover:bg-[#00CC76] text-black font-bold rounded-full glow-profit\"
+            className="w-full bg-[#00FF94] hover:bg-[#00CC76] text-black font-bold rounded-full glow-profit"
             disabled={loading}
-            data-testid=\"save-config-btn\"
+            data-testid="save-config-btn"
           >
-            <TrendingUp size={16} className=\"mr-2\" />
+            <TrendingUp size={16} className="mr-2" />
             Save Configuration
           </Button>
 
           {/* Info Box */}
-          <div className=\"bg-[#007AFF]/10 border border-[#007AFF]/30 rounded-lg p-4\">
-            <div className=\"flex items-start gap-3\">
-              <AlertCircle className=\"text-[#007AFF] flex-shrink-0 mt-1\" size={20} />
-              <div className=\"text-sm text-[#007AFF]\">
-                <p className=\"font-bold mb-2\">How Auto-Trading Works:</p>
-                <ul className=\"space-y-1 ml-4\">
-                  <li>• Runs continuously 24/7 in background</li>
-                  <li>• Executes trades every 15 minutes based on active strategies</li>
-                  <li>• Paper trading = No real money (simulation only)</li>
-                  <li>• Real trading = Actual trades on Kraken exchange</li>
-                  <li>• Both modes can run simultaneously for comparison</li>
-                  <li>• Mobile-optimized for Galaxy S22 background execution</li>
-                  <li>• Automatic stop-loss and take-profit protection</li>
+          <div className="bg-[#007AFF]/10 border border-[#007AFF]/30 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="text-[#007AFF] flex-shrink-0 mt-1" size={20} />
+              <div className="text-sm text-[#007AFF]">
+                <p className="font-bold mb-2">How Auto-Trading Works:</p>
+                <ul className="space-y-1 ml-4">
+                  <li>Runs continuously 24/7 in background</li>
+                  <li>Executes trades every 15 minutes based on active strategies</li>
+                  <li>Paper trading = No real money (simulation only)</li>
+                  <li>Real trading = Actual trades on Kraken exchange</li>
+                  <li>Both modes can run simultaneously for comparison</li>
+                  <li>Mobile-optimized for Galaxy S22 background execution</li>
+                  <li>Automatic stop-loss and take-profit protection</li>
                 </ul>
               </div>
             </div>
@@ -336,44 +335,44 @@ const AutoTrading = () => {
       </Card>
 
       {/* Mobile Instructions */}
-      <Card className=\"bg-[#0A0A0A] border-[#1F1F1F]\" data-testid=\"mobile-instructions-card\">
+      <Card className="bg-[#0A0A0A] border-[#1F1F1F]" data-testid="mobile-instructions-card">
         <CardHeader>
-          <CardTitle className=\"text-2xl font-heading flex items-center gap-3\">
-            <Smartphone className=\"text-[#9D00FF]\" />
+          <CardTitle className="text-2xl font-heading flex items-center gap-3">
+            <Smartphone className="text-[#9D00FF]" />
             Galaxy S22 Background Mode
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className=\"space-y-4\">
-            <p className=\"text-[#A1A1AA]\">
+          <div className="space-y-4">
+            <p className="text-[#A1A1AA]">
               To ensure auto-trading runs continuously in background on your Galaxy S22:
             </p>
             
-            <div className=\"space-y-3\">
-              <div className=\"flex items-start gap-3 p-3 bg-[#121212] rounded-lg\">
-                <span className=\"font-bold text-[#00FF94]\">1.</span>
-                <p className=\"text-sm text-[#A1A1AA]\">
-                  Add this app to your home screen (Chrome menu → \"Add to Home screen\")
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 p-3 bg-[#121212] rounded-lg">
+                <span className="font-bold text-[#00FF94]">1.</span>
+                <p className="text-sm text-[#A1A1AA]">
+                  Add this app to your home screen (Chrome menu - Add to Home screen)
                 </p>
               </div>
               
-              <div className=\"flex items-start gap-3 p-3 bg-[#121212] rounded-lg\">
-                <span className=\"font-bold text-[#00FF94]\">2.</span>
-                <p className=\"text-sm text-[#A1A1AA]\">
-                  Go to Settings → Apps → AI Crypto Trading → Battery → Allow background activity
+              <div className="flex items-start gap-3 p-3 bg-[#121212] rounded-lg">
+                <span className="font-bold text-[#00FF94]">2.</span>
+                <p className="text-sm text-[#A1A1AA]">
+                  Go to Settings - Apps - AI Crypto Trading - Battery - Allow background activity
                 </p>
               </div>
               
-              <div className=\"flex items-start gap-3 p-3 bg-[#121212] rounded-lg\">
-                <span className=\"font-bold text-[#00FF94]\">3.</span>
-                <p className=\"text-sm text-[#A1A1AA]\">
-                  Disable \"Put app to sleep\" in Device Care → Battery settings
+              <div className="flex items-start gap-3 p-3 bg-[#121212] rounded-lg">
+                <span className="font-bold text-[#00FF94]">3.</span>
+                <p className="text-sm text-[#A1A1AA]">
+                  Disable Put app to sleep in Device Care - Battery settings
                 </p>
               </div>
               
-              <div className=\"flex items-start gap-3 p-3 bg-[#121212] rounded-lg\">
-                <span className=\"font-bold text-[#00FF94]\">4.</span>
-                <p className=\"text-sm text-[#A1A1AA]\">
+              <div className="flex items-start gap-3 p-3 bg-[#121212] rounded-lg">
+                <span className="font-bold text-[#00FF94]">4.</span>
+                <p className="text-sm text-[#A1A1AA]">
                   Keep app open in background. Auto-trading will continue running even when screen is off.
                 </p>
               </div>
