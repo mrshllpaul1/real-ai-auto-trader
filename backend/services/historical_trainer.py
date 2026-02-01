@@ -441,14 +441,14 @@ Be concise and actionable.
                 await self.db.historical_training.insert_one(coin_summary)
                 
                 training_results['coins_trained'].append(coin)
-                training_results['total_patterns'] += len(patterns)
-                training_results['successful_patterns'] += successful
-                training_results['hidden_gems_found'] += len(hidden_gems)
+                training_results['total_patterns'] += int(len(patterns))
+                training_results['successful_patterns'] += int(successful)
+                training_results['hidden_gems_found'] += int(len(hidden_gems))
                 training_results['coin_summaries'].append({
                     'coin': coin,
-                    'patterns': len(patterns),
-                    'success_rate': success_rate,
-                    'hidden_gems': len(hidden_gems)
+                    'patterns': int(len(patterns)),
+                    'success_rate': float(success_rate),
+                    'hidden_gems': int(len(hidden_gems))
                 })
                 
                 print(f"  Success rate: {success_rate:.1f}%")
