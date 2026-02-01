@@ -424,12 +424,12 @@ Be concise and actionable.
                 # Coin summary
                 coin_summary = {
                     'coin_id': coin,
-                    'data_points': len(df),
-                    'patterns_found': len(patterns),
-                    'successful_patterns': successful,
-                    'success_rate': success_rate,
-                    'hidden_gems': len(hidden_gems),
-                    'avg_gem_multiplier': sum(g['multiplier'] for g in hidden_gems) / len(hidden_gems) if hidden_gems else 0,
+                    'data_points': int(len(df)),
+                    'patterns_found': int(len(patterns)),
+                    'successful_patterns': int(successful),
+                    'success_rate': float(success_rate),
+                    'hidden_gems': int(len(hidden_gems)),
+                    'avg_gem_multiplier': float(sum(g['multiplier'] for g in hidden_gems) / len(hidden_gems)) if hidden_gems else 0.0,
                     'ai_insights': ai_insights,
                     'date_range': {
                         'start': df['date'].min().isoformat() if hasattr(df['date'].min(), 'isoformat') else str(df['date'].min()),
