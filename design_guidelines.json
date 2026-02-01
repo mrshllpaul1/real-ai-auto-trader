@@ -1,0 +1,152 @@
+{
+  "design_system": {
+    "identity": {
+      "name": "E1: The Anti-AI Designer",
+      "archetype": "Electric & Neon (Archetype 7) + Performance Pro (Archetype 2)",
+      "core_philosophy": "Fusion over Imitation. Dark, sleek, data-dense but organized. Glowing accents for AI magic.",
+      "emotional_tone": "Professional, High-Tech, Trustworthy, Powerful, Edge over the market"
+    },
+    "typography": {
+      "headings": {
+        "font_family": "Chivo, sans-serif",
+        "weights": ["900", "700"],
+        "usage": "Main page titles, section headers, big stats. Use tight tracking (-0.02em).",
+        "google_font_url": "https://fonts.googleapis.com/css2?family=Chivo:wght@700;900&display=swap"
+      },
+      "body": {
+        "font_family": "Inter, sans-serif",
+        "weights": ["400", "500"],
+        "usage": "General text, descriptions, labels.",
+        "google_font_url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      },
+      "data": {
+        "font_family": "JetBrains Mono, monospace",
+        "weights": ["400", "500"],
+        "usage": "Prices, percentages, code snippets, wallet addresses, transaction hashes.",
+        "google_font_url": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+      }
+    },
+    "colors": {
+      "theme": "dark",
+      "palette": {
+        "background": {
+          "default": "#050505",
+          "paper": "#0A0A0A",
+          "subtle": "#121212"
+        },
+        "primary": {
+          "main": "#00FF94",
+          "description": "Electric Green - Use for 'Profit', 'Buy', 'Go', 'Positive Trends'"
+        },
+        "secondary": {
+          "main": "#9D00FF",
+          "description": "Cyber Purple - Use for 'AI', 'Strategy', 'Analysis', 'Magic'"
+        },
+        "accent": {
+          "main": "#007AFF",
+          "description": "Volt Blue - Use for 'Info', 'Charts', 'Selected States'"
+        },
+        "destructive": {
+          "main": "#FF0055",
+          "description": "Hot Pink/Red - Use for 'Sell', 'Loss', 'Stop', 'Danger'"
+        },
+        "text": {
+          "primary": "#FFFFFF",
+          "secondary": "#A1A1AA",
+          "muted": "#52525B"
+        },
+        "border": {
+          "default": "#1F1F1F",
+          "active": "#3F3F46"
+        }
+      },
+      "gradients": {
+        "ai_glow": "linear-gradient(135deg, #9D00FF 0%, #00FF94 100%)",
+        "glass": "linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)"
+      }
+    },
+    "layout": {
+      "grid_system": "Bento Grid (High Density)",
+      "spacing": {
+        "container_padding": "p-6 md:p-8 lg:p-12",
+        "item_gap": "gap-4 md:gap-6"
+      },
+      "containers": {
+        "card": "bg-[#0A0A0A] border border-[#1F1F1F] rounded-xl overflow-hidden",
+        "glass_card": "bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl"
+      }
+    },
+    "components": {
+      "buttons": {
+        "primary": "bg-[#00FF94] text-black hover:bg-[#00CC76] font-bold rounded-full px-6 py-2 transition-all shadow-[0_0_15px_rgba(0,255,148,0.3)] hover:shadow-[0_0_25px_rgba(0,255,148,0.5)]",
+        "secondary": "bg-[#1F1F1F] text-white hover:bg-[#27272A] border border-[#3F3F46] rounded-full px-6 py-2 transition-all",
+        "ghost": "text-[#A1A1AA] hover:text-white hover:bg-white/5 rounded-full px-4 py-2 transition-all"
+      },
+      "inputs": {
+        "default": "bg-[#0A0A0A] border border-[#1F1F1F] focus:border-[#00FF94] focus:ring-1 focus:ring-[#00FF94] rounded-lg px-4 py-2 text-white placeholder:text-[#52525B] transition-all"
+      },
+      "charts": {
+        "library": "Recharts (via Shadcn)",
+        "style": "Minimalist, no grid lines (or very subtle), gradient fills for area charts, neon strokes for line charts."
+      },
+      "strategy_card": {
+        "style": "Tracing Beam style. Dark card with a glowing border that activates on hover. Displays 'Confidence Score' prominently."
+      }
+    },
+    "visual_enhancers": {
+      "glassmorphism": "Used for sticky headers, sidebars, and floating overlays. Class: 'backdrop-blur-xl bg-black/60 border-b border-white/10'",
+      "glows": "Use 'shadow-[0_0_20px_rgba(157,0,255,0.2)]' for AI elements to give them a 'breathing' feel.",
+      "textures": "Subtle noise overlay on the main background to prevent banding and add 'film' quality."
+    },
+    "motion": {
+      "library": "framer-motion",
+      "transitions": {
+        "default": "transition: { duration: 0.3, ease: 'easeOut' }",
+        "hover": "scale: 1.02",
+        "page_load": "initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}"
+      }
+    },
+    "assets": {
+      "images": {
+        "hero_background": {
+          "url": "https://images.unsplash.com/photo-1762279388956-1c098163a2a8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTF8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMGRpZ2l0YWwlMjBkYXRhJTIwZmxvdyUyMGRhcmslMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc2OTk3MTI5NHww&ixlib=rb-4.1.0&q=85",
+          "alt": "Abstract neon digital data flow",
+          "usage": "Background for Login/Hero sections with low opacity overlay"
+        },
+        "crypto_icon_btc": {
+          "url": "https://images.unsplash.com/photo-1669060534046-6271062c85b1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzJ8MHwxfHNlYXJjaHwzfHxiaXRjb2luJTIwZXRoZXJldW0lMjBzb2xhbmElMjBjcnlwdG8lMjBjb2lucyUyMGRhcmslMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc2OTk3MTI3Mnww&ixlib=rb-4.1.0&q=85",
+          "alt": "Bitcoin Icon",
+          "usage": "Representative icon for crypto assets"
+        },
+        "trader_avatar": {
+          "url": "https://images.unsplash.com/photo-1626440854808-97dbf23ae7a1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTV8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjB0cmFkZXIlMjBsb29raW5nJTIwYXQlMjBzY3JlZW5zJTIwZGFyayUyMGVudmlyb25tZW50fGVufDB8fHx8MTc2OTk3MTI4MXww&ixlib=rb-4.1.0&q=85",
+          "alt": "Professional Trader",
+          "usage": "User profile or testimonial avatar"
+        }
+      },
+      "icons": {
+        "library": "lucide-react",
+        "style": "Stroke width 1.5px or 2px. Use 'text-[#00FF94]' for positive indicators, 'text-[#FF0055]' for negative."
+      }
+    },
+    "universal_guidelines": [
+      "DO NOT use gradients for dark colors. Use solid dark colors.",
+      "DO NOT center align the app container. Use full width.",
+      "Create depth through layered design elements with z-index hierarchy.",
+      "Use glass-morphism effects with backdrop filters (12-24px blur).",
+      "Every interaction needs micro-animations - hover states, transitions.",
+      "Use 2-3x more spacing than feels comfortable.",
+      "All interactive elements MUST include 'data-testid' attribute.",
+      "Use 'sonner' for toasts.",
+      "Components MUST use named exports.",
+      "Pages MUST use default exports."
+    ],
+    "instructions_to_main_agent": {
+      "setup": "Ensure 'Chivo' and 'JetBrains Mono' fonts are loaded in index.html or via CSS import.",
+      "dashboard": "Implement the 'Bento Grid' layout for the dashboard. Use the 'Strategy Card' component for the AI recommendations.",
+      "charts": "Use Recharts. Customize the tooltips to be dark and glassmorphic.",
+      "ai_features": "Highlight AI recommendations with the Cyber Purple color (#9D00FF) and subtle glow effects.",
+      "trading_view": "Ensure the trading view is dense but readable. Use the 'Performance Pro' archetype rules."
+    }
+  }
+}
