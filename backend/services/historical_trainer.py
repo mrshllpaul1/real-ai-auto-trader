@@ -256,17 +256,19 @@ class HistoricalTrainer:
                     confidence = 75
             
             if pattern_type and abs(future_return) > 0.03:
+                is_bullish_pattern = 'bullish' in pattern_type or pattern_type in ['oversold_reversal', 'golden_cross']
+                success = bool(future_return > 0.02) if is_bullish_pattern else bool(future_return < -0.02)
                 patterns.append({
                     'date': row['date'].isoformat() if hasattr(row['date'], 'isoformat') else str(row['date']),
                     'pattern_type': pattern_type,
                     'entry_price': float(current_price),
                     'exit_price': float(future_price),
                     'return_pct': float(future_return * 100),
-                    'success': future_return > 0.02 if 'bullish' in pattern_type or pattern_type in ['oversold_reversal', 'golden_cross'] else future_return < -0.02,
+                    'success': success,
                     'rsi': float(row['rsi']),
                     'macd': float(row['macd']),
                     'volume_ratio': float(row['volume_ratio']),
-                    'confidence': confidence
+                    'confidence': int(confidence)
                 })
         
         return patterns
