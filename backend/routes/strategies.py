@@ -1,0 +1,152 @@
+from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel
+from typing import List, Dict, Any
+from datetime import datetime
+
+router = APIRouter()
+
+class StrategyRequest(BaseModel):
+    user_id: str
+    coin_pairs: List[str]
+
+async def get_database():
+    from server import db
+    return db
+
+async def get_strategy_engine():
+    from services.strategy_engine import StrategyEngine
+    return StrategyEngine()
+
+async def get_market_service():
+    from services.market_data_service import MarketDataService
+    return MarketDataService()
+
+@router.post("/generate")
+async def generate_strategies(
+    request: StrategyRequest,
+    db = Depends(get_database),
+    strategy_engine = Depends(get_strategy_engine),
+    market_service = Depends(get_market_service)
+):
+    """Generate AI-powered trading strategies"""
+    try:
+        # Get historical data for each coin
+        historical_data = {}
+        
+        for pair in request.coin_pairs:
+            coin_id = pair.split('/')[0].lower()
+            
+            # Get historical data
+            hist_data = await market_service.get_historical_data(coin_id, days=30)
+            
+            # Get current market data
+            market_data = await market_service.get_coin_price([coin_id])
+            
+            historical_data[coin_id] = {
+                **hist_data,
+                **market_data.get(coin_id, {})
+            }
+        
+        # Generate strategies
+        strategies = await strategy_engine.generate_weekly_strategies(
+            [pair.split('/')[0].lower() for pair in request.coin_pairs],
+            historical_data
+        )
+        
+        # Store strategies in database
+        for strategy in strategies:
+            strategy['user_id'] = request.user_id
+            await db.strategies.insert_one(strategy)
+        
+        return {
+            "strategies": strategies,
+            "count": len(strategies),
+            "generated_at": datetime.now().isoformat()
+        }
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/list/{user_id}")
+async def get_strategies(
+    user_id: str,
+    status: str = "active",
+    limit: int = 10,
+    db = Depends(get_database)
+):
+    """Get strategies for a user"""
+    try:
+        query = {"user_id": user_id}
+        if status:
+            query["status"] = status
+        
+        strategies = await db.strategies.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+        
+        return {
+            "strategies": strategies,
+            "count": len(strategies)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/detail/{strategy_id}")
+async def get_strategy_detail(
+    strategy_id: str,
+    db = Depends(get_database)
+):
+    """Get detailed information about a specific strategy"""
+    try:
+        strategy = await db.strategies.find_one({"strategy_id": strategy_id}, {"_id": 0})
+        
+        if not strategy:
+            raise HTTPException(status_code=404, detail="Strategy not found")
+        
+        return strategy
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/activate/{strategy_id}")
+async def activate_strategy(
+    strategy_id: str,
+    user_id: str,
+    db = Depends(get_database)
+):
+    """Activate a strategy for auto-trading"""
+    try:
+        result = await db.strategies.update_one(
+            {"strategy_id": strategy_id, "user_id": user_id},
+            {"$set": {"status": "active", "activated_at": datetime.now().isoformat()}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Strategy not found or already active")
+        
+        return {"message": "Strategy activated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/deactivate/{strategy_id}")
+async def deactivate_strategy(
+    strategy_id: str,
+    user_id: str,
+    db = Depends(get_database)
+):
+    """Deactivate a strategy"""
+    try:
+        result = await db.strategies.update_one(
+            {"strategy_id": strategy_id, "user_id": user_id},
+            {"$set": {"status": "inactive", "deactivated_at": datetime.now().isoformat()}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Strategy not found")
+        
+        return {"message": "Strategy deactivated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
