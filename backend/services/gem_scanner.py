@@ -18,15 +18,20 @@ class GemScanner:
         self.is_running = False
         self.scan_interval = 300  # 5 minutes
         self.coinmarketcap_key = os.getenv('COINMARKETCAP_API_KEY')
-        self.coingecko_url = 'https://api.coingecko.com/api/v3'
+        self.coinstats_key = os.getenv('COINSTATS_API_KEY')
+        
+        # CoinMarketCap ID mapping
+        self.cmc_ids = {
+            'bitcoin': 1, 'ethereum': 1027, 'solana': 5426, 'cardano': 2010,
+            'polkadot': 6636, 'avalanche': 5805, 'chainlink': 1975, 
+            'polygon': 3890, 'uniswap': 7083, 'litecoin': 2,
+            'dogecoin': 74, 'shiba-inu': 5994, 'ripple': 52, 'tron': 1958,
+            'cosmos': 3794, 'near': 6535, 'aptos': 21794, 'sui': 20947,
+            'arbitrum': 11841, 'optimism': 11840
+        }
         
         # Coins to monitor
-        self.monitored_coins = [
-            'bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot',
-            'avalanche-2', 'chainlink', 'matic-network', 'uniswap', 'litecoin',
-            'dogecoin', 'shiba-inu', 'ripple', 'tron', 'cosmos',
-            'near', 'aptos', 'sui', 'arbitrum', 'optimism'
-        ]
+        self.monitored_coins = list(self.cmc_ids.keys())
         
         # Learned patterns from training (loaded from DB)
         self.learned_signals = None
