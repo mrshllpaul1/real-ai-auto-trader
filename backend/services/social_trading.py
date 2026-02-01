@@ -223,13 +223,17 @@ class SocialTradingService:
             {'_id': 0}
         ).to_list(100)
         
-        result = []
-        for follow in follows:
-            profile = await self.get_trader_profile(follow['trader_id'])
-            if profile:
-                result.append(profile)
+        # Batch fetch all profiles to avoid N+1 queries
+        trader_ids = [f['trader_id'] for f in follows]
+        if not trader_ids:
+            return []
         
-        return result
+        profiles = await self.db.trader_profiles.find(
+            {'user_id': {'$in': trader_ids}},
+            {'_id': 0}
+        ).to_list(len(trader_ids))
+        
+        return profiles
     
     async def get_followers(self, user_id: str) -> List[Dict[str, Any]]:
         """Get list of followers"""
