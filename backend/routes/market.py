@@ -7,6 +7,10 @@ async def get_market_service():
     from services.market_data_service import MarketDataService
     return MarketDataService()
 
+async def get_enhanced_market_service():
+    from services.enhanced_market_service import AggregatedMarketDataService
+    return AggregatedMarketDataService()
+
 async def get_database():
     from server import db
     return db
@@ -14,13 +18,33 @@ async def get_database():
 @router.get("/prices")
 async def get_crypto_prices(
     coin_ids: str,
-    market_service = Depends(get_market_service)
+    enhanced: bool = True,
+    market_service = Depends(get_market_service),
+    enhanced_service = Depends(get_enhanced_market_service)
 ):
-    """Get current prices for cryptocurrencies"""
+    """Get current prices for cryptocurrencies from multiple sources"""
     try:
         coin_list = coin_ids.split(',')
-        prices = await market_service.get_coin_price(coin_list)
+        
+        if enhanced:
+            # Use aggregated data from multiple sources
+            prices = await enhanced_service.get_aggregated_prices(coin_list)
+        else:
+            # Use single source (CoinGecko)
+            prices = await market_service.get_coin_price(coin_list)
+        
         return prices
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/global")
+async def get_global_metrics(
+    enhanced_service = Depends(get_enhanced_market_service)
+):
+    """Get global cryptocurrency market metrics"""
+    try:
+        metrics = await enhanced_service.get_comprehensive_market_data()
+        return metrics
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
