@@ -292,6 +292,28 @@ class BacktestingEngine:
                 return 0.0
             return val
         
+        # Sanitize trades
+        sanitized_trades = []
+        for trade in closed_trades[-20:]:
+            sanitized_trade = {}
+            for k, v in trade.items():
+                if isinstance(v, (float, np.floating, np.integer)):
+                    sanitized_trade[k] = safe_float(v)
+                else:
+                    sanitized_trade[k] = v
+            sanitized_trades.append(sanitized_trade)
+        
+        # Sanitize daily values
+        sanitized_daily = []
+        for dv in daily_values[::7]:
+            sanitized_dv = {}
+            for k, v in dv.items():
+                if isinstance(v, (float, np.floating, np.integer)):
+                    sanitized_dv[k] = safe_float(v)
+                else:
+                    sanitized_dv[k] = v
+            sanitized_daily.append(sanitized_dv)
+        
         result = {
             'backtest_id': backtest_id,
             'strategy': strategy,
@@ -309,8 +331,8 @@ class BacktestingEngine:
             'profit_factor': safe_float(profit_factor),
             'max_drawdown_pct': safe_float(max_drawdown),
             'sharpe_ratio': safe_float(sharpe),
-            'trades': closed_trades[-20:],  # Last 20 trades
-            'daily_values': daily_values[::7],  # Weekly snapshots
+            'trades': sanitized_trades,
+            'daily_values': sanitized_daily,
             'created_at': datetime.now().isoformat()
         }
         
