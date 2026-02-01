@@ -15,11 +15,136 @@ class CryptoNewsAggregator:
     def __init__(self):
         self.llm_api_key = os.getenv('EMERGENT_LLM_KEY')
         self.news_sources = {
+            'free_crypto_news': 'https://news-crypto.vercel.app/api',  # Free, no API key required
             'cryptopanic': 'https://cryptopanic.com/api/v1',
-            'coingecko': 'https://api.coingecko.com/api/v3',
             'coinmarketcap': 'https://pro-api.coinmarketcap.com/v1'
         }
         self.cmc_api_key = os.getenv('COINMARKETCAP_API_KEY')
+        # In-memory cache to reduce API calls
+        self._news_cache = {}
+        self._cache_ttl = 300  # 5 minutes
+    
+    async def get_free_crypto_news(self, currencies: List[str] = None, limit: int = 30) -> List[Dict[str, Any]]:
+        """Get news from free-crypto-news API (no API key required)"""
+        try:
+            # Check cache first
+            cache_key = f"free_news_{','.join(currencies or ['all'])}_{limit}"
+            cached = self._get_cached(cache_key)
+            if cached:
+                return cached
+            
+            # Build params - use category filter if currency specified
+            params = {'limit': min(limit, 50)}
+            
+            # Map common currency names to API categories
+            category_map = {
+                'bitcoin': 'bitcoin',
+                'btc': 'bitcoin',
+                'ethereum': 'ethereum',
+                'eth': 'ethereum',
+                'solana': 'altcoins',
+                'sol': 'altcoins',
+                'defi': 'defi',
+                'nft': 'nft',
+            }
+            
+            if currencies and len(currencies) == 1:
+                category = category_map.get(currencies[0].lower())
+                if category:
+                    params['category'] = category
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.news_sources['free_crypto_news']}/news",
+                    params=params,
+                    timeout=15.0
+                )
+                
+                if response.status_code != 200:
+                    print(f"Free Crypto News API returned {response.status_code}")
+                    return []
+                
+                data = response.json()
+                articles = data.get('articles', [])[:limit]
+                
+                result = [
+                    {
+                        'title': item.get('title', ''),
+                        'description': item.get('description', ''),
+                        'published_at': item.get('pubDate', ''),
+                        'source': item.get('source', 'Crypto News'),
+                        'url': item.get('link', ''),
+                        'category': item.get('category', 'crypto'),
+                        'time_ago': item.get('timeAgo', ''),
+                        'sentiment': self._infer_sentiment_from_title(item.get('title', '')),
+                        'aggregator': 'free_crypto_news',
+                        'currencies': self._extract_currencies_from_text(item.get('title', '') + ' ' + item.get('description', ''))
+                    }
+                    for item in articles
+                ]
+                
+                # Cache the result
+                self._set_cache(cache_key, result)
+                return result
+                
+        except Exception as e:
+            print(f"Free Crypto News error: {str(e)}")
+            return []
+    
+    def _infer_sentiment_from_title(self, title: str) -> str:
+        """Infer basic sentiment from news title"""
+        title_lower = title.lower()
+        
+        positive_keywords = ['surge', 'soar', 'rally', 'gains', 'bull', 'rise', 'up', 'growth', 
+                           'adoption', 'partnership', 'launch', 'breakthrough', 'record', 'high']
+        negative_keywords = ['crash', 'drop', 'fall', 'plunge', 'bear', 'down', 'loss', 'hack', 
+                           'exploit', 'scam', 'fraud', 'lawsuit', 'ban', 'warning', 'risk']
+        
+        positive_count = sum(1 for kw in positive_keywords if kw in title_lower)
+        negative_count = sum(1 for kw in negative_keywords if kw in title_lower)
+        
+        if positive_count > negative_count:
+            return 'positive'
+        elif negative_count > positive_count:
+            return 'negative'
+        return 'neutral'
+    
+    def _extract_currencies_from_text(self, text: str) -> List[str]:
+        """Extract cryptocurrency mentions from text"""
+        currencies = []
+        text_upper = text.upper()
+        
+        crypto_keywords = {
+            'BITCOIN': 'BTC', 'BTC': 'BTC',
+            'ETHEREUM': 'ETH', 'ETH': 'ETH',
+            'SOLANA': 'SOL', 'SOL': 'SOL',
+            'CARDANO': 'ADA', 'ADA': 'ADA',
+            'POLKADOT': 'DOT', 'DOT': 'DOT',
+            'CHAINLINK': 'LINK', 'LINK': 'LINK',
+            'AVALANCHE': 'AVAX', 'AVAX': 'AVAX',
+            'POLYGON': 'MATIC', 'MATIC': 'MATIC',
+            'XRP': 'XRP', 'RIPPLE': 'XRP',
+            'DOGECOIN': 'DOGE', 'DOGE': 'DOGE',
+        }
+        
+        for keyword, symbol in crypto_keywords.items():
+            if keyword in text_upper and symbol not in currencies:
+                currencies.append(symbol)
+        
+        return currencies
+    
+    def _get_cached(self, key: str) -> Any:
+        """Get item from cache if not expired"""
+        if key in self._news_cache:
+            item, timestamp = self._news_cache[key]
+            if (datetime.now() - timestamp).total_seconds() < self._cache_ttl:
+                return item
+            del self._news_cache[key]
+        return None
+    
+    def _set_cache(self, key: str, value: Any):
+        """Set item in cache"""
+        self._news_cache[key] = (value, datetime.now())
     
     async def get_cryptopanic_news(self, currencies: List[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
         """Get news from CryptoPanic"""
