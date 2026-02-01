@@ -347,6 +347,175 @@ const Settings = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Notifications Tab */}
+        <TabsContent value="notifications">
+          <Card className="bg-[#0A0A0A] border-[#1F1F1F]" data-testid="notification-settings-card">
+            <CardHeader>
+              <CardTitle className="text-2xl font-heading">Notification Settings</CardTitle>
+              <CardDescription>
+                Configure push and SMS notifications for trades and alerts
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Push Notifications Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Bell size={20} className="text-[#00FF94]" />
+                  Push Notifications
+                </h3>
+                
+                <div className="flex items-center justify-between p-3 bg-[#121212] rounded-lg">
+                  <div>
+                    <Label>Enable Push Notifications</Label>
+                    <p className="text-xs text-[#A1A1AA]">Receive in-app notifications</p>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.push_enabled}
+                    onCheckedChange={(checked) => setNotificationSettings({
+                      ...notificationSettings,
+                      push_enabled: checked
+                    })}
+                    data-testid="push-enabled-switch"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-[#121212] rounded-lg">
+                  <div>
+                    <Label>Trade Open Notifications</Label>
+                    <p className="text-xs text-[#A1A1AA]">Notify when trades are opened</p>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.notify_trade_open}
+                    onCheckedChange={(checked) => setNotificationSettings({
+                      ...notificationSettings,
+                      notify_trade_open: checked
+                    })}
+                    data-testid="trade-open-switch"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-[#121212] rounded-lg">
+                  <div>
+                    <Label>Trade Close Notifications</Label>
+                    <p className="text-xs text-[#A1A1AA]">Notify when trades are closed</p>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.notify_trade_close}
+                    onCheckedChange={(checked) => setNotificationSettings({
+                      ...notificationSettings,
+                      notify_trade_close: checked
+                    })}
+                    data-testid="trade-close-switch"
+                  />
+                </div>
+              </div>
+
+              {/* SMS Notifications Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Phone size={20} className="text-[#FFB800]" />
+                  SMS Notifications
+                </h3>
+
+                <div className="flex items-center justify-between p-3 bg-[#121212] rounded-lg">
+                  <div>
+                    <Label>Enable SMS Notifications</Label>
+                    <p className="text-xs text-[#A1A1AA]">Receive SMS for high priority alerts</p>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.sms_enabled}
+                    onCheckedChange={(checked) => setNotificationSettings({
+                      ...notificationSettings,
+                      sms_enabled: checked
+                    })}
+                    data-testid="sms-enabled-switch"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-[#A1A1AA]">Phone Number</Label>
+                  <Input
+                    type="tel"
+                    value={notificationSettings.sms_phone}
+                    onChange={(e) => setNotificationSettings({
+                      ...notificationSettings,
+                      sms_phone: e.target.value
+                    })}
+                    placeholder="Enter your phone number"
+                    className="bg-[#121212] border-[#1F1F1F] font-data mt-1"
+                    data-testid="sms-phone-input"
+                  />
+                  <p className="text-xs text-[#A1A1AA] mt-1">US format: 2104412761 (no dashes)</p>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-[#121212] rounded-lg">
+                  <div>
+                    <Label>HIGH Priority Alerts</Label>
+                    <p className="text-xs text-[#A1A1AA]">SMS for HIGH priority gem alerts</p>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.notify_high_alerts}
+                    onCheckedChange={(checked) => setNotificationSettings({
+                      ...notificationSettings,
+                      notify_high_alerts: checked
+                    })}
+                    data-testid="high-alerts-switch"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-[#121212] rounded-lg">
+                  <div>
+                    <Label>MEDIUM Priority Alerts</Label>
+                    <p className="text-xs text-[#A1A1AA]">SMS for MEDIUM priority alerts</p>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.notify_medium_alerts}
+                    onCheckedChange={(checked) => setNotificationSettings({
+                      ...notificationSettings,
+                      notify_medium_alerts: checked
+                    })}
+                    data-testid="medium-alerts-switch"
+                  />
+                </div>
+              </div>
+
+              {/* Info Box */}
+              <div className="bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-lg p-4">
+                <h4 className="font-bold text-[#FFB800] mb-2">SMS Setup Required</h4>
+                <p className="text-sm text-[#A1A1AA]">
+                  To enable SMS notifications, you need to configure Twilio credentials in the backend .env file:
+                </p>
+                <ul className="text-xs text-[#A1A1AA] mt-2 space-y-1">
+                  <li>• TWILIO_ACCOUNT_SID - Your Twilio Account SID</li>
+                  <li>• TWILIO_AUTH_TOKEN - Your Twilio Auth Token</li>
+                  <li>• TWILIO_PHONE_NUMBER - Your Twilio phone number</li>
+                </ul>
+              </div>
+
+              <div className="flex gap-4">
+                <Button
+                  onClick={saveNotificationSettings}
+                  className="flex-1 bg-[#00FF94] hover:bg-[#00CC76] text-black font-bold rounded-full"
+                  disabled={loading}
+                  data-testid="save-notification-settings-btn"
+                >
+                  {loading ? 'Saving...' : 'Save Settings'}
+                </Button>
+                <Button
+                  onClick={testSms}
+                  variant="outline"
+                  className="border-[#FFB800] text-[#FFB800] hover:bg-[#FFB800]/10"
+                  disabled={loading || !notificationSettings.sms_enabled}
+                  data-testid="test-sms-btn"
+                >
+                  <MessageSquare size={16} className="mr-2" />
+                  Test SMS
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
