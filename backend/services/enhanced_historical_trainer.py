@@ -2,9 +2,8 @@ import numpy as np
 import pandas as pd
 from typing import Dict, Any, List, Tuple
 from datetime import datetime, timedelta
-import pickle
+import json
 import os
-from sklearn.preprocessing import StandardScaler
 import asyncio
 
 class EnhancedHistoricalTrainer:
@@ -17,7 +16,6 @@ class EnhancedHistoricalTrainer:
         self.db = db
         self.model_path = '/app/backend/models/historical/'
         os.makedirs(self.model_path, exist_ok=True)
-        self.scaler = StandardScaler()
         
         # Hidden gems criteria
         self.hidden_gem_indicators = {
