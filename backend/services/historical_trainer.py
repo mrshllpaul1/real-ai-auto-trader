@@ -458,13 +458,13 @@ Be concise and actionable.
         
         # Calculate overall metrics
         if training_results['total_patterns'] > 0:
-            training_results['training_accuracy'] = (
+            training_results['training_accuracy'] = float(
                 training_results['successful_patterns'] / 
                 training_results['total_patterns'] * 100
             )
         
         if all_hidden_gems:
-            training_results['avg_gem_multiplier'] = sum(g['multiplier'] for g in all_hidden_gems) / len(all_hidden_gems)
+            training_results['avg_gem_multiplier'] = float(sum(g['multiplier'] for g in all_hidden_gems) / len(all_hidden_gems))
         
         training_results['completed_at'] = datetime.now().isoformat()
         
