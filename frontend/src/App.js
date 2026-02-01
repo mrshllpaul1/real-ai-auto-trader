@@ -59,6 +59,7 @@ function App() {
               <Route path="/scanner" element={<GemScanner />} />
               <Route path="/auto-exec" element={<AutoExecution />} />
               <Route path="/advanced" element={<AdvancedFeatures />} />
+              <Route path="/guide" element={<Guide />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
