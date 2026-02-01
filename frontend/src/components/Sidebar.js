@@ -7,7 +7,8 @@ import {
   Settings, 
   Sparkles,
   Brain,
-  Newspaper
+  Newspaper,
+  Zap
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
