@@ -224,9 +224,10 @@ Keep response concise and structured.
     async def generate_weekly_strategies(
         self,
         coin_pairs: List[str],
-        historical_data: Dict[str, Any]
+        historical_data: Dict[str, Any],
+        learning_data: Dict[str, Any] = None
     ) -> List[Dict[str, Any]]:
-        """Generate weekly strategy recommendations for multiple coins"""
+        """Generate weekly strategy recommendations for multiple coins with learning integration"""
         strategies = []
         
         for coin in coin_pairs:
@@ -244,11 +245,12 @@ Keep response concise and structured.
                     # Get market data
                     market_data = historical_data.get(coin, {})
                     
-                    # Generate AI strategy
+                    # Generate AI strategy with learning data
                     ai_strategy = await self.generate_ai_strategy(
                         coin,
                         technical_analysis,
-                        market_data
+                        market_data,
+                        learning_data=learning_data
                     )
                     
                     strategies.append(ai_strategy)
