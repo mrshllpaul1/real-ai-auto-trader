@@ -94,7 +94,7 @@ async def scan_now(scanner = Depends(get_scanner)):
     """
     Perform an immediate market scan
     Returns all current hidden gem alerts
-    Sends SMS notification for HIGH priority gems
+    Sends SMS and Email notification for HIGH priority gems
     """
     try:
         alerts = await scanner.scan_market()
@@ -105,12 +105,22 @@ async def scan_now(scanner = Depends(get_scanner)):
         
         # Send SMS for HIGH priority alerts
         sms_sent = []
+        email_sent = []
+        
         if high:
             notification_service = await get_notification_service()
+            email_service = await get_email_service()
+            
             for gem in high[:3]:  # Limit to top 3 HIGH alerts
-                result = await notification_service.notify_high_priority_gem(gem)
-                if result.get('success'):
+                # Send SMS
+                sms_result = await notification_service.notify_high_priority_gem(gem)
+                if sms_result.get('success'):
                     sms_sent.append(gem['symbol'])
+                
+                # Send Email with key factors
+                email_result = await email_service.send_high_priority_gem_alert(gem)
+                if email_result.get('success'):
+                    email_sent.append(gem['symbol'])
         
         return {
             "scan_time": alerts[0]['scanned_at'] if alerts else None,
@@ -119,6 +129,7 @@ async def scan_now(scanner = Depends(get_scanner)):
             "medium_alerts": len(medium),
             "low_alerts": len(low),
             "sms_sent_for": sms_sent,
+            "email_sent_for": email_sent,
             "top_gems": alerts[:10],
             "all_alerts": alerts
         }
