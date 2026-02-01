@@ -193,8 +193,15 @@ TWILIO_PHONE_NUMBER=      # User must provide
 ---
 
 ## Future Enhancements
+- Implement user-guided tutorial for first-time setup
+- Add automated pytest tests for regression prevention
 - Real Twilio integration (requires user credentials)
-- Email notifications backup
+- Email notifications with Resend (requires user API key)
 - Interactive onboarding tutorial
 - Custom strategy builder UI
 - Trading journal with AI insights
+
+---
+
+## Test Reports
+- `/app/test_reports/iteration_2.json` - Latest test results (Feb 2, 2026)
