@@ -50,3 +50,141 @@
   border-radius: 8px !important;
   padding: 12px !important;
 }
+
+/* Mobile Optimizations for Galaxy S22 */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .App {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Mobile viewport fix */
+.min-h-\[100dvh\] {
+  min-height: 100dvh;
+}
+
+/* Touch-friendly tap targets */
+@media (max-width: 768px) {
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Prevent text selection on touch */
+  .App {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Allow text selection in inputs */
+  input, textarea {
+    -webkit-user-select: auto;
+    user-select: auto;
+  }
+  
+  /* Smooth scrolling */
+  main {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Page padding adjustments */
+  .p-6 {
+    padding: 1rem !important;
+  }
+  
+  .lg\:p-12 {
+    padding: 1rem !important;
+  }
+  
+  /* Card spacing */
+  .space-y-6 > * + * {
+    margin-top: 1rem;
+  }
+  
+  /* Grid adjustments */
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  
+  /* Font size adjustments */
+  .text-4xl {
+    font-size: 1.75rem !important;
+    line-height: 2rem !important;
+  }
+  
+  .text-5xl {
+    font-size: 2rem !important;
+    line-height: 2.25rem !important;
+  }
+  
+  /* Button improvements */
+  .rounded-full {
+    border-radius: 9999px;
+  }
+  
+  /* Charts responsive */
+  .h-64 {
+    height: 200px !important;
+  }
+  
+  .h-96 {
+    height: 250px !important;
+  }
+  
+  /* Tab improvements */
+  [role="tablist"] {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  
+  [role="tablist"]::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Landscape mode adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+  .text-4xl, .text-5xl {
+    font-size: 1.5rem !important;
+    line-height: 1.75rem !important;
+  }
+  
+  .h-64, .h-96 {
+    height: 180px !important;
+  }
+}
+
+/* Active state for touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .active\:scale-95:active {
+    transform: scale(0.95);
+  }
+  
+  button:active, a:active {
+    opacity: 0.7;
+  }
+}
+
+/* Hide scrollbar but keep functionality */
+.overflow-auto::-webkit-scrollbar {
+  width: 4px;
+}
+
+.overflow-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+/* PWA standalone mode */
+@media (display-mode: standalone) {
+  .App {
+    padding-top: env(safe-area-inset-top);
+  }
+}
