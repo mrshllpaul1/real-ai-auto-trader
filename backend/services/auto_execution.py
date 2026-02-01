@@ -272,6 +272,16 @@ class AutoExecutionEngine:
         # Remove from open positions
         self.open_positions = [p for p in self.open_positions if p.get('trade_id') != trade_id]
         
+        # Send push notification for trade closed
+        if self.notification_service:
+            closed_position = {
+                **position,
+                'exit_price': exit_price,
+                'profit_pct': profit_pct,
+                'close_reason': reason
+            }
+            await self.notification_service.notify_trade_completed(closed_position)
+        
         emoji = "✅" if profit_pct > 0 else "❌"
         print(f"{emoji} CLOSED: {position.get('symbol')} | {reason}")
         print(f"   Entry: ${entry_price:.4f} → Exit: ${exit_price:.4f}")
