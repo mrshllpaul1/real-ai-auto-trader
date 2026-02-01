@@ -72,6 +72,30 @@ const AutoTrading = () => {
     }
   };
 
+  const saveAllocation = async () => {
+    try {
+      setLoading(true);
+      const userId = localStorage.getItem('user_id') || 'demo_user';
+      
+      // Filter out zero allocations
+      const nonZeroAllocations = Object.fromEntries(
+        Object.entries(allocation).filter(([_, value]) => value > 0)
+      );
+      
+      await api.post('/allocation/allocate', {
+        user_id: userId,
+        allocations: nonZeroAllocations
+      });
+      
+      toast.success('Funds allocated successfully! Bot will only trade with these funds.');
+      await loadConfig();
+    } catch (error) {
+      toast.error('Failed to allocate funds');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const saveConfig = async () => {
     try {
       setLoading(true);
