@@ -9,6 +9,11 @@ class TrainingRequest(BaseModel):
     start_year: int = 2009
     include_hidden_gems: bool = True
 
+class ProfitableGemsRequest(BaseModel):
+    coins: List[str] = ['bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot', 'avalanche', 'chainlink', 'polygon', 'uniswap', 'litecoin']
+    min_profit_multiplier: float = 2.0
+    start_year: int = 2009
+
 async def get_database():
     from server import db
     return db
