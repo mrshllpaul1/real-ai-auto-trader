@@ -41,6 +41,19 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 - [x] **SMS Integration (Twilio)** - Framework ready, requires user credentials
 - [x] **Settings UI** - Configure notification preferences
 
+#### Documentation
+- [x] **Complete Guide Page** - Comprehensive how-to for all features
+  - Quick Start (3 steps)
+  - Hidden Gem Scanner guide
+  - Auto Execution Engine setup
+  - Backtesting Strategies tutorial
+  - Portfolio Rebalancing how-to
+  - Social Trading explanation
+  - Notifications setup
+  - AI Learning explanation
+  - Settings configuration
+  - Tips & Best Practices
+
 #### Infrastructure
 - [x] FastAPI backend with MongoDB
 - [x] React frontend with Tailwind CSS
