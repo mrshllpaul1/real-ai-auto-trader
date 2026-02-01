@@ -7,6 +7,7 @@ router = APIRouter()
 # Global scanner instance
 _scanner = None
 _notification_service = None
+_email_service = None
 
 class ScannerConfig(BaseModel):
     interval_seconds: int = 300
@@ -23,6 +24,13 @@ async def get_notification_service():
     if _notification_service is None:
         _notification_service = NotificationService(db)
     return _notification_service
+
+async def get_email_service():
+    global _email_service
+    from services.email_service import get_email_service as get_email_svc
+    if _email_service is None:
+        _email_service = get_email_svc()
+    return _email_service
 
 async def get_scanner():
     global _scanner
