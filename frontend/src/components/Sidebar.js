@@ -29,6 +29,7 @@ const Sidebar = () => {
     { path: '/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/learning', icon: Brain, label: 'AI Learning' },
     { path: '/news', icon: Newspaper, label: 'News & Intel' },
+    { path: '/guide', icon: BookOpen, label: 'Guide', highlight: false },
     { path: '/settings', icon: Settings, label: 'Settings' },
   ];
 
