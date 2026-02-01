@@ -29,19 +29,23 @@ class ClosePositionRequest(BaseModel):
     reason: str = 'manual'
 
 async def get_auto_executor():
-    global _auto_executor, _ai_engine
+    global _auto_executor, _ai_engine, _notification_service
     from server import db
     from services.gem_scanner import GemScanner
     from services.self_improving_ai import SelfImprovingAI
     from services.auto_execution import AutoExecutionEngine
+    from services.notification_service import NotificationService
     
     if _ai_engine is None:
         _ai_engine = SelfImprovingAI(db)
         await _ai_engine.initialize()
     
+    if _notification_service is None:
+        _notification_service = NotificationService(db)
+    
     if _auto_executor is None:
         scanner = GemScanner(db)
-        _auto_executor = AutoExecutionEngine(db, scanner, _ai_engine)
+        _auto_executor = AutoExecutionEngine(db, scanner, _ai_engine, notification_service=_notification_service)
         await _auto_executor.load_risk_profile()
     
     return _auto_executor
