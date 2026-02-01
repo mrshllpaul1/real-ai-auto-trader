@@ -39,7 +39,7 @@ async def execute_trade(
     trading_engine = Depends(get_trading_engine),
     risk_manager = Depends(get_risk_manager)
 ):
-    """Execute a trade order"""
+    """Execute a trade order and record outcome for learning"""
     try:
         # Validate trade against risk management rules
         validation = await risk_manager.validate_trade(
@@ -71,10 +71,27 @@ async def execute_trade(
         if result.get('error'):
             raise HTTPException(status_code=500, detail=result['error'])
         
+        # Record for learning (asynchronously, don't wait)
+        try:
+            from services.learning_engine import AILearningEngine
+            learning_engine = AILearningEngine(db)
+            
+            # Store entry price for later P/L calculation
+            await db.trade_entries.insert_one({
+                "trade_id": result['trade_id'],
+                "strategy_id": order.strategy_id,
+                "entry_price": current_price,
+                "action": order.action,
+                "amount": order.amount,
+                "timestamp": result['created_at']
+            })
+        except Exception as e:
+            print(f"Warning: Could not record trade for learning: {str(e)}")
+        
         return TradeResponse(
             trade_id=result['trade_id'],
             status=result['status'],
-            message="Trade executed successfully"
+            message="Trade executed successfully. AI is learning from this trade."
         )
     
     except HTTPException:
