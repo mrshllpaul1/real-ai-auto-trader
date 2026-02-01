@@ -52,6 +52,53 @@ async def train_on_historical_data(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/train-profitable-gems")
+async def train_profitable_gems(
+    request: ProfitableGemsRequest,
+    background_tasks: BackgroundTasks,
+    trainer = Depends(get_historical_trainer)
+):
+    """
+    ADVANCED TRAINING: Focus specifically on PROFITABLE hidden gems
+    Learns the exact conditions that led to successful 2x-100x+ gains
+    """
+    try:
+        background_tasks.add_task(
+            trainer.train_profitable_gems,
+            request.coins,
+            request.min_profit_multiplier,
+            request.start_year
+        )
+        
+        return {
+            "message": "Profitable gems training started",
+            "focus": f"Learning patterns for {request.min_profit_multiplier}x+ gains",
+            "coins": request.coins,
+            "status": "processing",
+            "note": "This training analyzes ONLY successful gems to learn what makes them profitable."
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/profitable-gems-status")
+async def get_profitable_gems_status(trainer = Depends(get_historical_trainer)):
+    """Get status of profitable gems training"""
+    try:
+        return await trainer.get_profitable_gems_summary()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/profitable-gem-signals")
+async def get_profitable_gem_signals(trainer = Depends(get_historical_trainer)):
+    """
+    Get the AI's learned signals for finding profitable hidden gems
+    Returns the most effective entry conditions based on historical success
+    """
+    try:
+        return await trainer.get_profitable_gem_signals()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/status")
 async def get_training_status(trainer = Depends(get_historical_trainer)):
     """Get comprehensive training status including hidden gems stats"""
