@@ -36,7 +36,6 @@ class EmailNotificationService:
         current_price = gem.get('current_price', 0)
         price_change_24h = gem.get('price_change_24h', 0)
         volume_change = gem.get('volume_change_24h', 0)
-        market_cap = gem.get('market_cap', 0)
         
         # Extract signals and reasons
         signals = gem.get('matching_signals', [])
