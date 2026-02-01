@@ -41,11 +41,14 @@ const Sidebar = () => {
     >
       {/* Logo */}
       <div className="p-6 border-b border-[#1F1F1F]">
-        <h1 className="text-2xl font-heading font-black tracking-tight" data-testid="app-logo">
-          <span className="text-[#00FF94]">AI</span>
-          <span className="text-white">Crypto</span>
-          <span className="text-[#9D00FF]">Trade</span>
-        </h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-heading font-black tracking-tight" data-testid="app-logo">
+            <span className="text-[#00FF94]">AI</span>
+            <span className="text-white">Crypto</span>
+            <span className="text-[#9D00FF]">Trade</span>
+          </h1>
+          <NotificationCenter />
+        </div>
         <p className="text-xs text-[#A1A1AA] mt-1">Real Money Auto Trading</p>
       </div>
 
