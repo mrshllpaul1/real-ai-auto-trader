@@ -15,6 +15,7 @@ const Sidebar = () => {
   const navItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/strategies', icon: Sparkles, label: 'AI Strategies' },
+    { path: '/auto-trading', icon: Zap, label: 'Auto Trading' },
     { path: '/trading', icon: TrendingUp, label: 'Trading' },
     { path: '/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/learning', icon: Brain, label: 'AI Learning' },
