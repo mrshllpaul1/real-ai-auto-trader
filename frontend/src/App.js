@@ -6,6 +6,7 @@ import StrategySelector from "./pages/StrategySelector";
 import TradingView from "./pages/TradingView";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import AILearning from "./pages/AILearning";
 import Sidebar from "./components/Sidebar";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "framer-motion";
@@ -39,6 +40,7 @@ function App() {
               <Route path="/strategies" element={<StrategySelector />} />
               <Route path="/trading" element={<TradingView />} />
               <Route path="/analytics" element={<Analytics />} />
+              <Route path="/learning" element={<AILearning />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
