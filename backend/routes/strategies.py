@@ -28,10 +28,15 @@ async def generate_strategies(
     strategy_engine = Depends(get_strategy_engine),
     market_service = Depends(get_market_service)
 ):
-    """Generate AI-powered trading strategies with learning enhancement"""
+    """Generate AI-powered trading strategies with learning, news, and historical pattern integration"""
     try:
         from services.learning_engine import AILearningEngine
+        from services.news_service import CryptoNewsAggregator
+        from services.historical_trainer import HistoricalTrainer
+        
         learning_engine = AILearningEngine(db)
+        news_service = CryptoNewsAggregator()
+        historical_trainer = HistoricalTrainer(db)
         
         # Get historical data for each coin
         historical_data = {}
@@ -50,7 +55,7 @@ async def generate_strategies(
                 **market_data.get(coin_id, {})
             }
         
-        # Generate strategies with learning
+        # Generate strategies with full intelligence integration
         strategies = []
         for pair in request.coin_pairs:
             coin_id = pair.split('/')[0].lower()
@@ -69,7 +74,7 @@ async def generate_strategies(
                     # Get market data
                     market_data = historical_data.get(coin_id, {})
                     
-                    # Get learning insights for this coin (check if we have past strategies)
+                    # Get learning insights
                     past_strategies = await db.strategies.find(
                         {"coin_id": coin_id}
                     ).sort("created_at", -1).limit(1).to_list(1)
@@ -78,12 +83,29 @@ async def generate_strategies(
                     if past_strategies:
                         learning_data = await learning_engine.get_learning_insights(past_strategies[0]['strategy_id'])
                     
-                    # Generate AI strategy with learning
+                    # Get news sentiment analysis
+                    news = await news_service.get_aggregated_news([coin_id], 25)
+                    news_sentiment = await news_service.analyze_news_sentiment(news, coin_id)
+                    
+                    # Get similar historical patterns
+                    historical_patterns = await historical_trainer.get_similar_historical_patterns(
+                        coin_id,
+                        {
+                            'rsi': indicators.get('rsi', 50),
+                            'macd': indicators.get('macd', 0),
+                            'volatility': 0
+                        },
+                        limit=10
+                    )
+                    
+                    # Generate AI strategy with all intelligence sources
                     ai_strategy = await strategy_engine.generate_ai_strategy(
                         coin_id,
                         technical_analysis,
                         market_data,
-                        learning_data=learning_data
+                        news_sentiment=news_sentiment,
+                        learning_data=learning_data,
+                        historical_patterns=historical_patterns
                     )
                     
                     strategies.append(ai_strategy)
@@ -103,6 +125,9 @@ async def generate_strategies(
             "strategies": strategies,
             "count": len(strategies),
             "learning_enabled": True,
+            "news_integrated": True,
+            "historical_patterns_trained": True,
+            "intelligence_sources": ["technical_analysis", "ai_learning", "news_sentiment", "historical_patterns"],
             "generated_at": datetime.now().isoformat()
         }
     
