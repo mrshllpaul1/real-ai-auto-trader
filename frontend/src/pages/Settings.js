@@ -23,11 +23,21 @@ const Settings = () => {
     max_portfolio_allocation: 20,
     risk_level: 'medium'
   });
+  const [notificationSettings, setNotificationSettings] = useState({
+    push_enabled: true,
+    sms_enabled: true,
+    sms_phone: '2104412761',
+    notify_trade_open: true,
+    notify_trade_close: true,
+    notify_high_alerts: true,
+    notify_medium_alerts: false
+  });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     checkCredentials();
     loadRiskSettings();
+    loadNotificationSettings();
   }, []);
 
   const checkCredentials = async () => {
@@ -47,6 +57,17 @@ const Settings = () => {
       }
     } catch (error) {
       console.error('Error loading risk settings:', error);
+    }
+  };
+
+  const loadNotificationSettings = async () => {
+    try {
+      const response = await api.get('/notifications/settings');
+      if (response.data) {
+        setNotificationSettings(response.data);
+      }
+    } catch (error) {
+      console.error('Error loading notification settings:', error);
     }
   };
 
