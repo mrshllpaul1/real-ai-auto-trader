@@ -177,13 +177,19 @@ class AILearningEngine:
         if len(outcomes) < 10:
             return []
         
+        # Batch fetch all strategies to avoid N+1 queries
+        strategy_ids = list(set(o.get('strategy_id') for o in outcomes if o.get('strategy_id')))
+        strategies_list = await self.db.strategies.find(
+            {'strategy_id': {'$in': strategy_ids}},
+            {'_id': 0, 'strategy_id': 1, 'indicators': 1}
+        ).to_list(len(strategy_ids))
+        strategy_map = {s['strategy_id']: s for s in strategies_list}
+        
         # Analyze indicator performance
         indicator_performance = {}
         
         for outcome in outcomes:
-            strategy = await self.db.strategies.find_one(
-                {"strategy_id": outcome['strategy_id']}
-            )
+            strategy = strategy_map.get(outcome.get('strategy_id'))
             
             if not strategy or 'indicators' not in strategy:
                 continue
@@ -199,9 +205,9 @@ class AILearningEngine:
                     }
                 
                 indicator_performance[indicator_name]['total_uses'] += 1
-                if outcome['was_correct']:
+                if outcome.get('was_correct'):
                     indicator_performance[indicator_name]['correct_predictions'] += 1
-                indicator_performance[indicator_name]['total_profit'] += outcome['profit_loss']
+                indicator_performance[indicator_name]['total_profit'] += outcome.get('profit_loss', 0)
         
         # Calculate scores
         results = []
