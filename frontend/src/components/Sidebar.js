@@ -9,7 +9,8 @@ import {
   Brain,
   Newspaper,
   Zap,
-  Radar
+  Radar,
+  Bot
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -17,6 +18,7 @@ const Sidebar = () => {
   const navItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/scanner', icon: Radar, label: 'Gem Scanner', highlight: true },
+    { path: '/auto-exec', icon: Bot, label: 'Auto Execute', highlight: true },
     { path: '/strategies', icon: Sparkles, label: 'AI Strategies' },
     { path: '/auto-trading', icon: Zap, label: 'Auto Trading' },
     { path: '/trading', icon: TrendingUp, label: 'Trading' },
