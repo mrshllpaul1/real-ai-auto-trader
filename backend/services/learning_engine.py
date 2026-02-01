@@ -303,15 +303,19 @@ class AILearningEngine:
         total_strategies = await self.db.strategies.count_documents({})
         total_outcomes = await self.db.learning_outcomes.count_documents({})
         
-        # Overall accuracy
-        all_outcomes = await self.db.learning_outcomes.find({}).to_list(10000)
+        # Overall accuracy - fetch only required fields
+        all_outcomes = await self.db.learning_outcomes.find(
+            {},
+            {'_id': 0, 'was_correct': 1, 'profit_loss': 1}
+        ).to_list(10000)
+        
         overall_accuracy = (
-            sum(1 for o in all_outcomes if o['was_correct']) / len(all_outcomes) * 100
+            sum(1 for o in all_outcomes if o.get('was_correct')) / len(all_outcomes) * 100
             if all_outcomes else 0
         )
         
         # Total profit/loss from learning
-        total_learned_pl = sum(o['profit_loss'] for o in all_outcomes) if all_outcomes else 0
+        total_learned_pl = sum(o.get('profit_loss', 0) for o in all_outcomes) if all_outcomes else 0
         
         # Best performing indicators
         best_indicators = await self.get_best_performing_indicators()
