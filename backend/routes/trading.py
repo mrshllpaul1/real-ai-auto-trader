@@ -73,9 +73,6 @@ async def execute_trade(
         
         # Record for learning (asynchronously, don't wait)
         try:
-            from services.learning_engine import AILearningEngine
-            learning_engine = AILearningEngine(db)
-            
             # Store entry price for later P/L calculation
             await db.trade_entries.insert_one({
                 "trade_id": result['trade_id'],
