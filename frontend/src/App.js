@@ -9,6 +9,7 @@ import Settings from "./pages/Settings";
 import AILearning from "./pages/AILearning";
 import NewsAndIntelligence from "./pages/NewsAndIntelligence";
 import AutoTrading from "./pages/AutoTrading";
+import GemScanner from "./pages/GemScanner";
 import Sidebar from "./components/Sidebar";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "framer-motion";
@@ -52,6 +53,7 @@ function App() {
               <Route path="/learning" element={<AILearning />} />
               <Route path="/news" element={<NewsAndIntelligence />} />
               <Route path="/auto-trading" element={<AutoTrading />} />
+              <Route path="/scanner" element={<GemScanner />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
