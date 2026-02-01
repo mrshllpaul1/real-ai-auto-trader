@@ -35,19 +35,27 @@ function App() {
         .then(() => console.log('Service Worker registered'))
         .catch((err) => console.error('Service Worker registration failed:', err));
     }
+
+    // Set viewport meta for mobile
+    const viewport = document.querySelector('meta[name="viewport"]');
+    if (viewport) {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');
+    }
   }, []);
 
   return (
     <div className="App noise-bg">
       <BrowserRouter>
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen min-h-[100dvh]">
           <Sidebar />
           <motion.main 
-            className="flex-1 overflow-auto"
+            className="flex-1 overflow-auto w-full"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
+            {/* Mobile top padding for menu button */}
+            <div className="md:hidden h-16" />
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/strategies" element={<StrategySelector />} />
@@ -66,7 +74,7 @@ function App() {
           </motion.main>
         </div>
       </BrowserRouter>
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-center" richColors />
     </div>
   );
 }
