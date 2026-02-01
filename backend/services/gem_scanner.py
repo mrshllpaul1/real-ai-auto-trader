@@ -281,15 +281,17 @@ class GemScanner:
         # Sort by match score
         alerts.sort(key=lambda x: x['match_score'], reverse=True)
         
-        # Store alerts in database
+        # Store alerts in database (copies to avoid _id mutation)
         if alerts:
-            await self.db.gem_alerts.delete_many({})  # Clear old alerts
-            await self.db.gem_alerts.insert_many(alerts)
+            await self.db.gem_alerts.delete_many({})
+            # Insert copies to avoid mutating original alerts
+            await self.db.gem_alerts.insert_many([dict(a) for a in alerts])
             
             # Store in alert history (keep last 100)
-            for alert in alerts[:10]:  # Top 10 only
-                alert['timestamp'] = datetime.now()
-                await self.db.gem_alert_history.insert_one(alert)
+            for alert in alerts[:10]:
+                alert_copy = dict(alert)
+                alert_copy['timestamp'] = datetime.now()
+                await self.db.gem_alert_history.insert_one(alert_copy)
             
             # Cleanup old history
             count = await self.db.gem_alert_history.count_documents({})
