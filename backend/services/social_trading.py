@@ -242,13 +242,17 @@ class SocialTradingService:
             {'_id': 0}
         ).to_list(100)
         
-        result = []
-        for follow in follows:
-            profile = await self.get_trader_profile(follow['follower_id'])
-            if profile:
-                result.append(profile)
+        # Batch fetch all profiles to avoid N+1 queries
+        follower_ids = [f['follower_id'] for f in follows]
+        if not follower_ids:
+            return []
         
-        return result
+        profiles = await self.db.trader_profiles.find(
+            {'user_id': {'$in': follower_ids}},
+            {'_id': 0}
+        ).to_list(len(follower_ids))
+        
+        return profiles
     
     # ============= COPY TRADING =============
     
