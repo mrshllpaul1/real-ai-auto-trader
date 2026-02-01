@@ -28,8 +28,11 @@ async def generate_strategies(
     strategy_engine = Depends(get_strategy_engine),
     market_service = Depends(get_market_service)
 ):
-    """Generate AI-powered trading strategies"""
+    """Generate AI-powered trading strategies with learning enhancement"""
     try:
+        from services.learning_engine import AILearningEngine
+        learning_engine = AILearningEngine(db)
+        
         # Get historical data for each coin
         historical_data = {}
         
@@ -47,11 +50,49 @@ async def generate_strategies(
                 **market_data.get(coin_id, {})
             }
         
-        # Generate strategies
-        strategies = await strategy_engine.generate_weekly_strategies(
-            [pair.split('/')[0].lower() for pair in request.coin_pairs],
-            historical_data
-        )
+        # Generate strategies with learning
+        strategies = []
+        for pair in request.coin_pairs:
+            coin_id = pair.split('/')[0].lower()
+            
+            try:
+                # Get historical prices
+                coin_data = historical_data.get(coin_id, {}).get('prices', [])
+                
+                if coin_data:
+                    # Calculate technical indicators
+                    indicators = strategy_engine.calculate_technical_indicators(coin_data)
+                    
+                    # Generate rule-based signals
+                    technical_analysis = strategy_engine.generate_rule_based_signals(indicators)
+                    
+                    # Get market data
+                    market_data = historical_data.get(coin_id, {})
+                    
+                    # Get learning insights for this coin (check if we have past strategies)
+                    past_strategies = await db.strategies.find(
+                        {"coin_id": coin_id}
+                    ).sort("created_at", -1).limit(1).to_list(1)
+                    
+                    learning_data = None
+                    if past_strategies:
+                        learning_data = await learning_engine.get_learning_insights(past_strategies[0]['strategy_id'])
+                    
+                    # Generate AI strategy with learning
+                    ai_strategy = await strategy_engine.generate_ai_strategy(
+                        coin_id,
+                        technical_analysis,
+                        market_data,
+                        learning_data=learning_data
+                    )
+                    
+                    strategies.append(ai_strategy)
+            except Exception as e:
+                print(f"Error generating strategy for {coin_id}: {str(e)}")
+                continue
+        
+        # Sort strategies by confidence score
+        strategies.sort(key=lambda x: x.get('confidence_score', 0), reverse=True)
         
         # Store strategies in database
         for strategy in strategies:
@@ -61,6 +102,7 @@ async def generate_strategies(
         return {
             "strategies": strategies,
             "count": len(strategies),
+            "learning_enabled": True,
             "generated_at": datetime.now().isoformat()
         }
     
