@@ -29,167 +29,1963 @@ The user wants to build a real money AI crypto auto trading app.
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack application with a React frontend and FastAPI backend. The application features a sophisticated AI training pipeline that identifies hidden gems with 10x-100x potential. A real-time market scanner detects these opportunities and can trigger trades automatically via a new auto-execution engine. The AI is designed to be self-improving, learning from trade outcomes. Backend services for Backtesting, Portfolio Rebalancing, and Social Trading have also been created. Most of the frontend is functional, except for the newly added Advanced Features page.
+A comprehensive full-stack application with a React frontend and FastAPI backend. The app features an AI training pipeline, a real-time gem scanner, an auto-execution engine, and services for backtesting, portfolio rebalancing, and social trading. The UI includes a dashboard, trading view, analytics, a settings page, and pages for all major features. A notification system (push, SMS, email) has been implemented with placeholders for API keys. The UI is now mobile-responsive with a collapsible sidebar. A new Setup page allows the user to manage required API keys.
 
 **Last working item**:
--   **Last item agent was working:** Implementing three new features requested by the user: a backtesting interface, portfolio rebalancing automation, and a social trading feature. The agent created the backend services, API routes, and a new combined frontend page ().
--   **Status:** BLOCKED
+-   **Last item agent was working:** The agent was attempting to resolve a deployment blocker identified by the deployment agent. The blocker is the use of the  library, which is not supported in the deployment environment. The agent began refactoring the code to remove this dependency.
+-   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** both
+-   **Which testing method agent to use?** backend testing agent
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   Issue 1: The new  frontend page is rendering a black screen. (P0)
--   Issue 2: The news API endpoint () is working but returns no news articles. (P1)
+-   Issue 1: Deployment is blocked due to the unsupported  dependency. (P0)
+-   Issue 2: The news API endpoint () returns simulated data because the live CryptoPanic API integration is not working. (P1)
+-   Issue 3: The historical market data API for the trading chart is slow and frequently times out, causing the chart to appear empty. (P2)
 
 **Issues Detail:**
--   **Issue 1:** The  page causes a frontend compilation error, resulting in a black screen.
-    -   **Attempted fixes:** The agent identified the issue as a webpack error, likely a stack overflow caused by a deeply nested or overly complex component structure on the  page. The agent attempted to fix this by overwriting the file with a simplified version but did not verify the fix.
+-   **Issue 1:** Deployment blocker:  is not supported.
+    -   **Attempted fixes:** The agent identified that  and  use . It has already overwritten  with a refactored version.
     -   **Next debug checklist:**
-        1.  Verify if the simplified  component compiles.
-        2.  If it still fails, inspect the component for syntax errors or structural issues.
-        3.  Refactor  by breaking it down into three smaller, separate components for Backtesting, Rebalancing, and Social Trading, and load them within tabs to avoid deep nesting.
-        4.  Check the browser's developer console for specific runtime errors.
-    -   **Why fix this issue and what will be achieved with the fix?** This is a critical blocker preventing the user from accessing the three newly implemented features.
+        1.  Refactor  to remove all  dependencies (e.g., , ). Replace functionality with  or standard Python.
+        2.  Remove the  line from .
+        3.  Execute Found existing installation: scikit-learn 1.8.0
+Uninstalling scikit-learn-1.8.0:
+  Successfully uninstalled scikit-learn-1.8.0 to ensure it's removed from the environment.
+        4.  Restart the backend: backend: stopped
+backend: started.
+        5.  Thoroughly test the AI training and learning engine features to ensure they function correctly after the refactor.
+        6.  Call the  again to confirm the blocker is resolved.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a critical blocker. The application cannot be deployed until this dependency is removed.
     -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** Y (Frontend black screens have occurred before, though for different reasons).
-    -   **Should Test frontend/backend/both after fix?** frontend
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** backend
     -   **Blocked on other issue:** None. This is the primary blocker.
 
--   **Issue 2:** The news API endpoint is working but returns no news articles.
-    -   **Attempted fixes:** The agent previously diagnosed this as a potential rate-limiting issue on the free tier of the CryptoPanic API but did not implement a fix.
+-   **Issue 2:** The news API endpoint returns simulated data.
+    -   **Attempted fixes:** The agent added a hardcoded, simulated fallback news source in  as a temporary patch.
     -   **Next debug checklist:**
-        1.  Review .
-        2.  Implement a fallback mechanism or cycle through different news sources if one fails.
-        3.  Consider integrating another news API provider.
-    -   **Why fix this issue and what will be achieved with the fix?** The AI's learning and strategy generation depends on news sentiment analysis. Without news data, a core requirement is unfulfilled.
+        1.  Investigate the  function in  to understand why it returns an empty list. Check the CryptoPanic API documentation for any changes or deprecations.
+        2.  Implement a robust fallback mechanism that cycles through multiple *real* news APIs (e.g., from CoinMarketCap or another provider) instead of relying on simulated data.
+    -   **Why fix this issue and what will be achieved with the fix?** The AI's learning and strategy generation depends on real-time news sentiment. Simulated data undermines this core requirement.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** backend
     -   **Blocked on other issue:** None.
 
-**In progress Task List**:
--   **Task 1:** Complete the Advanced Features implementation (P0)
-    -   **Where to resume:** Resume by fixing the black screen on the  page. Once the UI is rendering, verify that the frontend controls correctly interact with the backend APIs for backtesting, rebalancing, and social trading.
-    -   **What will be achieved with this?** The user will have access to backtesting, portfolio rebalancing, and social trading capabilities.
-    -   **Status:** IN PROGRESS
+-   **Issue 3:** Market data API for trading chart is unreliable.
+    -   **Attempted fixes:** The agent added a function to generate random sample data in  when the API call fails or times out.
+    -   **Next debug checklist:**
+        1.  Review the  to identify performance bottlenecks.
+        2.  Implement a caching layer (e.g., using a dictionary or a more robust cache like Redis if available) for historical data to reduce redundant API calls.
+        3.  Implement better error handling and retry logic with exponential backoff for the external API calls to handle rate limiting (429 errors) gracefully.
+    -   **Why fix this issue and what will be achieved with the fix?** The trading chart is a key feature. An empty or fake chart provides no value to the user and makes the application look broken.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** both
-    -   **Blocked on something:** Blocked by Issue 1: The new frontend page is rendering a black screen.
+    -   **Blocked on other issue:** None.
+
+**In progress Task List**:
+-   **Task 1:** Resolve Deployment Blocker (P0)
+    -   **Where to resume:** Continue by refactoring  to remove .
+    -   **What will be achieved with this?** The application will become deployable.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** backend
+    -   **Blocked on something:** None.
 
 **Upcoming and Future Tasks**
-**Upcoming Tasks:**
--   **Task 1: Implement Trading Charts (P1):**
-    -   Integrate a charting library (e.g., TradingView Lightweight Charts) into the  component to display candlestick charts.
--   **Task 2: Add Price Alerts (P2):**
-    -   Implement a notification system (e.g., frontend toasts, email alerts) that triggers when the scanner detects a HIGH priority gem.
-
 **Future Tasks:**
--   **Task 3: Enable Concurrent Trading Modes (P2):**
-    -   Implement the UI in  to allow the user to manage and run paper trading and real-money trading sessions simultaneously.
--   **Task 4: Verify Mobile Background Execution (P3):**
-    -   Test the PWA service worker to ensure auto-trading tasks can run reliably in the background on mobile devices.
+-   **Task 1: Implement Robust API Fallbacks (P1):** Refactor the news and market data services to remove simulated data and implement reliable fallbacks with caching and rate-limit handling.
+-   **Task 2: Implement User-Guided Tutorial (P2):** Based on the user's last request, create an interactive tutorial or walkthrough to guide new users through setting up their first trade.
+-   **Task 3: Add Automated Tests (P3):** Create ============================= test session starts ==============================
+platform linux -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0
+rootdir: /app
+plugins: anyio-4.12.1
+collected 13 items
+
+backend/tests/test_notifications.py FFFFFFFFFFFFF                        [100%]
+
+=================================== FAILURES ===================================
+_________________ TestNotificationAPIs.test_get_notifications __________________
+
+self = <test_notifications.TestNotificationAPIs object at 0xfaa0ba08df50>
+
+    def test_get_notifications(self):
+        """Test GET /api/notifications/ - Get unread notifications"""
+>       response = requests.get(f"{BASE_URL}/api/notifications/")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:16: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>, url = '/api/notifications/'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/': No scheme supplied. Perhaps you meant https:///api/notifications/?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+_____________ TestNotificationAPIs.test_get_notification_settings ______________
+
+self = <test_notifications.TestNotificationAPIs object at 0xfaa0b9b57cd0>
+
+    def test_get_notification_settings(self):
+        """Test GET /api/notifications/settings - Get notification settings"""
+>       response = requests.get(f"{BASE_URL}/api/notifications/settings")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>, url = '/api/notifications/settings'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/settings': No scheme supplied. Perhaps you meant https:///api/notifications/settings?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+____________ TestNotificationAPIs.test_update_notification_settings ____________
+
+self = <test_notifications.TestNotificationAPIs object at 0xfaa0b9b6c350>
+
+    def test_update_notification_settings(self):
+        """Test POST /api/notifications/settings - Update notification settings"""
+        update_payload = {
+            "push_enabled": True,
+            "sms_enabled": True,
+            "notify_high_alerts": True,
+            "notify_medium_alerts": False
+        }
+    
+>       response = requests.post(
+            f"{BASE_URL}/api/notifications/settings",
+            json=update_payload
+        )
+
+backend/tests/test_notifications.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>, url = '/api/notifications/settings'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/settings': No scheme supplied. Perhaps you meant https:///api/notifications/settings?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+_______________ TestNotificationAPIs.test_test_push_notification _______________
+
+self = <test_notifications.TestNotificationAPIs object at 0xfaa0b9b6c9d0>
+
+    def test_test_push_notification(self):
+        """Test POST /api/notifications/test-push - Create test push notification"""
+>       response = requests.post(f"{BASE_URL}/api/notifications/test-push")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:78: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>, url = '/api/notifications/test-push'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/test-push': No scheme supplied. Perhaps you meant https:///api/notifications/test-push?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+________ TestNotificationAPIs.test_test_sms_notification_without_twilio ________
+
+self = <test_notifications.TestNotificationAPIs object at 0xfaa0b9b6d010>
+
+    def test_test_sms_notification_without_twilio(self):
+        """Test POST /api/notifications/test-sms - SMS without Twilio configured"""
+>       response = requests.post(
+            f"{BASE_URL}/api/notifications/test-sms",
+            json={"message": "Test SMS", "phone": "2104412761"}
+        )
+
+backend/tests/test_notifications.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>, url = '/api/notifications/test-sms'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/test-sms': No scheme supplied. Perhaps you meant https:///api/notifications/test-sms?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+_______________ TestNotificationAPIs.test_mark_notification_read _______________
+
+self = <test_notifications.TestNotificationAPIs object at 0xfaa0b9b6d650>
+
+    def test_mark_notification_read(self):
+        """Test POST /api/notifications/mark-read/{id} - Mark notification as read"""
+        # First create a test notification
+>       create_response = requests.post(f"{BASE_URL}/api/notifications/test-push")
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>, url = '/api/notifications/test-push'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/test-push': No scheme supplied. Perhaps you meant https:///api/notifications/test-push?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+____________ TestNotificationAPIs.test_mark_all_notifications_read _____________
+
+self = <test_notifications.TestNotificationAPIs object at 0xfaa0b9b6cd90>
+
+    def test_mark_all_notifications_read(self):
+        """Test POST /api/notifications/mark-all-read - Mark all notifications as read"""
+>       response = requests.post(f"{BASE_URL}/api/notifications/mark-all-read")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>, url = '/api/notifications/mark-all-read'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/mark-all-read': No scheme supplied. Perhaps you meant https:///api/notifications/mark-all-read?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+__________________ TestAdvancedFeaturesAPIs.test_backtest_run __________________
+
+self = <test_notifications.TestAdvancedFeaturesAPIs object at 0xfaa0b9b6de90>
+
+    def test_backtest_run(self):
+        """Test POST /api/backtest/run - Run backtest"""
+        payload = {
+            "strategy": {
+                "min_score": 50,
+                "position_size_pct": 10,
+                "stop_loss_pct": 10,
+                "take_profit_pct": 30,
+                "max_positions": 3
+            },
+            "coins": ["bitcoin", "ethereum"],
+            "days": 30,
+            "initial_capital": 10000
+        }
+    
+>       response = requests.post(f"{BASE_URL}/api/backtest/run", json=payload)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>, url = '/api/backtest/run'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/backtest/run': No scheme supplied. Perhaps you meant https:///api/backtest/run?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+______________ TestAdvancedFeaturesAPIs.test_rebalance_calculate _______________
+
+self = <test_notifications.TestAdvancedFeaturesAPIs object at 0xfaa0b9b6e1d0>
+
+    def test_rebalance_calculate(self):
+        """Test GET /api/rebalance/calculate/{user_id} - Calculate rebalance"""
+        user_id = "demo_user"
+>       response = requests.get(f"{BASE_URL}/api/rebalance/calculate/{user_id}")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:177: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>, url = '/api/rebalance/calculate/demo_user'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/rebalance/calculate/demo_user': No scheme supplied. Perhaps you meant https:///api/rebalance/calculate/demo_user?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+_______________ TestAdvancedFeaturesAPIs.test_social_leaderboard _______________
+
+self = <test_notifications.TestAdvancedFeaturesAPIs object at 0xfaa0b9b6e6d0>
+
+    def test_social_leaderboard(self):
+        """Test GET /api/social/leaderboard - Get trader leaderboard"""
+>       response = requests.get(f"{BASE_URL}/api/social/leaderboard?limit=10")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:188: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>, url = '/api/social/leaderboard?limit=10'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/social/leaderboard?limit=10': No scheme supplied. Perhaps you meant https:///api/social/leaderboard?limit=10?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+__________________________ TestCoreAPIs.test_api_root __________________________
+
+self = <test_notifications.TestCoreAPIs object at 0xfaa0b9b6ef50>
+
+    def test_api_root(self):
+        """Test GET /api/ - API root endpoint"""
+>       response = requests.get(f"{BASE_URL}/api/")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:204: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>, url = '/api/', params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/': No scheme supplied. Perhaps you meant https:///api/?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+___________________ TestCoreAPIs.test_auth_check_credentials ___________________
+
+self = <test_notifications.TestCoreAPIs object at 0xfaa0b9b6f590>
+
+    def test_auth_check_credentials(self):
+        """Test GET /api/auth/check-credentials - Check if credentials exist"""
+        # Note: This endpoint requires user_id query parameter
+>       response = requests.get(f"{BASE_URL}/api/auth/check-credentials?user_id=demo_user")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:217: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>
+url = '/api/auth/check-credentials?user_id=demo_user', params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/auth/check-credentials?user_id=demo_user': No scheme supplied. Perhaps you meant https:///api/auth/check-credentials?user_id=demo_user?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+_______________________ TestCoreAPIs.test_market_prices ________________________
+
+self = <test_notifications.TestCoreAPIs object at 0xfaa0b9b6fc10>
+
+    def test_market_prices(self):
+        """Test GET /api/market/prices - Get market prices"""
+>       response = requests.get(f"{BASE_URL}/api/market/prices?coin_ids=bitcoin,ethereum")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:228: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>
+url = '/api/market/prices?coin_ids=bitcoin,ethereum', params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/market/prices?coin_ids=bitcoin,ethereum': No scheme supplied. Perhaps you meant https:///api/market/prices?coin_ids=bitcoin,ethereum?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+=========================== short test summary info ============================
+FAILED backend/tests/test_notifications.py::TestNotificationAPIs::test_get_notifications
+FAILED backend/tests/test_notifications.py::TestNotificationAPIs::test_get_notification_settings
+FAILED backend/tests/test_notifications.py::TestNotificationAPIs::test_update_notification_settings
+FAILED backend/tests/test_notifications.py::TestNotificationAPIs::test_test_push_notification
+FAILED backend/tests/test_notifications.py::TestNotificationAPIs::test_test_sms_notification_without_twilio
+FAILED backend/tests/test_notifications.py::TestNotificationAPIs::test_mark_notification_read
+FAILED backend/tests/test_notifications.py::TestNotificationAPIs::test_mark_all_notifications_read
+FAILED backend/tests/test_notifications.py::TestAdvancedFeaturesAPIs::test_backtest_run
+FAILED backend/tests/test_notifications.py::TestAdvancedFeaturesAPIs::test_rebalance_calculate
+FAILED backend/tests/test_notifications.py::TestAdvancedFeaturesAPIs::test_social_leaderboard
+FAILED backend/tests/test_notifications.py::TestCoreAPIs::test_api_root - req...
+FAILED backend/tests/test_notifications.py::TestCoreAPIs::test_auth_check_credentials
+FAILED backend/tests/test_notifications.py::TestCoreAPIs::test_market_prices
+============================== 13 failed in 0.49s ============================== files for critical backend services (learning engine, auto-execution, notifications) to prevent regressions.
 
 **Completed work in this session**
--   **Initial Frontend Repair:** Fixed the initial black screen issue by correcting syntax errors ( to ) in  and .
--   **Enhanced AI Training:** Implemented and successfully ran multiple AI training cycles, including:
-    -   Comprehensive training with hidden gems detection.
-    -   Specialized training focused on patterns of profitable gems (10x-100x potential).
--   **Real-Time Gem Scanner:** Created a backend service () and frontend UI () to monitor markets in real-time and alert on potential hidden gems.
--   **Auto-Execution Engine:** Built a service () to automatically execute trades (in paper mode) when HIGH priority gems are detected.
--   **Self-Improving AI:** Created a service () that allows the AI to learn from trade outcomes and adjust its strategy.
--   **Advanced Features Backend:** Created backend services and routes for Backtesting, Portfolio Rebalancing, and Social Trading.
+-   Fixed critical frontend compilation error (black screen) in .
+-   Implemented a full notification system:
+    -   Push notifications for trade events.
+    -   SMS notifications (via Twilio) for high-priority alerts.
+    -   Email notifications (via Resend) with detailed analysis for high-priority alerts.
+-   Created a Setup page for the user to manage API keys for Twilio and Resend.
+-   Created a comprehensive, collapsible Guide page explaining all app features.
+-   Fixed a JSON serialization bug (/) in the backtesting service.
+-   Made the entire application mobile-responsive, including a collapsible sidebar for both mobile and desktop views.
+-   Completed all feature requests from the previous backlog, including the trading chart and analytics dashboard (though they rely on mock data).
+-   Fixed numerous frontend and backend linting errors and minor bugs.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Empty News API Response:** The news service is not fetching any articles. This was identified but not resolved.
--   **Issue 2: CoinGecko Rate Limiting:** The agent encountered a 429 rate limit error from CoinGecko and switched the scanner to use CoinMarketCap. This is a temporary fix, not a robust solution to API rate limiting.
+-   **Issue 1: Empty News API Response:** The core issue was patched with simulated data but not solved.
+-   **Issue 2: API Rate Limiting:** The issue of API timeouts from market data providers was patched with simulated data but not solved.
 
 **Known issue recurrence from previous fork**
--   The frontend showing a black screen due to compilation/runtime errors is a recurring theme, suggesting fragility in the frontend build process or component structure.
+-   External API instability (news, market data) is a persistent problem. The current solution of using simulated data is a temporary patch, not a fix.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend:** FastAPI, PyMongo, , , , .
--   **Frontend:** React, React Router, Tailwind CSS, Framer Motion.
--   **Key Pattern:** The agent has successfully implemented several features by creating a backend service, a corresponding API route file, and a dedicated React page for the UI.
+-   **Backend:** FastAPI, PyMongo, , , .
+-   **Frontend:** React, React Router, Tailwind CSS, Framer Motion, .
+-   **Key Pattern:** Using simulated data as a fallback when external APIs fail. This should be replaced with more robust error handling and caching.
 
 **key DB schema**
--   **strategies**: AI-generated trading strategies.
--   **trades**: Logs of executed trades.
--   **learning_data**: Trade outcomes for the learning engine.
--   **allocations**: User fund allocations.
--   **historical_data**: Cached market data.
--   **hidden_gems**: Collection of identified gem opportunities from training.
--   **scanner_alerts**: Real-time alerts generated by the gem scanner.
--   **signal_weights**: Weights for different trading signals, adjusted by the self-improving AI.
--   **trade_performance**: Detailed logs of trade profit/loss for AI learning.
+-   **notifications**:  - Stores user notifications (for the push notification bell).
 
 **changes in tech stack**
--   None.
+-   **Added:** , , .
+-   **Pending Removal:** .
 
 **All files of reference**
--   : **(Broken)** The primary file that needs to be fixed.
--   : Backend logic for the backtesting feature.
--   : Backend logic for rebalancing.
--   : Backend logic for social trading.
--   : Contains the frontend routing logic.
--   : Contains the navigation links.
--   : File to debug for the empty news results issue.
+-    (Needs refactoring to remove )
+-    (Needs  removed)
+-    (Contains simulated data fallback)
+-    (Contains simulated data fallback)
+-    (The new API key management page)
 
 **Areas that need refactoring**:
--   ****: This file MUST be refactored. The approach of creating one large, monolithic component for three distinct features caused a webpack compilation failure. It should be broken down into three smaller components, lazy-loaded inside a tabbed interface.
--   **API Error Handling:** The scanner was temporarily blocked by CoinGecko's rate limit. The backend services should have more robust error handling and fallback mechanisms for external API calls.
+-   **AI Services (, ):** Must be fully refactored to remove the  dependency.
+-   **External API Services (, ):** Must be refactored to replace simulated data with robust caching, rate-limit handling, and real fallback data sources.
 
 **key api endpoints**
--   : Manually trigger a market scan for hidden gems.
--   : Starts the continuous background scanner.
--   : Enable/disable the auto-execution engine.
--   : Get the status of the auto-execution engine.
--   : Run a backtest with a given strategy.
--   : Trigger portfolio rebalancing.
--   : Get the leaderboard of top traders.
+-   : Manage push notifications.
+-   : Check email integration status.
+-   : Get the status of all required/optional API keys.
+-   : Get historical data for charts (currently unreliable).
+-   : Get news articles (currently returns simulated data).
 
 **Critical Info for New Agent**
--   **IMMEDIATE BLOCKER:** You must first fix the broken  page. The issue is a webpack compilation error in . The best approach is to refactor this single large file into three smaller components (e.g., , , ) and render them within a tab container.
--   **Data Type Conversion:** The agent spent significant time debugging  boolean types not being serializable by MongoDB. Always ensure data from  or  is converted to native Python types (e.g., , , ) before storing it in the database.
--   **Backend Hot Reload:** The agent had to manually restart the backend supervisor service multiple times because hot reload didn't pick up the changes. Be prepared to restart the service (backend: stopped
-backend: started) if new code doesn't seem to be executing.
+-   **IMMEDIATE BLOCKER:** The app is **not deployable** due to the  dependency. Your first task is to finish the refactor of , remove the library from , and verify the AI features still work.
+-   **MOCKED DATA:** The News and Trading Chart features are currently using **simulated/mock data** as a temporary fix for unreliable external APIs. After fixing the deployment blocker, a high-priority task is to implement robust solutions like caching and real data fallbacks.
+-   **API KEY SETUP:** The user needs to provide a  to enable email notifications. Direct them to the  page to add this key.
 
 **documents and test reports created in this job**
--    (updated with completed features and next steps)
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  ****: User requested three new features. Status: **In Progress (Blocked)**.
-2.  ****: User requested auto-trading and a self-improving AI. Status: **Completed**.
-3.  ****: User requested a real-time scanner. Status: **Completed**.
-4.  ****: User requested to refine the training for higher potential gems. Status: **Completed**.
-5.  ****: User requested to focus training on profitable patterns. Status: **Completed**.
-6.  ****: User requested to train on a specific list of coins. Status: **Completed**.
-7.  ****: User confirmation to proceed. Status: **Completed**.
+1.   - User wants all bugs fixed. (In Progress)
+2.   - User reported deployment failure. (In Progress)
+3.   - User requested a health check. (Completed)
+4.   - User requested the Setup page. (Completed)
+5.   - User requested email notifications. (Completed)
+6.   - User requested deployment. (Completed, but found blockers)
+7.   - User requested mobile optimization. (Completed)
+8.   - User wants all pending tasks finished. (In Progress)
+9.   - User requested the Guide page. (Completed)
+10.  - User requested notifications. (Completed)
 
 **Project Health Check:**
--   **Broken:** The  frontend page is non-functional due to a compilation error.
--   **Mocked:** The news data integration is not functional as it returns no data.
+-   **Broken:** The  dependency is a hard deployment blocker.
+-   **Mocked:** News data and trading chart data are not using live APIs, relying on simulated fallbacks. This severely impacts core functionality.
 
 **3rd Party Integrations**
--   **Kraken API:** For exchange trading. (Requires User API Key - Provided)
--   **CoinGecko API:** For market data. (Public - Prone to rate limiting)
--   **CoinMarketCap API:** For market data. (Requires User API Key - Provided)
--   **CoinStats API:** For market data. (Requires User API Key - Provided)
--   **CryptoPanic API:** For news data (via CoinGecko). (Public - Not returning data)
--   **Emergent LLM Key:** Used in the backend for AI analysis.
+-   **Kraken API:** For exchange trading (Configured).
+-   **CoinGecko API:** For market data (Unreliable/Rate-limited).
+-   **CoinMarketCap API:** For market data (Configured).
+-   **CoinStats API:** For market data (Configured).
+-   **CryptoPanic API:** For news data (Not returning data).
+-   **Emergent LLM Key:** Used for AI analysis (Configured).
+-   **Twilio:** For SMS notifications (Requires User API Key).
+-   **Resend:** For email notifications (Requires User API Key).
+-   **lightweight-charts:** Frontend charting library.
+-   **scikit-learn:** AI/ML library (Deployment Blocker - **MUST BE REMOVED**).
 
 **Testing status**
--   **Testing agent used after significant changes:** NO
+-   **Testing agent used after significant changes:** YES (found and led to the fix of a backtesting bug).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** None.
--   **Known regressions:** A new frontend page () is broken, which is a regression in development velocity.
+-   **Test files created:** None
+-   **Known regressions:** None, but new features are not robust (rely on mock data).
 
 **Credentials to test flow:**
-All necessary API keys (Kraken, CoinMarketCap, CoinStats) are located in the  file. There is no user login/password functionality yet.
+Most keys are in . The user must provide keys for Resend (required for email) and Twilio (optional for SMS) via the new  page in the application.
 
 **What agent forgot to execute**
--   The agent did not fully resolve the  black screen issue. It identified the likely cause (component complexity) and attempted a simple overwrite but did not proceed to the more robust solution of refactoring the component into smaller parts.
--   The agent did not address the recurring news API issue, leaving a core feature non-functional.
--   The agent did not create any automated tests (e.g., using pytest) to prevent regressions, despite the backend's growing complexity.</analysis>
+-   The agent did not create a long-term solution for the unreliable external APIs (News, Market Data), opting for temporary mock data fallbacks instead of implementing proper caching and error handling.
+-   No new automated tests (============================= test session starts ==============================
+platform linux -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0
+rootdir: /app
+plugins: anyio-4.12.1
+collected 13 items
+
+backend/tests/test_notifications.py FFFFFFFFFFFFF                        [100%]
+
+=================================== FAILURES ===================================
+_________________ TestNotificationAPIs.test_get_notifications __________________
+
+self = <test_notifications.TestNotificationAPIs object at 0xfebc598c6ad0>
+
+    def test_get_notifications(self):
+        """Test GET /api/notifications/ - Get unread notifications"""
+>       response = requests.get(f"{BASE_URL}/api/notifications/")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:16: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>, url = '/api/notifications/'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/': No scheme supplied. Perhaps you meant https:///api/notifications/?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+_____________ TestNotificationAPIs.test_get_notification_settings ______________
+
+self = <test_notifications.TestNotificationAPIs object at 0xfebc598c77d0>
+
+    def test_get_notification_settings(self):
+        """Test GET /api/notifications/settings - Get notification settings"""
+>       response = requests.get(f"{BASE_URL}/api/notifications/settings")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>, url = '/api/notifications/settings'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/settings': No scheme supplied. Perhaps you meant https:///api/notifications/settings?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+____________ TestNotificationAPIs.test_update_notification_settings ____________
+
+self = <test_notifications.TestNotificationAPIs object at 0xfebc598c7e10>
+
+    def test_update_notification_settings(self):
+        """Test POST /api/notifications/settings - Update notification settings"""
+        update_payload = {
+            "push_enabled": True,
+            "sms_enabled": True,
+            "notify_high_alerts": True,
+            "notify_medium_alerts": False
+        }
+    
+>       response = requests.post(
+            f"{BASE_URL}/api/notifications/settings",
+            json=update_payload
+        )
+
+backend/tests/test_notifications.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>, url = '/api/notifications/settings'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/settings': No scheme supplied. Perhaps you meant https:///api/notifications/settings?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+_______________ TestNotificationAPIs.test_test_push_notification _______________
+
+self = <test_notifications.TestNotificationAPIs object at 0xfebc598d44d0>
+
+    def test_test_push_notification(self):
+        """Test POST /api/notifications/test-push - Create test push notification"""
+>       response = requests.post(f"{BASE_URL}/api/notifications/test-push")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:78: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>, url = '/api/notifications/test-push'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/test-push': No scheme supplied. Perhaps you meant https:///api/notifications/test-push?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+________ TestNotificationAPIs.test_test_sms_notification_without_twilio ________
+
+self = <test_notifications.TestNotificationAPIs object at 0xfebc598d4b10>
+
+    def test_test_sms_notification_without_twilio(self):
+        """Test POST /api/notifications/test-sms - SMS without Twilio configured"""
+>       response = requests.post(
+            f"{BASE_URL}/api/notifications/test-sms",
+            json={"message": "Test SMS", "phone": "2104412761"}
+        )
+
+backend/tests/test_notifications.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>, url = '/api/notifications/test-sms'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/test-sms': No scheme supplied. Perhaps you meant https:///api/notifications/test-sms?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+_______________ TestNotificationAPIs.test_mark_notification_read _______________
+
+self = <test_notifications.TestNotificationAPIs object at 0xfebc598d5150>
+
+    def test_mark_notification_read(self):
+        """Test POST /api/notifications/mark-read/{id} - Mark notification as read"""
+        # First create a test notification
+>       create_response = requests.post(f"{BASE_URL}/api/notifications/test-push")
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>, url = '/api/notifications/test-push'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/test-push': No scheme supplied. Perhaps you meant https:///api/notifications/test-push?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+____________ TestNotificationAPIs.test_mark_all_notifications_read _____________
+
+self = <test_notifications.TestNotificationAPIs object at 0xfebc598d5790>
+
+    def test_mark_all_notifications_read(self):
+        """Test POST /api/notifications/mark-all-read - Mark all notifications as read"""
+>       response = requests.post(f"{BASE_URL}/api/notifications/mark-all-read")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>, url = '/api/notifications/mark-all-read'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/mark-all-read': No scheme supplied. Perhaps you meant https:///api/notifications/mark-all-read?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+__________________ TestAdvancedFeaturesAPIs.test_backtest_run __________________
+
+self = <test_notifications.TestAdvancedFeaturesAPIs object at 0xfebc598d6210>
+
+    def test_backtest_run(self):
+        """Test POST /api/backtest/run - Run backtest"""
+        payload = {
+            "strategy": {
+                "min_score": 50,
+                "position_size_pct": 10,
+                "stop_loss_pct": 10,
+                "take_profit_pct": 30,
+                "max_positions": 3
+            },
+            "coins": ["bitcoin", "ethereum"],
+            "days": 30,
+            "initial_capital": 10000
+        }
+    
+>       response = requests.post(f"{BASE_URL}/api/backtest/run", json=payload)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>, url = '/api/backtest/run'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/backtest/run': No scheme supplied. Perhaps you meant https:///api/backtest/run?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+______________ TestAdvancedFeaturesAPIs.test_rebalance_calculate _______________
+
+self = <test_notifications.TestAdvancedFeaturesAPIs object at 0xfebc598d6850>
+
+    def test_rebalance_calculate(self):
+        """Test GET /api/rebalance/calculate/{user_id} - Calculate rebalance"""
+        user_id = "demo_user"
+>       response = requests.get(f"{BASE_URL}/api/rebalance/calculate/{user_id}")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:177: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>, url = '/api/rebalance/calculate/demo_user'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/rebalance/calculate/demo_user': No scheme supplied. Perhaps you meant https:///api/rebalance/calculate/demo_user?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+_______________ TestAdvancedFeaturesAPIs.test_social_leaderboard _______________
+
+self = <test_notifications.TestAdvancedFeaturesAPIs object at 0xfebc598d6e90>
+
+    def test_social_leaderboard(self):
+        """Test GET /api/social/leaderboard - Get trader leaderboard"""
+>       response = requests.get(f"{BASE_URL}/api/social/leaderboard?limit=10")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:188: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>, url = '/api/social/leaderboard?limit=10'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/social/leaderboard?limit=10': No scheme supplied. Perhaps you meant https:///api/social/leaderboard?limit=10?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+__________________________ TestCoreAPIs.test_api_root __________________________
+
+self = <test_notifications.TestCoreAPIs object at 0xfebc598d4890>
+
+    def test_api_root(self):
+        """Test GET /api/ - API root endpoint"""
+>       response = requests.get(f"{BASE_URL}/api/")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:204: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>, url = '/api/', params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/': No scheme supplied. Perhaps you meant https:///api/?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+___________________ TestCoreAPIs.test_auth_check_credentials ___________________
+
+self = <test_notifications.TestCoreAPIs object at 0xfebc598d7290>
+
+    def test_auth_check_credentials(self):
+        """Test GET /api/auth/check-credentials - Check if credentials exist"""
+        # Note: This endpoint requires user_id query parameter
+>       response = requests.get(f"{BASE_URL}/api/auth/check-credentials?user_id=demo_user")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:217: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>
+url = '/api/auth/check-credentials?user_id=demo_user', params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/auth/check-credentials?user_id=demo_user': No scheme supplied. Perhaps you meant https:///api/auth/check-credentials?user_id=demo_user?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+_______________________ TestCoreAPIs.test_market_prices ________________________
+
+self = <test_notifications.TestCoreAPIs object at 0xfebc598d7610>
+
+    def test_market_prices(self):
+        """Test GET /api/market/prices - Get market prices"""
+>       response = requests.get(f"{BASE_URL}/api/market/prices?coin_ids=bitcoin,ethereum")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_notifications.py:228: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>
+url = '/api/market/prices?coin_ids=bitcoin,ethereum', params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/market/prices?coin_ids=bitcoin,ethereum': No scheme supplied. Perhaps you meant https:///api/market/prices?coin_ids=bitcoin,ethereum?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+=========================== short test summary info ============================
+FAILED backend/tests/test_notifications.py::TestNotificationAPIs::test_get_notifications
+FAILED backend/tests/test_notifications.py::TestNotificationAPIs::test_get_notification_settings
+FAILED backend/tests/test_notifications.py::TestNotificationAPIs::test_update_notification_settings
+FAILED backend/tests/test_notifications.py::TestNotificationAPIs::test_test_push_notification
+FAILED backend/tests/test_notifications.py::TestNotificationAPIs::test_test_sms_notification_without_twilio
+FAILED backend/tests/test_notifications.py::TestNotificationAPIs::test_mark_notification_read
+FAILED backend/tests/test_notifications.py::TestNotificationAPIs::test_mark_all_notifications_read
+FAILED backend/tests/test_notifications.py::TestAdvancedFeaturesAPIs::test_backtest_run
+FAILED backend/tests/test_notifications.py::TestAdvancedFeaturesAPIs::test_rebalance_calculate
+FAILED backend/tests/test_notifications.py::TestAdvancedFeaturesAPIs::test_social_leaderboard
+FAILED backend/tests/test_notifications.py::TestCoreAPIs::test_api_root - req...
+FAILED backend/tests/test_notifications.py::TestCoreAPIs::test_auth_check_credentials
+FAILED backend/tests/test_notifications.py::TestCoreAPIs::test_market_prices
+============================== 13 failed in 0.69s ==============================) were created for the many new backend features (notifications, email, setup endpoints), increasing the risk of future regressions.</analysis>
