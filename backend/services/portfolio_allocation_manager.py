@@ -177,7 +177,7 @@ class PortfolioAllocationManager:
             available_balance['USD'] = available_balance.get('USD', 0) - usd_spent
             current_holdings[asset] = current_holdings.get(asset, 0) + crypto_acquired
             
-            print(f"📊 Bot Portfolio Update:")
+            print("📊 Bot Portfolio Update:")
             print(f"   • Spent: ${usd_spent:.2f} USD")
             print(f"   • Acquired: {crypto_acquired:.8f} {asset}")
             print(f"   • Remaining USD: ${available_balance['USD']:.2f}")
@@ -190,7 +190,7 @@ class PortfolioAllocationManager:
             current_holdings[asset] = current_holdings.get(asset, 0) - crypto_sold
             available_balance['USD'] = available_balance.get('USD', 0) + usd_gained
             
-            print(f"📊 Bot Portfolio Update:")
+            print("📊 Bot Portfolio Update:")
             print(f"   • Sold: {crypto_sold:.8f} {asset}")
             print(f"   • Gained: ${usd_gained:.2f} USD")
             print(f"   • Total USD: ${available_balance['USD']:.2f}")

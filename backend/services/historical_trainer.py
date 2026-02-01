@@ -386,7 +386,7 @@ Be concise and actionable.
                 # Calculate indicators
                 df = self.calculate_indicators(df)
                 if df.empty:
-                    print(f"  Insufficient data after indicator calculation")
+                    print("  Insufficient data after indicator calculation")
                     continue
                 
                 print(f"  Calculated {len(df)} data points with indicators")

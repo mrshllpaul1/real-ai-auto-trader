@@ -292,7 +292,7 @@ class EnhancedHistoricalTrainer:
                 
                 # Calculate indicators
                 df = self.calculate_comprehensive_indicators(df)
-                print(f"  ✓ Calculated comprehensive technical indicators")
+                print("  ✓ Calculated comprehensive technical indicators")
                 
                 # Identify trading patterns
                 patterns = self.identify_historical_patterns(df)
