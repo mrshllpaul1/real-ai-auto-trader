@@ -91,8 +91,8 @@ const Dashboard = () => {
         <p className="text-[#A1A1AA]">Real-time overview of your trading performance</p>
       </motion.div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="stats-grid">
+      {/* Stats Grid - 2x2 on mobile */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4" data-testid="stats-grid">
         {statCards.map((stat, index) => (
           <motion.div
             key={stat.title}
@@ -101,29 +101,29 @@ const Dashboard = () => {
             transition={{ delay: index * 0.1, duration: 0.3 }}
           >
             <Card className="bg-[#0A0A0A] border-[#1F1F1F] hover:border-[#3F3F46] transition-all" data-testid={`stat-card-${index}`}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-[#A1A1AA]">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
+                <CardTitle className="text-xs md:text-sm font-medium text-[#A1A1AA]">
                   {stat.title}
                 </CardTitle>
                 <div 
-                  className="p-2 rounded-lg" 
+                  className="p-1.5 md:p-2 rounded-lg" 
                   style={{ backgroundColor: `${stat.color}20` }}
                 >
-                  <stat.icon size={20} style={{ color: stat.color }} />
+                  <stat.icon size={16} className="md:w-5 md:h-5" style={{ color: stat.color }} />
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-data font-bold" style={{ color: stat.color }}>
+              <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+                <div className="text-xl md:text-3xl font-data font-bold" style={{ color: stat.color }}>
                   {stat.value}
                 </div>
                 {stat.change !== 0 && (
                   <div className="flex items-center gap-1 mt-1">
                     {stat.change >= 0 ? (
-                      <TrendingUp size={16} className="text-[#00FF94]" />
+                      <TrendingUp size={12} className="text-[#00FF94]" />
                     ) : (
-                      <TrendingDown size={16} className="text-[#FF0055]" />
+                      <TrendingDown size={12} className="text-[#FF0055]" />
                     )}
-                    <span className={`text-sm font-data ${stat.change >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                    <span className={`text-xs md:text-sm font-data ${stat.change >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
                       {stat.change >= 0 ? '+' : ''}{stat.change.toFixed(2)}%
                     </span>
                   </div>
