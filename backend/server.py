@@ -47,6 +47,7 @@ api_router.include_router(trading.router, prefix="/trading", tags=["Trading"])
 api_router.include_router(strategies.router, prefix="/strategies", tags=["Strategies"])
 api_router.include_router(market.router, prefix="/market", tags=["Market Data"])
 api_router.include_router(risk.router, prefix="/risk", tags=["Risk Management"])
+api_router.include_router(learning.router, prefix="/learning", tags=["AI Learning"])
 
 # Include the router in the main app
 app.include_router(api_router)
