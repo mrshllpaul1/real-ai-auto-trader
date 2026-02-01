@@ -39,10 +39,22 @@ const AutoTrading = () => {
   const loadConfig = async () => {
     try {
       const userId = localStorage.getItem('user_id') || 'demo_user';
-      const response = await api.get(`/auto-trading/config/${userId}`);
+      const [configRes, allocationRes, portfolioRes] = await Promise.all([
+        api.get(`/auto-trading/config/${userId}`).catch(() => ({ data: { configured: false } })),
+        api.get(`/allocation/allocation/${userId}`).catch(() => ({ data: { allocated: false } })),
+        api.get(`/allocation/portfolio/${userId}`).catch(() => ({ data: { initialized: false } }))
+      ]);
       
-      if (response.data.configured) {
-        setConfig(response.data.config);
+      if (configRes.data.configured) {
+        setConfig(configRes.data.config);
+      }
+      
+      if (allocationRes.data.allocated) {
+        setAllocation(allocationRes.data.allocations || {});
+      }
+      
+      if (portfolioRes.data.initialized !== false) {
+        setBotPortfolio(portfolioRes.data);
       }
     } catch (error) {
       console.error('Error loading config:', error);
