@@ -35,7 +35,7 @@ async def get_all_news(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/sentiment/{coin_id}")
-async async def analyze_coin_sentiment(
+async def analyze_coin_sentiment(
     coin_id: str,
     news_service = Depends(get_news_service)
 ):
