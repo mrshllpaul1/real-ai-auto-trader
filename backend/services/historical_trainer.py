@@ -3,7 +3,6 @@ import pandas as pd
 from typing import Dict, Any, List
 from datetime import datetime, timedelta
 import os
-from sklearn.preprocessing import StandardScaler
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 from dotenv import load_dotenv
 
@@ -19,7 +18,6 @@ class HistoricalTrainer:
         self.db = db
         self.model_path = '/app/backend/models/historical/'
         os.makedirs(self.model_path, exist_ok=True)
-        self.scaler = StandardScaler()
         self.llm_api_key = os.getenv('EMERGENT_LLM_KEY')
     
     async def generate_historical_data(
