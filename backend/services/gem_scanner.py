@@ -47,74 +47,76 @@ class GemScanner:
         return False
     
     async def fetch_market_data(self) -> Dict[str, Any]:
-        """Fetch current market data for all monitored coins"""
+        """Fetch current market data using CoinMarketCap API"""
         market_data = {}
         
         try:
+            # Use CoinMarketCap API
+            if not self.coinmarketcap_key:
+                print("  No CoinMarketCap API key available")
+                return market_data
+            
+            # Get all CMC IDs
+            cmc_ids = [str(self.cmc_ids[coin]) for coin in self.monitored_coins if coin in self.cmc_ids]
+            
             async with httpx.AsyncClient() as client:
-                # Fetch from CoinGecko
+                # Fetch latest quotes
                 response = await client.get(
-                    f"{self.coingecko_url}/coins/markets",
-                    params={
-                        'vs_currency': 'usd',
-                        'ids': ','.join(self.monitored_coins),
-                        'order': 'market_cap_desc',
-                        'sparkline': 'false',
-                        'price_change_percentage': '1h,24h,7d,30d'
+                    "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest",
+                    headers={
+                        'X-CMC_PRO_API_KEY': self.coinmarketcap_key,
+                        'Accept': 'application/json'
                     },
+                    params={'id': ','.join(cmc_ids)},
                     timeout=30.0
                 )
                 
                 if response.status_code == 200:
-                    coins = response.json()
-                    for coin in coins:
-                        market_data[coin['id']] = {
-                            'name': coin.get('name'),
-                            'symbol': coin.get('symbol', '').upper(),
-                            'price_usd': coin.get('current_price', 0),
-                            'market_cap': coin.get('market_cap', 0),
-                            'volume_24h': coin.get('total_volume', 0),
-                            'price_change_1h': coin.get('price_change_percentage_1h_in_currency', 0) or 0,
-                            'price_change_24h': coin.get('price_change_percentage_24h', 0) or 0,
-                            'price_change_7d': coin.get('price_change_percentage_7d_in_currency', 0) or 0,
-                            'price_change_30d': coin.get('price_change_percentage_30d_in_currency', 0) or 0,
-                            'ath': coin.get('ath', 0),
-                            'ath_change_percentage': coin.get('ath_change_percentage', 0),
-                            'market_cap_rank': coin.get('market_cap_rank', 999)
-                        }
-                
-                # Fetch additional data for RSI calculation (historical prices)
-                for coin_id in list(market_data.keys())[:10]:  # Limit to avoid rate limits
-                    try:
-                        hist_response = await client.get(
-                            f"{self.coingecko_url}/coins/{coin_id}/market_chart",
-                            params={'vs_currency': 'usd', 'days': '14'},
-                            timeout=15.0
-                        )
-                        if hist_response.status_code == 200:
-                            hist_data = hist_response.json()
-                            prices = [p[1] for p in hist_data.get('prices', [])]
-                            volumes = [v[1] for v in hist_data.get('total_volumes', [])]
-                            
-                            if len(prices) > 14:
-                                # Calculate RSI
-                                rsi = self._calculate_rsi(prices)
-                                market_data[coin_id]['rsi'] = rsi
-                                
-                                # Calculate volume ratio
-                                if volumes:
-                                    avg_volume = sum(volumes[:-1]) / len(volumes[:-1]) if len(volumes) > 1 else volumes[0]
-                                    current_volume = volumes[-1] if volumes else 0
-                                    market_data[coin_id]['volume_ratio'] = current_volume / avg_volume if avg_volume > 0 else 1
-                                
-                                # Calculate price vs recent average (proxy for SMA position)
-                                avg_price = sum(prices) / len(prices)
-                                market_data[coin_id]['price_vs_avg'] = (prices[-1] - avg_price) / avg_price if avg_price > 0 else 0
-                                
-                        await asyncio.sleep(0.5)  # Rate limit protection
-                    except Exception as e:
-                        print(f"Error fetching historical data for {coin_id}: {e}")
+                    data = response.json()
+                    coins_data = data.get('data', {})
+                    
+                    # Reverse lookup: CMC ID to coin name
+                    id_to_name = {v: k for k, v in self.cmc_ids.items()}
+                    
+                    for cmc_id, coin_info in coins_data.items():
+                        coin_id = id_to_name.get(int(cmc_id), coin_info.get('slug', ''))
+                        quote = coin_info.get('quote', {}).get('USD', {})
                         
+                        # Calculate RSI proxy from price changes
+                        change_1h = quote.get('percent_change_1h', 0) or 0
+                        change_24h = quote.get('percent_change_24h', 0) or 0
+                        change_7d = quote.get('percent_change_7d', 0) or 0
+                        change_30d = quote.get('percent_change_30d', 0) or 0
+                        
+                        # Estimate RSI from price momentum (simplified)
+                        momentum = (change_1h * 0.3 + change_24h * 0.4 + change_7d * 0.3)
+                        estimated_rsi = 50 + (momentum * 2)  # Scale to RSI range
+                        estimated_rsi = max(0, min(100, estimated_rsi))
+                        
+                        # Volume ratio estimation
+                        volume_24h = quote.get('volume_24h', 0) or 0
+                        volume_change_24h = quote.get('volume_change_24h', 0) or 0
+                        volume_ratio = 1 + (volume_change_24h / 100) if volume_change_24h else 1
+                        
+                        market_data[coin_id] = {
+                            'name': coin_info.get('name'),
+                            'symbol': coin_info.get('symbol', '').upper(),
+                            'price_usd': quote.get('price', 0),
+                            'market_cap': quote.get('market_cap', 0),
+                            'volume_24h': volume_24h,
+                            'price_change_1h': change_1h,
+                            'price_change_24h': change_24h,
+                            'price_change_7d': change_7d,
+                            'price_change_30d': change_30d,
+                            'volume_change_24h': volume_change_24h,
+                            'market_cap_rank': coin_info.get('cmc_rank', 999),
+                            'rsi': estimated_rsi,
+                            'volume_ratio': max(0.1, volume_ratio),
+                            'ath_change_percentage': -50  # Default, would need historical data
+                        }
+                else:
+                    print(f"  CoinMarketCap API error: {response.status_code}")
+                    
         except Exception as e:
             print(f"Error fetching market data: {e}")
         
