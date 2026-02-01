@@ -15,7 +15,8 @@ import {
   BookOpen,
   Menu,
   X,
-  ChevronLeft
+  ChevronLeft,
+  Key
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NotificationCenter from './NotificationCenter';
