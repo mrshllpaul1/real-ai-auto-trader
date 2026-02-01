@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from routes import auth, trading, strategies, market, risk, learning, news, training, auto_trading, allocation, scanner, auto_execute, backtest, rebalance, social
+from routes import auth, trading, strategies, market, risk, learning, news, training, auto_trading, allocation, scanner, auto_execute, backtest, rebalance, social, notifications
 
 
 ROOT_DIR = Path(__file__).parent
@@ -57,6 +57,7 @@ api_router.include_router(auto_execute.router, prefix="/auto-exec", tags=["Auto 
 api_router.include_router(backtest.router, prefix="/backtest", tags=["Backtesting"])
 api_router.include_router(rebalance.router, prefix="/rebalance", tags=["Portfolio Rebalancing"])
 api_router.include_router(social.router, prefix="/social", tags=["Social Trading"])
+api_router.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
 
 # Include the router in the main app
 app.include_router(api_router)
