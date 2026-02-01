@@ -17,188 +17,179 @@ The user wants to build a real money AI crypto auto trading app.
     -   View analytics, graphs, and candlestick charts.
     -   Manage auto-trading settings.
     -   Allocate specific funds for the AI to trade with.
+    -   Backtesting interface.
+    -   Portfolio rebalancing automation.
+    -   Social trading features.
 -   **Trading Modes:**
     -   Support both real-money and paper trading, running simultaneously.
-    -   The AI should only trade with funds explicitly allocated to it, creating its own portfolio separate from the user's main assets on Kraken.
+    -   The AI should only trade with funds explicitly allocated to it.
 -   **Platform:**
-    -   Function as a Progressive Web App (PWA) capable of running tasks in the background on mobile devices (e.g., Galaxy S22).
+    -   Function as a Progressive Web App (PWA) capable of running tasks in the background on mobile devices.
 
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack application with a React frontend and FastAPI backend has been developed. The backend includes services for trading via Kraken, aggregating market data from CoinGecko, CoinMarketCap, and CoinStats, a strategy engine, AI learning, news aggregation, historical data training, and portfolio management. API routes for these services have been set up. The frontend has pages for a dashboard, strategy selection, analytics, auto-trading, and AI learning insights. User-provided API keys for Kraken, CoinMarketCap, and CoinStats have been integrated into the backend environment. A health check confirmed that most backend APIs are responsive. However, the frontend is currently non-functional, displaying a black screen.
+A full-stack application with a React frontend and FastAPI backend. The application features a sophisticated AI training pipeline that identifies hidden gems with 10x-100x potential. A real-time market scanner detects these opportunities and can trigger trades automatically via a new auto-execution engine. The AI is designed to be self-improving, learning from trade outcomes. Backend services for Backtesting, Portfolio Rebalancing, and Social Trading have also been created. Most of the frontend is functional, except for the newly added Advanced Features page.
 
 **Last working item**:
--   **Last item agent was working:** The agent acknowledged the user's request to enhance the AI training process. The goal was to retrain the AI on all market and news data since January 2009 and add a hidden gems detection feature to find coins with 10-100x potential.
--   **Status:** NOT STARTED
+-   **Last item agent was working:** Implementing three new features requested by the user: a backtesting interface, portfolio rebalancing automation, and a social trading feature. The agent created the backend services, API routes, and a new combined frontend page ().
+-   **Status:** BLOCKED
 -   **Agent Testing Done:** N
 -   **Which testing method agent to use?** both
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   Issue 1: Frontend is not rendering and shows a black screen. (P0)
--   Issue 2: The news API endpoint is working but returns no news articles. (P1)
+-   Issue 1: The new  frontend page is rendering a black screen. (P0)
+-   Issue 2: The news API endpoint () is working but returns no news articles. (P1)
 
 **Issues Detail:**
--   **Issue 1:** Frontend is not rendering and shows a black screen.
-    -   **Attempted fixes:** The agent took a screenshot, which revealed a black screen. It then checked the frontend supervisor logs but found only deprecation warnings and no critical errors. The agent did not proceed with further debugging.
+-   **Issue 1:** The  page causes a frontend compilation error, resulting in a black screen.
+    -   **Attempted fixes:** The agent identified the issue as a webpack error, likely a stack overflow caused by a deeply nested or overly complex component structure on the  page. The agent attempted to fix this by overwriting the file with a simplified version but did not verify the fix.
     -   **Next debug checklist:**
-        1.  Restart frontend and backend services: nginx-code-proxy: stopped
-frontend: stopped
-mongodb: stopped
-backend: stopped
-backend: started
-frontend: started
-mongodb: started
-nginx-code-proxy: started
-code-server: started.
-        2.  Inspect the browser's developer console for runtime errors (e.g., JavaScript errors, failed network requests) when loading .
-        3.  Review  and  for routing or rendering errors.
-        4.  Check for missing package installations in  or incorrect import/export statements across all recently created React components and pages.
-    -   **Why fix this issue and what will be achieved with the fix?** This is a critical blocker. Fixing it will make the application's UI accessible, allowing the user to interact with the features that have been built.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** Y (The UI was visible in a previous step but is now broken, indicating a regression).
+        1.  Verify if the simplified  component compiles.
+        2.  If it still fails, inspect the component for syntax errors or structural issues.
+        3.  Refactor  by breaking it down into three smaller, separate components for Backtesting, Rebalancing, and Social Trading, and load them within tabs to avoid deep nesting.
+        4.  Check the browser's developer console for specific runtime errors.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a critical blocker preventing the user from accessing the three newly implemented features.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** Y (Frontend black screens have occurred before, though for different reasons).
     -   **Should Test frontend/backend/both after fix?** frontend
-    -   **Blocked on other issue:** None. This issue is blocking all other frontend-related work.
+    -   **Blocked on other issue:** None. This is the primary blocker.
 
 -   **Issue 2:** The news API endpoint is working but returns no news articles.
-    -   **Attempted fixes:** The agent ran a  command against the  endpoint, which returned . The agent assumed it might be a limitation of the free API tier but did not investigate further.
+    -   **Attempted fixes:** The agent previously diagnosed this as a potential rate-limiting issue on the free tier of the CryptoPanic API but did not implement a fix.
     -   **Next debug checklist:**
-        1.  Examine the implementation in  to check the logic for fetching news from CryptoPanic/CoinGecko.
-        2.  Add print statements or logging to see the raw response from the external news APIs.
-        3.  Test the external API endpoints directly with  to ensure they are providing data.
+        1.  Review .
+        2.  Implement a fallback mechanism or cycle through different news sources if one fails.
+        3.  Consider integrating another news API provider.
     -   **Why fix this issue and what will be achieved with the fix?** The AI's learning and strategy generation depends on news sentiment analysis. Without news data, a core requirement is unfulfilled.
     -   **Status:** NOT STARTED
-    -   **Is recurring issue?** N
+    -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** backend
     -   **Blocked on other issue:** None.
 
 **In progress Task List**:
--   None.
+-   **Task 1:** Complete the Advanced Features implementation (P0)
+    -   **Where to resume:** Resume by fixing the black screen on the  page. Once the UI is rendering, verify that the frontend controls correctly interact with the backend APIs for backtesting, rebalancing, and social trading.
+    -   **What will be achieved with this?** The user will have access to backtesting, portfolio rebalancing, and social trading capabilities.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** both
+    -   **Blocked on something:** Blocked by Issue 1: The new frontend page is rendering a black screen.
 
 **Upcoming and Future Tasks**
 **Upcoming Tasks:**
--   **Task 1: Implement Hidden Gems Detection (P0):**
-    -   Modify  to include logic for identifying cryptocurrencies with 10-100x growth potential based on historical data and other market indicators.
-    -   Update  to incorporate these findings into its recommendations.
-    -   **Status:** NOT STARTED
--   **Task 2: Retrain AI with Full Historical Data (P1):**
-    -   Trigger the enhanced training process (from Task 1) to process market and news data from January 2009 to the present.
-    -   Verify that  can handle this large date range and correctly integrates news sentiment.
-    -   **Status:** NOT STARTED
+-   **Task 1: Implement Trading Charts (P1):**
+    -   Integrate a charting library (e.g., TradingView Lightweight Charts) into the  component to display candlestick charts.
+-   **Task 2: Add Price Alerts (P2):**
+    -   Implement a notification system (e.g., frontend toasts, email alerts) that triggers when the scanner detects a HIGH priority gem.
 
 **Future Tasks:**
--   **Task 3: Implement Trading Charts (P2):**
-    -   Integrate a charting library (e.g., TradingView Lightweight Charts, which is a good open-source option) into the  component to display candlestick charts and other analytics.
--   **Task 4: Enable Concurrent Trading Modes (P2):**
-    -   Implement the frontend UI in  to allow the user to manage and run paper trading and real-money trading sessions simultaneously.
--   **Task 5: Verify Mobile Background Execution (P3):**
-    -   Test and debug the PWA service worker () to ensure that auto-trading tasks can run reliably in the background on a mobile device.
+-   **Task 3: Enable Concurrent Trading Modes (P2):**
+    -   Implement the UI in  to allow the user to manage and run paper trading and real-money trading sessions simultaneously.
+-   **Task 4: Verify Mobile Background Execution (P3):**
+    -   Test the PWA service worker to ensure auto-trading tasks can run reliably in the background on mobile devices.
 
 **Completed work in this session**
--   **Backend Foundation:**
-    -   Created a robust backend structure with services for all core features: , , , , , , , , , and .
-    -   All services are exposed via FastAPI routes in .
--   **API Key Integration:**
-    -   Successfully integrated user-provided API keys for Kraken, CoinMarketCap, and CoinStats into .
--   **Frontend Structure:**
-    -   Scaffolded the complete frontend page structure, including , , , , and .
--   **Portfolio Allocation:**
-    -   Implemented the backend logic () and frontend UI components () to allow the user to allocate specific funds for AI trading.
--   **PWA Configuration:**
-    -   Created  and a  to enable PWA functionality for mobile use.
--   **System Health Check:**
-    -   Performed a comprehensive health check that verified the status of all backend services, API endpoints, and database connections.
+-   **Initial Frontend Repair:** Fixed the initial black screen issue by correcting syntax errors ( to ) in  and .
+-   **Enhanced AI Training:** Implemented and successfully ran multiple AI training cycles, including:
+    -   Comprehensive training with hidden gems detection.
+    -   Specialized training focused on patterns of profitable gems (10x-100x potential).
+-   **Real-Time Gem Scanner:** Created a backend service () and frontend UI () to monitor markets in real-time and alert on potential hidden gems.
+-   **Auto-Execution Engine:** Built a service () to automatically execute trades (in paper mode) when HIGH priority gems are detected.
+-   **Self-Improving AI:** Created a service () that allows the AI to learn from trade outcomes and adjust its strategy.
+-   **Advanced Features Backend:** Created backend services and routes for Backtesting, Portfolio Rebalancing, and Social Trading.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Frontend Black Screen:** A major regression where the UI stopped rendering. Found during the final health check.
--   **Issue 2: Empty News API Response:** The news service is not fetching any articles, which is critical for the AI's learning process. Found during API testing.
+-   **Issue 1: Empty News API Response:** The news service is not fetching any articles. This was identified but not resolved.
+-   **Issue 2: CoinGecko Rate Limiting:** The agent encountered a 429 rate limit error from CoinGecko and switched the scanner to use CoinMarketCap. This is a temporary fix, not a robust solution to API rate limiting.
 
 **Known issue recurrence from previous fork**
--   None.
+-   The frontend showing a black screen due to compilation/runtime errors is a recurring theme, suggesting fragility in the frontend build process or component structure.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend:** FastAPI, PyMongo for MongoDB interaction,  for background jobs (auto-trading),  and  for data analysis and ML.
--   **Frontend:** React, React Router for navigation, Tailwind CSS for styling.
--   **Architecture:** Full-stack application with a clear separation between backend services (business logic) and routes (API layer).
--   **PWA:** Utilizes a service worker and manifest for mobile and background capabilities.
+-   **Backend:** FastAPI, PyMongo, , , , .
+-   **Frontend:** React, React Router, Tailwind CSS, Framer Motion.
+-   **Key Pattern:** The agent has successfully implemented several features by creating a backend service, a corresponding API route file, and a dedicated React page for the UI.
 
 **key DB schema**
--   **strategies**: Stores AI-generated trading strategies.
--   **trades**: Logs all executed trades for performance tracking.
--   **learning_data**: Records trade outcomes to train the learning engine.
--   **allocations**: Manages funds allocated by the user for AI trading.
--   **historical_data**: Caches historical market data for training.
+-   **strategies**: AI-generated trading strategies.
+-   **trades**: Logs of executed trades.
+-   **learning_data**: Trade outcomes for the learning engine.
+-   **allocations**: User fund allocations.
+-   **historical_data**: Cached market data.
+-   **hidden_gems**: Collection of identified gem opportunities from training.
+-   **scanner_alerts**: Real-time alerts generated by the gem scanner.
+-   **signal_weights**: Weights for different trading signals, adjusted by the self-improving AI.
+-   **trade_performance**: Detailed logs of trade profit/loss for AI learning.
 
 **changes in tech stack**
--   None. The project uses the initial stack of FastAPI, React, and MongoDB.
+-   None.
 
 **All files of reference**
--   : Entry point for the frontend, likely contains the root cause of the black screen issue.
--   : File to be modified for the hidden gems feature.
--   : File to be debugged to fix the empty news results.
--   : Contains the UI for managing auto-trading and fund allocation.
--   : Main FastAPI application file, orchestrates all backend routes.
+-   : **(Broken)** The primary file that needs to be fixed.
+-   : Backend logic for the backtesting feature.
+-   : Backend logic for rebalancing.
+-   : Backend logic for social trading.
+-   : Contains the frontend routing logic.
+-   : Contains the navigation links.
+-   : File to debug for the empty news results issue.
 
 **Areas that need refactoring**:
--   The frontend code was created through numerous small edits and file creations. The entire  directory requires a thorough review to fix the rendering issue, which is likely due to incorrect imports, component wiring, or state management issues.
+-   ****: This file MUST be refactored. The approach of creating one large, monolithic component for three distinct features caused a webpack compilation failure. It should be broken down into three smaller components, lazy-loaded inside a tabbed interface.
+-   **API Error Handling:** The scanner was temporarily blocked by CoinGecko's rate limit. The backend services should have more robust error handling and fallback mechanisms for external API calls.
 
 **key api endpoints**
--   : Health check for the backend API.
--   : Fetches aggregated global market data.
--   : Triggers the AI to generate new trading strategies.
--   : Initiates the historical data training process.
--   : Fetches latest news (currently returning no data).
--   : Starts the auto-trading background job.
--   : Manages user fund allocations for trading.
+-   : Manually trigger a market scan for hidden gems.
+-   : Starts the continuous background scanner.
+-   : Enable/disable the auto-execution engine.
+-   : Get the status of the auto-execution engine.
+-   : Run a backtest with a given strategy.
+-   : Trigger portfolio rebalancing.
+-   : Get the leaderboard of top traders.
 
 **Critical Info for New Agent**
--   **Priority #1 is fixing the frontend.** The application is unusable as it only displays a black screen. Start by investigating the browser's developer console for errors on . This is a major regression from a previously working state.
--   User-provided API keys for Kraken, CoinMarketCap, and CoinStats are securely stored in  and should not be modified.
--   The health check passed for the backend, so the issue is almost certainly within the React application's code.
+-   **IMMEDIATE BLOCKER:** You must first fix the broken  page. The issue is a webpack compilation error in . The best approach is to refactor this single large file into three smaller components (e.g., , , ) and render them within a tab container.
+-   **Data Type Conversion:** The agent spent significant time debugging  boolean types not being serializable by MongoDB. Always ensure data from  or  is converted to native Python types (e.g., , , ) before storing it in the database.
+-   **Backend Hot Reload:** The agent had to manually restart the backend supervisor service multiple times because hot reload didn't pick up the changes. Be prepared to restart the service (backend: stopped
+backend: started) if new code doesn't seem to be executing.
 
 **documents and test reports created in this job**
--   
--   
--   
+-    (updated with completed features and next steps)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  ****: New feature request. Status: **Pending**.
-2.  ****: Request to check system status. Status: **Completed**, but revealed critical frontend issue.
-3.  ****: Request for isolated portfolio. Status: **Completed**.
-4.  ****: Request for real-money trading and PWA features. Status: **Completed**.
-5.  ****: Request for news integration and historical training. Status: **Completed**, but news source is not returning data.
-6.  ****: Provided API key. Status: **Completed**.
-7.  ****: Provided API key. Status: **Completed**.
-8.  ****: Request for AI learning feature. Status: **Completed**.
-9.  ****: Provided API key. Status: **Completed**.
-10. ****: Initial preferences for the app. Status: **Completed**.
+1.  ****: User requested three new features. Status: **In Progress (Blocked)**.
+2.  ****: User requested auto-trading and a self-improving AI. Status: **Completed**.
+3.  ****: User requested a real-time scanner. Status: **Completed**.
+4.  ****: User requested to refine the training for higher potential gems. Status: **Completed**.
+5.  ****: User requested to focus training on profitable patterns. Status: **Completed**.
+6.  ****: User requested to train on a specific list of coins. Status: **Completed**.
+7.  ****: User confirmation to proceed. Status: **Completed**.
 
 **Project Health Check:**
--   **Broken:** The frontend is completely broken and shows a black screen.
--   **Mocked:** The news data integration is not functional as it returns no data. The AI training process is questionable as it reported 0 coins trained and 0 patterns found despite a TRAINED status.
+-   **Broken:** The  frontend page is non-functional due to a compilation error.
+-   **Mocked:** The news data integration is not functional as it returns no data.
 
 **3rd Party Integrations**
 -   **Kraken API:** For exchange trading. (Requires User API Key - Provided)
--   **CoinGecko API:** For market data. (Public)
+-   **CoinGecko API:** For market data. (Public - Prone to rate limiting)
 -   **CoinMarketCap API:** For market data. (Requires User API Key - Provided)
 -   **CoinStats API:** For market data. (Requires User API Key - Provided)
--   **CryptoPanic API:** For news data, used via CoinGecko. (Public)
--   **Emergent LLM Key:** Requested by the user, but its implementation is unclear as the current AI relies on traditional ML libraries.
+-   **CryptoPanic API:** For news data (via CoinGecko). (Public - Not returning data)
+-   **Emergent LLM Key:** Used in the backend for AI analysis.
 
 **Testing status**
 -   **Testing agent used after significant changes:** NO
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** None.
--   **Known regressions:** The frontend UI regressed from a working state to a non-working black screen.
+-   **Known regressions:** A new frontend page () is broken, which is a regression in development velocity.
 
 **Credentials to test flow:**
 All necessary API keys (Kraken, CoinMarketCap, CoinStats) are located in the  file. There is no user login/password functionality yet.
 
 **What agent forgot to execute**
--   The agent failed to debug the critical frontend black screen issue after discovering it. It acknowledged the problem, checked logs superficially, and then moved on to summarizing its work as if the app were functional.
--   The agent did not investigate why the news API was returning zero results, which is a blocker for the AI's news-based learning feature.
--   The agent did not implement the core visualization feature: analytics and graphs and candles. A placeholder page was created, but no charting functionality was added.</analysis>
+-   The agent did not fully resolve the  black screen issue. It identified the likely cause (component complexity) and attempted a simple overwrite but did not proceed to the more robust solution of refactoring the component into smaller parts.
+-   The agent did not address the recurring news API issue, leaving a core feature non-functional.
+-   The agent did not create any automated tests (e.g., using pytest) to prevent regressions, despite the backend's growing complexity.</analysis>
