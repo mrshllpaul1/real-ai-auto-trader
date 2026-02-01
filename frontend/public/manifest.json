@@ -1,0 +1,45 @@
+{
+  "short_name": "CryptoTrade",
+  "name": "AI Crypto Auto Trading",
+  "description": "Real money AI-powered cryptocurrency auto trading with machine learning",
+  "icons": [
+    {
+      "src": "/logo192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#00FF94",
+  "background_color": "#050505",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["finance", "trading", "cryptocurrency"],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View trading dashboard",
+      "url": "/",
+      "icons": [{ "src": "/logo192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Trading",
+      "short_name": "Trade",
+      "description": "Execute trades",
+      "url": "/trading",
+      "icons": [{ "src": "/logo192.png", "sizes": "192x192" }]
+    }
+  ]
+}
