@@ -89,5 +89,5 @@ class MarketDataService:
                         for update in data['status_updates']
                     ]
                 return []
-        except Exception as e:
+        except Exception:
             return []

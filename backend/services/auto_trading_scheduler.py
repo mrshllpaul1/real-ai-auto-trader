@@ -46,8 +46,8 @@ class AutoTradingScheduler:
         else:
             self.real_trading_enabled = False
         
-        print(f"🤖 Auto Trading Scheduler initialized")
-        print(f"💰 Portfolio Isolation: ENABLED ✓")
+        print("🤖 Auto Trading Scheduler initialized")
+        print("💰 Portfolio Isolation: ENABLED ✓")
         print(f"📊 Real Trading: {'ENABLED ✓' if self.real_trading_enabled else 'DISABLED (Configure Kraken API keys)'}")
     
     async def start(self):
@@ -114,7 +114,7 @@ class AutoTradingScheduler:
         ).sort('confidence_score', -1).limit(3).to_list(3)
         
         if not strategies:
-            print(f"  ⚠️ No active strategies found")
+            print("  ⚠️ No active strategies found")
             return
         
         print(f"  📊 Found {len(strategies)} active strategies")
@@ -147,7 +147,7 @@ class AutoTradingScheduler:
             current_price = price_data.get(coin_id, {}).get('price_usd', 0)
             
             if not current_price:
-                print(f"    ❌ Could not fetch current price")
+                print("    ❌ Could not fetch current price")
                 return
             
             # Calculate trade amount
@@ -184,7 +184,7 @@ class AutoTradingScheduler:
                 
                 if not allocation_check.get('valid'):
                     print(f"    🛡️ ALLOCATION PROTECTION: {allocation_check.get('reason')}")
-                    print(f"    ℹ️  Bot can only trade with allocated funds")
+                    print("    ℹ️  Bot can only trade with allocated funds")
                     return
                 
                 # Additional risk validation for real trades
@@ -209,7 +209,7 @@ class AutoTradingScheduler:
                     
                     if real_result.get('status') == 'executed':
                         print(f"    💰 REAL Trade: {signal} ${trade_amount} @ ${current_price:.2f}")
-                        print(f"    🛡️ Using ALLOCATED funds only (Other Kraken assets untouched)")
+                        print("    🛡️ Using ALLOCATED funds only (Other Kraken assets untouched)")
                         
                         # Record in bot portfolio
                         await self.allocation_manager.record_trade(
