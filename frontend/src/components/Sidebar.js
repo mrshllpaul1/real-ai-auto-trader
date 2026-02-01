@@ -10,7 +10,8 @@ import {
   Newspaper,
   Zap,
   Radar,
-  Bot
+  Bot,
+  FlaskConical
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -19,6 +20,7 @@ const Sidebar = () => {
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/scanner', icon: Radar, label: 'Gem Scanner', highlight: true },
     { path: '/auto-exec', icon: Bot, label: 'Auto Execute', highlight: true },
+    { path: '/advanced', icon: FlaskConical, label: 'Advanced' },
     { path: '/strategies', icon: Sparkles, label: 'AI Strategies' },
     { path: '/auto-trading', icon: Zap, label: 'Auto Trading' },
     { path: '/trading', icon: TrendingUp, label: 'Trading' },
