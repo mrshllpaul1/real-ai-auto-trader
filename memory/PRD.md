@@ -40,7 +40,20 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 ### ✅ Documentation
 - [x] **Complete Guide Page** - Comprehensive how-to for all features
 
-### ✅ Trading Charts (NEW)
+### ✅ News API (P1 - FIXED)
+- [x] **Free Crypto News API** - Primary source, no API key required
+- [x] **Real-time News** - Returns 50 actual news articles
+- [x] **Multiple Sources** - CryptoPanic, CoinMarketCap as fallbacks
+- [x] **Intelligent Fallback** - Simulated news only as last resort
+- [x] **Sentiment Analysis** - Automatic sentiment inference from titles
+
+### ✅ Market Data Service (P2 - FIXED)
+- [x] **Caching Layer** - Reduces API calls, improves performance
+- [x] **Timeout Handling** - 20s timeout with graceful degradation
+- [x] **Fallback Data** - Generated realistic data when API unavailable
+- [x] **Async Execution** - Non-blocking API calls via thread pool
+
+### ✅ Trading Charts
 - [x] **TradingView Lightweight Charts** - Professional candlestick charts
 - [x] **Multiple Chart Types** - Candlestick, Line, Area
 - [x] **Multiple Timeframes** - 1D, 7D, 30D, 90D, 1Y
