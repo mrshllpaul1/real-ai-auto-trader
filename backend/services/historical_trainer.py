@@ -602,3 +602,224 @@ Be concise and actionable.
         
         scored.sort(key=lambda x: x['similarity'], reverse=True)
         return scored[:limit]
+
+
+    async def train_profitable_gems(
+        self,
+        coins: List[str] = None,
+        min_profit_multiplier: float = 2.0,
+        start_year: int = 2009
+    ) -> Dict[str, Any]:
+        """
+        Advanced training focused ONLY on profitable hidden gems
+        Learns the exact conditions that led to successful 10-100x gains
+        """
+        if coins is None:
+            coins = ['bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot', 
+                    'avalanche', 'chainlink', 'polygon', 'uniswap', 'litecoin']
+        
+        print("=" * 60)
+        print("PROFITABLE HIDDEN GEMS TRAINING")
+        print("=" * 60)
+        print(f"Focus: Finding patterns that led to {min_profit_multiplier}x+ gains")
+        print(f"Coins: {', '.join(coins)}")
+        print("=" * 60)
+        
+        # Clear previous profitable gems data
+        await self.db.profitable_gems.delete_many({})
+        await self.db.gem_success_patterns.delete_many({})
+        
+        results = {
+            'coins_analyzed': [],
+            'total_profitable_gems': 0,
+            'avg_profit_multiplier': 0,
+            'best_entry_signals': {},
+            'optimal_conditions': {},
+            'started_at': datetime.now().isoformat()
+        }
+        
+        all_profitable_gems = []
+        signal_performance = {}
+        condition_stats = {
+            'rsi_ranges': {'0-20': [], '20-30': [], '30-40': [], '40-50': [], '50+': []},
+            'volume_ratios': {'low': [], 'medium': [], 'high': [], 'extreme': []},
+            'trend_states': {'oversold': [], 'neutral': [], 'overbought': []}
+        }
+        
+        for coin in coins:
+            try:
+                print(f"\nAnalyzing {coin.upper()} for profitable gems...")
+                
+                # Generate data
+                df = await self.generate_historical_data(coin, start_year)
+                if df.empty or len(df) < 365:
+                    continue
+                
+                df = self.calculate_indicators(df)
+                if df.empty:
+                    continue
+                
+                # Find ALL hidden gems first
+                all_gems = self.identify_hidden_gem_patterns(df)
+                
+                # Filter for PROFITABLE gems only
+                profitable = [g for g in all_gems if g['multiplier'] >= min_profit_multiplier]
+                
+                print(f"  Total gems: {len(all_gems)}, Profitable ({min_profit_multiplier}x+): {len(profitable)}")
+                
+                # Analyze what made these gems profitable
+                for gem in profitable:
+                    gem['coin_id'] = coin
+                    gem['profit_category'] = self._categorize_profit(gem['multiplier'])
+                    
+                    # Track signal performance
+                    for signal in gem.get('entry_signals', []):
+                        if signal not in signal_performance:
+                            signal_performance[signal] = {
+                                'count': 0, 
+                                'total_multiplier': 0, 
+                                'gems': [],
+                                'avg_rsi': 0,
+                                'avg_volume_ratio': 0
+                            }
+                        signal_performance[signal]['count'] += 1
+                        signal_performance[signal]['total_multiplier'] += gem['multiplier']
+                        signal_performance[signal]['gems'].append(gem)
+                    
+                    # Categorize by RSI
+                    rsi = gem.get('rsi', 50)
+                    if rsi < 20:
+                        condition_stats['rsi_ranges']['0-20'].append(gem['multiplier'])
+                    elif rsi < 30:
+                        condition_stats['rsi_ranges']['20-30'].append(gem['multiplier'])
+                    elif rsi < 40:
+                        condition_stats['rsi_ranges']['30-40'].append(gem['multiplier'])
+                    elif rsi < 50:
+                        condition_stats['rsi_ranges']['40-50'].append(gem['multiplier'])
+                    else:
+                        condition_stats['rsi_ranges']['50+'].append(gem['multiplier'])
+                    
+                    # Categorize by volume
+                    vol = gem.get('volume_ratio', 1)
+                    if vol < 1.2:
+                        condition_stats['volume_ratios']['low'].append(gem['multiplier'])
+                    elif vol < 2.0:
+                        condition_stats['volume_ratios']['medium'].append(gem['multiplier'])
+                    elif vol < 3.0:
+                        condition_stats['volume_ratios']['high'].append(gem['multiplier'])
+                    else:
+                        condition_stats['volume_ratios']['extreme'].append(gem['multiplier'])
+                    
+                    all_profitable_gems.append(gem)
+                
+                # Store profitable gems
+                if profitable:
+                    await self.db.profitable_gems.insert_many(profitable)
+                
+                results['coins_analyzed'].append({
+                    'coin': coin,
+                    'total_gems': len(all_gems),
+                    'profitable_gems': len(profitable),
+                    'profit_rate': (len(profitable) / len(all_gems) * 100) if all_gems else 0,
+                    'avg_multiplier': sum(g['multiplier'] for g in profitable) / len(profitable) if profitable else 0
+                })
+                
+                print(f"  Profit rate: {(len(profitable) / len(all_gems) * 100) if all_gems else 0:.1f}%")
+                
+            except Exception as e:
+                print(f"  Error analyzing {coin}: {str(e)}")
+        
+        # Calculate best entry signals
+        best_signals = []
+        for signal, stats in signal_performance.items():
+            if stats['count'] > 0:
+                avg_mult = stats['total_multiplier'] / stats['count']
+                avg_rsi = sum(g.get('rsi', 50) for g in stats['gems']) / len(stats['gems'])
+                avg_vol = sum(g.get('volume_ratio', 1) for g in stats['gems']) / len(stats['gems'])
+                
+                best_signals.append({
+                    'signal': signal,
+                    'occurrence_count': int(stats['count']),
+                    'avg_multiplier': float(avg_mult),
+                    'total_profit_potential': float(stats['total_multiplier']),
+                    'avg_entry_rsi': float(avg_rsi),
+                    'avg_entry_volume_ratio': float(avg_vol),
+                    'effectiveness_score': float(avg_mult * stats['count'])
+                })
+        
+        best_signals.sort(key=lambda x: x['effectiveness_score'], reverse=True)
+        
+        # Calculate optimal conditions
+        optimal_conditions = {}
+        for category, ranges in condition_stats.items():
+            optimal_conditions[category] = {}
+            for range_name, multipliers in ranges.items():
+                if multipliers:
+                    optimal_conditions[category][range_name] = {
+                        'count': len(multipliers),
+                        'avg_multiplier': float(sum(multipliers) / len(multipliers)),
+                        'max_multiplier': float(max(multipliers)),
+                        'total_profit': float(sum(multipliers))
+                    }
+        
+        # Store success patterns
+        success_patterns = {
+            'best_entry_signals': best_signals[:10],
+            'optimal_conditions': optimal_conditions,
+            'total_profitable_gems': len(all_profitable_gems),
+            'avg_profit_multiplier': float(sum(g['multiplier'] for g in all_profitable_gems) / len(all_profitable_gems)) if all_profitable_gems else 0,
+            'trained_at': datetime.now().isoformat()
+        }
+        
+        await self.db.gem_success_patterns.insert_one(success_patterns)
+        
+        results['total_profitable_gems'] = len(all_profitable_gems)
+        results['avg_profit_multiplier'] = success_patterns['avg_profit_multiplier']
+        results['best_entry_signals'] = best_signals[:5]
+        results['optimal_conditions'] = optimal_conditions
+        results['completed_at'] = datetime.now().isoformat()
+        
+        # Store results
+        await self.db.profitable_gems_training.delete_many({})
+        await self.db.profitable_gems_training.insert_one(results)
+        
+        print("\n" + "=" * 60)
+        print("PROFITABLE GEMS TRAINING COMPLETE")
+        print("=" * 60)
+        print(f"Total Profitable Gems Found: {len(all_profitable_gems)}")
+        print(f"Average Profit Multiplier: {results['avg_profit_multiplier']:.1f}x")
+        print("\nTOP 5 MOST EFFECTIVE ENTRY SIGNALS:")
+        for i, sig in enumerate(best_signals[:5], 1):
+            print(f"  {i}. {sig['signal']}: {sig['avg_multiplier']:.1f}x avg ({sig['occurrence_count']} occurrences)")
+        print("=" * 60)
+        
+        return results
+    
+    def _categorize_profit(self, multiplier: float) -> str:
+        """Categorize profit level"""
+        if multiplier >= 100:
+            return 'legendary_100x+'
+        elif multiplier >= 50:
+            return 'exceptional_50x+'
+        elif multiplier >= 10:
+            return 'hidden_gem_10x+'
+        elif multiplier >= 5:
+            return 'strong_5x+'
+        elif multiplier >= 3:
+            return 'good_3x+'
+        else:
+            return 'moderate_2x+'
+    
+    async def get_profitable_gem_signals(self) -> Dict[str, Any]:
+        """Get the learned profitable gem entry signals"""
+        patterns = await self.db.gem_success_patterns.find_one({}, {'_id': 0})
+        if not patterns:
+            return {'message': 'No profitable gem training data. Run train_profitable_gems first.'}
+        return patterns
+    
+    async def get_profitable_gems_summary(self) -> Dict[str, Any]:
+        """Get summary of profitable gems training"""
+        result = await self.db.profitable_gems_training.find_one({}, {'_id': 0})
+        if not result:
+            return {'trained': False, 'message': 'No profitable gems training completed'}
+        return {'trained': True, 'summary': result}
