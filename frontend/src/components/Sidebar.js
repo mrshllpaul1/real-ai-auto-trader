@@ -57,6 +57,7 @@ const Sidebar = () => {
     { path: '/learning', icon: Brain, label: 'AI Learning' },
     { path: '/news', icon: Newspaper, label: 'News & Intel' },
     { path: '/guide', icon: BookOpen, label: 'Guide' },
+    { path: '/setup', icon: Key, label: 'Setup', highlight: true },
     { path: '/settings', icon: Settings, label: 'Settings' },
   ];
 
