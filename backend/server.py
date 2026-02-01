@@ -58,6 +58,7 @@ api_router.include_router(backtest.router, prefix="/backtest", tags=["Backtestin
 api_router.include_router(rebalance.router, prefix="/rebalance", tags=["Portfolio Rebalancing"])
 api_router.include_router(social.router, prefix="/social", tags=["Social Trading"])
 api_router.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
+api_router.include_router(alerts.router, prefix="/alerts", tags=["Price Alerts"])
 
 # Include the router in the main app
 app.include_router(api_router)
