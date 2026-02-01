@@ -1,143 +1,174 @@
-# AI Crypto Auto Trading - Product Requirements Document
+# AI Crypto Trading Platform - Product Requirements Document
 
-## Overview
-A real-money AI crypto auto trading application that learns and develops optimal weekly trading strategies for automated trading on Kraken exchange. Features a self-improving AI that continuously learns from trades.
+## Original Problem Statement
+Build a real money AI crypto auto trading app that learns and develops optimal weekly trading strategies.
 
-## Core Features
+## Core Requirements
+- AI trained on historical crypto market and news data since January 2009
+- Continuously learning from trading performance
+- Ability to search for "hidden gems" with 10-100x potential
+- Support both real-money and paper trading simultaneously
+- PWA capable of running tasks in background on mobile
 
-### 1. AI Training & Learning System
-- **Historical Training**: AI trained on 16+ years of crypto market data (2009-present)
-- **Hidden Gems Detection**: Identifies coins with 10x-100x potential based on historical patterns
-- **Profitable Gems Training**: Specialized training focused only on patterns that led to actual profits
-- **Pattern Recognition**: Identifies trading patterns including:
-  - Oversold/Overbought Reversals
-  - Bullish/Bearish Continuations
-  - Golden Cross patterns
-  - Deep value opportunities
-  - Volume accumulation signals
-- **Continuous Learning**: Learns from trading performance to improve strategies
+## Integrations
+- **Exchange:** Kraken (real and paper trading)
+- **Market Data:** CoinStats, CoinMarketCap, CoinGecko
+- **News Data:** CryptoPanic
+- **AI:** Emergent LLM Key (GPT-5.2)
+- **SMS:** Twilio (requires user credentials)
 
-### 2. Hidden Gem Scanner
-- **Real-time Scanning**: Monitors 20+ cryptocurrencies for 10x-100x opportunities
-- **Pattern Matching**: Compares current market conditions against learned profitable patterns
-- **Alert Levels**: HIGH (60+ score), MEDIUM (40-59), LOW (20-39)
-- **Signal Detection**:
-  - MACD Bullish - Strong upward momentum
-  - Bollinger Squeeze - Breakout imminent
-  - Oversold Accumulation - RSI under 30
-  - Deep Value - 70%+ below ATH
-  - Trend Reversal - Recovering from downtrend
-  - Extreme Volume - 3x+ normal volume
-- **Auto-refresh**: Scans every 5 minutes when enabled
+---
 
-### 3. Auto-Execution Engine (NEW)
-- **Automatic Trading**: Executes trades when HIGH priority gems match risk profile
-- **Risk Profile Configuration**:
-  - Minimum score threshold (default: 60)
-  - Maximum position size (USD)
-  - Maximum daily trades
-  - Maximum open positions
-  - Stop loss percentage
-  - Take profit percentage
-  - Allowed/blacklisted coins
-- **Dual Mode**: Paper trading (simulation) or Live trading (real money)
-- **Position Management**: Automatic stop-loss and take-profit execution
+## What's Been Implemented
 
-### 4. Self-Improving AI (NEW)
-- **Signal Weight Learning**: Adjusts signal effectiveness weights based on trade outcomes
-- **Performance Tracking**: Win rate, total profit, avg profit per trade
-- **Automatic Optimization**: Boosts winning signals, reduces losing signals
-- **AI Insights**: GPT-5.2 powered strategy analysis and recommendations
-- **Continuous Learning Loop**: Background process that optimizes every hour
+### Completed Features (as of Feb 1, 2026)
 
-### 5. Market Intelligence
-- **Multi-Source Data**: CoinGecko, CoinMarketCap, CoinStats integration
-- **News Aggregation**: CryptoPanic API integration for crypto news
-- **Sentiment Analysis**: AI-powered news sentiment analysis using GPT-5.2
-- **Real-time Prices**: Live cryptocurrency price tracking
+#### Core AI & Trading
+- [x] AI training pipeline with hidden gems detection (10x-100x potential)
+- [x] Real-time market scanner for opportunity detection
+- [x] Auto-execution engine for paper trading
+- [x] Self-improving AI that learns from trade outcomes
+- [x] Signal weight optimization based on performance
 
-### 6. User Interface
-- **Dashboard**: Real-time portfolio overview and performance metrics
-- **Gem Scanner**: Real-time hidden gem alerts with signal breakdowns
-- **Auto Execution**: Control panel for auto-trading with risk profile settings
-- **AI Learning Tab**: View learned signal weights and performance analytics
-- **Positions Tab**: Monitor open and closed positions
-- **Risk Profile Tab**: Configure all trading parameters
+#### Advanced Features
+- [x] **Backtesting Interface** - Test strategies against historical data
+- [x] **Portfolio Rebalancing** - Automated rebalancing to target allocations
+- [x] **Social Trading** - Leaderboard of top traders
 
-## Technical Stack
-- **Frontend**: React, Tailwind CSS, Shadcn/UI, Framer Motion
-- **Backend**: FastAPI, Python
-- **Database**: MongoDB
-- **AI**: OpenAI GPT-5.2 via Emergent LLM Key
-- **Exchange**: Kraken API
-- **Market Data**: CoinMarketCap API (primary)
+#### Notification System
+- [x] **Push Notifications** - In-app notifications for completed trades
+- [x] **Notification Center** - Bell icon in sidebar with dropdown
+- [x] **SMS Integration (Twilio)** - Framework ready, requires user credentials
+- [x] **Settings UI** - Configure notification preferences
+
+#### Infrastructure
+- [x] FastAPI backend with MongoDB
+- [x] React frontend with Tailwind CSS
+- [x] PWA service worker for background execution
+- [x] Kraken API integration
+
+---
+
+## Current Architecture
+
+```
+/app/
+├── backend/
+│   ├── routes/
+│   │   ├── auth.py, trading.py, strategies.py
+│   │   ├── scanner.py - Gem scanner endpoints
+│   │   ├── auto_execute.py - Auto execution endpoints
+│   │   ├── backtest.py - Backtesting endpoints
+│   │   ├── rebalance.py - Rebalancing endpoints
+│   │   ├── social.py - Social trading endpoints
+│   │   └── notifications.py - Push/SMS notifications
+│   └── services/
+│       ├── gem_scanner.py - Real-time market scanner
+│       ├── auto_execution.py - Trade execution engine
+│       ├── backtesting.py - Strategy backtesting
+│       ├── portfolio_rebalancer.py - Portfolio management
+│       ├── social_trading.py - Leaderboard & following
+│       ├── notification_service.py - Push & SMS service
+│       └── self_improving_ai.py - Learning engine
+└── frontend/
+    ├── src/
+    │   ├── components/
+    │   │   ├── Sidebar.js - Main navigation
+    │   │   ├── NotificationCenter.js - Bell & dropdown
+    │   │   └── ui/ - Shadcn components
+    │   └── pages/
+    │       ├── Dashboard.js - Main dashboard
+    │       ├── GemScanner.js - Hidden gem alerts
+    │       ├── AutoExecution.js - Auto trading control
+    │       ├── AdvancedFeatures.js - Backtest/Rebalance/Social
+    │       └── Settings.js - API & Notification settings
+    └── public/service-worker.js - PWA support
+```
+
+---
 
 ## API Endpoints
 
-### Auto Execution (NEW)
-- `POST /api/auto-exec/start` - Start auto-execution engine
-- `POST /api/auto-exec/stop` - Stop auto-execution
-- `GET /api/auto-exec/status` - Get execution status and stats
-- `POST /api/auto-exec/execute-now` - Immediate scan and execute
-- `POST /api/auto-exec/enable` - Enable auto-execution
-- `POST /api/auto-exec/disable` - Disable auto-execution
-- `GET /api/auto-exec/risk-profile` - Get risk profile
-- `POST /api/auto-exec/risk-profile` - Update risk profile
-- `GET /api/auto-exec/positions` - Get all positions
-- `GET /api/auto-exec/positions/open` - Get open positions
-- `POST /api/auto-exec/positions/close` - Manually close position
+### Notifications
+- `GET /api/notifications/` - Get unread notifications
+- `POST /api/notifications/test-push` - Test push notification
+- `POST /api/notifications/test-sms` - Test SMS (requires Twilio)
+- `GET/POST /api/notifications/settings` - Notification preferences
 
-### AI Learning (NEW)
-- `GET /api/auto-exec/ai/status` - Get AI learning status
-- `GET /api/auto-exec/ai/weights` - Get learned signal weights
-- `GET /api/auto-exec/ai/performance` - Get performance analytics
-- `POST /api/auto-exec/ai/optimize` - Trigger manual optimization
-- `GET /api/auto-exec/ai/insights` - Get AI-generated insights
-- `POST /api/auto-exec/ai/start-learning` - Start continuous learning
-- `POST /api/auto-exec/ai/stop-learning` - Stop learning
+### Backtesting
+- `POST /api/backtest/run` - Run backtest with strategy
 
-### Scanner
-- `POST /api/scanner/scan-now` - Perform immediate market scan
-- `GET /api/scanner/alerts` - Get current alerts
-- `POST /api/scanner/start` - Start continuous scanning
+### Rebalancing  
+- `GET /api/rebalance/calculate/{user_id}` - Get trades needed
+- `POST /api/rebalance/execute/{user_id}` - Execute rebalance
 
-### Training
-- `POST /api/training/train` - Start AI training
-- `POST /api/training/train-profitable-gems` - Train on profitable 10x+ gems
-- `GET /api/training/status` - Get training status
-
-## Current Status
-
-### Completed Features ✅
-1. **Auto-Execution Engine**: Automatic trade execution on HIGH priority gems
-2. **Self-Improving AI**: Signal weight learning from trade outcomes
-3. **Risk Profile System**: Configurable trading parameters
-4. **Position Management**: Stop-loss and take-profit automation
-5. **Hidden Gem Scanner**: Real-time market scanner with pattern matching
-6. **AI Training**: Full training on 10 coins with hidden gems detection
-7. **Beautiful UI**: All pages rendering with professional design
-
-### Training Results
-- **Coins Trained**: 10 major cryptocurrencies
-- **10x+ Gems Found**: 12,724
-- **Pattern Success Rate**: 92.8%
-
-## Next Steps / Backlog
-
-### Priority 1 (P1)
-- Add push notifications for trade executions
-- Implement TradingView candlestick charts
-- Add email alerts for HIGH priority gems
-
-### Priority 2 (P2)
-- Backtesting interface for strategies
-- More detailed trade analytics
-- Portfolio rebalancing automation
-
-### Priority 3 (P3)
-- Mobile app optimization
-- Social trading features
-- Advanced charting with indicators
+### Social
+- `GET /api/social/leaderboard` - Top traders
 
 ---
-*Last Updated: February 2026*
+
+## Prioritized Backlog
+
+### P0 - Critical (User Requested)
+- [x] Fix Advanced Features black screen ✅
+- [x] Push notifications for completed trades ✅
+- [x] SMS notifications for high priority trades ✅
+
+### P1 - High Priority
+- [ ] Trading charts with TradingView Lightweight Charts
+- [ ] Price alerts when scanner detects HIGH gems
+- [ ] Fix news API returning empty results
+
+### P2 - Medium Priority
+- [ ] Concurrent paper + real-money trading modes
+- [ ] Mobile background execution verification
+- [ ] Improved API rate limiting handling
+
+### P3 - Future Enhancements
+- [ ] Portfolio performance analytics
+- [ ] Custom strategy builder
+- [ ] Trading journal with AI insights
+
+---
+
+## Known Issues
+
+1. **SMS Requires Credentials** - User must configure Twilio credentials in `.env`:
+   - `TWILIO_ACCOUNT_SID`
+   - `TWILIO_AUTH_TOKEN`
+   - `TWILIO_PHONE_NUMBER`
+
+2. **News API Empty** - CryptoPanic free tier may be rate limited
+
+3. **CoinGecko Rate Limiting** - Using CoinMarketCap as primary data source
+
+---
+
+## Environment Variables
+
+### Backend (.env)
+```
+MONGO_URL=mongodb://localhost:27017
+DB_NAME=crypto_trading_db
+EMERGENT_LLM_KEY=sk-emergent-xxx
+KRAKEN_API_KEY=xxx
+KRAKEN_API_SECRET=xxx
+COINMARKETCAP_API_KEY=xxx
+COINSTATS_API_KEY=xxx
+USER_PHONE_NUMBER=2104412761
+TWILIO_ACCOUNT_SID=       # User must provide
+TWILIO_AUTH_TOKEN=        # User must provide
+TWILIO_PHONE_NUMBER=      # User must provide
+```
+
+### Frontend (.env)
+```
+REACT_APP_BACKEND_URL=https://smartcrypto-34.preview.emergentagent.com
+```
+
+---
+
+## Testing Status
+- Backend: 92% pass rate
+- Frontend: 100% pass rate
+- Test reports: `/app/test_reports/iteration_1.json`
