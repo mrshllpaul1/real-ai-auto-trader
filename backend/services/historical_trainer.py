@@ -206,8 +206,8 @@ class HistoricalTrainer:
                         'volume_ratio': float(row['volume_ratio']),
                         'bb_width': float(row['bb_width']),
                         'volatility': float(row['volatility']),
-                        'is_10x': is_hidden_gem,
-                        'is_3x': is_moderate_gem
+                        'is_10x': bool(is_hidden_gem),
+                        'is_3x': bool(is_moderate_gem)
                     })
         
         return hidden_gems
