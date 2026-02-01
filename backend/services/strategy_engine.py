@@ -137,15 +137,33 @@ class StrategyEngine:
         coin_id: str,
         technical_analysis: Dict[str, Any],
         market_data: Dict[str, Any],
-        news_sentiment: str = ""
+        news_sentiment: str = "",
+        learning_data: Dict[str, Any] = None
     ) -> Dict[str, Any]:
-        """Generate AI-powered strategy recommendation using LLM"""
+        """Generate AI-powered strategy recommendation using LLM with learning integration"""
         try:
             chat = LlmChat(
                 api_key=self.llm_api_key,
                 session_id=f"strategy_{coin_id}_{datetime.now().timestamp()}",
-                system_message="You are an expert cryptocurrency trading analyst. Provide concise, actionable trading strategies based on technical analysis and market conditions."
+                system_message="You are an expert cryptocurrency trading analyst with machine learning capabilities. You learn from past predictions and continuously improve. Provide concise, actionable trading strategies based on technical analysis, market conditions, and historical performance data."
             ).with_model("openai", "gpt-5.2")
+            
+            # Include learning insights in the prompt
+            learning_context = ""
+            if learning_data and learning_data.get('has_learning_data'):
+                metrics = learning_data.get('overall_metrics', {})
+                recent = learning_data.get('recent_performance', {})
+                learning_context = f"""
+
+LEARNING INSIGHTS (AI has learned from {metrics.get('total_predictions', 0)} past predictions):
+- Historical Accuracy: {metrics.get('accuracy', 0):.1f}%
+- Learned Confidence Adjustment: {metrics.get('learned_confidence', 0):.1f}%
+- Recent Performance Trend: {recent.get('trend', 'unknown')}
+- Learning Status: {learning_data.get('learning_status', 'initializing')}
+- Recent Accuracy: {recent.get('accuracy', 0):.1f}%
+
+The AI has been learning and improving. Use this historical performance data to refine your recommendation.
+"""
             
             prompt = f"""
 Analyze the following data for {coin_id.upper()} and provide a trading strategy recommendation:
@@ -162,7 +180,7 @@ Market Data:
 - 24h Change: {market_data.get('price_change_24h', 'N/A')}%
 - 24h Volume: ${market_data.get('volume_24h', 'N/A')}
 - Market Cap: ${market_data.get('market_cap', 'N/A')}
-
+{learning_context}
 Provide:
 1. Recommended Action (BUY/SELL/HOLD)
 2. Entry Price Range
@@ -171,6 +189,7 @@ Provide:
 5. Risk Assessment (Low/Medium/High)
 6. Key Factors (3-5 bullet points explaining your recommendation)
 7. Time Horizon (Short/Medium/Long term)
+8. Learning-Adjusted Confidence (considering historical accuracy)
 
 Keep response concise and structured.
 """
@@ -178,12 +197,20 @@ Keep response concise and structured.
             user_message = UserMessage(text=prompt)
             response = await chat.send_message(user_message)
             
+            # Adjust confidence based on learning
+            final_confidence = technical_analysis.get('confidence')
+            if learning_data and learning_data.get('has_learning_data'):
+                learned_conf = learning_data.get('overall_metrics', {}).get('learned_confidence', final_confidence)
+                final_confidence = (final_confidence * 0.5) + (learned_conf * 0.5)  # Blend original and learned
+            
             return {
                 "strategy_id": f"strat_{coin_id}_{int(datetime.now().timestamp())}",
                 "coin_id": coin_id,
                 "ai_recommendation": response,
                 "technical_signal": technical_analysis.get('signal'),
-                "confidence_score": technical_analysis.get('confidence'),
+                "confidence_score": final_confidence,
+                "learning_enhanced": learning_data is not None and learning_data.get('has_learning_data', False),
+                "learning_data": learning_data,
                 "created_at": datetime.now().isoformat(),
                 "status": "active"
             }
