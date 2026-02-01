@@ -8,6 +8,7 @@ import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import AILearning from "./pages/AILearning";
 import NewsAndIntelligence from "./pages/NewsAndIntelligence";
+import AutoTrading from "./pages/AutoTrading";
 import Sidebar from "./components/Sidebar";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "framer-motion";
@@ -20,9 +21,16 @@ function App() {
     let uid = localStorage.getItem('user_id');
     if (!uid) {
       uid = 'demo_user_' + Math.random().toString(36).substr(2, 9);
-      localStorage.setItem('user_id', uid);
+      localStorage.getItem('user_id', uid);
     }
     setUserId(uid);
+
+    // Register service worker for background execution
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(() => console.log('Service Worker registered'))
+        .catch((err) => console.error('Service Worker registration failed:', err));
+    }
   }, []);
 
   return (
@@ -43,6 +51,7 @@ function App() {
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/learning" element={<AILearning />} />
               <Route path="/news" element={<NewsAndIntelligence />} />
+              <Route path="/auto-trading" element={<AutoTrading />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
