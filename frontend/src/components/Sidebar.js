@@ -8,13 +8,15 @@ import {
   Sparkles,
   Brain,
   Newspaper,
-  Zap
+  Zap,
+  Radar
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Sidebar = () => {
   const navItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/scanner', icon: Radar, label: 'Gem Scanner', highlight: true },
     { path: '/strategies', icon: Sparkles, label: 'AI Strategies' },
     { path: '/auto-trading', icon: Zap, label: 'Auto Trading' },
     { path: '/trading', icon: TrendingUp, label: 'Trading' },
@@ -54,7 +56,9 @@ const Sidebar = () => {
                   `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                     isActive
                       ? 'bg-[#00FF94]/10 text-[#00FF94] border border-[#00FF94]/30'
-                      : 'text-[#A1A1AA] hover:text-white hover:bg-white/5'
+                      : item.highlight 
+                        ? 'text-[#FF0055] hover:text-[#FF0055] hover:bg-[#FF0055]/10 border border-[#FF0055]/30'
+                        : 'text-[#A1A1AA] hover:text-white hover:bg-white/5'
                   }`
                 }
               >
