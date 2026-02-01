@@ -7,6 +7,7 @@ router = APIRouter()
 # Global instances
 _auto_executor = None
 _ai_engine = None
+_notification_service = None
 
 class RiskProfileUpdate(BaseModel):
     enabled: Optional[bool] = None
