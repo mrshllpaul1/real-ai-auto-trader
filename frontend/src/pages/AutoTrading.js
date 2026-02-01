@@ -19,6 +19,13 @@ const AutoTrading = () => {
     min_confidence: 70,
     max_daily_trades: 10
   });
+  const [allocation, setAllocation] = useState({
+    USD: 0,
+    BTC: 0,
+    ETH: 0,
+    SOL: 0
+  });
+  const [botPortfolio, setBotPortfolio] = useState(null);
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
 
