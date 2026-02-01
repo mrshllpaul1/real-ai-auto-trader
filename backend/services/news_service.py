@@ -176,13 +176,18 @@ class CryptoNewsAggregator:
         currencies: List[str] = None,
         limit_per_source: int = 25
     ) -> List[Dict[str, Any]]:
-        """Get aggregated news from all sources"""
+        """Get aggregated news from all sources with fallbacks"""
         # Fetch from all sources in parallel
         cryptopanic_news = await self.get_cryptopanic_news(currencies, limit_per_source)
         coingecko_news = await self.get_coingecko_news(limit_per_source)
+        cmc_news = await self.get_coinmarketcap_news(limit_per_source)
         
-        # Combine and sort by date
-        all_news = cryptopanic_news + coingecko_news
+        # Combine all sources
+        all_news = cryptopanic_news + coingecko_news + cmc_news
+        
+        # If no real news found, use simulated fallback
+        if len(all_news) == 0:
+            all_news = await self._get_simulated_news(limit_per_source)
         
         # Sort by published date (most recent first)
         all_news.sort(
@@ -190,7 +195,7 @@ class CryptoNewsAggregator:
             reverse=True
         )
         
-        return all_news[:50]  # Return top 50 most recent
+        return all_news[:50]
     
     async def analyze_news_sentiment(
         self,
