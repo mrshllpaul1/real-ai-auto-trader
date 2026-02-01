@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from routes import auth, trading, strategies, market, risk, learning, news, training, auto_trading, allocation
+from routes import auth, trading, strategies, market, risk, learning, news, training, auto_trading, allocation, scanner
 
 
 ROOT_DIR = Path(__file__).parent
@@ -52,6 +52,7 @@ api_router.include_router(news.router, prefix="/news", tags=["Crypto News"])
 api_router.include_router(training.router, prefix="/training", tags=["Historical Training"])
 api_router.include_router(auto_trading.router, prefix="/auto-trading", tags=["Auto Trading"])
 api_router.include_router(allocation.router, prefix="/allocation", tags=["Portfolio Allocation"])
+api_router.include_router(scanner.router, prefix="/scanner", tags=["Hidden Gem Scanner"])
 
 # Include the router in the main app
 app.include_router(api_router)
