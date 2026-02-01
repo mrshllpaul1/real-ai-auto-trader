@@ -203,6 +203,10 @@ class AutoExecutionEngine:
         # Record for AI learning
         await self.ai_engine.record_trade(position)
         
+        # Send push notification for trade opened
+        if self.notification_service:
+            await self.notification_service.notify_trade_completed(position)
+        
         print(f"🚀 AUTO-EXECUTED: {trade_mode.upper()} BUY {position['symbol']}")
         print(f"   Price: ${price:.4f} | Size: ${position_size:.2f}")
         print(f"   Stop Loss: ${stop_loss_price:.4f} | Take Profit: ${take_profit_price:.4f}")
