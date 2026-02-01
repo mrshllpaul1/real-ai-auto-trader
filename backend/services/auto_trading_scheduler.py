@@ -128,7 +128,7 @@ class AutoTradingScheduler:
         strategy: Dict[str, Any],
         config: Dict[str, Any]
     ):
-        """Execute a single strategy in both paper and real modes"""
+        """Execute a single strategy in both paper and real modes with allocation protection"""
         coin_id = strategy['coin_id']
         signal = strategy['technical_signal']
         confidence = strategy['confidence_score']
@@ -170,8 +170,23 @@ class AutoTradingScheduler:
                 else:
                     print(f"    ❌ Paper Trade Failed: {paper_result.get('error', 'Unknown')}")
             
-            # Execute REAL trade
+            # Execute REAL trade with ALLOCATION PROTECTION
             if config.get('real_trading_enabled', False) and self.real_trading_enabled:
+                # CRITICAL: Validate against allocated funds
+                asset_symbol = coin_id.upper()[:3]  # BTC, ETH, SOL
+                
+                allocation_check = await self.allocation_manager.validate_trade_allocation(
+                    user_id,
+                    asset_symbol if signal == 'SELL' else 'USD',
+                    trade_amount,
+                    signal.lower()
+                )
+                
+                if not allocation_check.get('valid'):
+                    print(f"    🛡️ ALLOCATION PROTECTION: {allocation_check.get('reason')}")
+                    print(f"    ℹ️  Bot can only trade with allocated funds")
+                    return
+                
                 # Additional risk validation for real trades
                 risk_check = await self.risk_manager.validate_trade(
                     user_id,
@@ -194,6 +209,19 @@ class AutoTradingScheduler:
                     
                     if real_result.get('status') == 'executed':
                         print(f"    💰 REAL Trade: {signal} ${trade_amount} @ ${current_price:.2f}")
+                        print(f"    🛡️ Using ALLOCATED funds only (Other Kraken assets untouched)")
+                        
+                        # Record in bot portfolio
+                        await self.allocation_manager.record_trade(
+                            user_id,
+                            {
+                                'asset': asset_symbol,
+                                'action': signal,
+                                'amount': trade_amount,
+                                'price': current_price,
+                                'trade_id': real_result.get('trade_id')
+                            }
+                        )
                         
                         # Record for learning
                         await self.learning_engine.record_strategy_outcome(
