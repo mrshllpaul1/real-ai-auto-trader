@@ -19,7 +19,11 @@ async def get_database():
     from server import db
     return db
 
-ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY", Fernet.generate_key()).encode()
+encryption_key = os.getenv("ENCRYPTION_KEY")
+if not encryption_key:
+    encryption_key = Fernet.generate_key().decode()
+    
+ENCRYPTION_KEY = encryption_key.encode() if isinstance(encryption_key, str) else encryption_key
 cipher = Fernet(ENCRYPTION_KEY)
 
 @router.post("/store-credentials")
