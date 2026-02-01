@@ -134,6 +134,9 @@ const Dashboard = () => {
         ))}
       </div>
 
+      {/* Market Overview */}
+      <MarketOverview />
+
       {/* Bento Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Active Strategies */}
