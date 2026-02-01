@@ -144,9 +144,10 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
    - `TWILIO_AUTH_TOKEN`
    - `TWILIO_PHONE_NUMBER`
 
-2. **Market API Rate Limits** - External APIs may timeout; fallback data is shown
+2. **Email Requires Resend API Key** - Add via /setup page:
+   - `RESEND_API_KEY`
 
-3. **News Uses Simulated Data** - When CryptoPanic/CoinGecko fail, simulated news is displayed
+3. **CoinGecko Rate Limits** - Free tier has rate limits; caching and fallback mitigate this
 
 ---
 
