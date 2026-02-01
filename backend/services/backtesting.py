@@ -275,27 +275,40 @@ class BacktestingEngine:
         if len(daily_values) > 1:
             returns = [(daily_values[i]['value'] - daily_values[i-1]['value']) / daily_values[i-1]['value'] 
                       for i in range(1, len(daily_values))]
-            sharpe = (np.mean(returns) / np.std(returns)) * np.sqrt(365) if np.std(returns) > 0 else 0
+            sharpe_val = (np.mean(returns) / np.std(returns)) * np.sqrt(365) if np.std(returns) > 0 else 0
+            sharpe = float(sharpe_val) if not (np.isnan(sharpe_val) or np.isinf(sharpe_val)) else 0
         else:
             sharpe = 0
+        
+        # Calculate profit factor (handle edge cases)
+        profit_factor_val = abs(avg_win / avg_loss) if avg_loss != 0 else 0
+        profit_factor = float(profit_factor_val) if not (np.isnan(profit_factor_val) or np.isinf(profit_factor_val)) else 0
+        
+        # Sanitize float values for JSON serialization
+        def safe_float(val):
+            if isinstance(val, (np.floating, np.integer)):
+                val = float(val)
+            if isinstance(val, float) and (np.isnan(val) or np.isinf(val)):
+                return 0.0
+            return val
         
         result = {
             'backtest_id': backtest_id,
             'strategy': strategy,
             'coins': coins,
             'period_days': days,
-            'initial_capital': initial_capital,
-            'final_value': final_value,
-            'total_return_pct': total_return,
-            'total_trades': total_trades,
+            'initial_capital': safe_float(initial_capital),
+            'final_value': safe_float(final_value),
+            'total_return_pct': safe_float(total_return),
+            'total_trades': int(total_trades),
             'winning_trades': len(winning_trades),
             'losing_trades': len(losing_trades),
-            'win_rate': win_rate,
-            'avg_win_pct': avg_win,
-            'avg_loss_pct': avg_loss,
-            'profit_factor': abs(avg_win / avg_loss) if avg_loss != 0 else float('inf'),
-            'max_drawdown_pct': max_drawdown,
-            'sharpe_ratio': sharpe,
+            'win_rate': safe_float(win_rate),
+            'avg_win_pct': safe_float(avg_win),
+            'avg_loss_pct': safe_float(avg_loss),
+            'profit_factor': safe_float(profit_factor),
+            'max_drawdown_pct': safe_float(max_drawdown),
+            'sharpe_ratio': safe_float(sharpe),
             'trades': closed_trades[-20:],  # Last 20 trades
             'daily_values': daily_values[::7],  # Weekly snapshots
             'created_at': datetime.now().isoformat()
