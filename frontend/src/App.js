@@ -21,7 +21,7 @@ function App() {
     let uid = localStorage.getItem('user_id');
     if (!uid) {
       uid = 'demo_user_' + Math.random().toString(36).substr(2, 9);
-      localStorage.getItem('user_id', uid);
+      localStorage.setItem('user_id', uid);
     }
     setUserId(uid);
 
