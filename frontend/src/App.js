@@ -13,6 +13,7 @@ import GemScanner from "./pages/GemScanner";
 import AutoExecution from "./pages/AutoExecution";
 import AdvancedFeatures from "./pages/AdvancedFeatures";
 import Guide from "./pages/Guide";
+import Setup from "./pages/Setup";
 import Sidebar from "./components/Sidebar";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "framer-motion";
