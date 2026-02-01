@@ -302,16 +302,24 @@ class CryptoNewsAggregator:
         limit_per_source: int = 25
     ) -> List[Dict[str, Any]]:
         """Get aggregated news from all sources with fallbacks"""
-        # Fetch from all sources in parallel
-        cryptopanic_news = await self.get_cryptopanic_news(currencies, limit_per_source)
-        coingecko_news = await self.get_coingecko_news(limit_per_source)
-        cmc_news = await self.get_coinmarketcap_news(limit_per_source)
+        # Primary source: Free Crypto News API (most reliable, no API key needed)
+        free_news = await self.get_free_crypto_news(currencies, limit_per_source)
+        
+        # Secondary sources as fallback
+        cryptopanic_news = []
+        cmc_news = []
+        
+        # Only fetch from secondary sources if primary returned few results
+        if len(free_news) < 10:
+            cryptopanic_news = await self.get_cryptopanic_news(currencies, limit_per_source)
+            cmc_news = await self.get_coinmarketcap_news(limit_per_source)
         
         # Combine all sources
-        all_news = cryptopanic_news + coingecko_news + cmc_news
+        all_news = free_news + cryptopanic_news + cmc_news
         
-        # If no real news found, use simulated fallback
+        # If no real news found, use simulated fallback (last resort)
         if len(all_news) == 0:
+            print("Warning: All news APIs failed, using simulated fallback")
             all_news = await self._get_simulated_news(limit_per_source)
         
         # Sort by published date (most recent first)
