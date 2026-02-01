@@ -137,15 +137,16 @@ class StrategyEngine:
         coin_id: str,
         technical_analysis: Dict[str, Any],
         market_data: Dict[str, Any],
-        news_sentiment: str = "",
-        learning_data: Dict[str, Any] = None
+        news_sentiment: Dict[str, Any] = None,
+        learning_data: Dict[str, Any] = None,
+        historical_patterns: List[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
-        """Generate AI-powered strategy recommendation using LLM with learning integration"""
+        """Generate AI-powered strategy recommendation using LLM with news and learning integration"""
         try:
             chat = LlmChat(
                 api_key=self.llm_api_key,
                 session_id=f"strategy_{coin_id}_{datetime.now().timestamp()}",
-                system_message="You are an expert cryptocurrency trading analyst with machine learning capabilities. You learn from past predictions and continuously improve. Provide concise, actionable trading strategies based on technical analysis, market conditions, and historical performance data."
+                system_message="You are an expert cryptocurrency trading analyst with machine learning capabilities and access to comprehensive market intelligence. You learn from past predictions, analyze news sentiment, and use 16+ years of historical patterns. Provide concise, actionable trading strategies based on multi-source analysis."
             ).with_model("openai", "gpt-5.2")
             
             # Include learning insights in the prompt
@@ -165,6 +166,39 @@ LEARNING INSIGHTS (AI has learned from {metrics.get('total_predictions', 0)} pas
 The AI has been learning and improving. Use this historical performance data to refine your recommendation.
 """
             
+            # Include news sentiment analysis
+            news_context = ""
+            if news_sentiment:
+                sentiment = news_sentiment.get('sentiment', 'neutral')
+                confidence = news_sentiment.get('confidence', 0)
+                headlines = news_sentiment.get('recent_headlines', [])
+                news_context = f"""
+
+NEWS SENTIMENT ANALYSIS:
+- Overall Sentiment: {sentiment.upper()} (Confidence: {confidence:.1f}%)
+- Recent Headlines:
+{chr(10).join([f"  • {h}" for h in headlines[:5]])}
+- AI Analysis: {news_sentiment.get('ai_analysis', 'No analysis available')[:200]}...
+
+News sentiment provides market psychology context. Factor this into risk assessment.
+"""
+            
+            # Include historical patterns
+            historical_context = ""
+            if historical_patterns:
+                success_rate = sum(1 for p in historical_patterns if p.get('success')) / len(historical_patterns) * 100
+                avg_return = sum(p.get('return', 0) for p in historical_patterns) / len(historical_patterns) * 100
+                historical_context = f"""
+
+HISTORICAL PATTERN ANALYSIS (Trained on data from 2009-2025):
+- Found {len(historical_patterns)} similar historical patterns
+- Historical Success Rate: {success_rate:.1f}%
+- Average Return: {avg_return:+.2f}%
+- Most Similar Pattern: {historical_patterns[0].get('pattern_type', 'N/A')} (similarity: {historical_patterns[0].get('similarity_score', 0)*100:.1f}%)
+
+These patterns show what happened in similar market conditions over 16+ years of crypto history.
+"""
+            
             prompt = f"""
 Analyze the following data for {coin_id.upper()} and provide a trading strategy recommendation:
 
@@ -181,15 +215,17 @@ Market Data:
 - 24h Volume: ${market_data.get('volume_24h', 'N/A')}
 - Market Cap: ${market_data.get('market_cap', 'N/A')}
 {learning_context}
+{news_context}
+{historical_context}
 Provide:
 1. Recommended Action (BUY/SELL/HOLD)
 2. Entry Price Range
 3. Stop Loss Level
 4. Take Profit Targets (3 levels)
 5. Risk Assessment (Low/Medium/High)
-6. Key Factors (3-5 bullet points explaining your recommendation)
+6. Key Factors (3-5 bullet points explaining your recommendation, including news and historical insights)
 7. Time Horizon (Short/Medium/Long term)
-8. Learning-Adjusted Confidence (considering historical accuracy)
+8. Learning & News-Adjusted Confidence (considering historical accuracy, news sentiment, and 16 years of patterns)
 
 Keep response concise and structured.
 """
@@ -197,11 +233,25 @@ Keep response concise and structured.
             user_message = UserMessage(text=prompt)
             response = await chat.send_message(user_message)
             
-            # Adjust confidence based on learning
+            # Adjust confidence based on learning and news
             final_confidence = technical_analysis.get('confidence')
             if learning_data and learning_data.get('has_learning_data'):
                 learned_conf = learning_data.get('overall_metrics', {}).get('learned_confidence', final_confidence)
                 final_confidence = (final_confidence * 0.5) + (learned_conf * 0.5)  # Blend original and learned
+            
+            # Adjust for news sentiment
+            if news_sentiment:
+                sentiment = news_sentiment.get('sentiment')
+                if sentiment == 'positive' and technical_analysis.get('signal') == 'BUY':
+                    final_confidence *= 1.1  # Boost confidence
+                elif sentiment == 'negative' and technical_analysis.get('signal') == 'SELL':
+                    final_confidence *= 1.1
+                elif sentiment == 'positive' and technical_analysis.get('signal') == 'SELL':
+                    final_confidence *= 0.9  # Reduce confidence (conflicting signals)
+                elif sentiment == 'negative' and technical_analysis.get('signal') == 'BUY':
+                    final_confidence *= 0.9
+            
+            final_confidence = min(100, max(0, final_confidence))  # Clamp to 0-100
             
             return {
                 "strategy_id": f"strat_{coin_id}_{int(datetime.now().timestamp())}",
@@ -210,7 +260,10 @@ Keep response concise and structured.
                 "technical_signal": technical_analysis.get('signal'),
                 "confidence_score": final_confidence,
                 "learning_enhanced": learning_data is not None and learning_data.get('has_learning_data', False),
+                "news_integrated": news_sentiment is not None,
+                "historical_patterns_used": len(historical_patterns) if historical_patterns else 0,
                 "learning_data": learning_data,
+                "news_sentiment": news_sentiment,
                 "created_at": datetime.now().isoformat(),
                 "status": "active"
             }
