@@ -175,7 +175,7 @@ class AILearningEngine:
         outcomes = await self.db.learning_outcomes.find(
             {},
             {"_id": 0, "strategy_id": 1, "was_correct": 1, "profit_loss": 1}
-        ).to_list(1000)
+        ).limit(1000).to_list(1000)
         
         if len(outcomes) < 10:
             return []
