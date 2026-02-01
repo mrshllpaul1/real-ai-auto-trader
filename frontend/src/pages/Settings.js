@@ -157,6 +157,10 @@ const Settings = () => {
             <Shield size={16} className="mr-2" />
             Risk Management
           </TabsTrigger>
+          <TabsTrigger value="notifications" data-testid="notifications-tab">
+            <Bell size={16} className="mr-2" />
+            Notifications
+          </TabsTrigger>
         </TabsList>
 
         {/* API Credentials Tab */}
