@@ -6,6 +6,7 @@ import { TrendingUp, TrendingDown, DollarSign, Activity, Sparkles } from 'lucide
 import { motion } from 'framer-motion';
 import { tradingAPI, marketAPI, strategyAPI } from '../services/api';
 import { toast } from 'sonner';
+import MarketOverview from '../components/MarketOverview';
 
 const Dashboard = () => {
   const [portfolio, setPortfolio] = useState(null);
