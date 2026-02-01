@@ -5,10 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { motion } from 'framer-motion';
-import { authAPI, riskAPI } from '../services/api';
+import api, { authAPI, riskAPI } from '../services/api';
 import { toast } from 'sonner';
-import { Shield, Key, Settings as SettingsIcon } from 'lucide-react';
+import { Shield, Key, Settings as SettingsIcon, Bell, Phone, MessageSquare } from 'lucide-react';
 
 const Settings = () => {
   const [apiKey, setApiKey] = useState('');
