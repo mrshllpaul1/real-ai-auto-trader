@@ -14,6 +14,7 @@ import {
   FlaskConical
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import NotificationCenter from './NotificationCenter';
 
 const Sidebar = () => {
   const navItems = [
