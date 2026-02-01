@@ -11,7 +11,8 @@ import {
   Zap,
   Radar,
   Bot,
-  FlaskConical
+  FlaskConical,
+  BookOpen
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import NotificationCenter from './NotificationCenter';
