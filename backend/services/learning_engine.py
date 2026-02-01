@@ -1,14 +1,13 @@
 import numpy as np
 from typing import Dict, Any, List
 from datetime import datetime, timedelta
-from sklearn.linear_model import LinearRegression
-import pickle
+import json
 import os
 
 class AILearningEngine:
     """
     Advanced learning engine that improves AI predictions based on historical performance.
-    Implements reinforcement learning principles to optimize trading strategies.
+    Uses statistical methods and rule-based learning for trading strategy optimization.
     """
     
     def __init__(self, db):
@@ -45,58 +44,59 @@ class AILearningEngine:
     
     def _calculate_performance_score(self, profit_loss: float, confidence_score: float) -> float:
         """Calculate performance score for a prediction"""
-        # Normalize profit/loss to -1 to 1 range
-        normalized_pl = np.tanh(profit_loss / 100)
+        # Normalize profit/loss to -1 to 1 range using tanh
+        normalized_pl = float(np.tanh(profit_loss / 100))
         
-        # Weight by confidence (higher confidence errors are penalized more)
-        confidence_factor = confidence_score / 100
+        # Weight by confidence
+        weighted_score = normalized_pl * (confidence_score / 100)
         
-        return normalized_pl * (1 + confidence_factor)
+        return weighted_score
     
     async def _update_strategy_learning_metrics(self, strategy_id: str):
         """Update learning metrics for a strategy"""
-        # Get all outcomes for this strategy
         outcomes = await self.db.learning_outcomes.find(
-            {"strategy_id": strategy_id}
+            {"strategy_id": strategy_id},
+            {"_id": 0, "was_correct": 1, "profit_loss": 1, "performance_score": 1}
         ).to_list(1000)
         
         if not outcomes:
             return
         
-        # Calculate metrics
-        total_outcomes = len(outcomes)
-        correct_predictions = sum(1 for o in outcomes if o['was_correct'])
-        accuracy = (correct_predictions / total_outcomes) * 100
+        total = len(outcomes)
+        correct = sum(1 for o in outcomes if o.get('was_correct', False))
+        total_profit = sum(o.get('profit_loss', 0) for o in outcomes)
+        avg_performance = sum(o.get('performance_score', 0) for o in outcomes) / total if total > 0 else 0
         
-        avg_performance = sum(o['performance_score'] for o in outcomes) / total_outcomes
-        total_profit_loss = sum(o['profit_loss'] for o in outcomes)
-        
-        # Calculate learning-adjusted confidence
-        base_confidence = outcomes[-1]['confidence_score']
-        learned_confidence = self._adjust_confidence(
-            base_confidence,
-            accuracy,
-            avg_performance
-        )
-        
-        learning_metrics = {
+        metrics = {
             "strategy_id": strategy_id,
-            "total_predictions": total_outcomes,
-            "accuracy": accuracy,
-            "avg_performance_score": avg_performance,
-            "total_profit_loss": total_profit_loss,
-            "learned_confidence": learned_confidence,
-            "last_updated": datetime.now().isoformat()
+            "total_predictions": total,
+            "correct_predictions": correct,
+            "accuracy": (correct / total * 100) if total > 0 else 0,
+            "total_profit_loss": total_profit,
+            "average_performance": avg_performance,
+            "updated_at": datetime.now().isoformat()
         }
         
         await self.db.strategy_learning_metrics.update_one(
             {"strategy_id": strategy_id},
-            {"$set": learning_metrics},
+            {"$set": metrics},
             upsert=True
         )
     
-    def _adjust_confidence(self, base_confidence: float, accuracy: float, performance: float) -> float:
-        """Adjust confidence based on historical accuracy and performance"""
+    async def get_learned_confidence_adjustment(self, strategy_id: str, base_confidence: float) -> float:
+        """Get confidence adjustment based on historical learning"""
+        metrics = await self.db.strategy_learning_metrics.find_one(
+            {"strategy_id": strategy_id},
+            {"_id": 0}
+        )
+        
+        if not metrics or metrics.get('total_predictions', 0) < 5:
+            return base_confidence
+        
+        accuracy = metrics.get('accuracy', 50)
+        performance = metrics.get('average_performance', 0)
+        
+        # Calculate adjustment factor
         accuracy_factor = (accuracy / 100)
         performance_factor = (performance + 1) / 2  # Normalize to 0-1
         
@@ -126,17 +126,18 @@ class AILearningEngine:
         
         # Get recent performance trend
         recent_outcomes = await self.db.learning_outcomes.find(
-            {"strategy_id": strategy_id}
+            {"strategy_id": strategy_id},
+            {"_id": 0, "was_correct": 1, "profit_loss": 1}
         ).sort("recorded_at", -1).limit(10).to_list(10)
         
         if recent_outcomes:
-            recent_accuracy = sum(1 for o in recent_outcomes if o['was_correct']) / len(recent_outcomes) * 100
-            recent_avg_pl = sum(o['profit_loss'] for o in recent_outcomes) / len(recent_outcomes)
+            recent_accuracy = sum(1 for o in recent_outcomes if o.get('was_correct', False)) / len(recent_outcomes) * 100
+            recent_avg_pl = sum(o.get('profit_loss', 0) for o in recent_outcomes) / len(recent_outcomes)
             
             # Determine trend
             if len(recent_outcomes) >= 5:
-                first_half_pl = sum(o['profit_loss'] for o in recent_outcomes[:5]) / 5
-                second_half_pl = sum(o['profit_loss'] for o in recent_outcomes[5:]) / len(recent_outcomes[5:])
+                first_half_pl = sum(o.get('profit_loss', 0) for o in recent_outcomes[:5]) / 5
+                second_half_pl = sum(o.get('profit_loss', 0) for o in recent_outcomes[5:]) / max(1, len(recent_outcomes[5:]))
                 trend = "improving" if second_half_pl > first_half_pl else "declining"
             else:
                 trend = "insufficient_data"
@@ -153,7 +154,7 @@ class AILearningEngine:
                 "avg_profit_loss": recent_avg_pl,
                 "trend": trend
             },
-            "learning_status": self._get_learning_status(metrics['accuracy'], metrics['total_predictions'])
+            "learning_status": self._get_learning_status(metrics.get('accuracy', 0), metrics.get('total_predictions', 0))
         }
     
     def _get_learning_status(self, accuracy: float, total_predictions: int) -> str:
@@ -171,8 +172,10 @@ class AILearningEngine:
     
     async def get_best_performing_indicators(self) -> List[Dict[str, Any]]:
         """Analyze which technical indicators perform best"""
-        # Get all outcomes with indicator data
-        outcomes = await self.db.learning_outcomes.find({}).to_list(1000)
+        outcomes = await self.db.learning_outcomes.find(
+            {},
+            {"_id": 0, "strategy_id": 1, "was_correct": 1, "profit_loss": 1}
+        ).to_list(1000)
         
         if len(outcomes) < 10:
             return []
@@ -210,93 +213,26 @@ class AILearningEngine:
                 indicator_performance[indicator_name]['total_profit'] += outcome.get('profit_loss', 0)
         
         # Calculate scores
-        results = []
-        for indicator_name, stats in indicator_performance.items():
-            if stats['total_uses'] > 0:
-                accuracy = (stats['correct_predictions'] / stats['total_uses']) * 100
-                avg_profit = stats['total_profit'] / stats['total_uses']
-                
-                results.append({
-                    "indicator": indicator_name,
-                    "accuracy": accuracy,
-                    "avg_profit_per_use": avg_profit,
-                    "total_uses": stats['total_uses'],
-                    "effectiveness_score": (accuracy * 0.6) + (avg_profit * 0.4)
-                })
-        
-        # Sort by effectiveness
-        results.sort(key=lambda x: x['effectiveness_score'], reverse=True)
-        return results[:10]
-    
-    async def optimize_strategy_weights(self, coin_id: str) -> Dict[str, float]:
-        """Use learning data to optimize indicator weights for a coin"""
-        # Get historical performance data
-        strategies = await self.db.strategies.find({"coin_id": coin_id}).to_list(100)
-        
-        if len(strategies) < 5:
-            # Return default weights
-            return {
-                "rsi_weight": 0.25,
-                "macd_weight": 0.25,
-                "bb_weight": 0.20,
-                "ma_weight": 0.20,
-                "adx_weight": 0.10
-            }
-        
-        # Analyze which indicators worked best
-        best_indicators = await self.get_best_performing_indicators()
-        
-        # Create optimized weights
-        weights = {
-            "rsi_weight": 0.20,
-            "macd_weight": 0.20,
-            "bb_weight": 0.20,
-            "ma_weight": 0.20,
-            "adx_weight": 0.20
-        }
-        
-        if best_indicators:
-            total_effectiveness = sum(ind['effectiveness_score'] for ind in best_indicators[:5])
+        ranked_indicators = []
+        for name, perf in indicator_performance.items():
+            if perf['total_uses'] < 5:
+                continue
             
-            for ind in best_indicators[:5]:
-                indicator_key = f"{ind['indicator'].lower()}_weight"
-                if indicator_key in weights:
-                    # Redistribute weight based on effectiveness
-                    weights[indicator_key] = (ind['effectiveness_score'] / total_effectiveness)
-        
-        return weights
-    
-    async def continuous_learning_update(self):
-        """Periodic learning update - run this regularly to improve the AI"""
-        print("🧠 Running continuous learning update...")
-        
-        # Get all active strategies
-        strategies = await self.db.strategies.find({"status": "active"}).to_list(100)
-        
-        for strategy in strategies:
-            strategy_id = strategy['strategy_id']
+            accuracy = (perf['correct_predictions'] / perf['total_uses']) * 100
+            avg_profit = perf['total_profit'] / perf['total_uses']
             
-            # Get recent trades for this strategy
-            recent_trades = await self.db.trades.find({
-                "strategy_id": strategy_id,
-                "created_at": {"$gte": (datetime.now() - timedelta(days=7)).isoformat()}
-            }).to_list(100)
+            # Simple weighted score without ML
+            score = (accuracy * 0.6) + (max(-100, min(100, avg_profit)) * 0.4)
             
-            # Record outcomes
-            for trade in recent_trades:
-                # Simulate outcome calculation (in production, use actual market data)
-                profit_loss = trade.get('amount', 0) * (np.random.randn() * 0.05)  # Placeholder
-                actual_outcome = "BUY" if profit_loss > 0 else "SELL"
-                
-                await self.record_strategy_outcome(
-                    strategy_id=strategy_id,
-                    predicted_action=strategy.get('technical_signal', 'HOLD'),
-                    actual_outcome=actual_outcome,
-                    profit_loss=profit_loss,
-                    confidence_score=strategy.get('confidence_score', 50)
-                )
+            ranked_indicators.append({
+                "indicator": name,
+                "accuracy": accuracy,
+                "avg_profit": avg_profit,
+                "total_uses": perf['total_uses'],
+                "score": score
+            })
         
-        print("✅ Continuous learning update complete")
+        return sorted(ranked_indicators, key=lambda x: x['score'], reverse=True)
     
     async def generate_learning_report(self) -> Dict[str, Any]:
         """Generate comprehensive learning report"""
@@ -329,3 +265,24 @@ class AILearningEngine:
             "learning_system_status": "active" if total_outcomes > 0 else "initializing",
             "generated_at": datetime.now().isoformat()
         }
+    
+    async def save_learning_state(self):
+        """Save current learning state to file (JSON instead of pickle)"""
+        state = {
+            "performance_weight": self.performance_weight,
+            "accuracy_weight": self.accuracy_weight,
+            "saved_at": datetime.now().isoformat()
+        }
+        
+        state_path = os.path.join(self.model_path, 'learning_state.json')
+        with open(state_path, 'w') as f:
+            json.dump(state, f)
+    
+    async def load_learning_state(self):
+        """Load learning state from file"""
+        state_path = os.path.join(self.model_path, 'learning_state.json')
+        if os.path.exists(state_path):
+            with open(state_path, 'r') as f:
+                state = json.load(f)
+                self.performance_weight = state.get('performance_weight', 0.7)
+                self.accuracy_weight = state.get('accuracy_weight', 0.3)
