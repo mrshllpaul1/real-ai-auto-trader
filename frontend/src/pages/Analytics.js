@@ -21,27 +21,15 @@ const Analytics = () => {
   }, []);
 
   const loadAnalytics = async () => {
-    setLoading(true);
     try {
-      const userId = localStorage.getItem('user_id') || 'demo_user';
-      
-      // Use shorter timeout for status check
-      const portfolioPromise = tradingAPI.getPortfolio().catch(() => ({ data: {} }));
-      const historyPromise = tradingAPI.getTradeHistory('all', 50).catch(() => ({ data: { trades: [] } }));
-      const aiStatusPromise = Promise.race([
-        api.get('/auto-exec/status'),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
-      ]).catch(() => ({ data: {} }));
-
-      const [portfolioRes, historyRes, aiStatusRes] = await Promise.all([
-        portfolioPromise,
-        historyPromise,
-        aiStatusPromise
+      const [portfolioRes, historyRes] = await Promise.all([
+        tradingAPI.getPortfolio().catch(() => ({ data: {} })),
+        tradingAPI.getTradeHistory('all', 50).catch(() => ({ data: { trades: [] } }))
       ]);
 
       setPortfolio(portfolioRes.data || {});
       setTradeHistory(historyRes.data?.trades || []);
-      setAiStats(aiStatusRes.data || {});
+      setAiStats({});
 
       // Generate performance data
       const trades = historyRes.data?.trades || [];
@@ -73,8 +61,9 @@ const Analytics = () => {
 
     } catch (error) {
       console.error('Error loading analytics:', error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const COLORS = ['#F7931A', '#627EEA', '#00FFA3', '#9D00FF', '#007AFF'];
