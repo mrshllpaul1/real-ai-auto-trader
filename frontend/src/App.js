@@ -11,6 +11,7 @@ import NewsAndIntelligence from "./pages/NewsAndIntelligence";
 import AutoTrading from "./pages/AutoTrading";
 import GemScanner from "./pages/GemScanner";
 import AutoExecution from "./pages/AutoExecution";
+import AdvancedFeatures from "./pages/AdvancedFeatures";
 import Sidebar from "./components/Sidebar";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "framer-motion";
@@ -56,6 +57,7 @@ function App() {
               <Route path="/auto-trading" element={<AutoTrading />} />
               <Route path="/scanner" element={<GemScanner />} />
               <Route path="/auto-exec" element={<AutoExecution />} />
+              <Route path="/advanced" element={<AdvancedFeatures />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
