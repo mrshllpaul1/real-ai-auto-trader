@@ -103,6 +103,37 @@ const Settings = () => {
     }
   };
 
+  const saveNotificationSettings = async () => {
+    try {
+      setLoading(true);
+      await api.post('/notifications/settings', notificationSettings);
+      toast.success('Notification settings updated!');
+    } catch (error) {
+      toast.error('Failed to update notification settings');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const testSms = async () => {
+    try {
+      setLoading(true);
+      const result = await api.post('/notifications/test-sms', {
+        message: 'Test SMS from AI Crypto Trading',
+        phone: notificationSettings.sms_phone
+      });
+      if (result.data.success) {
+        toast.success('Test SMS sent!');
+      } else {
+        toast.error(result.data.error || 'SMS failed');
+      }
+    } catch (error) {
+      toast.error('Failed to send test SMS');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="p-6 lg:p-12 space-y-6" data-testid="settings">
       <motion.div
