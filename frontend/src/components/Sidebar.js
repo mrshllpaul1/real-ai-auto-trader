@@ -6,7 +6,8 @@ import {
   BarChart3, 
   Settings, 
   Sparkles,
-  Brain
+  Brain,
+  Newspaper
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -17,6 +18,7 @@ const Sidebar = () => {
     { path: '/trading', icon: TrendingUp, label: 'Trading' },
     { path: '/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/learning', icon: Brain, label: 'AI Learning' },
+    { path: '/news', icon: Newspaper, label: 'News & Intel' },
     { path: '/settings', icon: Settings, label: 'Settings' },
   ];
 
