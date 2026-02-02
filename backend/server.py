@@ -98,6 +98,7 @@ api_router.include_router(budget.router, tags=["Budget Management"])
 api_router.include_router(journal.router, tags=["Trading Journal"])
 api_router.include_router(ai_decisions.router, prefix="/ai-decisions", tags=["AI Decisions"])
 api_router.include_router(ai_universe.router, tags=["AI Universe"])
+api_router.include_router(ai_discovery.router, tags=["AI Discovery"])
 
 # Include the router
 app.include_router(api_router)
