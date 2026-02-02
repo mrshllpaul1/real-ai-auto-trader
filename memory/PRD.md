@@ -15,7 +15,19 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ## What's Been Implemented (Feb 2, 2026 - Session 4)
 
-### ✅ Dynamic Coin Universe (NEW - Feb 2, 2026)
+### ✅ Push Notifications with Vibration (Feb 2, 2026)
+- [x] **Removed SMS/Twilio** - No longer using SMS notifications
+- [x] **Push notifications with vibration patterns**:
+  - Critical: `[200, 100, 200, 100, 200, 100, 400]` - Long urgent pattern
+  - High: `[200, 100, 200, 100, 400]` - Medium urgent pattern
+  - Normal: `[200, 100, 200]` - Standard pattern
+  - Low: `[100]` - Subtle single vibration
+- [x] **Updated notification service** - Now stores vibration patterns in DB
+- [x] **Updated service worker** - Handles vibration patterns for PWA
+- [x] **Updated Settings UI** - New "Enable Vibration" toggle, removed SMS section
+- [x] **Test Push button** - Replaced "Test SMS" button
+
+### ✅ Dynamic Coin Universe (Feb 2, 2026)
 - [x] **Database-backed coin universe** - Coins stored in MongoDB for persistence
 - [x] **AI coin discovery** - AI can add new coins to the universe
 - [x] **Complete CRUD API** - Add, view, update, deactivate coins
