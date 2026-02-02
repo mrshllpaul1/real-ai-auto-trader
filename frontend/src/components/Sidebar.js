@@ -89,7 +89,7 @@ const CollapseButton = ({ isCollapsed, onClick }) => (
 );
 
 // Sidebar content component
-const SidebarContent = ({ isCollapsed, mobile, navItems }) => (
+const SidebarContent = ({ isCollapsed, mobile, navItems, tradingMode }) => (
   <div className={`flex flex-col h-full ${mobile ? 'pt-16' : ''}`}>
     <div className={`p-4 ${isCollapsed && !mobile ? 'px-2' : 'p-6'} border-b border-[#1F1F1F]`}>
       <div className="flex items-center justify-between">
@@ -107,8 +107,8 @@ const SidebarContent = ({ isCollapsed, mobile, navItems }) => (
         {(!isCollapsed || mobile) && <NotificationCenter />}
       </div>
       {(!isCollapsed || mobile) && <p className="text-xs text-[#A1A1AA] mt-1">Real Money Auto Trading</p>}
-      {/* Trading Mode Indicator */}
-      <TradingModeIndicator isCollapsed={isCollapsed} mobile={mobile} />
+      {/* Trading Mode Indicator - passed as prop */}
+      {tradingMode}
     </div>
     <nav className="flex-1 p-2 md:p-4 overflow-y-auto" data-testid="sidebar-nav">
       <ul className="space-y-1">
