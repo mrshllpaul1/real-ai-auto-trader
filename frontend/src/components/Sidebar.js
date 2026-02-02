@@ -217,7 +217,12 @@ const Sidebar = () => {
             className="md:hidden fixed left-0 top-0 bottom-0 w-72 bg-[#0A0A0A] border-r border-[#1F1F1F] z-40 overflow-hidden"
             data-testid="mobile-sidebar"
           >
-            <SidebarContent isCollapsed={false} mobile={true} navItems={navItems} />
+            <SidebarContent 
+              isCollapsed={false} 
+              mobile={true} 
+              navItems={navItems} 
+              tradingMode={<TradingModeIndicator isCollapsed={false} mobile={true} />}
+            />
           </motion.div>
         )}
       </AnimatePresence>
