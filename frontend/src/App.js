@@ -67,6 +67,7 @@ function App() {
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/learning" element={<AILearning />} />
                 <Route path="/news" element={<NewsAndIntelligence />} />
+                <Route path="/news-filters" element={<NewsFilters />} />
                 <Route path="/auto-trading" element={<AutoTrading />} />
                 <Route path="/scanner" element={<GemScanner />} />
                 <Route path="/auto-exec" element={<AutoExecution />} />
