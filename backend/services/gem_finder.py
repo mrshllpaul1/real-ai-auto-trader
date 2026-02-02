@@ -79,9 +79,19 @@ class HiddenGemFinder:
         """
         await self.load_learned_scores()
         
+        # Get gems from dynamic universe + static list
+        try:
+            from services.dynamic_coin_universe import get_gem_candidates as dynamic_gems
+            universe_gems = await dynamic_gems()
+        except Exception:
+            universe_gems = []
+        
+        # Combine with known gems (dedup)
+        all_gem_ids = list(set(self.KNOWN_GEMS + universe_gems))
+        
         gem_candidates = []
         
-        for coin_id in self.KNOWN_GEMS:
+        for coin_id in all_gem_ids:
             prices = await self._get_prices(coin_id, week_start, days=60)
             
             if not prices or len(prices) < 14:
