@@ -9,16 +9,13 @@ import api from '../services/api';
 import { toast } from 'sonner';
 import { 
   Key, Check, X, AlertTriangle, Copy, ExternalLink, 
-  Mail, Phone, Database, Bot, TrendingUp, Shield
+  Mail, Database, Bot, TrendingUp, Shield
 } from 'lucide-react';
 
 const Setup = () => {
   const [configStatus, setConfigStatus] = useState({});
   const [credentials, setCredentials] = useState({
     RESEND_API_KEY: '',
-    TWILIO_ACCOUNT_SID: '',
-    TWILIO_AUTH_TOKEN: '',
-    TWILIO_PHONE_NUMBER: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
