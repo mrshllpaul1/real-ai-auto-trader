@@ -51,22 +51,6 @@ const AutoTrading = () => {
     const interval = setInterval(loadStatus, 30000);
     return () => clearInterval(interval);
   }, []);
-      ...prev,
-      paper_trading_enabled: !isReal,
-      real_trading_enabled: isReal
-    }));
-    setTradingModeInitialized(true);
-  }, []);
-
-  // Load config AFTER trading mode is initialized
-  useEffect(() => {
-    if (tradingModeInitialized) {
-      loadConfig();
-      loadStatus();
-      const interval = setInterval(loadStatus, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [tradingModeInitialized]);
 
   const loadConfig = async () => {
     try {
@@ -78,16 +62,13 @@ const AutoTrading = () => {
       ]);
       
       if (configRes.data.configured) {
-        // Apply config but ALWAYS respect localStorage trading mode
-        const savedMode = localStorage.getItem('growth_trading_mode');
+        // Apply config but preserve global trading mode from context
         setConfig(prev => ({
           ...configRes.data.config,
-          paper_trading_enabled: savedMode !== 'real',
-          real_trading_enabled: savedMode === 'real'
+          paper_trading_enabled: prev.paper_trading_enabled,
+          real_trading_enabled: prev.real_trading_enabled
         }));
-      } else {
-        // No config saved yet - apply localStorage mode
-        const savedMode = localStorage.getItem('growth_trading_mode');
+      }
         setConfig(prev => ({
           ...prev,
           paper_trading_enabled: savedMode !== 'real',
