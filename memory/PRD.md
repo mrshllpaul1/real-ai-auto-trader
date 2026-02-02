@@ -14,6 +14,15 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ## What's Been Implemented (Feb 2, 2026)
 
+### ✅ Adaptive AI Coin Selection Engine (NEW - Feb 2, 2026)
+- [x] **Dynamic coin selection** - AI selects best 5 coins weekly based on market conditions
+- [x] **Multi-factor analysis** - Momentum, Volatility, Volume, Trend, Sentiment scoring
+- [x] **Market condition adaptation** - Different strategies for bullish/bearish/neutral markets
+- [x] **Weekly simulation** - Fixed $10k/week capital (no unrealistic compounding)
+- [x] **Real historical data** - 5,124 records from 14 coins via CoinGecko API
+- [x] **Frontend UI** - Interactive coin selection with detailed score breakdown
+- [x] **Simulation results display** - Win rate, P/L, best/worst week, annual breakdown
+
 ### ✅ Deployment Ready (P0 - FIXED)
 - [x] Removed scikit-learn dependency for deployment compatibility
 - [x] Removed scipy dependency
