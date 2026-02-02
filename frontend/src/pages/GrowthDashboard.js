@@ -23,8 +23,10 @@ import CryptoNewsFeed from '../components/CryptoNewsFeed';
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const GrowthDashboard = () => {
-  // Trading mode state
-  const [tradingMode, setTradingMode] = useState('paper'); // 'paper' or 'real'
+  // Trading mode state - persist to localStorage
+  const [tradingMode, setTradingMode] = useState(() => {
+    return localStorage.getItem('growth_trading_mode') || 'paper';
+  });
   
   // Paper trading state
   const [paperStats, setPaperStats] = useState(null);
