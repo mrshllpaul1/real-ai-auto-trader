@@ -300,21 +300,24 @@ class TestSchedulerCoinUniverse:
         # Data assertions
         data = response.json()
         assert 'coins' in data, "Response should contain 'coins'"
-        assert 'count' in data, "Response should contain 'count'"
+        assert 'total_coins' in data, "Response should contain 'total_coins'"
+        assert 'gem_candidates' in data, "Response should contain 'gem_candidates'"
+        assert 'categories' in data, "Response should contain 'categories'"
         
         # Validate data types
         assert isinstance(data['coins'], list), "coins should be a list"
-        assert isinstance(data['count'], int), "count should be an integer"
+        assert isinstance(data['total_coins'], int), "total_coins should be an integer"
+        assert isinstance(data['gem_candidates'], int), "gem_candidates should be an integer"
         
         # Should have same coins as ai-universe/coins
         ai_universe_response = requests.get(f"{BASE_URL}/api/ai-universe/coins", timeout=30)
         ai_universe_data = ai_universe_response.json()
         
         # Counts should match (scheduler uses dynamic universe)
-        assert data['count'] == ai_universe_data['count'], \
-            f"Scheduler count ({data['count']}) should match AI universe count ({ai_universe_data['count']})"
+        assert data['total_coins'] == ai_universe_data['count'], \
+            f"Scheduler total_coins ({data['total_coins']}) should match AI universe count ({ai_universe_data['count']})"
         
-        print(f"✅ Scheduler coin universe: {data['count']} coins (matches AI universe)")
+        print(f"✅ Scheduler coin universe: {data['total_coins']} coins (matches AI universe)")
 
 
 class TestAIUniverseCategories:
