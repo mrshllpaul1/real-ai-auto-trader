@@ -209,14 +209,20 @@ class TestGrowthSchedulerIntegration:
         # Small delay to ensure scheduler state is updated
         time.sleep(1)
         
-        # 2. Setup default schedule (this also starts the scheduler)
+        # 2. Start the scheduler first
+        start_response = requests.post(f"{BASE_URL}/api/scheduler/start", timeout=10)
+        assert start_response.status_code == 200
+        
+        time.sleep(0.5)
+        
+        # 3. Setup default schedule
         setup_response = requests.post(f"{BASE_URL}/api/scheduler/setup-default?paper_trade=true", timeout=10)
         assert setup_response.status_code == 200
         assert setup_response.json()['success'] == True
         
         time.sleep(0.5)
         
-        # 3. Verify scheduler is running with jobs (with retry)
+        # 4. Verify scheduler is running with jobs (with retry)
         for attempt in range(3):
             status_response = requests.get(f"{BASE_URL}/api/scheduler/status", timeout=10)
             if status_response.status_code == 200:
@@ -228,11 +234,11 @@ class TestGrowthSchedulerIntegration:
         assert status['running'] == True
         assert status['job_count'] >= 3
         
-        # 4. Verify growth stats accessible
+        # 5. Verify growth stats accessible
         stats_response = requests.get(f"{BASE_URL}/api/growth/stats", timeout=10)
         assert stats_response.status_code == 200
         
-        # 5. Verify positions accessible
+        # 6. Verify positions accessible
         positions_response = requests.get(f"{BASE_URL}/api/growth/positions?status=OPEN", timeout=10)
         assert positions_response.status_code == 200
         
