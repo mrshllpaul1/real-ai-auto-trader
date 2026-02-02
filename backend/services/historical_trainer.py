@@ -61,7 +61,7 @@ class HistoricalTrainer:
         
         # Fetch from Twelve Data API if not enough cached data
         try:
-            print(f"  📥 Fetching from Twelve Data API...")
+            print("  📥 Fetching from Twelve Data API...")
             records = await self.twelvedata.fetch_historical_for_db(coin_id, days=365)
             
             if records and len(records) > 0:

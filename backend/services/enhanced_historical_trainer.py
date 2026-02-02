@@ -66,7 +66,7 @@ class EnhancedHistoricalTrainer:
         
         # Fetch from Twelve Data API if not enough cached data
         try:
-            print(f"  📥 Fetching from Twelve Data API...")
+            print("  📥 Fetching from Twelve Data API...")
             records = await self.twelvedata.fetch_historical_for_db(coin_id, days)
             
             if records and len(records) > 0:
@@ -193,7 +193,7 @@ class EnhancedHistoricalTrainer:
                     
                     gems.append(gem_signals)
                     print(f"   🎯 Hidden Gem Found: {coin_id} at {gem_signals['date']} → {gain_multiplier:.1f}x gain!")
-            except Exception as e:
+            except Exception:
                 continue
         
         return gems
@@ -371,7 +371,7 @@ class EnhancedHistoricalTrainer:
         print(f"✅ Successful Patterns: {training_results['successful_patterns']:,}")
         print(f"💎 Hidden Gems Found: {training_results['hidden_gems_found']}")
         print(f"🎯 Overall Accuracy: {training_results['training_accuracy']:.2f}%")
-        print(f"📡 Data Source: REAL MARKET DATA ONLY")
+        print("📡 Data Source: REAL MARKET DATA ONLY")
         print("="*70 + "\n")
         
         return training_results
