@@ -590,8 +590,11 @@ class SchedulerService:
         return history
     
     async def setup_default_schedule(self, paper_trade: bool = True) -> Dict[str, Any]:
-        """Set up the default passive income schedule"""
+        """Set up the default passive income schedule with full universe training"""
+        from services.coin_universe import get_training_coins
+        
         results = {}
+        all_coins = get_training_coins()
         
         # 1. Monitor positions every hour
         results['monitor'] = await self.add_growth_monitor_job(interval_hours=1)
@@ -599,10 +602,11 @@ class SchedulerService:
         # 2. Compound profits daily at midnight
         results['compound'] = await self.add_compound_job(hour=0)
         
-        # 3. Weekly AI retraining on Mondays at 6 AM (before trading)
+        # 3. Weekly AI retraining on Mondays at 6 AM (before trading) - ALL COINS
         results['retrain'] = await self.add_weekly_retrain_job(
             day_of_week='mon',
-            hour=6
+            hour=6,
+            coins=all_coins
         )
         
         # 4. Weekly trading on Mondays at 8 AM (after retraining)
@@ -612,11 +616,12 @@ class SchedulerService:
             paper_trade=paper_trade
         )
         
-        logger.info("📋 Default schedule configured (including weekly retraining)")
+        logger.info(f"📋 Default schedule configured (training on {len(all_coins)} coins)")
         
         return {
             'success': True,
             'jobs_configured': len(results),
             'details': results,
-            'message': 'Passive income schedule active with weekly AI retraining!'
+            'coin_universe_size': len(all_coins),
+            'message': f'Passive income schedule active! AI will retrain on {len(all_coins)} coins every Monday.'
         }
