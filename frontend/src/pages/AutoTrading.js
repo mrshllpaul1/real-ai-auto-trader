@@ -299,7 +299,10 @@ const AutoTrading = () => {
               </div>
               <Switch
                 checked={config.paper_trading_enabled}
-                onCheckedChange={(checked) => setConfig({...config, paper_trading_enabled: checked})}
+                onCheckedChange={(checked) => {
+                  setConfig({...config, paper_trading_enabled: checked, real_trading_enabled: !checked});
+                  localStorage.setItem('growth_trading_mode', checked ? 'paper' : 'real');
+                }}
                 data-testid="paper-trading-switch"
               />
             </div>
@@ -311,7 +314,10 @@ const AutoTrading = () => {
               </div>
               <Switch
                 checked={config.real_trading_enabled}
-                onCheckedChange={(checked) => setConfig({...config, real_trading_enabled: checked})}
+                onCheckedChange={(checked) => {
+                  setConfig({...config, real_trading_enabled: checked, paper_trading_enabled: !checked});
+                  localStorage.setItem('growth_trading_mode', checked ? 'real' : 'paper');
+                }}
                 data-testid="real-trading-switch"
               />
             </div>
