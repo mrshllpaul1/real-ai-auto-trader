@@ -2,6 +2,7 @@
 Aggressive Growth Engine
 Goal: Turn $500 into $100,000 (200x)
 Strategy: Heavy gem allocation, compounding, 24/7 hunting
+IMPORTANT: Only uses allocated budget - NEVER touches other assets
 """
 
 import asyncio
@@ -26,14 +27,17 @@ class AggressiveGrowthEngine:
     - 24/7 opportunity scanning
     - Dynamic position sizing based on conviction
     - Trailing stop-losses to lock in gains
+    
+    SAFETY: Only uses budget you allocate - NEVER touches other assets
     """
     
-    def __init__(self, db, kraken_service, gem_finder, ai_trainer, alert_service=None):
+    def __init__(self, db, kraken_service, gem_finder, ai_trainer, alert_service=None, budget_manager=None):
         self.db = db
         self.kraken = kraken_service
         self.gem_finder = gem_finder
         self.ai_trainer = ai_trainer
         self.alert_service = alert_service
+        self.budget_manager = budget_manager
         
         # Growth targets
         self.targets = {
