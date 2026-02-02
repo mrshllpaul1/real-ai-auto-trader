@@ -539,13 +539,13 @@ const AutoExecution = () => {
                 </div>
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => setRiskProfile(p => ({...p, mode: 'paper'}))}
+                    onClick={() => handleModeChange('paper')}
                     className={riskProfile.mode === 'paper' ? 'bg-[#007AFF]' : 'bg-[#1F1F1F]'}
                   >
                     Paper
                   </Button>
                   <Button
-                    onClick={() => setRiskProfile(p => ({...p, mode: 'live'}))}
+                    onClick={() => handleModeChange('live')}
                     className={riskProfile.mode === 'live' ? 'bg-[#FF0055]' : 'bg-[#1F1F1F]'}
                   >
                     Live
