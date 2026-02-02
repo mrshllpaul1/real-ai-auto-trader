@@ -9,6 +9,7 @@ import { Zap, Play, Square, Smartphone, TrendingUp, AlertCircle } from 'lucide-r
 import { motion } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
+import AIPortfolioSection from '../components/AIPortfolioSection';
 
 const AutoTrading = () => {
   const [config, setConfig] = useState({
