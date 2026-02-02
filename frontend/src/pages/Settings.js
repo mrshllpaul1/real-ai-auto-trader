@@ -354,7 +354,7 @@ const Settings = () => {
             <CardHeader>
               <CardTitle className="text-2xl font-heading">Notification Settings</CardTitle>
               <CardDescription>
-                Configure push and SMS notifications for trades and alerts
+                Configure push notifications with vibration for trades and alerts
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -377,6 +377,21 @@ const Settings = () => {
                       push_enabled: checked
                     })}
                     data-testid="push-enabled-switch"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-[#121212] rounded-lg">
+                  <div>
+                    <Label>Enable Vibration</Label>
+                    <p className="text-xs text-[#A1A1AA]">Vibrate phone for important alerts</p>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.vibration_enabled}
+                    onCheckedChange={(checked) => setNotificationSettings({
+                      ...notificationSettings,
+                      vibration_enabled: checked
+                    })}
+                    data-testid="vibration-enabled-switch"
                   />
                 </div>
 
@@ -411,48 +426,17 @@ const Settings = () => {
                 </div>
               </div>
 
-              {/* SMS Notifications Section */}
+              {/* Alert Priority Section */}
               <div className="space-y-4">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Phone size={20} className="text-[#FFB800]" />
-                  SMS Notifications
+                  <Smartphone size={20} className="text-[#9D00FF]" />
+                  Alert Priorities
                 </h3>
 
                 <div className="flex items-center justify-between p-3 bg-[#121212] rounded-lg">
                   <div>
-                    <Label>Enable SMS Notifications</Label>
-                    <p className="text-xs text-[#A1A1AA]">Receive SMS for high priority alerts</p>
-                  </div>
-                  <Switch
-                    checked={notificationSettings.sms_enabled}
-                    onCheckedChange={(checked) => setNotificationSettings({
-                      ...notificationSettings,
-                      sms_enabled: checked
-                    })}
-                    data-testid="sms-enabled-switch"
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-[#A1A1AA]">Phone Number</Label>
-                  <Input
-                    type="tel"
-                    value={notificationSettings.sms_phone}
-                    onChange={(e) => setNotificationSettings({
-                      ...notificationSettings,
-                      sms_phone: e.target.value
-                    })}
-                    placeholder="Enter your phone number"
-                    className="bg-[#121212] border-[#1F1F1F] font-data mt-1"
-                    data-testid="sms-phone-input"
-                  />
-                  <p className="text-xs text-[#A1A1AA] mt-1">US format: 2104412761 (no dashes)</p>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-[#121212] rounded-lg">
-                  <div>
                     <Label>HIGH Priority Alerts</Label>
-                    <p className="text-xs text-[#A1A1AA]">SMS for HIGH priority gem alerts</p>
+                    <p className="text-xs text-[#A1A1AA]">Urgent vibration for high priority gems</p>
                   </div>
                   <Switch
                     checked={notificationSettings.notify_high_alerts}
@@ -467,7 +451,7 @@ const Settings = () => {
                 <div className="flex items-center justify-between p-3 bg-[#121212] rounded-lg">
                   <div>
                     <Label>MEDIUM Priority Alerts</Label>
-                    <p className="text-xs text-[#A1A1AA]">SMS for MEDIUM priority alerts</p>
+                    <p className="text-xs text-[#A1A1AA]">Normal vibration for medium alerts</p>
                   </div>
                   <Switch
                     checked={notificationSettings.notify_medium_alerts}
@@ -478,18 +462,31 @@ const Settings = () => {
                     data-testid="medium-alerts-switch"
                   />
                 </div>
+
+                <div className="flex items-center justify-between p-3 bg-[#121212] rounded-lg">
+                  <div>
+                    <Label>AI Discovery Alerts</Label>
+                    <p className="text-xs text-[#A1A1AA]">Notify when AI discovers new coins</p>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.notify_ai_discoveries}
+                    onCheckedChange={(checked) => setNotificationSettings({
+                      ...notificationSettings,
+                      notify_ai_discoveries: checked
+                    })}
+                    data-testid="ai-discoveries-switch"
+                  />
+                </div>
               </div>
 
               {/* Info Box */}
-              <div className="bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-lg p-4">
-                <h4 className="font-bold text-[#FFB800] mb-2">SMS Setup Required</h4>
-                <p className="text-sm text-[#A1A1AA]">
-                  To enable SMS notifications, you need to configure Twilio credentials in the backend .env file:
-                </p>
-                <ul className="text-xs text-[#A1A1AA] mt-2 space-y-1">
-                  <li>• TWILIO_ACCOUNT_SID - Your Twilio Account SID</li>
-                  <li>• TWILIO_AUTH_TOKEN - Your Twilio Auth Token</li>
-                  <li>• TWILIO_PHONE_NUMBER - Your Twilio phone number</li>
+              <div className="bg-[#00FF94]/10 border border-[#00FF94]/30 rounded-lg p-4">
+                <h4 className="font-bold text-[#00FF94] mb-2">Vibration Patterns</h4>
+                <ul className="text-sm text-[#A1A1AA] space-y-1">
+                  <li>• <span className="text-red-400">Critical:</span> Long urgent pattern (moonshots, 100%+ gains)</li>
+                  <li>• <span className="text-[#FFB800]">High:</span> Medium urgent pattern (gem alerts, major trades)</li>
+                  <li>• <span className="text-[#00FF94]">Normal:</span> Standard pattern (trade updates)</li>
+                  <li>• <span className="text-[#A1A1AA]">Low:</span> Subtle single vibration</li>
                 </ul>
               </div>
 
