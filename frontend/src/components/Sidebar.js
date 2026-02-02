@@ -114,6 +114,8 @@ const Sidebar = () => {
 
   const navItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/growth', icon: TrendingUp, label: '$500→$100k', highlight: true },
+    { path: '/journal', icon: BookOpen, label: 'Journal' },
     { path: '/scanner', icon: Radar, label: 'Gem Scanner', highlight: true },
     { path: '/auto-exec', icon: Bot, label: 'Auto Execute', highlight: true },
     { path: '/advanced', icon: FlaskConical, label: 'Advanced' },
