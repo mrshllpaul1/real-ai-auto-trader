@@ -15,7 +15,26 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ## What's Been Implemented (Feb 2, 2026 - Session 4)
 
-### ✅ AI Auto-Discovery (NEW - Feb 2, 2026)
+### ✅ AI News Sentiment Analysis (NEW - Feb 2, 2026)
+- [x] **Comprehensive sentiment service** (`ai_news_sentiment.py`) - Analyzes news for all coins
+- [x] **LLM-powered analysis** - Uses GPT-5.2 via Emergent LLM Key for sentiment scoring
+- [x] **News sources** - CryptoPanic API + CoinGecko status updates
+- [x] **Sentiment scoring** - 0-100 scale with bullish/bearish/neutral labels
+- [x] **Market sentiment** - Weighted average of top coins (BTC, ETH, BNB, SOL, XRP)
+- [x] **Integrated into:**
+  - **Gem Finder** - 15% weight in gem scoring
+  - **AI Discovery** - 15% weight in discovery scoring  
+  - **Growth Engine** - Position sizing adjusted by sentiment
+  - **Training** - Sentiment influences coin selection
+- [x] **API endpoints:**
+  - `GET /api/sentiment/coin/{coin_id}` - Individual coin sentiment
+  - `POST /api/sentiment/batch` - Batch sentiment for multiple coins
+  - `GET /api/sentiment/market` - Overall market sentiment
+  - `GET /api/sentiment/history/{coin_id}` - Historical sentiment
+- [x] **Frontend component** - MarketSentimentPanel on Growth Dashboard
+- [x] **Caching** - 1-hour cache to avoid API spam
+
+### ✅ AI Auto-Discovery (Feb 2, 2026)
 - [x] **Proactive coin scanning** - Fetches trending, new, and top gaining coins from CoinGecko
 - [x] **Multi-factor scoring** - Analyzes market cap, volume, momentum, community, and development
 - [x] **Auto-add to universe** - Coins scoring above threshold are automatically added
