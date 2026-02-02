@@ -142,6 +142,14 @@ async def initialize_services():
         from services.trading_journal import TradingJournalService
         from services.historical_trainer import HistoricalTrainer
         from services.enhanced_historical_trainer import EnhancedHistoricalTrainer
+        from services.dynamic_coin_universe import DynamicCoinUniverseManager, set_universe_manager
+        
+        # Initialize Dynamic Coin Universe (FIRST - other services depend on it)
+        universe_manager = DynamicCoinUniverseManager(db)
+        await universe_manager.initialize()
+        set_universe_manager(universe_manager)
+        ai_universe.set_dependencies(universe_manager)
+        logger.info("✅ Dynamic Coin Universe initialized")
         
         # Initialize base services
         market_service = MarketDataService()
