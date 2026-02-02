@@ -177,33 +177,85 @@ class AINewsSentimentService:
         return unique_news[:15]  # Limit to 15 most recent
     
     async def _fetch_cryptopanic_news(self, query: str) -> List[Dict]:
-        """Fetch news from CryptoPanic API"""
-        try:
-            async with httpx.AsyncClient(timeout=15) as client:
-                response = await client.get(
-                    "https://cryptopanic.com/api/v1/posts/",
-                    params={
-                        'auth_token': self.cryptopanic_key,
-                        'currencies': query.upper(),
-                        'kind': 'news',
-                        'filter': 'hot'
-                    }
+        """Fetch news from CryptoPanic using the official library"""
+        news_items = []
+        
+        # Try using the CryptoPanic library first
+        if self.cryptopanic_client:
+            try:
+                # Run in thread pool since the library is synchronous
+                loop = asyncio.get_event_loop()
+                posts = await loop.run_in_executor(
+                    None,
+                    lambda: self.cryptopanic_client.get_posts(
+                        currencies=[query.upper()],
+                        filter="hot"
+                    )
                 )
-                if response.status_code == 200:
-                    data = response.json()
-                    return [
-                        {
-                            'title': item.get('title', ''),
-                            'source': item.get('source', {}).get('title', 'Unknown'),
-                            'published_at': item.get('published_at', ''),
-                            'url': item.get('url', ''),
-                            'votes': item.get('votes', {})
+                
+                if posts and posts.results:
+                    for post in posts.results[:15]:
+                        # Calculate sentiment from votes
+                        votes = post.votes
+                        vote_sentiment = 'neutral'
+                        if votes:
+                            pos_neg_ratio = (votes.positive + votes.liked) / max(1, votes.negative + votes.disliked + 1)
+                            if pos_neg_ratio > 2:
+                                vote_sentiment = 'bullish'
+                            elif pos_neg_ratio < 0.5:
+                                vote_sentiment = 'bearish'
+                        
+                        news_items.append({
+                            'title': post.title,
+                            'source': post.source.title if post.source else 'Unknown',
+                            'published_at': post.published_at.isoformat() if post.published_at else '',
+                            'url': post.url,
+                            'kind': post.kind,
+                            'panic_score': post.panic_score,
+                            'vote_sentiment': vote_sentiment,
+                            'votes': {
+                                'positive': votes.positive if votes else 0,
+                                'negative': votes.negative if votes else 0,
+                                'important': votes.important if votes else 0,
+                                'liked': votes.liked if votes else 0,
+                                'disliked': votes.disliked if votes else 0,
+                                'comments': votes.comments if votes else 0
+                            }
+                        })
+                    
+                    print(f"✅ CryptoPanic: Fetched {len(news_items)} news for {query}")
+                    return news_items
+                    
+            except Exception as e:
+                print(f"CryptoPanic library error: {e}")
+        
+        # Fallback to direct API call if library fails
+        if self.cryptopanic_key:
+            try:
+                async with httpx.AsyncClient(timeout=15) as client:
+                    response = await client.get(
+                        "https://cryptopanic.com/api/v1/posts/",
+                        params={
+                            'auth_token': self.cryptopanic_key,
+                            'currencies': query.upper(),
+                            'kind': 'news',
+                            'filter': 'hot'
                         }
-                        for item in data.get('results', [])
-                    ]
-        except Exception as e:
-            print(f"CryptoPanic fetch error: {e}")
-        return []
+                    )
+                    if response.status_code == 200:
+                        data = response.json()
+                        for item in data.get('results', []):
+                            news_items.append({
+                                'title': item.get('title', ''),
+                                'source': item.get('source', {}).get('title', 'Unknown'),
+                                'published_at': item.get('published_at', ''),
+                                'url': item.get('url', ''),
+                                'votes': item.get('votes', {})
+                            })
+            except Exception as e:
+                print(f"CryptoPanic API fallback error: {e}")
+        
+        return news_items
     
     async def _fetch_coingecko_news(self, coin_id: str) -> List[Dict]:
         """Fetch news/status updates from CoinGecko"""
