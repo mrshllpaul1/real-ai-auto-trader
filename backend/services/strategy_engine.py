@@ -247,7 +247,16 @@ Keep response concise and structured.
 """
             
             user_message = UserMessage(text=prompt)
-            response = await chat.send_message(user_message)
+            
+            # Add timeout for AI response (30 seconds)
+            try:
+                response = await asyncio.wait_for(
+                    chat.send_message(user_message),
+                    timeout=30.0
+                )
+            except asyncio.TimeoutError:
+                print(f"AI response timed out for {coin_id}, using fallback")
+                raise Exception("AI response timed out")
             
             # Adjust confidence based on learning and news
             final_confidence = technical_analysis.get('confidence')
