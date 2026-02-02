@@ -111,10 +111,81 @@ class HiddenGemFinder:
             if score_data and score_data['total_score'] > 50:
                 gem_candidates.append(score_data)
         
-        # Sort by gem score
+        # Enhance with sentiment analysis
+        gem_candidates = await self._enhance_with_sentiment(gem_candidates)
+        
+        # Sort by gem score (now includes sentiment)
         gem_candidates.sort(key=lambda x: x['total_score'], reverse=True)
         
         return gem_candidates[:max_gems]
+    
+    async def _enhance_with_sentiment(self, candidates: List[Dict]) -> List[Dict]:
+        """
+        Enhance gem candidates with AI news sentiment analysis.
+        Adjusts scores based on bullish/bearish news.
+        """
+        if not candidates:
+            return candidates
+        
+        # Get sentiment service
+        if not self._sentiment_service:
+            try:
+                from services.ai_news_sentiment import get_sentiment_service
+                self._sentiment_service = get_sentiment_service()
+            except Exception:
+                pass
+        
+        if not self._sentiment_service:
+            return candidates  # Return unchanged if no sentiment service
+        
+        # Prepare batch request
+        coins_to_analyze = [{'coin_id': c['coin_id'], 'symbol': c['coin_id'].upper()} for c in candidates]
+        
+        try:
+            sentiments = await self._sentiment_service.get_batch_sentiment(coins_to_analyze)
+            
+            for candidate in candidates:
+                coin_id = candidate['coin_id']
+                if coin_id in sentiments:
+                    sentiment = sentiments[coin_id]
+                    sentiment_score = sentiment.get('score', 50)
+                    
+                    # Update the sentiment score in the candidate
+                    candidate['scores']['sentiment'] = sentiment_score
+                    candidate['sentiment'] = {
+                        'score': sentiment_score,
+                        'label': sentiment.get('label', 'neutral'),
+                        'summary': sentiment.get('summary', ''),
+                        'bullish_signals': sentiment.get('bullish_signals', []),
+                        'bearish_signals': sentiment.get('bearish_signals', [])
+                    }
+                    candidate['sentiment_pending'] = False
+                    
+                    # Recalculate total score with sentiment
+                    candidate['total_score'] = round(
+                        candidate['scores']['volatility'] * self.gem_weights['volatility_potential'] +
+                        candidate['scores']['volume_spike'] * self.gem_weights['volume_spike'] +
+                        candidate['scores']['momentum'] * self.gem_weights['price_momentum'] +
+                        candidate['scores']['breakout'] * self.gem_weights['trend_breakout'] +
+                        candidate['scores']['historical'] * self.gem_weights['market_cap_potential'] +
+                        sentiment_score * self.gem_weights['news_sentiment'],
+                        2
+                    )
+                    
+                    # Update signal based on new score
+                    if candidate['total_score'] > 80:
+                        candidate['signal'] = "🔥 HIGH POTENTIAL"
+                    elif candidate['total_score'] > 65:
+                        candidate['signal'] = "⚡ WATCH CLOSELY"
+                    elif candidate['total_score'] > 50:
+                        candidate['signal'] = "👀 MONITORING"
+                    else:
+                        candidate['signal'] = "⏸️ WAIT"
+        
+        except Exception as e:
+            print(f"Sentiment enhancement error: {e}")
+        
+        return candidates
     
     async def _get_prices(
         self,
