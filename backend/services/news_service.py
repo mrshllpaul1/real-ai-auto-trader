@@ -192,7 +192,7 @@ class CryptoNewsAggregator:
         """Get news from CoinMarketCap (fallback source)"""
         try:
             if not self.cmc_api_key:
-                return await self._get_simulated_news(limit)
+                return []  # Return empty if no API key - NEVER use simulated data
             
             headers = {'X-CMC_PRO_API_KEY': self.cmc_api_key}
             
