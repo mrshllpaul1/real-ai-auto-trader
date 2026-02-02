@@ -128,19 +128,42 @@ const GrowthDashboard = () => {
   const portfolio = stats?.portfolio || {};
   const goalProgress = stats?.goal_progress || {};
   const statistics = stats?.statistics || {};
+  
+  // Generate AI decisions for positions
+  const aiDecisions = positions.map(pos => generateAIReasoning(pos));
 
   return (
     <div className="min-h-screen bg-[#000000] text-white p-4 md:p-8">
+      {/* Tutorial Modal */}
+      {showTutorial && (
+        <UserTutorial 
+          onComplete={completeTutorial} 
+          onSkip={completeTutorial}
+        />
+      )}
+      
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="mb-8"
       >
-        <h1 className="text-4xl md:text-5xl font-bold mb-2 flex items-center gap-3">
-          <Rocket className="text-[#00FF94]" />
-          $500 → $100,000
-        </h1>
-        <p className="text-[#A1A1AA]">Aggressive Growth Engine • Always hunting • Always compounding</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-bold mb-2 flex items-center gap-3">
+              <Rocket className="text-[#00FF94]" />
+              $500 → $100,000
+            </h1>
+            <p className="text-[#A1A1AA]">Aggressive Growth Engine • Always hunting • Always compounding</p>
+          </div>
+          <Button
+            variant="ghost"
+            onClick={() => setShowTutorial(true)}
+            className="text-[#A1A1AA] hover:text-white"
+          >
+            <HelpCircle className="mr-2" size={16} />
+            Tutorial
+          </Button>
+        </div>
       </motion.div>
 
       <motion.div
@@ -176,6 +199,66 @@ const GrowthDashboard = () => {
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Budget Control - Only shows when real trading is selected */}
+      {!paperMode && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="mb-8"
+        >
+          <Card className="bg-[#0A0A0A] border-[#FF9500]/30">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Shield className="text-[#FF9500]" />
+                Budget Protection
+                {budget?.real_trading_enabled && (
+                  <Badge className="bg-[#00FF94]/20 text-[#00FF94] ml-2">ENABLED</Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-[#A1A1AA] mb-4">
+                Set your trading budget. The AI will ONLY use this amount - your other assets remain untouched.
+              </p>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex-1">
+                  <Input
+                    type="number"
+                    placeholder="Enter budget amount ($)"
+                    value={budgetInput}
+                    onChange={(e) => setBudgetInput(e.target.value)}
+                    className="bg-[#121212] border-[#1F1F1F]"
+                  />
+                </div>
+                <Button
+                  onClick={handleSetBudget}
+                  disabled={settingBudget}
+                  className="bg-[#FF9500] hover:bg-[#CC7700] text-black"
+                >
+                  {settingBudget ? <Loader2 className="animate-spin" /> : 'Set Budget'}
+                </Button>
+              </div>
+              {budget && (
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="p-3 bg-[#121212] rounded-lg">
+                    <div className="text-lg font-bold text-[#00FF94]">${budget.allocated_budget || 0}</div>
+                    <div className="text-xs text-[#A1A1AA]">Allocated</div>
+                  </div>
+                  <div className="p-3 bg-[#121212] rounded-lg">
+                    <div className="text-lg font-bold text-[#007AFF]">${budget.available_budget || 0}</div>
+                    <div className="text-xs text-[#A1A1AA]">Available</div>
+                  </div>
+                  <div className="p-3 bg-[#121212] rounded-lg">
+                    <div className="text-lg font-bold text-[#FF9500]">${budget.used_budget || 0}</div>
+                    <div className="text-xs text-[#A1A1AA]">In Use</div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       <motion.div
         initial={{ y: 20, opacity: 0 }}
