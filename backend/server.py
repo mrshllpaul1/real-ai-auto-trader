@@ -66,6 +66,7 @@ api_router.include_router(gems.router, tags=["Gem Finder"])
 api_router.include_router(auto_trade.router, tags=["Automated Trading"])
 api_router.include_router(growth.router, tags=["Growth Engine"])
 api_router.include_router(scheduler.router, tags=["Scheduler"])
+api_router.include_router(budget.router, tags=["Budget Management"])
 
 # Include the router in the main app
 app.include_router(api_router)
