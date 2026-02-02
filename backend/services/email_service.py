@@ -19,7 +19,7 @@ class EmailNotificationService:
     def __init__(self):
         self.api_key = os.getenv('RESEND_API_KEY')
         self.sender_email = os.getenv('SENDER_EMAIL', 'onboarding@resend.dev')
-        self.default_recipient = os.getenv('ALERT_EMAIL', 'mrshllpaul1@hotmail.com')
+        self.default_recipient = os.getenv('ALERT_EMAIL')  # No fallback - must be configured
         
         if self.api_key:
             resend.api_key = self.api_key
