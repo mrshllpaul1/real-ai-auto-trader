@@ -200,10 +200,30 @@ TWILIO_PHONE_NUMBER=      # User must provide
    - Weekly Automated Trading (Mondays at 8 AM UTC)
    - Daily Profit Compounding (midnight UTC)
    - Start/Stop scheduler controls
-   - Autopilot Mode UI in Growth Dashboard
-3. ✅ All Growth APIs working: /api/growth/stats, /api/growth/positions, /api/growth/execute, /api/growth/monitor
-4. ✅ All Scheduler APIs working: /api/scheduler/status, /api/scheduler/setup-default, /api/scheduler/start, /api/scheduler/stop
-5. ✅ Testing agent validated 100% pass rate (12/12 backend tests)
+3. ✅ **P2 COMPLETED**: Real Money Trading with Budget Protection
+   - BudgetManager service - only uses allocated funds
+   - NEVER touches other user assets
+   - Budget allocation/release tracking
+   - Real trading enable/disable toggle
+4. ✅ **P2 COMPLETED**: User-Guided Tutorial
+   - 6-step interactive onboarding flow
+   - Covers budget setup, Kraken connection, AI training, autopilot
+   - Accessible via Tutorial button in header
+5. ✅ **P3 COMPLETED**: AI Decision Visualization
+   - Shows WHY AI chose specific coins
+   - Factor breakdown (momentum, volume, trend, sentiment, volatility)
+   - Confidence scores and reasoning text
+6. ✅ **P3 COMPLETED**: Fixed `/api/learning/record-outcome` endpoint
+   - Now accepts query parameters correctly
+   - Works even without existing strategy/trade records
+7. ✅ **P3 COMPLETED**: Pytest tests for critical services
+   - Budget Manager tests
+   - Scheduler Service tests
+   - Growth Engine tests
+   - API endpoint tests
+8. ✅ All Growth APIs working
+9. ✅ All Scheduler APIs working
+10. ✅ All Budget APIs working
 
 ## Previous Session (Feb 2, 2026 - Earlier)
 1. ✅ **P0 FIXED**: Removed scikit-learn/scipy - App now deployable
