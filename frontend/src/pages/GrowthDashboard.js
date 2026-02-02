@@ -18,6 +18,7 @@ import UserTutorial from '../components/UserTutorial';
 import CoinUniverseManager from '../components/CoinUniverseManager';
 import AIDiscoveryPanel from '../components/AIDiscoveryPanel';
 import MarketSentimentPanel from '../components/MarketSentimentPanel';
+import CryptoNewsFeed from '../components/CryptoNewsFeed';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
