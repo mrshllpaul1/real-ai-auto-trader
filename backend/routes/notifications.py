@@ -9,16 +9,17 @@ _notification_service = None
 
 class NotificationSettingsUpdate(BaseModel):
     push_enabled: Optional[bool] = None
-    sms_enabled: Optional[bool] = None
-    sms_phone: Optional[str] = None
+    vibration_enabled: Optional[bool] = None
     notify_trade_open: Optional[bool] = None
     notify_trade_close: Optional[bool] = None
     notify_high_alerts: Optional[bool] = None
     notify_medium_alerts: Optional[bool] = None
+    notify_ai_discoveries: Optional[bool] = None
 
-class TestSmsRequest(BaseModel):
-    message: str = "Test notification from AI Crypto Trading"
-    phone: Optional[str] = None
+class TestPushRequest(BaseModel):
+    title: str = "Test Notification"
+    body: str = "This is a test notification from AI Crypto Trading"
+    priority: str = "normal"  # high, normal, low
 
 async def get_notification_service():
     global _notification_service
@@ -90,25 +91,22 @@ async def update_settings(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/test-sms")
-async def test_sms(request: TestSmsRequest):
-    """Send a test SMS notification"""
-    try:
-        service = await get_notification_service()
-        result = await service.send_sms(request.message, request.phone)
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 @router.post("/test-push")
-async def test_push():
-    """Send a test push notification"""
+async def test_push(request: TestPushRequest = None):
+    """Send a test push notification with vibration"""
     try:
         service = await get_notification_service()
+        
+        title = request.title if request else "Test Notification"
+        body = request.body if request else "This is a test notification from AI Crypto Trading"
+        priority = request.priority if request else "normal"
+        
         result = await service.send_push_notification(
-            title="Test Notification",
-            body="This is a test notification from AI Crypto Trading",
-            data={"type": "test"}
+            title=title,
+            body=body,
+            data={"type": "test"},
+            priority=priority,
+            vibrate=True
         )
         return result
     except Exception as e:
