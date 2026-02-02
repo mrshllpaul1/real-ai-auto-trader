@@ -15,6 +15,23 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ## What's Been Implemented (Feb 2, 2026 - Session 4)
 
+### ✅ AI Auto-Discovery (NEW - Feb 2, 2026)
+- [x] **Proactive coin scanning** - Fetches trending, new, and top gaining coins from CoinGecko
+- [x] **Multi-factor scoring** - Analyzes market cap, volume, momentum, community, and development
+- [x] **Auto-add to universe** - Coins scoring above threshold are automatically added
+- [x] **Approval workflow** - Optional "require approval" mode to review before adding
+- [x] **Daily limits** - Configurable max daily additions to prevent spam
+- [x] **Scheduled scans** - Runs daily at 10 AM via scheduler
+- [x] **Push notifications** - Alerts when AI discovers new coins
+- [x] **API endpoints**:
+  - `GET /api/ai-discovery/stats` - Discovery statistics
+  - `POST /api/ai-discovery/scan` - Run manual scan
+  - `GET /api/ai-discovery/pending` - Pending approvals
+  - `POST /api/ai-discovery/approve/{coin_id}` - Approve discovery
+  - `POST /api/ai-discovery/reject/{coin_id}` - Reject discovery
+  - `GET/POST /api/ai-discovery/settings` - Manage settings
+- [x] **Frontend component** - AIDiscoveryPanel on Growth Dashboard
+
 ### ✅ Push Notifications with Vibration (Feb 2, 2026)
 - [x] **Removed SMS/Twilio** - No longer using SMS notifications
 - [x] **Push notifications with vibration patterns**:
