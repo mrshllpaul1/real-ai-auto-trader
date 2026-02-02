@@ -69,12 +69,6 @@ const AutoTrading = () => {
           real_trading_enabled: prev.real_trading_enabled
         }));
       }
-        setConfig(prev => ({
-          ...prev,
-          paper_trading_enabled: savedMode !== 'real',
-          real_trading_enabled: savedMode === 'real'
-        }));
-      }
       
       if (allocationRes.data.allocated) {
         setAllocation(allocationRes.data.allocations || {});
