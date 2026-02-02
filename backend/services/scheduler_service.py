@@ -585,18 +585,24 @@ class SchedulerService:
         # 2. Compound profits daily at midnight
         results['compound'] = await self.add_compound_job(hour=0)
         
-        # 3. Weekly trading on Mondays
+        # 3. Weekly AI retraining on Mondays at 6 AM (before trading)
+        results['retrain'] = await self.add_weekly_retrain_job(
+            day_of_week='mon',
+            hour=6
+        )
+        
+        # 4. Weekly trading on Mondays at 8 AM (after retraining)
         results['weekly'] = await self.add_weekly_trader_job(
             day_of_week='mon',
             hour=8,
             paper_trade=paper_trade
         )
         
-        logger.info("📋 Default schedule configured")
+        logger.info("📋 Default schedule configured (including weekly retraining)")
         
         return {
             'success': True,
             'jobs_configured': len(results),
             'details': results,
-            'message': 'Passive income schedule active!'
+            'message': 'Passive income schedule active with weekly AI retraining!'
         }
