@@ -14,13 +14,25 @@ import AICoinSelectionSection from '../components/AICoinSelectionSection';
 import AutomatedTradingSection from '../components/AutomatedTradingSection';
 
 const AutoTrading = () => {
-  const [config, setConfig] = useState({
-    enabled: false,
-    paper_trading_enabled: true,
-    real_trading_enabled: false,
-    amount_per_trade: 100,
-    min_confidence: 70,
-    max_daily_trades: 10
+  // Get initial trading mode from localStorage
+  const getInitialTradingMode = () => {
+    const saved = localStorage.getItem('growth_trading_mode');
+    return {
+      paper_trading_enabled: saved !== 'real',
+      real_trading_enabled: saved === 'real'
+    };
+  };
+  
+  const [config, setConfig] = useState(() => {
+    const initialMode = getInitialTradingMode();
+    return {
+      enabled: false,
+      paper_trading_enabled: initialMode.paper_trading_enabled,
+      real_trading_enabled: initialMode.real_trading_enabled,
+      amount_per_trade: 100,
+      min_confidence: 70,
+      max_daily_trades: 10
+    };
   });
   const [allocation, setAllocation] = useState({
     USD: 0,
@@ -31,6 +43,42 @@ const AutoTrading = () => {
   const [botPortfolio, setBotPortfolio] = useState(null);
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Sync trading mode with localStorage
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'growth_trading_mode') {
+        setConfig(prev => ({
+          ...prev,
+          paper_trading_enabled: e.newValue !== 'real',
+          real_trading_enabled: e.newValue === 'real'
+        }));
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check on mount
+    const saved = localStorage.getItem('growth_trading_mode');
+    if (saved) {
+      setConfig(prev => ({
+        ...prev,
+        paper_trading_enabled: saved !== 'real',
+        real_trading_enabled: saved === 'real'
+      }));
+    }
+    
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Handler to update trading mode and sync to localStorage
+  const handleTradingModeChange = (enableReal) => {
+    setConfig(prev => ({
+      ...prev,
+      paper_trading_enabled: !enableReal,
+      real_trading_enabled: enableReal
+    }));
+    localStorage.setItem('growth_trading_mode', enableReal ? 'real' : 'paper');
+  };
 
   useEffect(() => {
     loadConfig();
