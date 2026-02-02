@@ -221,10 +221,10 @@ class CryptoNewsAggregator:
                         for coin in coins
                     ]
                 
-                return await self._get_simulated_news(limit)
+                return await self._get_unavailable_news_response(limit)
         except Exception as e:
             print(f"CMC news error: {str(e)}")
-            return await self._get_simulated_news(limit)
+            return await self._get_unavailable_news_response(limit)
     
     async def _get_unavailable_news_response(self, limit: int = 10) -> List[Dict[str, Any]]:
         """
