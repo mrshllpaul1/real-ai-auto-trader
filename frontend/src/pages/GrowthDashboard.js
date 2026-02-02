@@ -94,11 +94,6 @@ const GrowthDashboard = () => {
     }
   }, []);
 
-  // Save trading mode to localStorage when it changes
-  useEffect(() => {
-    localStorage.setItem('growth_trading_mode', tradingMode);
-  }, [tradingMode]);
-
   useEffect(() => {
     loadPaperData();
     loadRealData();
