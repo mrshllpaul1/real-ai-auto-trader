@@ -175,6 +175,24 @@ growth_engine = AggressiveGrowthEngine(
 growth.set_dependencies(db, growth_engine)
 logger.info("🚀 Aggressive Growth Engine initialized ($500→$100k)")
 
+# Initialize Scheduler Service
+from services.scheduler_service import SchedulerService
+scheduler_service = SchedulerService(
+    db=db,
+    growth_engine=growth_engine,
+    automated_trader=automated_trader,
+    alert_service=alert_service
+)
+scheduler.set_dependencies(scheduler_service)
+logger.info("⏰ Scheduler Service initialized")
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Start the scheduler on app startup"""
+    await scheduler_service.start()
+    logger.info("🚀 Application startup complete")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
