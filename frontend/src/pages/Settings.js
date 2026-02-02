@@ -115,20 +115,21 @@ const Settings = () => {
     }
   };
 
-  const testSms = async () => {
+  const testPushNotification = async () => {
     try {
       setLoading(true);
-      const result = await api.post('/notifications/test-sms', {
-        message: 'Test SMS from AI Crypto Trading',
-        phone: notificationSettings.sms_phone
+      const result = await api.post('/notifications/test-push', {
+        title: 'Test Notification',
+        body: 'This is a test push notification with vibration!',
+        priority: 'high'
       });
       if (result.data.success) {
-        toast.success('Test SMS sent!');
+        toast.success('Test push notification sent!');
       } else {
-        toast.error(result.data.error || 'SMS failed');
+        toast.error(result.data.error || 'Push notification failed');
       }
     } catch (error) {
-      toast.error('Failed to send test SMS');
+      toast.error('Failed to send test notification');
     } finally {
       setLoading(false);
     }
