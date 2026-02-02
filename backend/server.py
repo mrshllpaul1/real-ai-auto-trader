@@ -146,6 +146,7 @@ async def initialize_services():
         from services.enhanced_historical_trainer import EnhancedHistoricalTrainer
         from services.dynamic_coin_universe import DynamicCoinUniverseManager, set_universe_manager
         from services.ai_coin_discovery import AICoinDiscoveryService, set_discovery_service
+        from services.ai_news_sentiment import AINewsSentimentService, set_sentiment_service
         
         # Initialize Dynamic Coin Universe (FIRST - other services depend on it)
         universe_manager = DynamicCoinUniverseManager(db)
@@ -153,6 +154,12 @@ async def initialize_services():
         set_universe_manager(universe_manager)
         ai_universe.set_dependencies(universe_manager)
         logger.info("✅ Dynamic Coin Universe initialized")
+        
+        # Initialize AI Sentiment Service
+        sentiment_service = AINewsSentimentService(db)
+        set_sentiment_service(sentiment_service)
+        sentiment.set_dependencies(sentiment_service)
+        logger.info("✅ AI Sentiment Service initialized")
         
         # Initialize AI Discovery Service
         discovery_service = AICoinDiscoveryService(db, universe_manager)
