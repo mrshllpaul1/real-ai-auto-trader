@@ -125,8 +125,12 @@ async def generate_strategies(
         
         # Store strategies in database
         for strategy in strategies:
-            strategy['user_id'] = request.user_id
-            await db.strategies.insert_one(strategy)
+            strategy_to_store = {**strategy, 'user_id': request.user_id}
+            await db.strategies.insert_one(strategy_to_store)
+        
+        # Remove any _id fields before returning
+        for strategy in strategies:
+            strategy.pop('_id', None)
         
         return {
             "strategies": strategies,
