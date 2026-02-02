@@ -43,10 +43,10 @@ const AutoExecution = () => {
     setRiskProfile(prev => ({ ...prev, mode: newMode }));
   }, [isRealMode]);
 
-  // When mode changes, update localStorage
+  // When mode changes, update global context
   const handleModeChange = (newMode) => {
     setRiskProfile(prev => ({ ...prev, mode: newMode }));
-    localStorage.setItem('growth_trading_mode', newMode === 'live' ? 'real' : 'paper');
+    setMode(newMode === 'live' ? 'real' : 'paper');
   };
 
   const loadData = useCallback(async () => {
@@ -62,15 +62,8 @@ const AutoExecution = () => {
       setAiStatus(aiRes.data);
       setAiPerformance(perfRes.data);
       if (profileRes.data) {
-        // Apply API config but ALWAYS respect localStorage trading mode
-        const savedMode = localStorage.getItem('growth_trading_mode');
-        const mode = savedMode === 'real' ? 'live' : 'paper';
-        setRiskProfile(prev => ({ ...prev, ...profileRes.data, mode }));
-      } else {
-        // No API config - apply localStorage mode
-        const savedMode = localStorage.getItem('growth_trading_mode');
-        const mode = savedMode === 'real' ? 'live' : 'paper';
-        setRiskProfile(prev => ({ ...prev, mode }));
+        // Apply API config but preserve global trading mode
+        setRiskProfile(prev => ({ ...prev, ...profileRes.data, mode: isRealMode ? 'live' : 'paper' }));
       }
     } catch (error) {
       console.error('Error loading data:', error);
