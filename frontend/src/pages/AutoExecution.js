@@ -21,9 +21,16 @@ const AutoExecution = () => {
   const [aiStatus, setAiStatus] = useState(null);
   const [aiPerformance, setAiPerformance] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Get initial mode from localStorage - sync with GrowthDashboard
+  const getInitialMode = () => {
+    const saved = localStorage.getItem('growth_trading_mode');
+    return saved === 'real' ? 'live' : 'paper';
+  };
+  
   const [riskProfile, setRiskProfile] = useState({
     enabled: false,
-    mode: 'paper',
+    mode: getInitialMode(),
     min_score: 60,
     max_position_size_usd: 100,
     max_daily_trades: 5,
@@ -31,6 +38,32 @@ const AutoExecution = () => {
     stop_loss_pct: 10,
     take_profit_pct: 50
   });
+
+  // Sync mode with localStorage
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'growth_trading_mode') {
+        const newMode = e.newValue === 'real' ? 'live' : 'paper';
+        setRiskProfile(prev => ({ ...prev, mode: newMode }));
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check on mount
+    const saved = localStorage.getItem('growth_trading_mode');
+    if (saved) {
+      const newMode = saved === 'real' ? 'live' : 'paper';
+      setRiskProfile(prev => ({ ...prev, mode: newMode }));
+    }
+    
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // When mode changes, update localStorage
+  const handleModeChange = (newMode) => {
+    setRiskProfile(prev => ({ ...prev, mode: newMode }));
+    localStorage.setItem('growth_trading_mode', newMode === 'live' ? 'real' : 'paper');
+  };
 
   const loadData = useCallback(async () => {
     try {
