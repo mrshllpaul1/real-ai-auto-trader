@@ -162,6 +162,13 @@ async def initialize_services():
         sentiment.set_dependencies(sentiment_service)
         logger.info("✅ AI Sentiment Service initialized")
         
+        # Initialize CryptoPanic Service
+        from services.cryptopanic_service import CryptoPanicService, set_cryptopanic_service
+        cryptopanic_service = CryptoPanicService()
+        set_cryptopanic_service(cryptopanic_service)
+        cryptopanic.set_dependencies(cryptopanic_service)
+        logger.info("✅ CryptoPanic Service initialized")
+        
         # Initialize AI Discovery Service
         discovery_service = AICoinDiscoveryService(db, universe_manager)
         set_discovery_service(discovery_service)
