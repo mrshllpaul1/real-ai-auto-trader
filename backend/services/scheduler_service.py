@@ -487,20 +487,28 @@ class SchedulerService:
         """
         Execute weekly AI retraining with real market data.
         This updates the AI's pattern recognition and hidden gem detection.
+        Trains on ALL coins in the universe for comprehensive learning.
         """
         timestamp = datetime.utcnow()
         logger.info(f"🧠 [{timestamp.strftime('%H:%M')}] Running weekly AI retraining...")
         
+        # Use all coins from universe if not specified
         if coins is None:
-            coins = ['bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot']
+            from services.coin_universe import get_training_coins
+            coins = get_training_coins()
+        
+        logger.info(f"  📊 Training on {len(coins)} coins from universe")
         
         results = {
             'timestamp': timestamp.isoformat(),
             'coins': coins,
+            'coin_count': len(coins),
             'historical_trainer': None,
             'enhanced_trainer': None,
             'total_patterns': 0,
             'hidden_gems_found': 0,
+            'coins_trained': 0,
+            'coins_skipped': 0,
             'success': False
         }
         
