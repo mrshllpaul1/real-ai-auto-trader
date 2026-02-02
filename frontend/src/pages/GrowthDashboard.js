@@ -32,9 +32,6 @@ const GrowthDashboard = () => {
     setTradingMode(newMode);
     toast.success(`Switched to ${newMode === 'real' ? 'Real' : 'Paper'} Trading`);
   };
-    localStorage.setItem('growth_trading_mode', newMode);
-    setTradingMode(newMode);
-  };
   
   // Paper trading state
   const [paperStats, setPaperStats] = useState(null);
