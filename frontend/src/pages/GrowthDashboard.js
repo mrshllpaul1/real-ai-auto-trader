@@ -15,6 +15,7 @@ import api from '../services/api';
 import { toast } from 'sonner';
 import AutopilotControl from '../components/AutopilotControl';
 import UserTutorial from '../components/UserTutorial';
+import CoinUniverseManager from '../components/CoinUniverseManager';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -594,6 +595,16 @@ const GrowthDashboard = () => {
             </div>
           </CardContent>
         </Card>
+      </motion.div>
+
+      {/* Coin Universe Manager */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.25 }}
+        className="mb-8"
+      >
+        <CoinUniverseManager />
       </motion.div>
 
       {/* Open Positions */}
