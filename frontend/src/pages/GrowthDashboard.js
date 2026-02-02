@@ -271,6 +271,45 @@ const GrowthDashboard = () => {
                   </div>
                 </div>
               )}
+              
+              {/* AI Confidence Threshold Setting */}
+              <div className="mt-6 pt-4 border-t border-[#1F1F1F]">
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap size={16} className="text-[#9D00FF]" />
+                  <span className="font-medium">AI Confidence Threshold</span>
+                </div>
+                <p className="text-xs text-[#A1A1AA] mb-3">
+                  Only execute real trades when AI confidence is above this threshold. Lower confidence trades will be paper-only.
+                </p>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={confidenceThreshold}
+                    onChange={(e) => setConfidenceThreshold(parseInt(e.target.value))}
+                    className="flex-1 h-2 bg-[#1F1F1F] rounded-lg appearance-none cursor-pointer accent-[#9D00FF]"
+                  />
+                  <span className={`text-lg font-bold min-w-[60px] text-center ${
+                    confidenceThreshold >= 80 ? 'text-[#00FF94]' : 
+                    confidenceThreshold >= 60 ? 'text-[#FF9500]' : 'text-[#FF0055]'
+                  }`}>
+                    {confidenceThreshold}%
+                  </span>
+                  <Button
+                    size="sm"
+                    onClick={() => handleSetConfidenceThreshold(confidenceThreshold)}
+                    disabled={settingThreshold}
+                    className="bg-[#9D00FF] hover:bg-[#7A00CC] text-white"
+                  >
+                    {settingThreshold ? <Loader2 size={14} className="animate-spin" /> : 'Save'}
+                  </Button>
+                </div>
+                <div className="flex justify-between mt-2 text-xs text-[#71717A]">
+                  <span>Aggressive (0%)</span>
+                  <span>Conservative (100%)</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
