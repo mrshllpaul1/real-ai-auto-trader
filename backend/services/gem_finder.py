@@ -222,13 +222,17 @@ class HiddenGemFinder:
         # 5. Historical gem performance (learned)
         hist_score = self.gem_scores.get(coin_id, 50)
         
+        # 6. News Sentiment Score (will be updated async if available)
+        sentiment_score = 50  # Default neutral
+        
         # Calculate weighted total
         total = (
             vol_score * self.gem_weights['volatility_potential'] +
             volume_score * self.gem_weights['volume_spike'] +
             momentum_score * self.gem_weights['price_momentum'] +
             breakout_score * self.gem_weights['trend_breakout'] +
-            hist_score * self.gem_weights['market_cap_potential']
+            hist_score * self.gem_weights['market_cap_potential'] +
+            sentiment_score * self.gem_weights['news_sentiment']
         )
         
         # Generate gem signal
@@ -250,13 +254,15 @@ class HiddenGemFinder:
                 'volume_spike': volume_score,
                 'momentum': momentum_score,
                 'breakout': breakout_score,
-                'historical': hist_score
+                'historical': hist_score,
+                'sentiment': sentiment_score
             },
             'metrics': {
                 'volatility_pct': round(volatility, 2),
                 'week_change_pct': round(week_change, 2),
                 'current_price': closes[-1]
-            }
+            },
+            'sentiment_pending': True  # Will be enhanced with sentiment
         }
     
     async def backtest_gems(
