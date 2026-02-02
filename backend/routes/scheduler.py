@@ -141,7 +141,7 @@ async def add_weekly_retrain(schedule: RetrainSchedule):
     Add weekly AI retraining job.
     
     - Runs on Mondays at 6 AM UTC by default (before trading at 8 AM)
-    - Trains both Historical and Enhanced trainers
+    - Trains on ALL 107 coins in the universe by default
     - Uses REAL market data only from Twelve Data API
     - Updates pattern recognition and hidden gem detection
     """
@@ -151,7 +151,7 @@ async def add_weekly_retrain(schedule: RetrainSchedule):
     return await scheduler_service.add_weekly_retrain_job(
         day_of_week=schedule.day_of_week,
         hour=schedule.hour,
-        coins=schedule.coins
+        coins=schedule.coins  # None = all coins
     )
 
 
@@ -160,6 +160,7 @@ async def retrain_now(coins: list = None):
     """
     Trigger AI retraining immediately.
     
+    - If coins is None, trains on ALL 107 coins in the universe
     - Runs Historical Trainer (patterns + hidden gems)
     - Runs Enhanced Trainer (technical indicators)
     - Uses REAL market data only
@@ -169,6 +170,22 @@ async def retrain_now(coins: list = None):
     
     result = await scheduler_service._run_weekly_retrain(coins=coins)
     return result
+
+
+@router.get("/coin-universe")
+async def get_coin_universe():
+    """Get the full coin universe used for training"""
+    from services.coin_universe import get_training_coins, get_gem_candidates, CATEGORIES
+    
+    all_coins = get_training_coins()
+    gems = get_gem_candidates()
+    
+    return {
+        "total_coins": len(all_coins),
+        "gem_candidates": len(gems),
+        "coins": all_coins,
+        "categories": CATEGORIES
+    }
 
 
 @router.delete("/jobs/{job_id}")
