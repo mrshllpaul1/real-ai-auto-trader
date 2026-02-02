@@ -60,6 +60,7 @@ api_router.include_router(social.router, prefix="/social", tags=["Social Trading
 api_router.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
 api_router.include_router(alerts.router, prefix="/alerts", tags=["Price Alerts"])
 api_router.include_router(email.router, prefix="/email", tags=["Email Notifications"])
+api_router.include_router(ai_portfolio.router, prefix="/ai-portfolio", tags=["AI Portfolio Manager"])
 
 # Include the router in the main app
 app.include_router(api_router)
