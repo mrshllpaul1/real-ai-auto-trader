@@ -187,6 +187,16 @@ scheduler_service = SchedulerService(
 scheduler.set_dependencies(scheduler_service)
 logger.info("⏰ Scheduler Service initialized")
 
+# Initialize Budget Manager
+from services.budget_manager import BudgetManager
+budget_manager = BudgetManager(db)
+budget.set_dependencies(budget_manager)
+logger.info("💰 Budget Manager initialized")
+
+# Update Growth Engine with Budget Manager
+growth_engine.budget_manager = budget_manager
+logger.info("🔗 Growth Engine linked to Budget Manager")
+
 
 @app.on_event("startup")
 async def startup_event():
