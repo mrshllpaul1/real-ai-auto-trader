@@ -259,10 +259,21 @@ TWILIO_PHONE_NUMBER=      # User must provide
 - Twilio SMS notifications (requires user credentials)
 - Email notifications with Resend (requires user API key)
 - Custom strategy builder UI
-- Trading journal with AI insights
 
 ---
 
 ## Test Reports
 - `/app/test_reports/iteration_3.json` - Latest test results (Feb 2, 2026)
 - `/app/backend/tests/test_services.py` - Unit tests for critical services
+
+---
+
+## New Features Added (Feb 2, 2026 - Session 2)
+1. ✅ **Trading Journal with AI Insights**
+   - Track all trades with timestamps and AI reasoning
+   - Daily/weekly/monthly performance summaries
+   - AI confidence accuracy analysis
+   - Gem vs Regular trade comparison
+   - Factor performance breakdown
+   - New route: `/journal`
+   - New APIs: `/api/journal/entries`, `/api/journal/stats`, `/api/journal/ai-insights`, `/api/journal/daily`
