@@ -133,7 +133,7 @@ const AutomatedTradingSection = () => {
                   <span className="text-sm text-[#A1A1AA]">Paper Mode</span>
                   <Switch
                     checked={paperMode}
-                    onCheckedChange={setPaperMode}
+                    onCheckedChange={handlePaperModeChange}
                     data-testid="paper-mode-switch"
                   />
                 </div>
