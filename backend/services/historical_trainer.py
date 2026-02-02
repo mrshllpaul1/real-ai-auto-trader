@@ -404,16 +404,18 @@ Be concise and actionable.
                 successful = sum(1 for p in patterns if p.get('success', False))
                 success_rate = (successful / len(patterns) * 100) if patterns else 0
                 
-                # Store patterns
+                # Store patterns with data source tag
                 if patterns:
                     for p in patterns:
                         p['coin_id'] = coin
+                        p['data_source'] = 'REAL_MARKET_DATA'
                     await self.db.historical_patterns.insert_many(patterns)
                 
-                # Store hidden gems
+                # Store hidden gems with data source tag
                 if hidden_gems:
                     for g in hidden_gems:
                         g['coin_id'] = coin
+                        g['data_source'] = 'REAL_MARKET_DATA'
                     await self.db.hidden_gems.insert_many(hidden_gems)
                 
                 # AI analysis
@@ -429,6 +431,7 @@ Be concise and actionable.
                     'hidden_gems': int(len(hidden_gems)),
                     'avg_gem_multiplier': float(sum(g['multiplier'] for g in hidden_gems) / len(hidden_gems)) if hidden_gems else 0.0,
                     'ai_insights': ai_insights,
+                    'data_source': 'REAL_MARKET_DATA',
                     'date_range': {
                         'start': df['date'].min().isoformat() if hasattr(df['date'].min(), 'isoformat') else str(df['date'].min()),
                         'end': df['date'].max().isoformat() if hasattr(df['date'].max(), 'isoformat') else str(df['date'].max())
