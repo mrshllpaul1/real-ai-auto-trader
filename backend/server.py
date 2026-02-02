@@ -1,13 +1,12 @@
 from fastapi import FastAPI, APIRouter
 from dotenv import load_dotenv
-from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
 import os
 import logging
-from pathlib import Path
-from routes import auth, trading, strategies, market, risk, learning, news, training, auto_trading, allocation, scanner, auto_execute, backtest, rebalance, social, notifications, alerts, email, ai_portfolio, ai_selection, gems, auto_trade, growth, scheduler, budget, journal
 
-
+# Load environment variables
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
@@ -17,39 +16,34 @@ db_name = os.environ.get('DB_NAME', 'crypto_trading_db')
 client = AsyncIOMotorClient(mongo_url)
 db = client[db_name]
 
-# Create the main app without a prefix
+# Create the main app
 app = FastAPI(
     title="AI Crypto Trading API",
     description="Real money AI-powered cryptocurrency auto trading platform",
     version="1.0.0"
 )
 
-# Health check endpoint at root level (required for Kubernetes/deployment)
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Health check endpoints - Must respond fast
 @app.get("/health")
 async def health_check():
     """Health check endpoint for deployment"""
-    try:
-        # Verify MongoDB connection
-        await client.admin.command('ping')
-        db_status = "connected"
-    except Exception as e:
-        db_status = f"error: {str(e)}"
-    
-    return {
-        "status": "healthy",
-        "database": db_status,
-        "version": "1.0.0"
-    }
+    return {"status": "healthy", "version": "1.0.0"}
 
 @app.get("/")
 async def root_health():
     """Root health check"""
     return {"status": "ok", "service": "ai-crypto-trading"}
 
-# Create a router with the /api prefix
+# Create API router
 api_router = APIRouter(prefix="/api")
 
-# API-level health check (accessible via /api/health)
 @api_router.get("/health")
 async def api_health_check():
     """API health check endpoint"""
@@ -58,27 +52,21 @@ async def api_health_check():
         db_status = "connected"
     except Exception as e:
         db_status = f"error: {str(e)}"
-    
-    return {
-        "status": "healthy",
-        "database": db_status,
-        "version": "1.0.0"
-    }
+    return {"status": "healthy", "database": db_status, "version": "1.0.0"}
 
-# Health check
 @api_router.get("/")
 async def root():
     return {
         "message": "AI Crypto Trading API",
         "status": "operational",
-        "features": [
-            "AI-powered strategy generation",
-            "Paper & Real trading",
-            "Risk management",
-            "Real-time market data",
-            "Portfolio analytics"
-        ]
+        "features": ["AI-powered trading", "Paper & Real trading", "Growth Engine"]
     }
+
+# Import routes
+from routes import auth, trading, strategies, market, risk, learning, news, training
+from routes import auto_trading, allocation, scanner, auto_execute, backtest, rebalance
+from routes import social, notifications, alerts, email, ai_portfolio, ai_selection
+from routes import gems, auto_trade, growth, scheduler, budget, journal
 
 # Include routers
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
@@ -92,7 +80,7 @@ api_router.include_router(training.router, prefix="/training", tags=["Historical
 api_router.include_router(auto_trading.router, prefix="/auto-trading", tags=["Auto Trading"])
 api_router.include_router(allocation.router, prefix="/allocation", tags=["Portfolio Allocation"])
 api_router.include_router(scanner.router, prefix="/scanner", tags=["Hidden Gem Scanner"])
-api_router.include_router(auto_execute.router, prefix="/auto-exec", tags=["Auto Execution & AI Learning"])
+api_router.include_router(auto_execute.router, prefix="/auto-exec", tags=["Auto Execution"])
 api_router.include_router(backtest.router, prefix="/backtest", tags=["Backtesting"])
 api_router.include_router(rebalance.router, prefix="/rebalance", tags=["Portfolio Rebalancing"])
 api_router.include_router(social.router, prefix="/social", tags=["Social Trading"])
@@ -108,9 +96,10 @@ api_router.include_router(scheduler.router, tags=["Scheduler"])
 api_router.include_router(budget.router, tags=["Budget Management"])
 api_router.include_router(journal.router, tags=["Trading Journal"])
 
-# Include the router in the main app
+# Include the router
 app.include_router(api_router)
 
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -119,136 +108,126 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# Global service references (initialized lazily)
+_services_initialized = False
 
-# Initialize AI Portfolio Manager
-from services.ai_portfolio_manager import AIPortfolioManager
-from services.market_data_service import MarketDataService
-from services.news_service import CryptoNewsAggregator
-from services.kraken_service import KrakenAuthenticator, KrakenTradeService
 
-# Set up services for AI Portfolio Manager
-market_service = MarketDataService()
-news_service = CryptoNewsAggregator()
-
-# Initialize Kraken if credentials available
-kraken_api_key = os.getenv('KRAKEN_API_KEY')
-kraken_api_secret = os.getenv('KRAKEN_API_SECRET')
-kraken_service = None
-
-if kraken_api_key and kraken_api_secret:
-    kraken_auth = KrakenAuthenticator(kraken_api_key, kraken_api_secret)
-    kraken_service = KrakenTradeService(kraken_auth)
-    logger.info("✅ Kraken service initialized for real trading")
-else:
-    logger.warning("⚠️ Kraken credentials not found - real trading disabled")
-
-# Initialize AI Portfolio Manager
-ai_portfolio_mgr = AIPortfolioManager(
-    db=db,
-    kraken_service=kraken_service,
-    market_service=market_service,
-    news_service=news_service
-)
-
-# Inject into routes
-ai_portfolio.ai_portfolio_manager = ai_portfolio_mgr
-logger.info("🤖 AI Portfolio Manager initialized")
-
-# Initialize AI Coin Selection Engine
-from services.adaptive_coin_selector import AdaptiveCoinSelector
-from services.weekly_simulation import WeeklySimulationRunner
-
-coin_selector = AdaptiveCoinSelector(db, market_service, news_service)
-simulation_runner = WeeklySimulationRunner(db)
-
-# Inject dependencies into AI selection routes
-ai_selection.set_dependencies(db, coin_selector, simulation_runner)
-logger.info("🎯 AI Coin Selection Engine initialized")
-
-# Initialize Gem Finder
-from services.gem_finder import HiddenGemFinder
-gem_finder = HiddenGemFinder(db)
-gems.set_dependencies(db, gem_finder)
-logger.info("💎 Gem Finder initialized")
-
-# Initialize AI Weekly Trainer
-from services.ai_weekly_trainer import AIWeeklyTrainer
-ai_trainer = AIWeeklyTrainer(db)
-logger.info("🧠 AI Weekly Trainer initialized")
-
-# Initialize Alert Service
-from services.alert_service import AlertService
-alert_service = AlertService(db)
-logger.info("🔔 Alert Service initialized")
-
-# Initialize Social Sentiment Analyzer
-from services.social_sentiment import SocialSentimentAnalyzer
-sentiment_analyzer = SocialSentimentAnalyzer(db)
-logger.info("📊 Social Sentiment Analyzer initialized")
-
-# Initialize Automated Trader
-from services.automated_trader import AutomatedWeeklyTrader
-automated_trader = AutomatedWeeklyTrader(
-    db=db,
-    kraken_service=kraken_service,
-    ai_trainer=ai_trainer,
-    gem_finder=gem_finder,
-    alert_service=alert_service
-)
-auto_trade.set_dependencies(db, automated_trader, alert_service, sentiment_analyzer)
-logger.info("🤖 Automated Weekly Trader initialized")
-
-# Initialize Aggressive Growth Engine
-from services.growth_engine import AggressiveGrowthEngine
-growth_engine = AggressiveGrowthEngine(
-    db=db,
-    kraken_service=kraken_service,
-    gem_finder=gem_finder,
-    ai_trainer=ai_trainer,
-    alert_service=alert_service
-)
-growth.set_dependencies(db, growth_engine)
-logger.info("🚀 Aggressive Growth Engine initialized ($500→$100k)")
-
-# Initialize Scheduler Service
-from services.scheduler_service import SchedulerService
-scheduler_service = SchedulerService(
-    db=db,
-    growth_engine=growth_engine,
-    automated_trader=automated_trader,
-    alert_service=alert_service
-)
-scheduler.set_dependencies(scheduler_service)
-logger.info("⏰ Scheduler Service initialized")
-
-# Initialize Budget Manager
-from services.budget_manager import BudgetManager
-budget_manager = BudgetManager(db)
-budget.set_dependencies(budget_manager)
-logger.info("💰 Budget Manager initialized")
-
-# Update Growth Engine with Budget Manager
-growth_engine.budget_manager = budget_manager
-logger.info("🔗 Growth Engine linked to Budget Manager")
-
-# Initialize Trading Journal
-from services.trading_journal import TradingJournalService
-journal_service = TradingJournalService(db)
-journal.set_dependencies(journal_service)
-logger.info("📝 Trading Journal initialized")
+async def initialize_services():
+    """Initialize all services - called after startup"""
+    global _services_initialized
+    if _services_initialized:
+        return
+    
+    logger.info("🚀 Initializing services...")
+    
+    try:
+        # Import services
+        from services.ai_portfolio_manager import AIPortfolioManager
+        from services.market_data_service import MarketDataService
+        from services.news_service import CryptoNewsAggregator
+        from services.kraken_service import KrakenAuthenticator, KrakenTradeService
+        from services.adaptive_coin_selector import AdaptiveCoinSelector
+        from services.weekly_simulation import WeeklySimulationRunner
+        from services.gem_finder import HiddenGemFinder
+        from services.ai_weekly_trainer import AIWeeklyTrainer
+        from services.alert_service import AlertService
+        from services.social_sentiment import SocialSentimentAnalyzer
+        from services.automated_trader import AutomatedWeeklyTrader
+        from services.growth_engine import AggressiveGrowthEngine
+        from services.scheduler_service import SchedulerService
+        from services.budget_manager import BudgetManager
+        from services.trading_journal import TradingJournalService
+        
+        # Initialize base services
+        market_service = MarketDataService()
+        news_service = CryptoNewsAggregator()
+        
+        # Kraken service (optional)
+        kraken_api_key = os.getenv('KRAKEN_API_KEY')
+        kraken_api_secret = os.getenv('KRAKEN_API_SECRET')
+        kraken_service = None
+        if kraken_api_key and kraken_api_secret:
+            kraken_auth = KrakenAuthenticator(kraken_api_key, kraken_api_secret)
+            kraken_service = KrakenTradeService(kraken_auth)
+            logger.info("✅ Kraken service initialized")
+        
+        # AI Portfolio Manager
+        ai_portfolio_mgr = AIPortfolioManager(db=db, kraken_service=kraken_service, market_service=market_service, news_service=news_service)
+        ai_portfolio.ai_portfolio_manager = ai_portfolio_mgr
+        
+        # AI Coin Selection
+        coin_selector = AdaptiveCoinSelector(db, market_service, news_service)
+        simulation_runner = WeeklySimulationRunner(db)
+        ai_selection.set_dependencies(db, coin_selector, simulation_runner)
+        
+        # Gem Finder
+        gem_finder = HiddenGemFinder(db)
+        gems.set_dependencies(db, gem_finder)
+        
+        # AI Trainer
+        ai_trainer = AIWeeklyTrainer(db)
+        
+        # Alert Service
+        alert_service = AlertService(db)
+        
+        # Sentiment Analyzer
+        sentiment_analyzer = SocialSentimentAnalyzer(db)
+        
+        # Automated Trader
+        automated_trader = AutomatedWeeklyTrader(
+            db=db, kraken_service=kraken_service, ai_trainer=ai_trainer,
+            gem_finder=gem_finder, alert_service=alert_service
+        )
+        auto_trade.set_dependencies(db, automated_trader, alert_service, sentiment_analyzer)
+        
+        # Growth Engine
+        growth_engine = AggressiveGrowthEngine(
+            db=db, kraken_service=kraken_service, gem_finder=gem_finder,
+            ai_trainer=ai_trainer, alert_service=alert_service
+        )
+        growth.set_dependencies(db, growth_engine)
+        
+        # Scheduler
+        scheduler_service = SchedulerService(
+            db=db, growth_engine=growth_engine,
+            automated_trader=automated_trader, alert_service=alert_service
+        )
+        scheduler.set_dependencies(scheduler_service)
+        
+        # Budget Manager
+        budget_manager = BudgetManager(db)
+        budget.set_dependencies(budget_manager)
+        growth_engine.budget_manager = budget_manager
+        
+        # Trading Journal
+        journal_service = TradingJournalService(db)
+        journal.set_dependencies(journal_service)
+        
+        # Start scheduler
+        await scheduler_service.start()
+        
+        _services_initialized = True
+        logger.info("✅ All services initialized successfully")
+        
+    except Exception as e:
+        logger.error(f"❌ Service initialization error: {e}")
 
 
 @app.on_event("startup")
 async def startup_event():
-    """Start the scheduler on app startup"""
-    await scheduler_service.start()
-    logger.info("🚀 Application startup complete")
+    """Fast startup - defer heavy initialization"""
+    logger.info("🚀 Application starting...")
+    # Initialize services in background after a short delay
+    import asyncio
+    asyncio.create_task(delayed_init())
+
+
+async def delayed_init():
+    """Initialize services after startup completes"""
+    import asyncio
+    await asyncio.sleep(2)  # Let health check pass first
+    await initialize_services()
+
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
