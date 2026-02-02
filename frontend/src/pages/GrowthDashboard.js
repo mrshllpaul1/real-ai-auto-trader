@@ -26,6 +26,8 @@ const GrowthDashboard = () => {
   const [showTutorial, setShowTutorial] = useState(false);
   const [budgetInput, setBudgetInput] = useState('');
   const [settingBudget, setSettingBudget] = useState(false);
+  const [confidenceThreshold, setConfidenceThreshold] = useState(70);
+  const [settingThreshold, setSettingThreshold] = useState(false);
 
   useEffect(() => {
     loadData();
