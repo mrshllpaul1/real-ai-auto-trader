@@ -15,6 +15,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
+import { useTradingMode } from '../context/TradingModeContext';
 
 const AutoExecution = () => {
   const [status, setStatus] = useState(null);
@@ -22,15 +23,12 @@ const AutoExecution = () => {
   const [aiPerformance, setAiPerformance] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  // Get initial mode from localStorage - sync with GrowthDashboard
-  const getInitialMode = () => {
-    const saved = localStorage.getItem('growth_trading_mode');
-    return saved === 'real' ? 'live' : 'paper';
-  };
+  // Use global trading mode context
+  const { mode: globalMode, setMode, isRealMode } = useTradingMode();
   
   const [riskProfile, setRiskProfile] = useState({
     enabled: false,
-    mode: getInitialMode(),
+    mode: 'paper',
     min_score: 60,
     max_position_size_usd: 100,
     max_daily_trades: 5,
@@ -39,25 +37,11 @@ const AutoExecution = () => {
     take_profit_pct: 50
   });
 
-  // Sync mode with localStorage
+  // Sync riskProfile mode with global trading mode
   useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'growth_trading_mode') {
-        const newMode = e.newValue === 'real' ? 'live' : 'paper';
-        setRiskProfile(prev => ({ ...prev, mode: newMode }));
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Also check on mount
-    const saved = localStorage.getItem('growth_trading_mode');
-    if (saved) {
-      const newMode = saved === 'real' ? 'live' : 'paper';
-      setRiskProfile(prev => ({ ...prev, mode: newMode }));
-    }
-    
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+    const newMode = isRealMode ? 'live' : 'paper';
+    setRiskProfile(prev => ({ ...prev, mode: newMode }));
+  }, [isRealMode]);
 
   // When mode changes, update localStorage
   const handleModeChange = (newMode) => {
