@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { 
   Rocket, Target, TrendingUp, Sparkles, DollarSign, 
-  Loader2, Play, RefreshCw, Trophy, Flame
+  Loader2, Play, RefreshCw, Trophy, Flame, Clock, Calendar, Zap, Power
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../services/api';
@@ -15,14 +15,21 @@ import { toast } from 'sonner';
 const GrowthDashboard = () => {
   const [stats, setStats] = useState(null);
   const [positions, setPositions] = useState([]);
+  const [schedulerStatus, setSchedulerStatus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [executing, setExecuting] = useState(false);
+  const [schedulerLoading, setSchedulerLoading] = useState(false);
   const [paperMode, setPaperMode] = useState(true);
 
   useEffect(() => {
     loadData();
+    loadSchedulerStatus();
     const interval = setInterval(loadData, 30000);
-    return () => clearInterval(interval);
+    const schedulerInterval = setInterval(loadSchedulerStatus, 60000);
+    return () => {
+      clearInterval(interval);
+      clearInterval(schedulerInterval);
+    };
   }, []);
 
   const loadData = async () => {
@@ -35,6 +42,15 @@ const GrowthDashboard = () => {
       setPositions(posRes.data.positions || []);
     } catch (error) {
       console.error('Error:', error);
+    }
+  };
+
+  const loadSchedulerStatus = async () => {
+    try {
+      const response = await api.get('/scheduler/status');
+      setSchedulerStatus(response.data);
+    } catch (error) {
+      console.error('Scheduler status error:', error);
     }
   };
 
@@ -72,6 +88,47 @@ const GrowthDashboard = () => {
       toast.error('Monitor failed');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const setupAutoPilot = async () => {
+    setSchedulerLoading(true);
+    try {
+      const response = await api.post(`/scheduler/setup-default?paper_trade=${paperMode}`);
+      if (response.data.success) {
+        toast.success('Autopilot activated! Passive income mode ON');
+        loadSchedulerStatus();
+      }
+    } catch (error) {
+      toast.error('Failed to setup autopilot');
+    } finally {
+      setSchedulerLoading(false);
+    }
+  };
+
+  const stopScheduler = async () => {
+    setSchedulerLoading(true);
+    try {
+      await api.post('/scheduler/stop');
+      toast.info('Scheduler stopped');
+      loadSchedulerStatus();
+    } catch (error) {
+      toast.error('Failed to stop scheduler');
+    } finally {
+      setSchedulerLoading(false);
+    }
+  };
+
+  const startScheduler = async () => {
+    setSchedulerLoading(true);
+    try {
+      await api.post('/scheduler/start');
+      toast.success('Scheduler started');
+      loadSchedulerStatus();
+    } catch (error) {
+      toast.error('Failed to start scheduler');
+    } finally {
+      setSchedulerLoading(false);
     }
   };
 
