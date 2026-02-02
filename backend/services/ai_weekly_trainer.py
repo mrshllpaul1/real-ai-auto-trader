@@ -244,8 +244,16 @@ class AIWeeklyTrainer:
     
     async def select_portfolio(self, week_start: datetime) -> Dict[str, Any]:
         """Select 10 main coins + 1 gem for the week"""
-        available = get_available_coins(week_start.strftime('%Y-%m-%d'))
-        gem_candidates = get_gem_candidates()
+        # Use dynamic universe if available, fallback to sync base
+        from services.dynamic_coin_universe import get_gem_candidates as async_get_gems
+        
+        available = get_available_coins_sync(week_start.strftime('%Y-%m-%d'))
+        try:
+            gem_candidates = await async_get_gems()
+        except Exception:
+            # Fallback to base universe
+            gem_categories = ['meme', 'ai', 'new', 'gaming']
+            gem_candidates = [k for k, v in BASE_UNIVERSE.items() if v.get('category') in gem_categories]
         
         main_scores = []
         gem_scores = []
