@@ -139,6 +139,7 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 │   ├── routes/
 │   │   ├── growth.py           # Growth Engine API ($500→$100k)
 │   │   ├── scheduler.py        # Scheduler/Autopilot API
+│   │   ├── ai_universe.py      # Dynamic Coin Universe API (NEW)
 │   │   ├── alerts.py           # Price alerts API
 │   │   ├── notifications.py    # Push & SMS notifications
 │   │   ├── scanner.py          # Gem scanner
@@ -147,8 +148,11 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 │   │   ├── rebalance.py        # Portfolio rebalancing
 │   │   └── social.py           # Social trading
 │   └── services/
+│       ├── dynamic_coin_universe.py # Dynamic Coin Universe Manager (NEW)
 │       ├── growth_engine.py       # Aggressive Growth Engine
-│       ├── scheduler_service.py   # APScheduler service (Autopilot)
+│       ├── scheduler_service.py   # APScheduler service (uses dynamic universe)
+│       ├── gem_finder.py          # Updated to use dynamic universe
+│       ├── ai_weekly_trainer.py   # Updated to use dynamic universe
 │       ├── price_alerts.py        # Alert service
 │       ├── notification_service.py
 │       ├── news_service.py        # Fixed with fallbacks
@@ -157,14 +161,15 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 └── frontend/
     ├── src/
     │   ├── pages/
-    │   │   ├── GrowthDashboard.js  # $500→$100k Dashboard
+    │   │   ├── GrowthDashboard.js  # $500→$100k Dashboard (includes CoinUniverseManager)
     │   │   ├── TradingView.js      # Candlestick charts
     │   │   ├── Analytics.js        # Enhanced dashboard
     │   │   ├── AdvancedFeatures.js
     │   │   ├── Guide.js
     │   │   └── Settings.js
     │   └── components/
-    │       └── AutopilotControl.js  # Scheduler UI
+    │       ├── CoinUniverseManager.js # Dynamic Coin Universe UI (NEW)
+    │       └── AutopilotControl.js    # Scheduler UI
     └── public/
         └── service-worker.js   # Enhanced for background
 ```
@@ -173,7 +178,17 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ## API Endpoints
 
-### Alerts (NEW)
+### AI Universe (NEW)
+- `GET /api/ai-universe/stats` - Get universe statistics
+- `GET /api/ai-universe/coins` - Get all active coins
+- `GET /api/ai-universe/coins/gems` - Get gem candidates
+- `GET /api/ai-universe/coins/discovered` - Get AI-discovered coins
+- `POST /api/ai-universe/coins/ai-discover` - Add coin via AI discovery
+- `DELETE /api/ai-universe/coin/{coin_id}` - Deactivate coin
+- `GET /api/ai-universe/categories` - Get all categories
+- `GET /api/ai-universe/coins/category/{category}` - Get coins by category
+
+### Alerts
 - `POST /api/alerts/create` - Create price alert
 - `GET /api/alerts/` - Get user alerts
 - `DELETE /api/alerts/{alert_id}` - Delete alert
