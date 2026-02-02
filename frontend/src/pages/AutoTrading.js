@@ -323,19 +323,20 @@ const AutoTrading = () => {
               <div className="text-sm text-[#007AFF]">
                 <p className="font-bold mb-2">How Auto-Trading Works:</p>
                 <ul className="space-y-1 ml-4">
-                  <li>Runs continuously 24/7 in background</li>
-                  <li>Executes trades every 15 minutes based on active strategies</li>
-                  <li>Paper trading = No real money (simulation only)</li>
-                  <li>Real trading = Actual trades on Kraken exchange</li>
-                  <li>Both modes can run simultaneously for comparison</li>
-                  <li>Mobile-optimized for Galaxy S22 background execution</li>
-                  <li>Automatic stop-loss and take-profit protection</li>
+                  <li>AI selects 10 coins + 1 gem every week</li>
+                  <li>Automatic stop-loss (15%) and take-profit (30%)</li>
+                  <li>Gem positions: higher risk (25% SL, 100% TP)</li>
+                  <li>Paper trading for simulation, Real for live execution</li>
+                  <li>59.5% win rate on 11+ years of backtesting</li>
                 </ul>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Automated Weekly Trading */}
+      <AutomatedTradingSection />
 
       {/* AI Portfolio Manager */}
       <Card className="bg-[#0A0A0A] border-[#1F1F1F] border-l-4 border-l-[#9D00FF]" data-testid="ai-portfolio-card">
