@@ -11,6 +11,89 @@ import { motion } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
 
+const formatTime = (isoString) => {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  return `${diffDays}d ago`;
+};
+
+const NewsItem = ({ item }) => (
+  <motion.a
+    href={item.url}
+    target="_blank"
+    rel="noopener noreferrer"
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="block p-3 rounded-lg bg-[#1F1F1F]/50 hover:bg-[#1F1F1F] transition-colors border border-transparent hover:border-[#2F2F2F]"
+  >
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex-1 min-w-0">
+        <h4 className="text-sm font-medium text-white line-clamp-2 mb-1">
+          {item.title}
+        </h4>
+        <div className="flex items-center gap-2 text-xs text-[#71717A]">
+          <span>{item.source}</span>
+          <span>•</span>
+          <span className="flex items-center gap-1">
+            <Clock size={10} />
+            {formatTime(item.published_at)}
+          </span>
+        </div>
+      </div>
+      <div className="flex flex-col items-end gap-1">
+        {item.currencies?.length > 0 && (
+          <div className="flex gap-1">
+            {item.currencies.slice(0, 3).map((curr, i) => (
+              <Badge 
+                key={i}
+                variant="outline"
+                className="text-[10px] px-1.5 py-0 border-[#2F2F2F] text-[#A1A1AA]"
+              >
+                {curr}
+              </Badge>
+            ))}
+          </div>
+        )}
+        {item.panic_score !== null && item.panic_score !== undefined && (
+          <Badge 
+            className={`text-[10px] ${
+              item.panic_score >= 60 
+                ? 'bg-[#00FF94]/20 text-[#00FF94]' 
+                : item.panic_score <= 40 
+                  ? 'bg-red-500/20 text-red-400'
+                  : 'bg-[#1F1F1F] text-[#A1A1AA]'
+            }`}
+          >
+            Score: {item.panic_score}
+          </Badge>
+        )}
+        <ExternalLink size={12} className="text-[#71717A]" />
+      </div>
+    </div>
+    {item.votes && (item.votes.positive > 0 || item.votes.negative > 0) && (
+      <div className="flex items-center gap-3 mt-2 text-xs">
+        {item.votes.positive > 0 && (
+          <span className="text-[#00FF94]">👍 {item.votes.positive}</span>
+        )}
+        {item.votes.negative > 0 && (
+          <span className="text-red-400">👎 {item.votes.negative}</span>
+        )}
+        {item.votes.important > 0 && (
+          <span className="text-[#FFB800]">⭐ {item.votes.important}</span>
+        )}
+      </div>
+    )}
+  </motion.a>
+);
+
 const CryptoNewsFeed = () => {
   const [activeTab, setActiveTab] = useState('trending');
   const [trendingNews, setTrendingNews] = useState([]);
