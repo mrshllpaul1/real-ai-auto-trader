@@ -239,11 +239,11 @@ class AILearningEngine:
         total_strategies = await self.db.strategies.count_documents({})
         total_outcomes = await self.db.learning_outcomes.count_documents({})
         
-        # Overall accuracy - fetch only required fields
+        # Overall accuracy - fetch only required fields with limit
         all_outcomes = await self.db.learning_outcomes.find(
             {},
             {'_id': 0, 'was_correct': 1, 'profit_loss': 1}
-        ).to_list(10000)
+        ).limit(10000).to_list(10000)
         
         overall_accuracy = (
             sum(1 for o in all_outcomes if o.get('was_correct')) / len(all_outcomes) * 100
