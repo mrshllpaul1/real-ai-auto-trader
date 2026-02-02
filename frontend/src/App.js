@@ -19,6 +19,7 @@ import TradingJournal from "./pages/TradingJournal";
 import Sidebar from "./components/Sidebar";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "framer-motion";
+import { TradingModeProvider } from "./context/TradingModeContext";
 
 function App() {
   useEffect(() => {
@@ -44,40 +45,42 @@ function App() {
   }, []);
 
   return (
-    <div className="App noise-bg">
-      <BrowserRouter>
-        <div className="flex min-h-screen min-h-[100dvh]">
-          <Sidebar />
-          <motion.main 
-            className="flex-1 overflow-auto w-full"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="md:hidden h-16" />
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/growth" element={<GrowthDashboard />} />
-              <Route path="/journal" element={<TradingJournal />} />
-              <Route path="/strategies" element={<StrategySelector />} />
-              <Route path="/trading" element={<TradingView />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/learning" element={<AILearning />} />
-              <Route path="/news" element={<NewsAndIntelligence />} />
-              <Route path="/auto-trading" element={<AutoTrading />} />
-              <Route path="/scanner" element={<GemScanner />} />
-              <Route path="/auto-exec" element={<AutoExecution />} />
-              <Route path="/advanced" element={<AdvancedFeatures />} />
-              <Route path="/guide" element={<Guide />} />
-              <Route path="/setup" element={<Setup />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </motion.main>
-        </div>
-      </BrowserRouter>
-      <Toaster position="top-center" richColors />
-    </div>
+    <TradingModeProvider>
+      <div className="App noise-bg">
+        <BrowserRouter>
+          <div className="flex min-h-screen min-h-[100dvh]">
+            <Sidebar />
+            <motion.main 
+              className="flex-1 overflow-auto w-full"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="md:hidden h-16" />
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/growth" element={<GrowthDashboard />} />
+                <Route path="/journal" element={<TradingJournal />} />
+                <Route path="/strategies" element={<StrategySelector />} />
+                <Route path="/trading" element={<TradingView />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/learning" element={<AILearning />} />
+                <Route path="/news" element={<NewsAndIntelligence />} />
+                <Route path="/auto-trading" element={<AutoTrading />} />
+                <Route path="/scanner" element={<GemScanner />} />
+                <Route path="/auto-exec" element={<AutoExecution />} />
+                <Route path="/advanced" element={<AdvancedFeatures />} />
+                <Route path="/guide" element={<Guide />} />
+                <Route path="/setup" element={<Setup />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </motion.main>
+          </div>
+        </BrowserRouter>
+        <Toaster position="top-center" richColors />
+      </div>
+    </TradingModeProvider>
   );
 }
 
