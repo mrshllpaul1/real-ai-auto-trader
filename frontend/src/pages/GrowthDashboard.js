@@ -58,8 +58,22 @@ const GrowthDashboard = () => {
     try {
       const response = await api.get('/budget/');
       setBudget(response.data);
+      setConfidenceThreshold(response.data.ai_confidence_threshold || 70);
     } catch (error) {
       console.error('Budget error:', error);
+    }
+  };
+
+  const handleSetConfidenceThreshold = async (newThreshold) => {
+    setSettingThreshold(true);
+    try {
+      await api.post('/budget/confidence-threshold', { threshold: newThreshold });
+      setConfidenceThreshold(newThreshold);
+      toast.success(`AI confidence threshold set to ${newThreshold}%`);
+    } catch (error) {
+      toast.error('Failed to set confidence threshold');
+    } finally {
+      setSettingThreshold(false);
     }
   };
 
