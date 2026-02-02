@@ -138,6 +138,8 @@ async def initialize_services():
         from services.scheduler_service import SchedulerService
         from services.budget_manager import BudgetManager
         from services.trading_journal import TradingJournalService
+        from services.historical_trainer import HistoricalTrainer
+        from services.enhanced_historical_trainer import EnhancedHistoricalTrainer
         
         # Initialize base services
         market_service = MarketDataService()
