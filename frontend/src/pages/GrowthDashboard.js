@@ -1,35 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { 
   Rocket, Target, TrendingUp, Sparkles, DollarSign, 
-  Loader2, Play, RefreshCw, Trophy, Flame, Clock, Calendar, Zap, Power
+  Loader2, RefreshCw, Trophy, Flame
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
+import AutopilotControl from '../components/AutopilotControl';
 
 const GrowthDashboard = () => {
   const [stats, setStats] = useState(null);
   const [positions, setPositions] = useState([]);
-  const [schedulerStatus, setSchedulerStatus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [executing, setExecuting] = useState(false);
-  const [schedulerLoading, setSchedulerLoading] = useState(false);
   const [paperMode, setPaperMode] = useState(true);
 
   useEffect(() => {
     loadData();
-    loadSchedulerStatus();
     const interval = setInterval(loadData, 30000);
-    const schedulerInterval = setInterval(loadSchedulerStatus, 60000);
-    return () => {
-      clearInterval(interval);
-      clearInterval(schedulerInterval);
-    };
+    return () => clearInterval(interval);
   }, []);
 
   const loadData = async () => {
@@ -42,15 +36,6 @@ const GrowthDashboard = () => {
       setPositions(posRes.data.positions || []);
     } catch (error) {
       console.error('Error:', error);
-    }
-  };
-
-  const loadSchedulerStatus = async () => {
-    try {
-      const response = await api.get('/scheduler/status');
-      setSchedulerStatus(response.data);
-    } catch (error) {
-      console.error('Scheduler status error:', error);
     }
   };
 
@@ -91,54 +76,12 @@ const GrowthDashboard = () => {
     }
   };
 
-  const setupAutoPilot = async () => {
-    setSchedulerLoading(true);
-    try {
-      const response = await api.post(`/scheduler/setup-default?paper_trade=${paperMode}`);
-      if (response.data.success) {
-        toast.success('Autopilot activated! Passive income mode ON');
-        loadSchedulerStatus();
-      }
-    } catch (error) {
-      toast.error('Failed to setup autopilot');
-    } finally {
-      setSchedulerLoading(false);
-    }
-  };
-
-  const stopScheduler = async () => {
-    setSchedulerLoading(true);
-    try {
-      await api.post('/scheduler/stop');
-      toast.info('Scheduler stopped');
-      loadSchedulerStatus();
-    } catch (error) {
-      toast.error('Failed to stop scheduler');
-    } finally {
-      setSchedulerLoading(false);
-    }
-  };
-
-  const startScheduler = async () => {
-    setSchedulerLoading(true);
-    try {
-      await api.post('/scheduler/start');
-      toast.success('Scheduler started');
-      loadSchedulerStatus();
-    } catch (error) {
-      toast.error('Failed to start scheduler');
-    } finally {
-      setSchedulerLoading(false);
-    }
-  };
-
   const portfolio = stats?.portfolio || {};
   const goalProgress = stats?.goal_progress || {};
   const statistics = stats?.statistics || {};
 
   return (
     <div className="min-h-screen bg-[#000000] text-white p-4 md:p-8">
-      {/* Header */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -151,7 +94,6 @@ const GrowthDashboard = () => {
         <p className="text-[#A1A1AA]">Aggressive Growth Engine • Always hunting • Always compounding</p>
       </motion.div>
 
-      {/* Goal Progress */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -186,7 +128,6 @@ const GrowthDashboard = () => {
         </Card>
       </motion.div>
 
-      {/* Controls */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -228,7 +169,6 @@ const GrowthDashboard = () => {
         </Card>
       </motion.div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
           <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
@@ -287,84 +227,8 @@ const GrowthDashboard = () => {
         </motion.div>
       </div>
 
-      {/* Autopilot Control */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.38 }}
-        className="mb-8"
-      >
-        <Card className="bg-gradient-to-r from-[#9D00FF]/10 to-[#007AFF]/10 border-[#9D00FF]/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Zap className="text-[#9D00FF]" />
-              Autopilot Mode
-              {schedulerStatus?.running && schedulerStatus?.job_count > 0 && (
-                <Badge className="bg-[#00FF94]/20 text-[#00FF94] ml-2">ACTIVE</Badge>
-              )}
-            </CardTitle>
-            <CardDescription className="text-[#A1A1AA]">
-              Let AI trade automatically while you sleep
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap items-center gap-4 mb-4">
-              <Button
-                onClick={setupAutoPilot}
-                disabled={schedulerLoading}
-                className="bg-[#9D00FF] hover:bg-[#7B00CC] text-white font-bold"
-                data-testid="autopilot-btn"
-              >
-                {schedulerLoading ? <Loader2 className="animate-spin mr-2" /> : <Zap className="mr-2" />}
-                Activate Autopilot
-              </Button>
-              
-              {schedulerStatus?.running ? (
-                <Button
-                  onClick={stopScheduler}
-                  disabled={schedulerLoading}
-                  variant="outline"
-                  className="border-[#FF0055] text-[#FF0055]"
-                >
-                  <Power className="mr-2" size={16} />
-                  Stop
-                </Button>
-              ) : (
-                <Button
-                  onClick={startScheduler}
-                  disabled={schedulerLoading}
-                  variant="outline"
-                  className="border-[#00FF94] text-[#00FF94]"
-                >
-                  <Power className="mr-2" size={16} />
-                  Start
-                </Button>
-              )}
-            </div>
-            
-            {schedulerStatus?.jobs && schedulerStatus.jobs.length > 0 && (
-              <div className="space-y-2">
-                <div className="text-sm text-[#A1A1AA] mb-2">Scheduled Jobs:</div>
-                {schedulerStatus.jobs.map((job, i) => (
-                  <div key={i} className="flex items-center justify-between p-2 bg-[#121212] rounded-lg text-sm">
-                    <div className="flex items-center gap-2">
-                      {job.id === 'growth_monitor' && <Clock size={14} className="text-[#007AFF]" />}
-                      {job.id === 'weekly_trader' && <Calendar size={14} className="text-[#FF9500]" />}
-                      {job.id === 'daily_compound' && <DollarSign size={14} className="text-[#00FF94]" />}
-                      <span>{job.name}</span>
-                    </div>
-                    <span className="text-[#A1A1AA]">
-                      Next: {job.next_run ? new Date(job.next_run).toLocaleString() : 'N/A'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
+      <AutopilotControl paperMode={paperMode} />
 
-      {/* Open Positions */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
