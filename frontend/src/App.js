@@ -14,6 +14,7 @@ import AutoExecution from "./pages/AutoExecution";
 import AdvancedFeatures from "./pages/AdvancedFeatures";
 import Guide from "./pages/Guide";
 import Setup from "./pages/Setup";
+import GrowthDashboard from "./pages/GrowthDashboard";
 import Sidebar from "./components/Sidebar";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "framer-motion";
