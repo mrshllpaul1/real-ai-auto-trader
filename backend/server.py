@@ -195,6 +195,12 @@ async def initialize_services():
             db=db, growth_engine=growth_engine,
             automated_trader=automated_trader, alert_service=alert_service
         )
+        
+        # Add trainers for weekly retraining
+        historical_trainer = HistoricalTrainer(db)
+        enhanced_trainer = EnhancedHistoricalTrainer(db)
+        scheduler_service.set_trainers(historical_trainer, enhanced_trainer)
+        
         scheduler.set_dependencies(scheduler_service)
         
         # Budget Manager
