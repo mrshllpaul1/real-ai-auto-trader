@@ -268,4 +268,338 @@ export const generateAIReasoning = (trade) => {
 };
 
 export { AIDecisionCard, AIDecisionsPanel };
-export default AIDecisionsPanel;
+
+
+/**
+ * Complete AI Decision Visualization Dashboard
+ * Fetches and displays AI trading decisions with full explanations
+ */
+const AIDecisionVisualization = () => {
+  const [decisions, setDecisions] = useState([]);
+  const [gemCandidates, setGemCandidates] = useState([]);
+  const [factors, setFactors] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [expandedCoin, setExpandedCoin] = useState(null);
+  const [coinExplanation, setCoinExplanation] = useState(null);
+
+  const fetchDecisions = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [decisionsRes, factorsRes] = await Promise.all([
+        fetch(`${API_URL}/api/ai-decisions/recent?limit=15`),
+        fetch(`${API_URL}/api/ai-decisions/factors`)
+      ]);
+      
+      const decisionsData = await decisionsRes.json();
+      const factorsData = await factorsRes.json();
+      
+      setDecisions(decisionsData.decisions || []);
+      setGemCandidates(decisionsData.gem_candidates || []);
+      setFactors(factorsData);
+    } catch (error) {
+      console.error('Failed to fetch AI decisions:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchCoinExplanation = async (coinId) => {
+    if (expandedCoin === coinId) {
+      setExpandedCoin(null);
+      setCoinExplanation(null);
+      return;
+    }
+    
+    try {
+      const res = await fetch(`${API_URL}/api/ai-decisions/explain/${coinId}`);
+      const data = await res.json();
+      setCoinExplanation(data);
+      setExpandedCoin(coinId);
+    } catch (error) {
+      console.error('Failed to fetch coin explanation:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchDecisions();
+    const interval = setInterval(fetchDecisions, 60000); // Refresh every minute
+    return () => clearInterval(interval);
+  }, [fetchDecisions]);
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-[#9D00FF]/20 rounded-lg">
+            <Brain className="text-[#9D00FF]" size={24} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold">AI Decision Transparency</h2>
+            <p className="text-sm text-[#A1A1AA]">Understand why AI makes each trading decision</p>
+          </div>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={fetchDecisions}
+          disabled={loading}
+          className="border-[#1F1F1F] hover:bg-[#1F1F1F]"
+        >
+          <RefreshCw size={14} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </div>
+
+      {/* Factor Performance Summary */}
+      {factors && (
+        <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-[#A1A1AA]">
+              AI Factor Performance (Based on {factors.total_patterns_analyzed?.toLocaleString()} patterns)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {Object.entries(factors.factors || {}).map(([name, stats]) => (
+                <div key={name} className="p-3 bg-[#121212] rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    {name === 'momentum' && <TrendingUp size={14} className="text-[#007AFF]" />}
+                    {name === 'volume' && <BarChart3 size={14} className="text-[#9D00FF]" />}
+                    {name === 'trend' && <Activity size={14} className="text-[#00FF94]" />}
+                    {name === 'sentiment' && <Zap size={14} className="text-[#FFD700]" />}
+                    {name === 'volatility' && <Target size={14} className="text-[#FF9500]" />}
+                    <span className="text-xs capitalize">{name}</span>
+                  </div>
+                  <div className="text-lg font-bold">
+                    {stats.success_rate || 0}%
+                  </div>
+                  <div className="text-xs text-[#A1A1AA]">
+                    {stats.successful || 0}/{stats.total || 0} signals
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 text-xs text-[#A1A1AA]">
+              Most reliable factor: <span className="text-[#00FF94] font-medium capitalize">{factors.most_reliable}</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Hidden Gem Candidates */}
+      {gemCandidates.length > 0 && (
+        <Card className="bg-gradient-to-br from-[#FFD700]/10 to-[#0A0A0A] border-[#FFD700]/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Sparkles className="text-[#FFD700]" />
+              Hidden Gem Candidates
+              <Badge className="bg-[#FFD700]/20 text-[#FFD700] ml-2">
+                {gemCandidates.length} found
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {gemCandidates.map((gem, i) => (
+                <motion.div 
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="p-3 bg-[#0A0A0A] border border-[#FFD700]/20 rounded-lg cursor-pointer hover:border-[#FFD700]/50 transition-colors"
+                  onClick={() => fetchCoinExplanation(gem.coin_id)}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold">{gem.coin_id?.toUpperCase()}</span>
+                    <Badge className="bg-[#00FF94]/20 text-[#00FF94]">
+                      {gem.potential_multiplier?.toFixed(1)}x potential
+                    </Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {gem.entry_signals?.slice(0, 3).map((signal, j) => (
+                      <Badge key={j} variant="outline" className="text-xs border-[#1F1F1F]">
+                        {signal}
+                      </Badge>
+                    ))}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Recent Decisions */}
+      <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Zap className="text-[#9D00FF]" />
+            Recent AI Decisions
+            <Badge className="bg-[#9D00FF]/20 text-[#9D00FF] ml-2">
+              {decisions.length} decisions
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 max-h-[500px] overflow-y-auto">
+          <AnimatePresence>
+            {decisions.map((decision, i) => (
+              <motion.div
+                key={`${decision.coin_id}-${i}`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ delay: i * 0.05 }}
+              >
+                <div 
+                  className="p-4 bg-[#121212] border border-[#1F1F1F] rounded-lg cursor-pointer hover:border-[#9D00FF]/50 transition-colors"
+                  onClick={() => fetchCoinExplanation(decision.coin_id)}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-lg">{decision.coin_id?.toUpperCase()}</span>
+                      {decision.is_gem && (
+                        <Badge className="bg-[#FFD700]/20 text-[#FFD700]">
+                          <Sparkles size={10} className="mr-1" />GEM
+                        </Badge>
+                      )}
+                      <Badge variant="outline" className="text-xs border-[#1F1F1F]">
+                        {decision.type}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className={`${
+                        decision.action === 'BUY' ? 'bg-[#00FF94]/20 text-[#00FF94]' :
+                        decision.action === 'SELL' ? 'bg-[#FF0055]/20 text-[#FF0055]' :
+                        'bg-[#FF9500]/20 text-[#FF9500]'
+                      }`}>
+                        {decision.action}
+                      </Badge>
+                      <span className={`text-sm font-bold ${
+                        decision.confidence >= 70 ? 'text-[#00FF94]' : 
+                        decision.confidence >= 50 ? 'text-[#FF9500]' : 'text-[#FF0055]'
+                      }`}>
+                        {decision.confidence?.toFixed(0)}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Factor Pills */}
+                  {decision.factors?.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {decision.factors.slice(0, 4).map((factor, j) => (
+                        <div key={j} className="flex items-center gap-1 px-2 py-1 bg-[#0A0A0A] rounded-full text-xs">
+                          {factor.type === 'momentum' && <TrendingUp size={10} className="text-[#007AFF]" />}
+                          {factor.type === 'volume' && <BarChart3 size={10} className="text-[#9D00FF]" />}
+                          {factor.type === 'trend' && <Activity size={10} className="text-[#00FF94]" />}
+                          {factor.type === 'sentiment' && <Zap size={10} className="text-[#FFD700]" />}
+                          {factor.type === 'volatility' && <Target size={10} className="text-[#FF9500]" />}
+                          {factor.type === 'ai_confidence' && <Brain size={10} className="text-[#9D00FF]" />}
+                          <span className={`${
+                            factor.impact === 'positive' ? 'text-[#00FF94]' : 
+                            factor.impact === 'negative' ? 'text-[#FF0055]' : 'text-[#A1A1AA]'
+                          }`}>
+                            {factor.name}: {factor.value || `${factor.score?.toFixed(0)}`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Reasoning */}
+                  <p className="text-sm text-[#A1A1AA] line-clamp-2">{decision.reasoning}</p>
+                  
+                  {/* Timestamp */}
+                  <div className="flex items-center gap-1 mt-2 text-xs text-[#71717A]">
+                    <Clock size={10} />
+                    {new Date(decision.timestamp).toLocaleString()}
+                  </div>
+
+                  {/* Expand Icon */}
+                  <div className="flex justify-center mt-2">
+                    {expandedCoin === decision.coin_id ? (
+                      <ChevronUp size={16} className="text-[#A1A1AA]" />
+                    ) : (
+                      <ChevronDown size={16} className="text-[#A1A1AA]" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Expanded Explanation */}
+                <AnimatePresence>
+                  {expandedCoin === decision.coin_id && coinExplanation && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-2 p-4 bg-[#0A0A0A] border border-[#9D00FF]/30 rounded-lg"
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <Info size={16} className="text-[#9D00FF]" />
+                        <span className="font-medium">Detailed AI Analysis</span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                        <div className="p-2 bg-[#121212] rounded">
+                          <div className="text-xs text-[#A1A1AA]">Technical Signal</div>
+                          <div className="font-bold">{coinExplanation.analysis?.technical?.signal}</div>
+                        </div>
+                        <div className="p-2 bg-[#121212] rounded">
+                          <div className="text-xs text-[#A1A1AA]">RSI</div>
+                          <div className="font-bold">{coinExplanation.analysis?.technical?.rsi}</div>
+                        </div>
+                        <div className="p-2 bg-[#121212] rounded">
+                          <div className="text-xs text-[#A1A1AA]">Sentiment</div>
+                          <div className="font-bold capitalize">{coinExplanation.analysis?.sentiment?.overall}</div>
+                        </div>
+                        <div className="p-2 bg-[#121212] rounded">
+                          <div className="text-xs text-[#A1A1AA]">Pattern Success</div>
+                          <div className="font-bold">{coinExplanation.analysis?.historical?.success_rate}%</div>
+                        </div>
+                      </div>
+
+                      {coinExplanation.is_potential_gem && coinExplanation.gem_analysis && (
+                        <div className="p-3 bg-[#FFD700]/10 border border-[#FFD700]/30 rounded-lg mb-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Sparkles size={14} className="text-[#FFD700]" />
+                            <span className="font-medium text-[#FFD700]">Hidden Gem Analysis</span>
+                          </div>
+                          <p className="text-sm text-[#A1A1AA]">
+                            Historical {coinExplanation.gem_analysis.historical_multiplier?.toFixed(1)}x multiplier | 
+                            Type: {coinExplanation.gem_analysis.gem_type}
+                          </p>
+                        </div>
+                      )}
+
+                      <p className="text-sm text-[#A1A1AA]">{coinExplanation.reasoning}</p>
+                      
+                      <div className="mt-3 text-xs text-[#71717A]">
+                        Data source: {coinExplanation.data_source} | Generated: {new Date(coinExplanation.generated_at).toLocaleString()}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {decisions.length === 0 && !loading && (
+            <div className="text-center py-8 text-[#A1A1AA]">
+              <Brain size={48} className="mx-auto mb-3 opacity-50" />
+              <p>No AI decisions yet. Generate strategies to see AI reasoning.</p>
+            </div>
+          )}
+
+          {loading && (
+            <div className="text-center py-8">
+              <RefreshCw size={24} className="mx-auto animate-spin text-[#9D00FF]" />
+              <p className="text-[#A1A1AA] mt-2">Loading AI decisions...</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default AIDecisionVisualization;
