@@ -2,6 +2,7 @@
 Aggressive Growth Engine
 Goal: Turn $500 into $100,000 (200x)
 Strategy: Heavy gem allocation, compounding, 24/7 hunting
+Integrates AI news sentiment for smarter decisions
 IMPORTANT: Only uses allocated budget - NEVER touches other assets
 """
 
@@ -27,6 +28,7 @@ class AggressiveGrowthEngine:
     - 24/7 opportunity scanning
     - Dynamic position sizing based on conviction
     - Trailing stop-losses to lock in gains
+    - AI news sentiment integration for timing
     
     SAFETY: Only uses budget you allocate - NEVER touches other assets
     """
@@ -38,6 +40,7 @@ class AggressiveGrowthEngine:
         self.ai_trainer = ai_trainer
         self.alert_service = alert_service
         self.budget_manager = budget_manager
+        self._sentiment_service = None
         
         # Growth targets
         self.targets = {
@@ -56,6 +59,11 @@ class AggressiveGrowthEngine:
             'max_positions': 15,           # More positions for diversification
             'max_gem_positions': 5,        # Up to 5 gems
             'max_single_position_pct': 15, # Max 15% in single coin
+            
+            # Sentiment thresholds
+            'bullish_sentiment_boost': 1.2,    # 20% more if bullish
+            'bearish_sentiment_reduce': 0.7,   # 30% less if bearish
+            'min_sentiment_for_entry': 35,     # Don't enter if very bearish
             
             # Aggressive gem targets
             'gem_take_profit_1': 50,       # First TP at 50%
