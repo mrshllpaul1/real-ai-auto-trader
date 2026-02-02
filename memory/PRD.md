@@ -252,6 +252,44 @@ TWILIO_PHONE_NUMBER=      # User must provide
 
 ---
 
+## Session 3: Removed All Simulated Data (Feb 2, 2026)
+
+### ✅ P1 COMPLETED: No Simulated Data Policy Enforced
+
+The user's strict requirement that "this program will never use simulated market data under any circumstances" has been fully implemented:
+
+**Files Fixed:**
+1. **`/app/backend/services/enhanced_historical_trainer.py`** - REWRITTEN
+   - Removed all `np.random` synthetic data generation
+   - Now fetches REAL data from Twelve Data API
+   - Falls back to database cache
+   - Returns empty DataFrame if no real data available (NEVER fakes it)
+
+2. **`/app/backend/services/historical_trainer.py`** - REWRITTEN  
+   - Removed all synthetic price/volume generation
+   - Integrated with Twelve Data service for real market data
+   - Returns empty DataFrame if no real data available
+
+3. **`/app/backend/services/market_data_service.py`** - FIXED
+   - Removed fallback that generated fake historical data
+   - Now returns error indicator when API unavailable
+   - Never generates simulated prices
+
+4. **`/app/backend/services/news_service.py`** - FIXED
+   - Removed `_get_simulated_news()` function
+   - Returns empty list when all news APIs fail
+   - Never generates fake news articles
+
+**Data Sources (Real Only):**
+- Twelve Data API for historical OHLCV data
+- CoinGecko for current prices and market data
+- CryptoPanic for news
+- CoinMarketCap for trending data
+
+**Important:** The `simulate_week()` and `_simulate_trade()` methods in `ai_weekly_trainer.py` are LEGITIMATE - they simulate paper trades using REAL historical price data, not simulated market data.
+
+---
+
 ## New Features Added (Feb 2, 2026 - Session 2)
 1. ✅ **Trading Journal with AI Insights**
    - Track all trades with timestamps and AI reasoning
@@ -261,3 +299,4 @@ TWILIO_PHONE_NUMBER=      # User must provide
    - Factor performance breakdown
    - New route: `/journal`
    - New APIs: `/api/journal/entries`, `/api/journal/stats`, `/api/journal/ai-insights`, `/api/journal/daily`
+
