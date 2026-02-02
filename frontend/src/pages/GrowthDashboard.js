@@ -19,35 +19,19 @@ import CoinUniverseManager from '../components/CoinUniverseManager';
 import AIDiscoveryPanel from '../components/AIDiscoveryPanel';
 import MarketSentimentPanel from '../components/MarketSentimentPanel';
 import CryptoNewsFeed from '../components/CryptoNewsFeed';
+import { useTradingMode } from '../context/TradingModeContext';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const GrowthDashboard = () => {
-  // Trading mode state - initialize from localStorage
-  const getInitialMode = () => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('growth_trading_mode');
-      if (saved === 'real' || saved === 'paper') {
-        return saved;
-      }
-    }
-    return 'paper';
-  };
+  // Use global trading mode context
+  const { mode: tradingMode, setMode: setTradingMode, isRealMode } = useTradingMode();
   
-  const [tradingMode, setTradingMode] = useState(getInitialMode);
-  const [isInitialized, setIsInitialized] = useState(false);
-  
-  // Sync with localStorage on mount (handles hydration mismatch)
-  useEffect(() => {
-    const saved = localStorage.getItem('growth_trading_mode');
-    if (saved === 'real' || saved === 'paper') {
-      setTradingMode(saved);
-    }
-    setIsInitialized(true);
-  }, []);
-  
-  // Handle trading mode change with persistence
+  // Handle trading mode change
   const handleTradingModeChange = (newMode) => {
+    setTradingMode(newMode);
+    toast.success(`Switched to ${newMode === 'real' ? 'Real' : 'Paper'} Trading`);
+  };
     localStorage.setItem('growth_trading_mode', newMode);
     setTradingMode(newMode);
   };
