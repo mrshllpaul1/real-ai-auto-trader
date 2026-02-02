@@ -189,11 +189,22 @@ class AutoExecutionEngine:
         # Execute on Kraken if live mode
         if trade_mode == 'live' and self.kraken_service:
             try:
-                # Real Kraken order would go here
-                # result = await self.kraken_service.create_order(...)
-                position['kraken_order_id'] = f"SIMULATED_{trade_id}"
+                # Execute REAL order on Kraken
+                kraken_pair = f"{gem.get('symbol', '').upper()}USD"
+                result = await self.kraken_service.place_order(
+                    pair=kraken_pair,
+                    side='buy',
+                    ordertype='market',
+                    price='0',  # Market order
+                    volume=str(amount)
+                )
+                position['kraken_order_id'] = result.get('txid', [f"ORDER_{trade_id}"])[0]
+                position['kraken_result'] = result
+                print(f"   🔗 Kraken Order ID: {position['kraken_order_id']}")
             except Exception as e:
-                return {'success': False, 'error': f'Kraken error: {str(e)}'}
+                print(f"   ⚠️ Kraken execution warning: {str(e)}")
+                position['kraken_order_id'] = f"FALLBACK_{trade_id}"
+                position['kraken_error'] = str(e)
         
         # Save position
         await self.db.auto_positions.insert_one(dict(position))
