@@ -115,6 +115,17 @@ ai_portfolio_mgr = AIPortfolioManager(
 ai_portfolio.ai_portfolio_manager = ai_portfolio_mgr
 logger.info("🤖 AI Portfolio Manager initialized")
 
+# Initialize AI Coin Selection Engine
+from services.adaptive_coin_selector import AdaptiveCoinSelector
+from services.weekly_simulation import WeeklySimulationRunner
+
+coin_selector = AdaptiveCoinSelector(db, market_service, news_service)
+simulation_runner = WeeklySimulationRunner(db)
+
+# Inject dependencies into AI selection routes
+ai_selection.set_dependencies(db, coin_selector, simulation_runner)
+logger.info("🎯 AI Coin Selection Engine initialized")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
