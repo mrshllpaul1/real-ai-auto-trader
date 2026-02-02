@@ -305,6 +305,14 @@ class AIWeeklyTrainer:
         main_scores.sort(key=lambda x: x['total_score'], reverse=True)
         gem_scores.sort(key=lambda x: x['total_score'], reverse=True)
         
+        # Enhance with sentiment analysis
+        main_scores = await self._enhance_with_sentiment(main_scores[:20])
+        gem_scores = await self._enhance_with_sentiment(gem_scores[:10])
+        
+        # Re-sort after sentiment enhancement
+        main_scores.sort(key=lambda x: x['total_score'], reverse=True)
+        gem_scores.sort(key=lambda x: x['total_score'], reverse=True)
+        
         # Select top 10 main + diversify by category
         selected_main = self._diversified_selection(main_scores, self.config['main_coins'])
         
@@ -317,8 +325,62 @@ class AIWeeklyTrainer:
             'gem': selected_gem,
             'available_coins': len(available),
             'analyzed_main': len(main_scores),
-            'analyzed_gems': len(gem_scores)
+            'analyzed_gems': len(gem_scores),
+            'sentiment_enhanced': True
         }
+    
+    async def _enhance_with_sentiment(self, candidates: List[Dict]) -> List[Dict]:
+        """Enhance candidate scores with AI news sentiment"""
+        if not candidates:
+            return candidates
+        
+        sentiment_service = await self._get_sentiment_service()
+        if not sentiment_service:
+            return candidates
+        
+        try:
+            # Batch get sentiment for all candidates
+            coins_to_analyze = [
+                {'coin_id': c['coin_id'], 'symbol': c.get('symbol', c['coin_id'][:4].upper())}
+                for c in candidates
+            ]
+            
+            sentiments = await sentiment_service.get_batch_sentiment(coins_to_analyze)
+            
+            for candidate in candidates:
+                coin_id = candidate['coin_id']
+                if coin_id in sentiments:
+                    sentiment = sentiments[coin_id]
+                    sentiment_score = sentiment.get('score', 50)
+                    
+                    # Update the sentiment score
+                    candidate['scores']['sentiment'] = sentiment_score
+                    candidate['sentiment'] = {
+                        'score': sentiment_score,
+                        'label': sentiment.get('label', 'neutral'),
+                        'summary': sentiment.get('summary', ''),
+                        'bullish_signals': sentiment.get('bullish_signals', []),
+                        'bearish_signals': sentiment.get('bearish_signals', [])
+                    }
+                    candidate['sentiment_pending'] = False
+                    
+                    # Recalculate total score with sentiment
+                    weights = self.learned_weights
+                    candidate['total_score'] = round(
+                        candidate['scores']['momentum'] * weights['momentum'] +
+                        candidate['scores']['volatility'] * weights['volatility'] +
+                        candidate['scores']['volume'] * weights['volume'] +
+                        candidate['scores']['trend'] * weights['trend'] +
+                        candidate['scores']['historical'] * weights['historical_performance'] +
+                        candidate['scores']['category'] * weights['category_preference'] +
+                        sentiment_score * weights.get('sentiment', 0.12),
+                        2
+                    )
+        
+        except Exception as e:
+            print(f"Sentiment enhancement error in trainer: {e}")
+        
+        return candidates
     
     def _diversified_selection(self, scored_coins: List[Dict], count: int) -> List[Dict]:
         """Select coins with category diversification"""
