@@ -67,7 +67,7 @@ from routes import auth, trading, strategies, market, risk, learning, news, trai
 from routes import auto_trading, allocation, scanner, auto_execute, backtest, rebalance
 from routes import social, notifications, alerts, email, ai_portfolio, ai_selection
 from routes import gems, auto_trade, growth, scheduler, budget, journal, ai_decisions
-from routes import ai_universe, ai_discovery, sentiment
+from routes import ai_universe, ai_discovery, sentiment, cryptopanic
 
 # Include routers
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
