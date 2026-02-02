@@ -85,14 +85,21 @@ class SchedulerService:
     def get_status(self) -> Dict[str, Any]:
         """Get scheduler status"""
         jobs = []
-        for job in self.scheduler.get_jobs():
-            next_run = job.next_run_time
-            jobs.append({
-                'id': job.id,
-                'name': job.name,
-                'next_run': next_run.isoformat() if next_run else None,
-                'trigger': str(job.trigger)
-            })
+        try:
+            for job in self.scheduler.get_jobs():
+                try:
+                    next_run = getattr(job, 'next_run_time', None)
+                    jobs.append({
+                        'id': job.id,
+                        'name': getattr(job, 'name', job.id),
+                        'next_run': next_run.isoformat() if next_run else None,
+                        'trigger': str(job.trigger) if hasattr(job, 'trigger') else 'unknown'
+                    })
+                except Exception as e:
+                    logger.warning(f"Error getting job info: {e}")
+                    continue
+        except Exception as e:
+            logger.error(f"Error getting scheduler jobs: {e}")
         
         return {
             'running': self.scheduler.running,
