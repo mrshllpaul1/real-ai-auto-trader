@@ -280,11 +280,8 @@ const AutoTrading = () => {
                 <p className="text-sm text-[#FF0055] mt-1">Uses real money on Kraken</p>
               </div>
               <Switch
-                checked={config.real_trading_enabled}
-                onCheckedChange={(checked) => {
-                  setConfig({...config, real_trading_enabled: checked, paper_trading_enabled: !checked});
-                  localStorage.setItem('growth_trading_mode', checked ? 'real' : 'paper');
-                }}
+                checked={isRealMode}
+                onCheckedChange={(checked) => setMode(checked ? 'real' : 'paper')}
                 data-testid="real-trading-switch"
               />
             </div>
