@@ -141,19 +141,105 @@ const Analytics = () => {
     );
   }
 
-  const totalValue = portfolio?.total_value || 10000;
-  const profitLoss = portfolio?.profit_loss || 0;
+  const totalValue = portfolio?.total_value || realPortfolio?.total_value || 10000;
+  const profitLoss = portfolio?.profit_loss || realPortfolio?.realized_profit || 0;
   const profitPct = portfolio?.profit_pct || ((profitLoss / (totalValue - profitLoss)) * 100) || 0;
 
   return (
     <div className="p-6 lg:p-12 space-y-6" data-testid="analytics">
-      <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
-        <h1 className="text-4xl lg:text-5xl font-heading font-black tracking-tight mb-2" data-testid="analytics-title">
-          <BarChart3 className="inline mr-3 text-[#007AFF]" size={48} />
-          <span className="text-[#007AFF]">Portfolio</span> Analytics
-        </h1>
-        <p className="text-[#A1A1AA]">Track performance, allocation, and AI trading metrics</p>
+      <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-4xl lg:text-5xl font-heading font-black tracking-tight mb-2" data-testid="analytics-title">
+            <BarChart3 className="inline mr-3 text-[#007AFF]" size={48} />
+            <span className="text-[#007AFF]">Portfolio</span> Analytics
+          </h1>
+          <p className="text-[#A1A1AA]">Track performance, allocation, and AI trading metrics</p>
+        </div>
+        <Button onClick={loadAnalytics} variant="outline" className="border-[#1F1F1F]">
+          <RefreshCw size={16} className="mr-2" />
+          Refresh
+        </Button>
       </motion.div>
+
+      {/* Real Money Portfolio Section */}
+      {(realPortfolio || krakenBalance || realPositions.length > 0) && (
+        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}>
+          <Card className="bg-gradient-to-br from-[#00FF94]/10 to-[#007AFF]/10 border-[#00FF94]/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <Wallet className="text-[#00FF94]" />
+                Real Money Portfolio
+                <Badge className="bg-[#00FF94]/20 text-[#00FF94]">LIVE</Badge>
+              </CardTitle>
+              <CardDescription>Your actual trading portfolio connected to Kraken</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="bg-[#0A0A0A]/50 rounded-lg p-4 text-center">
+                  <div className="text-xs text-[#A1A1AA] mb-1">Total Value</div>
+                  <div className="text-2xl font-bold text-[#00FF94]">
+                    ${(realPortfolio?.total_value || growthStats?.portfolio?.total_value || 0).toLocaleString(undefined, {maximumFractionDigits: 2})}
+                  </div>
+                </div>
+                <div className="bg-[#0A0A0A]/50 rounded-lg p-4 text-center">
+                  <div className="text-xs text-[#A1A1AA] mb-1">Multiplier</div>
+                  <div className="text-2xl font-bold text-[#007AFF]">
+                    {(realPortfolio?.multiplier || growthStats?.goal_progress?.multiplier || 1).toFixed(2)}x
+                  </div>
+                </div>
+                <div className="bg-[#0A0A0A]/50 rounded-lg p-4 text-center">
+                  <div className="text-xs text-[#A1A1AA] mb-1">Progress to $100k</div>
+                  <div className="text-2xl font-bold text-[#9D00FF]">
+                    {(realPortfolio?.progress_pct || growthStats?.goal_progress?.progress_pct || 0).toFixed(1)}%
+                  </div>
+                </div>
+                <div className="bg-[#0A0A0A]/50 rounded-lg p-4 text-center">
+                  <div className="text-xs text-[#A1A1AA] mb-1">Open Positions</div>
+                  <div className="text-2xl font-bold text-[#FFB800]">
+                    {realPositions.length || realPortfolio?.open_positions || 0}
+                  </div>
+                </div>
+                <div className="bg-[#0A0A0A]/50 rounded-lg p-4 text-center">
+                  <div className="text-xs text-[#A1A1AA] mb-1">Realized P/L</div>
+                  <div className={`text-2xl font-bold ${(realPortfolio?.realized_profit || 0) >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                    {(realPortfolio?.realized_profit || 0) >= 0 ? '+' : ''}${(realPortfolio?.realized_profit || 0).toFixed(2)}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Kraken Balance */}
+              {krakenBalance && (
+                <div className="mt-4 p-3 bg-[#0A0A0A]/50 rounded-lg">
+                  <div className="text-xs text-[#A1A1AA] mb-2">Kraken Exchange Balance</div>
+                  <div className="flex flex-wrap gap-3">
+                    {Object.entries(krakenBalance).slice(0, 8).map(([currency, amount]) => (
+                      <Badge key={currency} variant="outline" className="border-[#1F1F1F] text-white">
+                        {currency}: {parseFloat(amount).toFixed(4)}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Top Positions */}
+              {realPositions.length > 0 && (
+                <div className="mt-4">
+                  <div className="text-xs text-[#A1A1AA] mb-2">Top Positions</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                    {realPositions.slice(0, 6).map((pos, i) => (
+                      <div key={i} className="bg-[#0A0A0A] rounded p-2 text-center">
+                        <div className="font-bold text-sm">{pos.coin_id?.toUpperCase()}</div>
+                        <div className="text-xs text-[#A1A1AA]">{pos.quantity?.toFixed(4)}</div>
+                        <div className="text-xs text-[#00FF94]">${pos.entry_price?.toFixed(2)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Key Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4" data-testid="metrics-grid">
