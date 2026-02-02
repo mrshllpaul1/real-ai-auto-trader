@@ -304,6 +304,8 @@ class SchedulerService:
                 result = await self._run_compound()
             elif job_id == 'weekly_trader':
                 result = await self._run_weekly_trade()
+            elif job_id == 'weekly_retrain':
+                result = await self._run_weekly_retrain()
             else:
                 return {'success': False, 'error': 'Unknown job type'}
             
