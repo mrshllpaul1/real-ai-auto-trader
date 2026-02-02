@@ -1,4 +1,4 @@
-const CACHE_NAME = 'crypto-trade-v2';
+const CACHE_NAME = 'crypto-trade-v3';
 const API_BASE = '/api';
 
 const urlsToCache = [
@@ -78,11 +78,16 @@ self.addEventListener('periodicsync', (event) => {
   }
 });
 
-// Handle push notifications
+// Handle push notifications with vibration
 self.addEventListener('push', (event) => {
   console.log('[SW] Push received');
   
-  let data = { title: 'AI Crypto Trading', body: 'New notification' };
+  let data = { 
+    title: 'AI Crypto Trading', 
+    body: 'New notification',
+    priority: 'normal',
+    vibrate: true
+  };
   
   if (event.data) {
     try {
@@ -92,13 +97,26 @@ self.addEventListener('push', (event) => {
     }
   }
   
+  // Vibration patterns based on priority
+  const vibrationPatterns = {
+    critical: [200, 100, 200, 100, 200, 100, 400],
+    high: [200, 100, 200, 100, 400],
+    normal: [200, 100, 200],
+    low: [100]
+  };
+  
+  const vibrationPattern = data.vibration_pattern || 
+    vibrationPatterns[data.priority] || 
+    vibrationPatterns.normal;
+  
   const options = {
     body: data.body,
     icon: '/logo192.png',
     badge: '/logo192.png',
-    vibrate: [200, 100, 200],
+    vibrate: data.vibrate !== false ? vibrationPattern : [],
     tag: data.tag || 'default',
     data: data.data || {},
+    requireInteraction: data.priority === 'high' || data.priority === 'critical',
     actions: [
       { action: 'view', title: 'View' },
       { action: 'dismiss', title: 'Dismiss' }
@@ -200,7 +218,8 @@ async function updateTrades() {
         body: `${latestTrade.action} ${latestTrade.symbol} at $${latestTrade.price}`,
         icon: '/logo192.png',
         badge: '/logo192.png',
-        tag: 'trade-update'
+        tag: 'trade-update',
+        vibrate: [200, 100, 200]
       });
     }
   } catch (error) {
@@ -213,7 +232,7 @@ async function checkScanner() {
     const response = await fetch(`${API_BASE}/scanner/alerts`);
     const data = await response.json();
     
-    // Notify for HIGH priority alerts
+    // Notify for HIGH priority alerts with urgent vibration
     const highAlerts = (data.alerts || []).filter(a => a.alert_level === 'HIGH');
     
     if (highAlerts.length > 0) {
@@ -224,7 +243,8 @@ async function checkScanner() {
         icon: '/logo192.png',
         badge: '/logo192.png',
         tag: 'gem-alert',
-        requireInteraction: true
+        requireInteraction: true,
+        vibrate: [200, 100, 200, 100, 400]  // Urgent pattern
       });
     }
   } catch (error) {
@@ -237,17 +257,31 @@ async function checkAlerts() {
     const response = await fetch(`${API_BASE}/notifications/`);
     const data = await response.json();
     
-    // Show unread notifications
+    // Show unread notifications with appropriate vibration
     const unread = (data.notifications || []).filter(n => !n.read);
     
     if (unread.length > 0) {
       const notif = unread[0];
       
+      // Get vibration pattern based on priority
+      const vibrationPatterns = {
+        critical: [200, 100, 200, 100, 200, 100, 400],
+        high: [200, 100, 200, 100, 400],
+        normal: [200, 100, 200],
+        low: [100]
+      };
+      
+      const vibration = notif.vibrate !== false ? 
+        (notif.vibration_pattern || vibrationPatterns[notif.priority] || vibrationPatterns.normal) : 
+        [];
+      
       self.registration.showNotification(notif.title, {
         body: notif.body,
         icon: '/logo192.png',
         badge: '/logo192.png',
-        tag: `notif-${notif.id}`
+        tag: `notif-${notif.id}`,
+        vibrate: vibration,
+        requireInteraction: notif.priority === 'high' || notif.priority === 'critical'
       });
     }
   } catch (error) {
@@ -255,4 +289,4 @@ async function checkAlerts() {
   }
 }
 
-console.log('[SW] Service Worker loaded');
+console.log('[SW] Service Worker loaded with vibration support');
