@@ -10,6 +10,7 @@ import {
 import { motion } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
+import { useTradingMode } from '../context/TradingModeContext';
 
 const AutomatedTradingSection = () => {
   const [positions, setPositions] = useState([]);
@@ -18,33 +19,13 @@ const AutomatedTradingSection = () => {
   const [loading, setLoading] = useState(false);
   const [executing, setExecuting] = useState(false);
   
-  // Paper mode synced with localStorage - same key as GrowthDashboard
-  const [paperMode, setPaperMode] = useState(() => {
-    const saved = localStorage.getItem('growth_trading_mode');
-    return saved !== 'real'; // Default to paper (true) unless explicitly 'real'
-  });
+  // Use global trading mode context
+  const { isPaperMode, setMode } = useTradingMode();
 
-  // Handle paper mode toggle with localStorage sync
+  // Handle paper mode toggle
   const handlePaperModeChange = (isPaper) => {
-    setPaperMode(isPaper);
-    localStorage.setItem('growth_trading_mode', isPaper ? 'paper' : 'real');
+    setMode(isPaper ? 'paper' : 'real');
   };
-
-  useEffect(() => {
-    // Listen for storage changes from other components
-    const handleStorageChange = (e) => {
-      if (e.key === 'growth_trading_mode') {
-        setPaperMode(e.newValue !== 'real');
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Also check on mount in case it changed
-    const saved = localStorage.getItem('growth_trading_mode');
-    setPaperMode(saved !== 'real');
-    
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
 
   useEffect(() => {
     loadData();
