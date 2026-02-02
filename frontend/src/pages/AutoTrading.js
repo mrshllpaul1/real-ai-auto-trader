@@ -97,7 +97,21 @@ const AutoTrading = () => {
       ]);
       
       if (configRes.data.configured) {
-        setConfig(configRes.data.config);
+        // Apply config but ALWAYS respect localStorage trading mode
+        const savedMode = localStorage.getItem('growth_trading_mode');
+        setConfig(prev => ({
+          ...configRes.data.config,
+          paper_trading_enabled: savedMode !== 'real',
+          real_trading_enabled: savedMode === 'real'
+        }));
+      } else {
+        // No config saved yet - apply localStorage mode
+        const savedMode = localStorage.getItem('growth_trading_mode');
+        setConfig(prev => ({
+          ...prev,
+          paper_trading_enabled: savedMode !== 'real',
+          real_trading_enabled: savedMode === 'real'
+        }));
       }
       
       if (allocationRes.data.allocated) {
