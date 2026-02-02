@@ -8,6 +8,7 @@ import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import AILearning from "./pages/AILearning";
 import NewsAndIntelligence from "./pages/NewsAndIntelligence";
+import NewsFilters from "./pages/NewsFilters";
 import AutoTrading from "./pages/AutoTrading";
 import GemScanner from "./pages/GemScanner";
 import AutoExecution from "./pages/AutoExecution";
