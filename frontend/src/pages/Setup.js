@@ -104,19 +104,6 @@ TWILIO_PHONE_NUMBER=${credentials.TWILIO_PHONE_NUMBER || '+1234567890'}
       recipient: configStatus.emailRecipient,
     },
     {
-      id: 'sms',
-      name: 'SMS Notifications (Twilio)',
-      icon: Phone,
-      configured: false, // Will show as optional
-      required: false,
-      description: 'Get text messages for HIGH priority alerts',
-      envKeys: ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_PHONE_NUMBER'],
-      signupUrl: 'https://twilio.com',
-      signupText: 'Get Credentials from Twilio',
-      instructions: 'Sign up → Console → Account Info (SID & Token) → Buy a Phone Number',
-      recipient: configStatus.smsPhone,
-    },
-    {
       id: 'kraken',
       name: 'Kraken Exchange',
       icon: TrendingUp,
