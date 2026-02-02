@@ -47,7 +47,7 @@ class CryptoPanicService:
     Compatible with free tier API that has limited response fields.
     """
     
-    BASE_URL = "https://cryptopanic.com/api/v1"
+    BASE_URL = "https://cryptopanic.com/api/developer/v2"
     
     def __init__(self, api_key: str = None):
         """
