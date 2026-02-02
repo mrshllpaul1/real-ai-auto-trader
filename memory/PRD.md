@@ -256,17 +256,13 @@ TWILIO_PHONE_NUMBER=      # User must provide
 ---
 
 ## Future Enhancements
-- **P2**: Enable Real Money Trading - Switch from paper to live Kraken trades
-- **P2**: Implement user-guided tutorial for first-time setup
-- **P3**: Add automated pytest tests for regression prevention
-- Real Twilio integration (requires user credentials)
+- Twilio SMS notifications (requires user credentials)
 - Email notifications with Resend (requires user API key)
-- Interactive onboarding tutorial
 - Custom strategy builder UI
 - Trading journal with AI insights
-- Fix `/api/learning/record-outcome` endpoint (currently has workaround)
 
 ---
 
 ## Test Reports
 - `/app/test_reports/iteration_3.json` - Latest test results (Feb 2, 2026)
+- `/app/backend/tests/test_services.py` - Unit tests for critical services
