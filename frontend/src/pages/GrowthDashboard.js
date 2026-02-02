@@ -25,8 +25,17 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 const GrowthDashboard = () => {
   // Trading mode state - persist to localStorage
   const [tradingMode, setTradingMode] = useState(() => {
-    return localStorage.getItem('growth_trading_mode') || 'paper';
+    const saved = localStorage.getItem('growth_trading_mode');
+    console.log('Initial trading mode from localStorage:', saved);
+    return saved || 'paper';
   });
+  
+  // Handle trading mode change with persistence
+  const handleTradingModeChange = (newMode) => {
+    console.log('Changing trading mode to:', newMode);
+    localStorage.setItem('growth_trading_mode', newMode);
+    setTradingMode(newMode);
+  };
   
   // Paper trading state
   const [paperStats, setPaperStats] = useState(null);
