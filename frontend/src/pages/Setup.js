@@ -244,68 +244,8 @@ RESEND_API_KEY=${credentials.RESEND_API_KEY || 'your_resend_api_key_here'}
               </div>
             </div>
 
-            {/* SMS - Twilio */}
-            <div className="space-y-3 p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Phone className="text-[#FFB800]" size={20} />
-                  <span className="font-bold text-white">SMS (Twilio)</span>
-                  <Badge className="bg-[#FFB800]/20 text-[#FFB800]">Optional</Badge>
-                </div>
-                <a 
-                  href="https://twilio.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-xs text-[#007AFF] hover:underline flex items-center gap-1"
-                >
-                  Get Credentials <ExternalLink size={12} />
-                </a>
-              </div>
-              <p className="text-xs text-[#A1A1AA]">
-                Sign up at twilio.com → Console Dashboard → Account Info (SID & Auth Token)
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs text-[#A1A1AA]">TWILIO_ACCOUNT_SID</Label>
-                  <Input
-                    type="text"
-                    placeholder="ACxxxxxxxx..."
-                    value={credentials.TWILIO_ACCOUNT_SID}
-                    onChange={(e) => handleInputChange('TWILIO_ACCOUNT_SID', e.target.value)}
-                    className="bg-[#0A0A0A] border-[#333] font-mono text-sm mt-1"
-                    data-testid="twilio-sid-input"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs text-[#A1A1AA]">TWILIO_AUTH_TOKEN</Label>
-                  <Input
-                    type="password"
-                    placeholder="xxxxxxxx..."
-                    value={credentials.TWILIO_AUTH_TOKEN}
-                    onChange={(e) => handleInputChange('TWILIO_AUTH_TOKEN', e.target.value)}
-                    className="bg-[#0A0A0A] border-[#333] font-mono text-sm mt-1"
-                    data-testid="twilio-token-input"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label className="text-xs text-[#A1A1AA]">TWILIO_PHONE_NUMBER</Label>
-                <Input
-                  type="text"
-                  placeholder="+1234567890"
-                  value={credentials.TWILIO_PHONE_NUMBER}
-                  onChange={(e) => handleInputChange('TWILIO_PHONE_NUMBER', e.target.value)}
-                  className="bg-[#0A0A0A] border-[#333] font-mono text-sm mt-1"
-                  data-testid="twilio-phone-input"
-                />
-              </div>
-              <div className="text-xs text-[#666]">
-                📱 SMS will be sent to: <span className="text-[#00FF94]">{configStatus.smsPhone || '2104412761'}</span>
-              </div>
-            </div>
-
             {/* Output Box */}
-            {(credentials.RESEND_API_KEY || credentials.TWILIO_ACCOUNT_SID) && (
+            {credentials.RESEND_API_KEY && (
               <div className="space-y-2">
                 <Label className="text-sm text-white">Copy this and send it to me:</Label>
                 <div className="bg-[#000] border border-[#333] rounded-lg p-4 font-mono text-xs text-[#00FF94] whitespace-pre-wrap">
