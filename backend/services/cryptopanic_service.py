@@ -1,7 +1,7 @@
 """
 CryptoPanic API Wrapper Service
-Comprehensive Python wrapper for the CryptoPanic news API.
-Provides access to crypto news, sentiment filters, and trending content.
+Comprehensive Python wrapper for the CryptoPanic news API using direct HTTP calls.
+Compatible with the free tier API (handles limited fields).
 
 Features:
 - Get news by currency/coin
@@ -14,18 +14,11 @@ Features:
 
 import asyncio
 import os
+import httpx
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from enum import Enum
 from dotenv import load_dotenv
-
-# Import CryptoPanic library
-try:
-    from cryptopanic import CryptoPanicClient, CryptoPanicAPIError
-    CRYPTOPANIC_AVAILABLE = True
-except ImportError:
-    CRYPTOPANIC_AVAILABLE = False
-    print("⚠️ Warning: cryptopanic library not installed. Run: pip install cryptopanic")
 
 load_dotenv()
 
@@ -50,9 +43,11 @@ class NewsKind(str, Enum):
 
 class CryptoPanicService:
     """
-    Comprehensive CryptoPanic API wrapper service.
-    Provides easy access to crypto news with caching and async support.
+    Comprehensive CryptoPanic API wrapper service using direct HTTP calls.
+    Compatible with free tier API that has limited response fields.
     """
+    
+    BASE_URL = "https://cryptopanic.com/api/v1"
     
     def __init__(self, api_key: str = None):
         """
@@ -62,8 +57,7 @@ class CryptoPanicService:
             api_key: CryptoPanic API key. If not provided, uses CRYPTOPANIC_API_KEY env var.
         """
         self.api_key = api_key or os.getenv('CRYPTOPANIC_API_KEY', '')
-        self.client = None
-        self._initialized = False
+        self._initialized = bool(self.api_key)
         
         # Cache settings
         self.cache = {}
@@ -73,32 +67,15 @@ class CryptoPanicService:
         self.last_request_time = None
         self.min_request_interval = 1.0  # seconds between requests
         
-        self._initialize()
-    
-    def _initialize(self):
-        """Initialize the CryptoPanic client"""
-        if not CRYPTOPANIC_AVAILABLE:
-            print("❌ CryptoPanic library not available")
-            return
-        
-        if not self.api_key:
-            print("⚠️ No CryptoPanic API key configured. Get one at: cryptopanic.com/developers/api/")
-            return
-        
-        try:
-            self.client = CryptoPanicClient(
-                auth_token=self.api_key,
-                timeout=30
-            )
-            self._initialized = True
+        if self._initialized:
             print("✅ CryptoPanic service initialized")
-        except Exception as e:
-            print(f"❌ CryptoPanic initialization error: {e}")
+        else:
+            print("⚠️ No CryptoPanic API key configured. Get one at: cryptopanic.com/developers/api/")
     
     @property
     def is_available(self) -> bool:
         """Check if the service is available and configured"""
-        return self._initialized and self.client is not None
+        return self._initialized
     
     async def _respect_rate_limit(self):
         """Ensure we don't exceed rate limits"""
@@ -128,26 +105,27 @@ class CryptoPanicService:
             'data': data
         }
     
-    def _parse_post(self, post) -> Dict[str, Any]:
-        """Parse a CryptoPanic post into a clean dictionary"""
+    def _parse_post(self, post: Dict) -> Dict[str, Any]:
+        """Parse a CryptoPanic post dictionary into a clean format"""
         # Extract currencies mentioned
         currencies = []
-        if hasattr(post, 'instruments') and post.instruments:
-            currencies = [inst.code for inst in post.instruments]
+        if 'currencies' in post and post['currencies']:
+            currencies = [c.get('code', '') for c in post['currencies'] if c.get('code')]
         
-        # Extract vote data
+        # Extract vote data if available
         votes = {}
-        if hasattr(post, 'votes') and post.votes:
+        if 'votes' in post and post['votes']:
+            v = post['votes']
             votes = {
-                'positive': post.votes.positive or 0,
-                'negative': post.votes.negative or 0,
-                'important': post.votes.important or 0,
-                'liked': post.votes.liked or 0,
-                'disliked': post.votes.disliked or 0,
-                'lol': post.votes.lol or 0,
-                'toxic': post.votes.toxic or 0,
-                'saved': post.votes.saved or 0,
-                'comments': post.votes.comments or 0,
+                'positive': v.get('positive', 0) or 0,
+                'negative': v.get('negative', 0) or 0,
+                'important': v.get('important', 0) or 0,
+                'liked': v.get('liked', 0) or 0,
+                'disliked': v.get('disliked', 0) or 0,
+                'lol': v.get('lol', 0) or 0,
+                'toxic': v.get('toxic', 0) or 0,
+                'saved': v.get('saved', 0) or 0,
+                'comments': v.get('comments', 0) or 0,
             }
             
             # Calculate vote-based sentiment
@@ -165,19 +143,35 @@ class CryptoPanicService:
             else:
                 votes['sentiment'] = 'unknown'
         
+        # Extract source info
+        source = post.get('source', {}) or {}
+        
         return {
-            'id': post.id if hasattr(post, 'id') else None,
-            'title': post.title if hasattr(post, 'title') else '',
-            'url': post.url if hasattr(post, 'url') else '',
-            'source': post.source.title if hasattr(post, 'source') and post.source else 'Unknown',
-            'source_domain': post.source.domain if hasattr(post, 'source') and post.source else '',
-            'published_at': post.published_at.isoformat() if hasattr(post, 'published_at') and post.published_at else '',
-            'created_at': post.created_at.isoformat() if hasattr(post, 'created_at') and post.created_at else '',
-            'kind': post.kind if hasattr(post, 'kind') else 'news',
+            'id': post.get('id'),
+            'title': post.get('title', ''),
+            'url': post.get('url', ''),
+            'source': source.get('title', 'Unknown') if isinstance(source, dict) else str(source),
+            'source_domain': source.get('domain', '') if isinstance(source, dict) else '',
+            'published_at': post.get('published_at', ''),
+            'created_at': post.get('created_at', ''),
+            'kind': post.get('kind', 'news'),
             'currencies': currencies,
             'votes': votes,
-            'panic_score': post.panic_score if hasattr(post, 'panic_score') else None,
         }
+    
+    async def _make_request(self, endpoint: str, params: Dict = None) -> Dict:
+        """Make an API request to CryptoPanic"""
+        await self._respect_rate_limit()
+        
+        url = f"{self.BASE_URL}/{endpoint}"
+        request_params = {'auth_token': self.api_key}
+        if params:
+            request_params.update(params)
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(url, params=request_params)
+            response.raise_for_status()
+            return response.json()
     
     async def get_news(
         self,
@@ -220,29 +214,21 @@ class CryptoPanicService:
                 return cached
         
         try:
-            await self._respect_rate_limit()
-            
-            # Run synchronous client in thread pool
-            loop = asyncio.get_event_loop()
-            
             params = {}
             if currencies:
-                params['currencies'] = currencies
+                params['currencies'] = ','.join(currencies)
             if filter_type:
                 params['filter'] = filter_type.value
             if kind and kind != NewsKind.ALL:
                 params['kind'] = kind.value
             if regions:
-                params['regions'] = regions
+                params['regions'] = ','.join(regions)
             
-            posts = await loop.run_in_executor(
-                None,
-                lambda: self.client.get_posts(**params)
-            )
+            data = await self._make_request('posts/', params)
             
             news_items = []
-            if posts and posts.results:
-                for post in posts.results[:limit]:
+            if 'results' in data and data['results']:
+                for post in data['results'][:limit]:
                     news_items.append(self._parse_post(post))
             
             # Cache results
