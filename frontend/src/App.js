@@ -15,6 +15,7 @@ import AdvancedFeatures from "./pages/AdvancedFeatures";
 import Guide from "./pages/Guide";
 import Setup from "./pages/Setup";
 import GrowthDashboard from "./pages/GrowthDashboard";
+import TradingJournal from "./pages/TradingJournal";
 import Sidebar from "./components/Sidebar";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "framer-motion";
