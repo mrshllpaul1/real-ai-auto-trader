@@ -4,6 +4,7 @@ from typing import Optional, List
 from datetime import datetime
 from cryptography.fernet import Fernet
 import os
+import base64
 
 router = APIRouter()
 
@@ -19,12 +20,22 @@ async def get_database():
     from server import db
     return db
 
+# Get or generate encryption key
 encryption_key = os.getenv("ENCRYPTION_KEY")
 if not encryption_key:
+    # Generate a valid Fernet key (32 url-safe base64-encoded bytes)
     encryption_key = Fernet.generate_key().decode()
-    
-ENCRYPTION_KEY = encryption_key.encode() if isinstance(encryption_key, str) else encryption_key
-cipher = Fernet(ENCRYPTION_KEY)
+    os.environ["ENCRYPTION_KEY"] = encryption_key
+
+# Ensure key is properly formatted
+try:
+    ENCRYPTION_KEY = encryption_key.encode() if isinstance(encryption_key, str) else encryption_key
+    cipher = Fernet(ENCRYPTION_KEY)
+except ValueError:
+    # If key is invalid, generate a new one
+    encryption_key = Fernet.generate_key().decode()
+    ENCRYPTION_KEY = encryption_key.encode()
+    cipher = Fernet(ENCRYPTION_KEY)
 
 @router.post("/store-credentials")
 async def store_credentials(
