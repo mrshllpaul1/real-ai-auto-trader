@@ -8,80 +8,53 @@ load_dotenv()
 
 class NotificationService:
     """
-    Handles push notifications (browser) and SMS notifications (Twilio)
+    Handles push notifications (browser/PWA) with vibration support
     for trade completions and high-priority alerts
     """
     
     def __init__(self, db):
         self.db = db
-        self.twilio_client = None
-        self.twilio_phone = None
-        self.user_phone = os.getenv('USER_PHONE_NUMBER', '2104412761')
-        
-        # Initialize Twilio
-        self._init_twilio()
         
         # Track sent notifications to avoid spam
         self.recent_notifications = []
         self.notification_cooldown = 300  # 5 minutes between same type notifications
     
-    def _init_twilio(self):
-        """Initialize Twilio client"""
-        try:
-            account_sid = os.getenv('TWILIO_ACCOUNT_SID')
-            auth_token = os.getenv('TWILIO_AUTH_TOKEN')
-            self.twilio_phone = os.getenv('TWILIO_PHONE_NUMBER')
-            
-            if account_sid and auth_token and self.twilio_phone:
-                from twilio.rest import Client
-                self.twilio_client = Client(account_sid, auth_token)
-                print("✅ Twilio SMS notifications enabled")
-            else:
-                print("⚠️ Twilio credentials not configured - SMS disabled")
-        except ImportError:
-            print("⚠️ Twilio library not installed - SMS disabled")
-        except Exception as e:
-            print(f"⚠️ Twilio init error: {e}")
-    
-    async def send_sms(self, message: str, phone_number: str = None) -> Dict[str, Any]:
-        """Send SMS notification via Twilio"""
-        if not self.twilio_client:
-            return {'success': False, 'error': 'Twilio not configured'}
-        
-        target_phone = phone_number or self.user_phone
-        
-        # Format phone number (ensure E.164 format)
-        if not target_phone.startswith('+'):
-            target_phone = '+1' + target_phone  # Assume US number
-        
-        try:
-            sms = self.twilio_client.messages.create(
-                body=message,
-                from_=self.twilio_phone,
-                to=target_phone
-            )
-            
-            # Log notification
-            await self._log_notification('sms', message, target_phone, sms.sid)
-            
-            print(f"📱 SMS sent to {target_phone}: {message[:50]}...")
-            return {'success': True, 'sid': sms.sid}
-        except Exception as e:
-            print(f"❌ SMS error: {e}")
-            return {'success': False, 'error': str(e)}
-    
-    async def send_push_notification(self, title: str, body: str, data: Dict = None) -> Dict[str, Any]:
+    async def send_push_notification(
+        self, 
+        title: str, 
+        body: str, 
+        data: Dict = None,
+        priority: str = 'normal',
+        vibrate: bool = True
+    ) -> Dict[str, Any]:
         """
-        Create push notification payload for browser/PWA
+        Create push notification payload for browser/PWA with vibration
         The actual push is handled by the frontend service worker
+        
+        Args:
+            title: Notification title
+            body: Notification body text
+            data: Additional data payload
+            priority: 'high', 'normal', or 'low'
+            vibrate: Enable vibration pattern
         """
+        # Vibration patterns (in milliseconds)
+        vibration_patterns = {
+            'high': [200, 100, 200, 100, 400],  # Urgent pattern
+            'normal': [200, 100, 200],          # Standard pattern
+            'low': [100]                        # Subtle pattern
+        }
+        
         notification = {
             'id': str(datetime.now().timestamp()),
             'title': title,
             'body': body,
             'data': data or {},
             'timestamp': datetime.now().isoformat(),
-            'read': False
+            'read': False,
+            'priority': priority,
+            'vibrate': vibrate,
+            'vibration_pattern': vibration_patterns.get(priority, vibration_patterns['normal'])
         }
         
         # Store notification in database for frontend to poll
@@ -90,7 +63,7 @@ class NotificationService:
         # Log notification
         await self._log_notification('push', f"{title}: {body}", None, notification['id'])
         
-        print(f"🔔 Push notification: {title}")
+        print(f"🔔 Push notification ({priority}): {title}")
         return {'success': True, 'notification': notification}
     
     async def notify_trade_completed(self, trade: Dict[str, Any]) -> Dict[str, Any]:
@@ -111,11 +84,14 @@ class NotificationService:
             body = f"{mode} {action} closed ({close_reason})\n" \
                    f"Entry: ${entry_price:.4f} → Exit: ${exit_price:.4f}\n" \
                    f"P/L: {profit_str}"
+            # High priority if significant profit or loss
+            priority = 'high' if abs(profit_pct) > 10 else 'normal'
         else:
             title = f"🚀 Trade Opened: {symbol}"
             body = f"{mode} {action} at ${entry_price:.4f}"
+            priority = 'normal'
         
-        # Send push notification
+        # Send push notification with vibration
         result = await self.send_push_notification(
             title=title,
             body=body,
@@ -124,13 +100,15 @@ class NotificationService:
                 'trade_id': trade.get('trade_id'),
                 'symbol': symbol,
                 'profit_pct': profit_pct
-            }
+            },
+            priority=priority,
+            vibrate=True
         )
         
         return result
     
-    async def notify_high_priority_gem(self, gem: Dict[str, Any], phone_number: str = None) -> Dict[str, Any]:
-        """Send SMS notification for HIGH priority gems"""
+    async def notify_high_priority_gem(self, gem: Dict[str, Any]) -> Dict[str, Any]:
+        """Send HIGH priority push notification for gems (with urgent vibration)"""
         symbol = gem.get('symbol', 'Unknown')
         score = gem.get('match_score', 0)
         potential = gem.get('potential_multiplier', '?x')
@@ -140,25 +118,58 @@ class NotificationService:
         signal_names = [s.get('signal', s) if isinstance(s, dict) else s for s in signals[:3]]
         signals_str = ', '.join(signal_names)
         
-        message = f"🚨 HIGH ALERT: {symbol}\n" \
-                  f"Score: {score} | Potential: {potential}\n" \
-                  f"Price: ${price:.6f}\n" \
-                  f"Signals: {signals_str}\n" \
-                  f"Check app for details!"
+        title = f"🚨 HIGH ALERT: {symbol}"
+        body = f"Score: {score} | Potential: {potential}\n" \
+               f"Price: ${price:.6f}\n" \
+               f"Signals: {signals_str}"
         
         # Check cooldown to avoid spam
         cooldown_key = f"gem_{symbol}"
         if self._check_cooldown(cooldown_key):
-            print(f"⏳ Skipping SMS for {symbol} - in cooldown")
+            print(f"⏳ Skipping notification for {symbol} - in cooldown")
             return {'success': False, 'error': 'In cooldown period'}
         
-        # Send SMS
-        result = await self.send_sms(message, phone_number)
+        # Send HIGH priority push notification with urgent vibration
+        result = await self.send_push_notification(
+            title=title,
+            body=body,
+            data={
+                'type': 'high_priority_gem',
+                'symbol': symbol,
+                'score': score,
+                'potential': potential
+            },
+            priority='high',
+            vibrate=True
+        )
         
         if result.get('success'):
             self._set_cooldown(cooldown_key)
         
         return result
+    
+    async def notify_ai_discovery(self, coin: Dict[str, Any]) -> Dict[str, Any]:
+        """Send notification when AI discovers a new coin"""
+        symbol = coin.get('symbol', 'Unknown')
+        reason = coin.get('reason', 'Promising potential')
+        potential_score = coin.get('potential_score', 0)
+        
+        title = f"🆕 AI Discovered: {symbol}"
+        body = f"Added to universe!\n" \
+               f"Potential: {potential_score}%\n" \
+               f"Reason: {reason[:100]}"
+        
+        return await self.send_push_notification(
+            title=title,
+            body=body,
+            data={
+                'type': 'ai_discovery',
+                'symbol': symbol,
+                'potential_score': potential_score
+            },
+            priority='high',
+            vibrate=True
+        )
     
     def _check_cooldown(self, key: str) -> bool:
         """Check if a notification type is in cooldown"""
@@ -222,12 +233,12 @@ class NotificationService:
             settings = {
                 'user_id': user_id,
                 'push_enabled': True,
-                'sms_enabled': True,
-                'sms_phone': self.user_phone,
+                'vibration_enabled': True,
                 'notify_trade_open': True,
                 'notify_trade_close': True,
                 'notify_high_alerts': True,
-                'notify_medium_alerts': False
+                'notify_medium_alerts': False,
+                'notify_ai_discoveries': True
             }
             await self.db.notification_settings.insert_one(dict(settings))
         
