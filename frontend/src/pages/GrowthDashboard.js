@@ -599,6 +599,16 @@ const GrowthDashboard = () => {
         </Card>
       </motion.div>
 
+      {/* AI Sentiment Panel */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.22 }}
+        className="mb-8"
+      >
+        <MarketSentimentPanel />
+      </motion.div>
+
       {/* Coin Universe Manager */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
