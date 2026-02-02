@@ -41,7 +41,7 @@ class CompoundSchedule(BaseModel):
 class RetrainSchedule(BaseModel):
     day_of_week: Optional[str] = 'mon'
     hour: Optional[int] = 6
-    coins: Optional[list] = ['bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot']
+    coins: Optional[list] = None  # None = use all coins from universe
 
 
 @router.get("/status")
