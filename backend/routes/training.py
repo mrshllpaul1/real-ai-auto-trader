@@ -14,6 +14,9 @@ class ProfitableGemsRequest(BaseModel):
     min_profit_multiplier: float = 2.0
     start_year: int = 2009
 
+class EnhancedTrainingRequest(BaseModel):
+    coins: List[str] = ['bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot']
+
 async def get_database():
     from server import db
     return db
@@ -22,6 +25,11 @@ async def get_historical_trainer():
     from services.historical_trainer import HistoricalTrainer
     from server import db
     return HistoricalTrainer(db)
+
+async def get_enhanced_trainer():
+    from services.enhanced_historical_trainer import EnhancedHistoricalTrainer
+    from server import db
+    return EnhancedHistoricalTrainer(db)
 
 @router.post("/train")
 async def train_on_historical_data(
