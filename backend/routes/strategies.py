@@ -63,6 +63,11 @@ async def generate_strategies(
             try:
                 # Get historical prices
                 coin_data = historical_data.get(coin_id, {}).get('prices', [])
+                print(f"DEBUG: coin_id={coin_id}, has_prices={bool(coin_data)}, prices_len={len(coin_data) if coin_data else 0}")
+                
+                if not coin_data:
+                    print(f"DEBUG: No price data for {coin_id}, historical_data keys: {list(historical_data.get(coin_id, {}).keys())}")
+                    continue
                 
                 if coin_data:
                     # Calculate technical indicators
