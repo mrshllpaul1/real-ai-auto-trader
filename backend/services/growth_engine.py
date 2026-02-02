@@ -183,6 +183,13 @@ class AggressiveGrowthEngine:
         if capital < 10:
             return {'success': False, 'error': 'Insufficient capital', 'capital': capital}
         
+        # Get AI confidence threshold
+        confidence_threshold = 70  # Default
+        if self.budget_manager:
+            budget = await self.budget_manager.get_budget()
+            confidence_threshold = budget.get("ai_confidence_threshold", 70)
+            print(f"🎯 AI Confidence Threshold: {confidence_threshold}%")
+        
         # For real trading, allocate from budget
         if not paper_trade and self.budget_manager:
             allocation = await self.budget_manager.allocate_funds(
@@ -201,6 +208,7 @@ class AggressiveGrowthEngine:
         print(f"Main Allocation: ${main_capital:,.2f} ({self.config['main_allocation_pct']}%)")
         
         trades = []
+        skipped_low_confidence = []
         
         # 1. Find and buy gems
         print(f"\n💎 Scanning for gems...")
@@ -209,9 +217,19 @@ class AggressiveGrowthEngine:
         if gems:
             gem_position_size = gem_capital / len(gems)
             for gem in gems:
-                trade = await self._execute_gem_trade(
-                    gem, gem_position_size, paper_trade
-                )
+                # Check confidence threshold for real trades
+                gem_confidence = gem.get('gem_score', gem.get('ai_score', 50))
+                if not paper_trade and gem_confidence < confidence_threshold:
+                    skipped_low_confidence.append({
+                        'coin_id': gem.get('coin_id'),
+                        'confidence': gem_confidence,
+                        'threshold': confidence_threshold,
+                        'reason': 'Below confidence threshold - paper trade only'
+                    })
+                    # Execute as paper trade instead
+                    trade = await self._execute_gem_trade(gem, gem_position_size, paper_trade=True)
+                else:
+                    trade = await self._execute_gem_trade(gem, gem_position_size, paper_trade)
                 if trade:
                     trades.append(trade)
         
