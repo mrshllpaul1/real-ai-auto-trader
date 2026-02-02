@@ -8,6 +8,9 @@ import asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
+# Configure pytest-asyncio
+pytest_plugins = ('pytest_asyncio',)
+
 
 # ============ Budget Manager Tests ============
 
