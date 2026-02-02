@@ -115,7 +115,9 @@ async def generate_strategies(
                     
                     strategies.append(ai_strategy)
             except Exception as e:
+                import traceback
                 print(f"Error generating strategy for {coin_id}: {str(e)}")
+                print(f"Traceback: {traceback.format_exc()}")
                 continue
         
         # Sort strategies by confidence score
