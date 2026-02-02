@@ -119,48 +119,19 @@ class MarketDataService:
             return self._generate_fallback_historical(coin_id, days)
     
     def _generate_fallback_historical(self, coin_id: str, days: int) -> Dict[str, Any]:
-        """Generate fallback historical data when API fails"""
-        import random
-        
-        # Use realistic base prices for common coins
-        base_prices = {
-            'bitcoin': 95000,
-            'ethereum': 3500,
-            'solana': 200,
-            'cardano': 0.65,
-            'polkadot': 8,
-            'chainlink': 18,
-            'avalanche': 40,
-        }
-        
-        base_price = base_prices.get(coin_id, 100)
-        now = datetime.now()
-        
-        prices = []
-        market_caps = []
-        volumes = []
-        
-        # Generate realistic-looking data
-        current_price = base_price
-        for i in range(days * 24):  # Hourly data points
-            timestamp = int((now - timedelta(hours=days*24 - i)).timestamp() * 1000)
-            
-            # Add some realistic volatility
-            change = random.uniform(-0.02, 0.02)
-            current_price = current_price * (1 + change)
-            
-            prices.append([timestamp, current_price])
-            market_caps.append([timestamp, current_price * random.uniform(1e9, 1e11)])
-            volumes.append([timestamp, current_price * random.uniform(1e7, 1e9)])
-        
+        """
+        Return error indicator when API fails.
+        NEVER generates fake or simulated data - only real market data is used.
+        """
         return {
             "coin_id": coin_id,
             "days": days,
-            "prices": prices,
-            "market_caps": market_caps,
-            "total_volumes": volumes,
-            "fallback": True,
-            "message": "Using generated data due to API unavailability",
+            "prices": [],
+            "market_caps": [],
+            "total_volumes": [],
+            "error": True,
+            "data_available": False,
+            "message": f"No real historical data available for {coin_id}. API unavailable.",
             "fetched_at": datetime.now().isoformat()
         }
     
