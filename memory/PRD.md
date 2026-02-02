@@ -15,7 +15,21 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ## What's Been Implemented (Feb 2, 2026 - Session 4)
 
-### ✅ CryptoPanic News Feed Integration (NEW - Feb 2, 2026)
+### ✅ AI Retrained with Sentiment Parameters (Feb 2, 2026)
+- [x] **Updated AI Weekly Trainer** with sentiment integration:
+  - Sentiment weight: **12%** of selection criteria
+  - Momentum: 18%, Volume: 18%, Trend: 18%
+  - Volatility: 13%, Historical: 13%, Category: 8%
+- [x] **Enhanced portfolio selection** - Now uses sentiment to boost/penalize candidates
+- [x] **New signal weights** - Added `bullish_news` and `bearish_news` signals
+- [x] **Sentiment accuracy tracking** - Tracks bullish/bearish prediction accuracy
+- [x] **New API endpoints**:
+  - `GET /api/training/ai-weights` - View current AI weights
+  - `POST /api/training/update-weights` - Manually adjust weights
+- [x] **Training stats**: 578 weeks trained, meme category top performer (77.4 score)
+- [x] **GPT-5.2 active** - Using Emergent LLM for real-time sentiment analysis
+
+### ✅ CryptoPanic News Feed Integration (Feb 2, 2026)
 - [x] **Installed cryptopanic library** - `pip install cryptopanic==0.1.0`
 - [x] **Enhanced sentiment service** - Uses CryptoPanic library for news fetching
 - [x] **Additional data extraction**:
