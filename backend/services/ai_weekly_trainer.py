@@ -39,11 +39,13 @@ class AIWeeklyTrainer:
     """
     AI that learns week-by-week, adjusting its selection criteria based on outcomes.
     Maintains a portfolio of 10 coins + 1 gem.
+    NOW INCLUDES: AI News Sentiment Analysis in training and selection.
     """
     
     def __init__(self, db):
         self.db = db
         self.coincodex = CoinCodexService()
+        self._sentiment_service = None
         
         # Portfolio configuration
         self.config = {
@@ -58,21 +60,30 @@ class AIWeeklyTrainer:
             'take_profit_gem': 100,    # 100% take profit gem (looking for 2x+)
         }
         
-        # Learned weights (adjusted through training)
+        # Learned weights (adjusted through training) - NOW WITH SENTIMENT
         self.learned_weights = {
-            # Selection criteria weights
-            'momentum': 0.20,
-            'volatility': 0.15,
-            'volume': 0.20,
-            'trend': 0.20,
-            'historical_performance': 0.15,
-            'category_preference': 0.10,
+            # Selection criteria weights (NOW WITH SENTIMENT)
+            'momentum': 0.18,
+            'volatility': 0.13,
+            'volume': 0.18,
+            'trend': 0.18,
+            'historical_performance': 0.13,
+            'category_preference': 0.08,
+            'sentiment': 0.12,          # NEW: News sentiment weight
             
             # Category performance scores (learned)
             'category_scores': {cat: 50.0 for cat in CATEGORIES.keys()},
             
             # Individual coin performance (learned)
             'coin_scores': {},
+            
+            # Sentiment effectiveness tracking (NEW)
+            'sentiment_accuracy': {
+                'bullish_correct': 0,
+                'bullish_total': 0,
+                'bearish_correct': 0,
+                'bearish_total': 0,
+            },
             
             # Signal effectiveness (learned)
             'signal_weights': {
@@ -81,6 +92,8 @@ class AIWeeklyTrainer:
                 'volume_breakout': 1.0,
                 'trend_reversal': 1.0,
                 'mean_reversion': 1.0,
+                'bullish_news': 1.0,      # NEW
+                'bearish_news': 1.0,      # NEW
             }
         }
         
@@ -90,6 +103,16 @@ class AIWeeklyTrainer:
         self.total_profit = 0
         self.total_weeks = 0
         self.winning_weeks = 0
+    
+    async def _get_sentiment_service(self):
+        """Get the sentiment service for news analysis"""
+        if not self._sentiment_service:
+            try:
+                from services.ai_news_sentiment import get_sentiment_service
+                self._sentiment_service = get_sentiment_service()
+            except Exception:
+                pass
+        return self._sentiment_service
     
     async def initialize_training_data(self):
         """Load any existing learned weights from database"""
