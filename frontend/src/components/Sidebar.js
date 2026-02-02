@@ -154,6 +154,9 @@ const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
+  
+  // Use trading mode context
+  const { mode, isRealMode, toggleMode } = useTradingMode();
 
   // Close mobile menu on route change
   useEffect(() => {
