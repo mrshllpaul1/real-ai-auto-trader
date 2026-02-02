@@ -243,10 +243,10 @@ class AutoTradingScheduler:
             try:
                 await asyncio.sleep(60)  # Check every minute
                 
-                # Get all open trades
+                # Get all open trades with limit
                 open_trades = await self.db.trades.find(
                     {'status': 'executed'}
-                ).to_list(1000)
+                ).limit(1000).to_list(1000)
                 
                 for trade in open_trades:
                     await self.monitor_trade(trade)
