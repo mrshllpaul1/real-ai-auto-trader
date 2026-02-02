@@ -268,11 +268,8 @@ const AutoTrading = () => {
                 <p className="text-sm text-[#A1A1AA] mt-1">Risk-free simulation mode</p>
               </div>
               <Switch
-                checked={config.paper_trading_enabled}
-                onCheckedChange={(checked) => {
-                  setConfig({...config, paper_trading_enabled: checked, real_trading_enabled: !checked});
-                  localStorage.setItem('growth_trading_mode', checked ? 'paper' : 'real');
-                }}
+                checked={isPaperMode}
+                onCheckedChange={(checked) => setMode(checked ? 'paper' : 'real')}
                 data-testid="paper-trading-switch"
               />
             </div>
