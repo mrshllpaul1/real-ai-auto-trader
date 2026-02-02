@@ -65,20 +65,34 @@ async def trigger_continuous_learning(
 
 @router.post("/record-outcome")
 async def record_trade_outcome(
-    strategy_id: str,
-    trade_id: str,
-    actual_profit_loss: float,
+    strategy_id: str = None,
+    trade_id: str = None,
+    actual_profit_loss: float = 0,
     learning_engine = Depends(get_learning_engine),
     db = Depends(get_database)
 ):
     """Record actual trade outcome for learning"""
     try:
+        if not strategy_id or not trade_id:
+            raise HTTPException(status_code=400, detail="strategy_id and trade_id are required")
+        
         # Get strategy and trade details
         strategy = await db.strategies.find_one({"strategy_id": strategy_id}, {"_id": 0})
         trade = await db.trades.find_one({"trade_id": trade_id}, {"_id": 0})
         
-        if not strategy or not trade:
-            raise HTTPException(status_code=404, detail="Strategy or trade not found")
+        if not strategy and not trade:
+            # Create a basic learning record even without strategy/trade
+            await learning_engine.record_strategy_outcome(
+                strategy_id=strategy_id,
+                predicted_action="UNKNOWN",
+                actual_outcome="BUY" if actual_profit_loss > 0 else "SELL" if actual_profit_loss < 0 else "HOLD",
+                profit_loss=actual_profit_loss,
+                confidence_score=50
+            )
+            return {
+                "message": "Trade outcome recorded for learning (basic)",
+                "learning_applied": True
+            }
         
         # Determine actual outcome
         actual_outcome = "BUY" if actual_profit_loss > 0 else "SELL" if actual_profit_loss < 0 else "HOLD"
@@ -86,10 +100,10 @@ async def record_trade_outcome(
         # Record for learning
         await learning_engine.record_strategy_outcome(
             strategy_id=strategy_id,
-            predicted_action=strategy.get('technical_signal', 'HOLD'),
+            predicted_action=strategy.get('technical_signal', 'HOLD') if strategy else 'UNKNOWN',
             actual_outcome=actual_outcome,
             profit_loss=actual_profit_loss,
-            confidence_score=strategy.get('confidence_score', 50)
+            confidence_score=strategy.get('confidence_score', 50) if strategy else 50
         )
         
         return {
