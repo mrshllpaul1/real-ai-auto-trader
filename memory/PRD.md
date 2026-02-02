@@ -14,6 +14,13 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ## What's Been Implemented (Feb 2, 2026 - Session 3)
 
+### ✅ AI Confidence Threshold (NEW - Feb 2, 2026)
+- [x] **Adjustable threshold** - Set minimum AI confidence for real trades (0-100%)
+- [x] **Smart fallback** - Low confidence trades execute as paper-only
+- [x] **Backend API**: `/api/budget/confidence-threshold`, `/api/budget/confidence-check`
+- [x] **Frontend slider** - Visual control in Budget Protection card
+- [x] **Integration with Growth Engine** - Trades below threshold auto-downgraded to paper
+
 ### ✅ AI Decision Visualization (NEW - Feb 2, 2026)
 - [x] **Complete transparency dashboard** - See WHY AI makes each decision
 - [x] **Factor performance analysis** - Momentum, Volume, Trend success rates
