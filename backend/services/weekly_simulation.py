@@ -418,12 +418,12 @@ class WeeklySimulationRunner:
     def _calculate_annual_breakdown(
         self,
         weekly_results: List[Dict]
-    ) -> Dict[int, Dict[str, Any]]:
+    ) -> Dict[str, Dict[str, Any]]:
         """Calculate year-by-year performance"""
         annual = {}
         
         for week in weekly_results:
-            year = int(week['week_start'][:4])
+            year = week['week_start'][:4]  # Keep as string for MongoDB
             
             if year not in annual:
                 annual[year] = {
