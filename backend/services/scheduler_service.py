@@ -27,6 +27,10 @@ class SchedulerService:
         self.automated_trader = automated_trader
         self.alert_service = alert_service
         
+        # AI trainers (set later via set_trainers)
+        self.historical_trainer = None
+        self.enhanced_trainer = None
+        
         # Initialize scheduler
         self.scheduler = AsyncIOScheduler(timezone='UTC')
         
@@ -56,8 +60,20 @@ class SchedulerService:
                 'trigger': 'cron',
                 'hour': 0,
                 'description': 'Compound profits daily at midnight UTC'
+            },
+            'weekly_retrain': {
+                'trigger': 'cron',
+                'day_of_week': 'mon',
+                'hour': 6,
+                'description': 'Retrain AI models on Mondays at 6 AM UTC'
             }
         }
+    
+    def set_trainers(self, historical_trainer, enhanced_trainer):
+        """Set AI trainers for retraining jobs"""
+        self.historical_trainer = historical_trainer
+        self.enhanced_trainer = enhanced_trainer
+        logger.info("✅ AI trainers configured for scheduler")
     
     async def start(self):
         """Start the scheduler"""
