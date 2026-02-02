@@ -12,8 +12,12 @@ import { toast } from 'sonner';
 import AIPortfolioSection from '../components/AIPortfolioSection';
 import AICoinSelectionSection from '../components/AICoinSelectionSection';
 import AutomatedTradingSection from '../components/AutomatedTradingSection';
+import { useTradingMode } from '../context/TradingModeContext';
 
 const AutoTrading = () => {
+  // Use global trading mode context
+  const { isRealMode, isPaperMode, setMode } = useTradingMode();
+  
   const [config, setConfig] = useState({
     enabled: false,
     paper_trading_enabled: true,
@@ -31,13 +35,22 @@ const AutoTrading = () => {
   const [botPortfolio, setBotPortfolio] = useState(null);
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [tradingModeInitialized, setTradingModeInitialized] = useState(false);
 
-  // Initialize trading mode from localStorage FIRST before anything else
+  // Sync config with global trading mode
   useEffect(() => {
-    const savedMode = localStorage.getItem('growth_trading_mode');
-    const isReal = savedMode === 'real';
     setConfig(prev => ({
+      ...prev,
+      paper_trading_enabled: isPaperMode,
+      real_trading_enabled: isRealMode
+    }));
+  }, [isPaperMode, isRealMode]);
+
+  useEffect(() => {
+    loadConfig();
+    loadStatus();
+    const interval = setInterval(loadStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
       ...prev,
       paper_trading_enabled: !isReal,
       real_trading_enabled: isReal
