@@ -616,6 +616,9 @@ class SchedulerService:
             paper_trade=paper_trade
         )
         
+        # 5. AI Discovery scan daily at 10 AM
+        results['discovery'] = await self.add_discovery_job(hour=10)
+        
         logger.info(f"📋 Default schedule configured (training on {len(all_coins)} coins)")
         
         return {
