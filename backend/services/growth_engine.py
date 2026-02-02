@@ -149,11 +149,26 @@ class AggressiveGrowthEngine:
         """
         Execute the aggressive growth strategy.
         Allocates capital between gems (40%) and main coins (60%).
+        
+        SAFETY: For real trades, only uses allocated budget - NEVER touches other assets.
         """
         print(f"\n{'='*70}")
         print(f"🚀 AGGRESSIVE GROWTH ENGINE - {'PAPER' if paper_trade else 'REAL'}")
         print(f"{'='*70}")
         print(f"Goal: ${self.targets['starting_capital']} → ${self.targets['goal']:,} (200x)")
+        
+        # For real trading, check budget first
+        if not paper_trade and self.budget_manager:
+            can_trade = await self.budget_manager.can_trade_real(capital or self.targets['starting_capital'])
+            if not can_trade.get("allowed"):
+                return {
+                    'success': False, 
+                    'error': can_trade.get("reason", "Real trading not allowed"),
+                    'budget': can_trade.get("budget")
+                }
+            # Use available budget if no capital specified
+            if capital is None:
+                capital = can_trade["available"]
         
         # Get available capital
         if capital is None:
@@ -167,6 +182,16 @@ class AggressiveGrowthEngine:
         
         if capital < 10:
             return {'success': False, 'error': 'Insufficient capital', 'capital': capital}
+        
+        # For real trading, allocate from budget
+        if not paper_trade and self.budget_manager:
+            allocation = await self.budget_manager.allocate_funds(
+                amount=capital,
+                purpose="Growth strategy execution"
+            )
+            if not allocation.get("success"):
+                return {'success': False, 'error': allocation.get("error")}
+            print(f"💰 Budget allocated: ${capital:.2f} (Remaining: ${allocation['remaining_budget']:.2f})")
         
         # Calculate allocations
         gem_capital = capital * (self.config['gem_allocation_pct'] / 100)
