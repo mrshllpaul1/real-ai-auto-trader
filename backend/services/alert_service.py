@@ -1,7 +1,7 @@
 """
 Real-time Alert Service
-Sends notifications for gem detections, trade executions, and position updates.
-Supports in-app alerts, email (Resend), and SMS (Twilio).
+Sends push notifications for gem detections, trade executions, and position updates.
+Supports in-app alerts, email (Resend), and push notifications with vibration.
 """
 
 import asyncio
@@ -16,14 +16,12 @@ load_dotenv()
 class AlertService:
     """
     Multi-channel alert service for trading notifications.
+    Uses push notifications with vibration instead of SMS.
     """
     
     def __init__(self, db):
         self.db = db
         self.resend_key = os.getenv('RESEND_API_KEY')
-        self.twilio_sid = os.getenv('TWILIO_ACCOUNT_SID')
-        self.twilio_token = os.getenv('TWILIO_AUTH_TOKEN')
-        self.twilio_phone = os.getenv('TWILIO_PHONE_NUMBER')
         self.alert_email = os.getenv('ALERT_EMAIL')
     
     async def send_alert(
@@ -42,10 +40,10 @@ class AlertService:
             message: Alert message
             alert_type: Type of alert (gem_detected, execution, position_close, etc.)
             priority: Alert priority (low, normal, high, critical)
-            channels: List of channels (app, email, sms). Defaults to ['app']
+            channels: List of channels (app, email, push). Defaults to ['app', 'push']
         """
         if channels is None:
-            channels = ['app']
+            channels = ['app', 'push']
         
         alert = {
             'title': title,
@@ -54,15 +52,26 @@ class AlertService:
             'priority': priority,
             'channels': channels,
             'created_at': datetime.now().isoformat(),
-            'read': False
+            'read': False,
+            'vibrate': priority in ['high', 'critical']
         }
         
-        results = {'app': False, 'email': False, 'sms': False}
+        results = {'app': False, 'email': False, 'push': False}
         
         # Always store in app
         if 'app' in channels:
             await self.db.gem_alerts.insert_one(alert)
             results['app'] = True
+        
+        # Send push notification with vibration
+        if 'push' in channels:
+            push_result = await self._send_push_notification(
+                title=title,
+                message=message,
+                priority=priority,
+                alert_type=alert_type
+            )
+            results['push'] = push_result
         
         # Send email if configured
         if 'email' in channels and self.resend_key and self.alert_email:
@@ -72,20 +81,47 @@ class AlertService:
             except Exception as e:
                 print(f"Email alert error: {e}")
         
-        # Send SMS if configured and high priority
-        if 'sms' in channels and priority in ['high', 'critical']:
-            if self.twilio_sid and self.twilio_token and self.twilio_phone:
-                try:
-                    await self._send_sms(f"{title}\n{message}")
-                    results['sms'] = True
-                except Exception as e:
-                    print(f"SMS alert error: {e}")
-        
         return {
             'success': any(results.values()),
             'results': results,
             'alert_id': str(alert.get('_id', ''))
         }
+    
+    async def _send_push_notification(
+        self, 
+        title: str, 
+        message: str, 
+        priority: str,
+        alert_type: str
+    ) -> bool:
+        """Send push notification with vibration"""
+        # Vibration patterns (in milliseconds)
+        vibration_patterns = {
+            'critical': [200, 100, 200, 100, 200, 100, 400],  # Urgent pattern
+            'high': [200, 100, 200, 100, 400],
+            'normal': [200, 100, 200],
+            'low': [100]
+        }
+        
+        notification = {
+            'id': str(datetime.now().timestamp()),
+            'title': title,
+            'body': message[:500],
+            'data': {'type': alert_type},
+            'timestamp': datetime.now().isoformat(),
+            'read': False,
+            'priority': priority,
+            'vibrate': priority in ['high', 'critical'],
+            'vibration_pattern': vibration_patterns.get(priority, vibration_patterns['normal'])
+        }
+        
+        try:
+            await self.db.notifications.insert_one(dict(notification))
+            print(f"🔔 Push alert ({priority}): {title}")
+            return True
+        except Exception as e:
+            print(f"Push notification error: {e}")
+            return False
     
     async def _send_email(self, subject: str, body: str):
         """Send email via Resend"""
@@ -107,24 +143,6 @@ class AlertService:
             )
             return response.status_code == 200
     
-    async def _send_sms(self, message: str):
-        """Send SMS via Twilio"""
-        from twilio.rest import Client
-        
-        client = Client(self.twilio_sid, self.twilio_token)
-        
-        # Get user phone from settings
-        user_phone = os.getenv('USER_PHONE')
-        if not user_phone:
-            return False
-        
-        client.messages.create(
-            body=message[:160],  # SMS limit
-            from_=self.twilio_phone,
-            to=user_phone
-        )
-        return True
-    
     async def send_gem_alert(self, gem: Dict[str, Any]):
         """Send alert for detected gem"""
         score = gem.get('total_score', 0)
@@ -138,6 +156,10 @@ class AlertService:
             priority = 'normal'
         else:
             priority = 'low'
+        
+        channels = ['app', 'push']
+        if priority == 'high':
+            channels.append('email')
         
         await self.send_alert(
             title=f"💎 Gem Detected: {coin_id.upper()}",
@@ -154,7 +176,7 @@ Week Change: {gem.get('metrics', {}).get('week_change_pct', 0):.2f}%
             """,
             alert_type='gem_detected',
             priority=priority,
-            channels=['app', 'email'] if priority == 'high' else ['app']
+            channels=channels
         )
     
     async def send_moonshot_alert(self, trade: Dict[str, Any]):
@@ -173,7 +195,7 @@ Exit: ${trade.get('exit_price', 0):.6f}
             """,
             alert_type='moonshot',
             priority='critical',
-            channels=['app', 'email', 'sms']
+            channels=['app', 'push', 'email']
         )
     
     async def get_unread_alerts(self, limit: int = 50) -> List[Dict]:
