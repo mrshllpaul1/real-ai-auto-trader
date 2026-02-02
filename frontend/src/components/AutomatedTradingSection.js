@@ -53,7 +53,7 @@ const AutomatedTradingSection = () => {
     setExecuting(true);
     try {
       const response = await api.post('/auto-trade/execute-weekly', {
-        paper_trade: paperMode
+        paper_trade: isPaperMode
       });
       
       if (response.data.success) {
