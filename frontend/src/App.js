@@ -56,6 +56,7 @@ function App() {
             <div className="md:hidden h-16" />
             <Routes>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/growth" element={<GrowthDashboard />} />
               <Route path="/strategies" element={<StrategySelector />} />
               <Route path="/trading" element={<TradingView />} />
               <Route path="/analytics" element={<Analytics />} />
