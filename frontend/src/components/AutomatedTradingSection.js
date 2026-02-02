@@ -17,7 +17,34 @@ const AutomatedTradingSection = () => {
   const [performance, setPerformance] = useState(null);
   const [loading, setLoading] = useState(false);
   const [executing, setExecuting] = useState(false);
-  const [paperMode, setPaperMode] = useState(true);
+  
+  // Paper mode synced with localStorage - same key as GrowthDashboard
+  const [paperMode, setPaperMode] = useState(() => {
+    const saved = localStorage.getItem('growth_trading_mode');
+    return saved !== 'real'; // Default to paper (true) unless explicitly 'real'
+  });
+
+  // Handle paper mode toggle with localStorage sync
+  const handlePaperModeChange = (isPaper) => {
+    setPaperMode(isPaper);
+    localStorage.setItem('growth_trading_mode', isPaper ? 'paper' : 'real');
+  };
+
+  useEffect(() => {
+    // Listen for storage changes from other components
+    const handleStorageChange = (e) => {
+      if (e.key === 'growth_trading_mode') {
+        setPaperMode(e.newValue !== 'real');
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check on mount in case it changed
+    const saved = localStorage.getItem('growth_trading_mode');
+    setPaperMode(saved !== 'real');
+    
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   useEffect(() => {
     loadData();
