@@ -7,9 +7,12 @@ import { motion } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
 
-const AutopilotControl = ({ paperMode }) => {
+const AutopilotControl = ({ mode }) => {
   const [schedulerStatus, setSchedulerStatus] = useState(null);
   const [loading, setLoading] = useState(false);
+  
+  // Determine if paper mode based on prop or localStorage
+  const isPaperMode = mode === 'paper' || (mode === undefined && localStorage.getItem('growth_trading_mode') !== 'real');
 
   useEffect(() => {
     loadStatus();
@@ -29,7 +32,7 @@ const AutopilotControl = ({ paperMode }) => {
   const setupAutoPilot = async () => {
     setLoading(true);
     try {
-      const response = await api.post(`/scheduler/setup-default?paper_trade=${paperMode}`);
+      const response = await api.post(`/scheduler/setup-default?paper_trade=${isPaperMode}`);
       if (response.data.success) {
         toast.success('Autopilot activated! Passive income mode ON');
         loadStatus();
