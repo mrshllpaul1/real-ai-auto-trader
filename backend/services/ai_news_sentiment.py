@@ -153,14 +153,15 @@ class AINewsSentimentService:
         """
         news_items = []
         
-        # Try CryptoPanic first
-        if self.cryptopanic_key:
+        # Try CryptoPanic first (now uses the library)
+        if self.cryptopanic_key or self.cryptopanic_client:
             cryptopanic_news = await self._fetch_cryptopanic_news(symbol or coin_id)
             news_items.extend(cryptopanic_news)
         
-        # Fallback to CoinGecko news if available
-        coingecko_news = await self._fetch_coingecko_news(coin_id)
-        news_items.extend(coingecko_news)
+        # Fallback to CoinGecko news if no CryptoPanic news
+        if len(news_items) < 5:
+            coingecko_news = await self._fetch_coingecko_news(coin_id)
+            news_items.extend(coingecko_news)
         
         # Deduplicate by title similarity
         seen_titles = set()
@@ -175,6 +176,93 @@ class AINewsSentimentService:
         unique_news.sort(key=lambda x: x.get('published_at', ''), reverse=True)
         
         return unique_news[:15]  # Limit to 15 most recent
+    
+    async def get_trending_news(self, limit: int = 20) -> List[Dict]:
+        """
+        Get trending/rising crypto news from CryptoPanic.
+        Useful for discovering market-moving events.
+        """
+        if not self.cryptopanic_client:
+            return []
+        
+        try:
+            loop = asyncio.get_event_loop()
+            posts = await loop.run_in_executor(
+                None,
+                lambda: self.cryptopanic_client.get_posts(
+                    filter="rising"
+                )
+            )
+            
+            news_items = []
+            if posts and posts.results:
+                for post in posts.results[:limit]:
+                    # Extract currencies mentioned
+                    currencies = []
+                    if post.instruments:
+                        currencies = [inst.code for inst in post.instruments]
+                    
+                    news_items.append({
+                        'title': post.title,
+                        'source': post.source.title if post.source else 'Unknown',
+                        'published_at': post.published_at.isoformat() if post.published_at else '',
+                        'url': post.url,
+                        'kind': post.kind,
+                        'panic_score': post.panic_score,
+                        'currencies': currencies,
+                        'votes': {
+                            'positive': post.votes.positive if post.votes else 0,
+                            'negative': post.votes.negative if post.votes else 0,
+                            'important': post.votes.important if post.votes else 0,
+                        }
+                    })
+            
+            return news_items
+            
+        except Exception as e:
+            print(f"Trending news error: {e}")
+            return []
+    
+    async def get_bullish_bearish_news(self, filter_type: str = 'bullish') -> Dict[str, Any]:
+        """
+        Get news filtered by community sentiment (bullish or bearish).
+        """
+        if not self.cryptopanic_client:
+            return {'news': [], 'filter': filter_type, 'count': 0}
+        
+        try:
+            loop = asyncio.get_event_loop()
+            posts = await loop.run_in_executor(
+                None,
+                lambda: self.cryptopanic_client.get_posts(
+                    filter=filter_type  # "bullish" or "bearish"
+                )
+            )
+            
+            news_items = []
+            if posts and posts.results:
+                for post in posts.results[:20]:
+                    currencies = []
+                    if post.instruments:
+                        currencies = [inst.code for inst in post.instruments]
+                    
+                    news_items.append({
+                        'title': post.title,
+                        'source': post.source.title if post.source else 'Unknown',
+                        'published_at': post.published_at.isoformat() if post.published_at else '',
+                        'currencies': currencies,
+                        'panic_score': post.panic_score,
+                    })
+            
+            return {
+                'news': news_items,
+                'filter': filter_type,
+                'count': len(news_items)
+            }
+            
+        except Exception as e:
+            print(f"Bullish/bearish news error: {e}")
+            return {'news': [], 'filter': filter_type, 'count': 0, 'error': str(e)}
     
     async def _fetch_cryptopanic_news(self, query: str) -> List[Dict]:
         """Fetch news from CryptoPanic using the official library"""
