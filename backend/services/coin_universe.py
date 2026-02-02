@@ -185,3 +185,25 @@ def get_gem_candidates() -> list:
     gem_categories = ['meme', 'ai', 'new', 'gaming']
     return [coin_id for coin_id, info in COIN_UNIVERSE.items() 
             if info['category'] in gem_categories]
+
+def get_all_coins() -> list:
+    """Get all coins in the universe for training"""
+    return list(COIN_UNIVERSE.keys())
+
+def get_training_coins() -> list:
+    """
+    Get all coins for AI training - includes entire universe.
+    Returns coins sorted by priority (major first, then by category).
+    """
+    priority_order = ['major', 'large', 'mid', 'defi', 'ai', 'gaming', 'infra', 'new', 'meme', 'bridge', 'storage', 'exchange', 'privacy', 'older']
+    
+    coins = []
+    for category in priority_order:
+        coins.extend(get_coins_by_category(category))
+    
+    # Add any remaining coins not in categories
+    for coin_id in COIN_UNIVERSE.keys():
+        if coin_id not in coins:
+            coins.append(coin_id)
+    
+    return coins
