@@ -179,6 +179,8 @@ class TestCryptoPanicNewsAPI:
         print(f"✅ Lowercase symbol handled correctly")
     
     # ==================== Sentiment Analysis ====================
+    # Note: /api/news/sentiment/{symbol} is handled by the AI sentiment service (news.py)
+    # which provides AI-powered analysis with confidence scores and detailed analysis
     def test_sentiment_analysis_eth(self):
         """Test /api/news/sentiment/ETH - Get AI sentiment analysis for Ethereum"""
         response = self.session.get(f"{BASE_URL}/api/news/sentiment/ETH")
@@ -186,22 +188,23 @@ class TestCryptoPanicNewsAPI:
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
         data = response.json()
-        assert data["symbol"] == "ETH", f"Symbol should be 'ETH', got: {data['symbol']}"
-        assert "sentiment_score" in data, "Response should contain 'sentiment_score'"
-        assert "sentiment_label" in data, "Response should contain 'sentiment_label'"
-        assert "bullish_news_count" in data, "Response should contain 'bullish_news_count'"
-        assert "bearish_news_count" in data, "Response should contain 'bearish_news_count'"
+        # AI sentiment service returns: sentiment, confidence, ai_analysis, news_count, analyzed_at, recent_headlines
+        assert "sentiment" in data, "Response should contain 'sentiment'"
+        assert "confidence" in data, "Response should contain 'confidence'"
         assert "analyzed_at" in data, "Response should contain 'analyzed_at'"
+        assert "news_count" in data, "Response should contain 'news_count'"
         
-        # Validate sentiment score range
-        assert 0 <= data["sentiment_score"] <= 100, f"Sentiment score should be 0-100, got: {data['sentiment_score']}"
+        # Validate sentiment value
+        valid_sentiments = ['bullish', 'bearish', 'neutral', 'positive', 'negative']
+        assert data["sentiment"].lower() in valid_sentiments, f"Invalid sentiment: {data['sentiment']}"
         
-        # Validate sentiment label
-        valid_labels = ['very_bullish', 'bullish', 'neutral', 'bearish', 'very_bearish']
-        assert data["sentiment_label"] in valid_labels, f"Invalid sentiment label: {data['sentiment_label']}"
+        # Validate confidence range (0-100)
+        assert 0 <= data["confidence"] <= 100, f"Confidence should be 0-100, got: {data['confidence']}"
         
-        print(f"✅ ETH sentiment: score={data['sentiment_score']}, label={data['sentiment_label']}")
-        print(f"   Bullish news: {data['bullish_news_count']}, Bearish news: {data['bearish_news_count']}")
+        print(f"✅ ETH sentiment: {data['sentiment']}, confidence={data['confidence']}")
+        print(f"   News count: {data['news_count']}")
+        if data.get("recent_headlines"):
+            print(f"   Recent headlines: {data['recent_headlines'][:2]}")
     
     def test_sentiment_analysis_btc(self):
         """Test /api/news/sentiment/BTC - Get AI sentiment analysis for Bitcoin"""
@@ -210,11 +213,12 @@ class TestCryptoPanicNewsAPI:
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
         data = response.json()
-        assert data["symbol"] == "BTC", f"Symbol should be 'BTC', got: {data['symbol']}"
-        assert "sentiment_score" in data, "Response should contain 'sentiment_score'"
-        assert "vote_metrics" in data, "Response should contain 'vote_metrics'"
+        # AI sentiment service returns: sentiment, confidence, ai_analysis, news_count, analyzed_at
+        assert "sentiment" in data, "Response should contain 'sentiment'"
+        assert "confidence" in data, "Response should contain 'confidence'"
+        assert "analyzed_at" in data, "Response should contain 'analyzed_at'"
         
-        print(f"✅ BTC sentiment: score={data['sentiment_score']}, label={data['sentiment_label']}")
+        print(f"✅ BTC sentiment: {data['sentiment']}, confidence={data['confidence']}")
     
     # ==================== Market Overview ====================
     def test_market_overview_endpoint(self):
