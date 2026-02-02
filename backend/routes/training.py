@@ -383,3 +383,76 @@ async def train_all_systems(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/ai-weights")
+async def get_ai_weights(db = Depends(get_database)):
+    """
+    Get current AI training weights including sentiment parameters.
+    Shows how the AI weighs different factors in coin selection.
+    """
+    from services.ai_weekly_trainer import AIWeeklyTrainer
+    
+    try:
+        trainer = AIWeeklyTrainer(db)
+        await trainer.load_weights()
+        
+        weights = trainer.learned_weights
+        
+        return {
+            "selection_weights": {
+                "momentum": weights.get('momentum', 0.18),
+                "volatility": weights.get('volatility', 0.13),
+                "volume": weights.get('volume', 0.18),
+                "trend": weights.get('trend', 0.18),
+                "historical_performance": weights.get('historical_performance', 0.13),
+                "category_preference": weights.get('category_preference', 0.08),
+                "sentiment": weights.get('sentiment', 0.12),
+            },
+            "signal_weights": weights.get('signal_weights', {}),
+            "sentiment_tracking": weights.get('sentiment_accuracy', {}),
+            "top_category_scores": dict(sorted(
+                weights.get('category_scores', {}).items(),
+                key=lambda x: x[1],
+                reverse=True
+            )[:10]),
+            "training_stats": {
+                "total_weeks_trained": trainer.total_weeks,
+                "winning_weeks": trainer.winning_weeks,
+                "win_rate": f"{(trainer.winning_weeks / max(1, trainer.total_weeks) * 100):.1f}%"
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/update-weights")
+async def update_ai_weights(
+    weights: dict,
+    db = Depends(get_database)
+):
+    """
+    Update AI selection weights manually.
+    Use with caution - affects all trading decisions.
+    """
+    from services.ai_weekly_trainer import AIWeeklyTrainer
+    
+    try:
+        trainer = AIWeeklyTrainer(db)
+        await trainer.load_weights()
+        
+        # Update only provided weights
+        for key, value in weights.items():
+            if key in trainer.learned_weights:
+                trainer.learned_weights[key] = value
+        
+        # Save updated weights
+        await trainer.save_weights()
+        
+        return {
+            "message": "AI weights updated successfully",
+            "updated_weights": weights,
+            "current_weights": trainer.learned_weights
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
