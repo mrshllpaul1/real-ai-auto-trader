@@ -23,18 +23,18 @@ import CryptoNewsFeed from '../components/CryptoNewsFeed';
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const GrowthDashboard = () => {
-  // Trading mode state - persist to localStorage with proper initialization
-  const [tradingMode, setTradingMode] = useState('paper');
-  const [isInitialized, setIsInitialized] = useState(false);
-  
-  // Initialize trading mode from localStorage after mount
-  useEffect(() => {
-    const saved = localStorage.getItem('growth_trading_mode');
-    if (saved === 'real' || saved === 'paper') {
-      setTradingMode(saved);
+  // Trading mode state - initialize directly from localStorage
+  const [tradingMode, setTradingMode] = useState(() => {
+    // Initialize from localStorage synchronously to avoid flash
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('growth_trading_mode');
+      if (saved === 'real' || saved === 'paper') {
+        return saved;
+      }
     }
-    setIsInitialized(true);
-  }, []);
+    return 'paper';
+  });
+  const [isInitialized, setIsInitialized] = useState(true);
   
   // Handle trading mode change with persistence
   const handleTradingModeChange = (newMode) => {
