@@ -128,6 +128,39 @@ simulation_runner = WeeklySimulationRunner(db)
 ai_selection.set_dependencies(db, coin_selector, simulation_runner)
 logger.info("🎯 AI Coin Selection Engine initialized")
 
+# Initialize Gem Finder
+from services.gem_finder import HiddenGemFinder
+gem_finder = HiddenGemFinder(db)
+gems.set_dependencies(db, gem_finder)
+logger.info("💎 Gem Finder initialized")
+
+# Initialize AI Weekly Trainer
+from services.ai_weekly_trainer import AIWeeklyTrainer
+ai_trainer = AIWeeklyTrainer(db)
+logger.info("🧠 AI Weekly Trainer initialized")
+
+# Initialize Alert Service
+from services.alert_service import AlertService
+alert_service = AlertService(db)
+logger.info("🔔 Alert Service initialized")
+
+# Initialize Social Sentiment Analyzer
+from services.social_sentiment import SocialSentimentAnalyzer
+sentiment_analyzer = SocialSentimentAnalyzer(db)
+logger.info("📊 Social Sentiment Analyzer initialized")
+
+# Initialize Automated Trader
+from services.automated_trader import AutomatedWeeklyTrader
+automated_trader = AutomatedWeeklyTrader(
+    db=db,
+    kraken_service=kraken_service,
+    ai_trainer=ai_trainer,
+    gem_finder=gem_finder,
+    alert_service=alert_service
+)
+auto_trade.set_dependencies(db, automated_trader, alert_service, sentiment_analyzer)
+logger.info("🤖 Automated Weekly Trader initialized")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
