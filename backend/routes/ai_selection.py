@@ -40,7 +40,7 @@ async def select_best_coins(request: SelectionRequest):
     Select the best coins for trading based on current conditions.
     Uses the Adaptive AI Coin Selection Engine.
     """
-    if not coin_selector:
+    if coin_selector is None:
         raise HTTPException(status_code=500, detail="Coin selector not initialized")
     
     try:
