@@ -63,8 +63,61 @@ class KrakenAuthenticator:
 class KrakenTradeService:
     def __init__(self, authenticator: KrakenAuthenticator):
         self.auth = authenticator
+        self.api_url = "https://api.kraken.com"
+    
+    async def get_balance(self) -> Dict[str, float]:
+        """Retrieve all account balances"""
+        response = await self.auth.request("Balance")
+        if response.get("error"):
+            raise Exception(f"Kraken API error: {response['error']}")
+        return response.get("result", {})
     
     async def get_account_balance(self) -> Dict[str, float]:
+        """Alias for get_balance"""
+        return await self.get_balance()
+    
+    async def get_ticker(self, symbol: str) -> Dict[str, Any]:
+        """Get ticker for a single trading pair (public endpoint)"""
+        async with AsyncClient() as client:
+            response = await client.get(
+                f"{self.api_url}/0/public/Ticker",
+                params={"pair": symbol}
+            )
+            data = response.json()
+            if data.get("error"):
+                return None
+            result = data.get("result", {})
+            # Return the first (and only) ticker
+            for key, ticker in result.items():
+                return ticker
+            return None
+    
+    async def create_order(
+        self,
+        symbol: str,
+        side: str,
+        order_type: str,
+        volume: float,
+        price: float = None
+    ) -> Dict[str, Any]:
+        """Create a new order"""
+        params = {
+            "pair": symbol,
+            "type": side.lower(),
+            "ordertype": order_type.lower(),
+            "volume": str(volume)
+        }
+        
+        if price and order_type.lower() != 'market':
+            params["price"] = str(price)
+        
+        response = await self.auth.request("AddOrder", params=params)
+        if response.get("error"):
+            print(f"Kraken order error: {response['error']}")
+            return None
+        return response.get("result", {})
+    
+    async def get_open_orders(self) -> Dict[str, Any]:
         """Retrieve all account balances"""
         response = await self.auth.request("Balance")
         if response.get("error"):
