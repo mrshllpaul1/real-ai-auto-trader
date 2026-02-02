@@ -243,6 +243,9 @@ TWILIO_PHONE_NUMBER=      # User must provide
 
 ---
 
+## New Routes Added
+- `/journal` - Trading Journal with AI Insights
+
 ## Test Reports
 - `/app/test_reports/iteration_3.json` - Latest test results (Feb 2, 2026)
 - `/app/backend/tests/test_services.py` - Unit tests for critical services
