@@ -12,10 +12,27 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 from dotenv import load_dotenv
 
-from services.coin_universe import COIN_UNIVERSE, get_available_coins, get_gem_candidates, CATEGORIES
+from services.dynamic_coin_universe import BASE_UNIVERSE, CATEGORIES, get_universe_manager
 from services.coincodex_service import CoinCodexService
 
 load_dotenv()
+
+
+def get_available_coins_sync(date_str: str) -> list:
+    """Synchronous helper - get coins available at a given date from base universe"""
+    target_date = datetime.strptime(date_str[:10], '%Y-%m-%d')
+    available = []
+    for coin_id, info in BASE_UNIVERSE.items():
+        launch = info.get('launch')
+        if launch:
+            launch_date = datetime.strptime(launch, '%Y-%m-%d')
+            if launch_date <= target_date:
+                available.append(coin_id)
+    return available
+
+
+# Alias for backward compatibility
+COIN_UNIVERSE = BASE_UNIVERSE
 
 
 class AIWeeklyTrainer:
