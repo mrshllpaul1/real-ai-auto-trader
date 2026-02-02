@@ -18,9 +18,21 @@ class StrategyEngine:
         if not prices or len(prices) < 30:
             return {}
         
-        # Convert to pandas DataFrame
-        df = pd.DataFrame(prices, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-        df = df.astype({'open': float, 'high': float, 'low': float, 'close': float, 'volume': float})
+        # CoinGecko returns [[timestamp, price], ...] format
+        # Convert to DataFrame with just timestamp and close price
+        if len(prices[0]) == 2:
+            # Data is [timestamp, price] format from CoinGecko
+            df = pd.DataFrame(prices, columns=['timestamp', 'close'])
+            df['close'] = df['close'].astype(float)
+            # Create synthetic OHLV from close price (since we only have close)
+            df['open'] = df['close']
+            df['high'] = df['close']
+            df['low'] = df['close']
+            df['volume'] = 1000000  # Placeholder volume
+        else:
+            # Full OHLCV data
+            df = pd.DataFrame(prices, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+            df = df.astype({'open': float, 'high': float, 'low': float, 'close': float, 'volume': float})
         
         close_prices = df['close'].values
         high_prices = df['high'].values
