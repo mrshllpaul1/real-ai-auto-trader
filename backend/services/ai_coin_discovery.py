@@ -296,6 +296,13 @@ class AICoinDiscoveryService:
             'source': candidate.get('source'),
             'score': round(total_score, 1),
             'scores': scores,
+            'sentiment': {
+                'score': sentiment_data.get('score', 50),
+                'label': sentiment_data.get('label', 'neutral'),
+                'summary': sentiment_data.get('summary', ''),
+                'bullish_signals': sentiment_data.get('bullish_signals', []),
+                'bearish_signals': sentiment_data.get('bearish_signals', [])
+            },
             'market_cap': details.get('market_cap'),
             'volume_24h': details.get('volume_24h'),
             'price_change_24h': details.get('price_changes', {}).get('24h', 0),
@@ -303,6 +310,19 @@ class AICoinDiscoveryService:
             'reason': reason,
             'analyzed_at': datetime.now().isoformat()
         }
+    
+    async def _get_sentiment(self, coin_id: str, symbol: str) -> Dict:
+        """Get sentiment analysis for a coin"""
+        try:
+            from services.ai_news_sentiment import get_sentiment_service
+            sentiment_service = get_sentiment_service()
+            
+            if sentiment_service:
+                return await sentiment_service.get_coin_sentiment(coin_id, symbol)
+        except Exception as e:
+            print(f"Sentiment fetch error for {coin_id}: {e}")
+        
+        return {'score': 50, 'label': 'neutral', 'summary': 'No sentiment data', 'bullish_signals': [], 'bearish_signals': []}
     
     async def _get_coin_details(self, coin_id: str) -> Dict:
         """Fetch detailed coin data"""
