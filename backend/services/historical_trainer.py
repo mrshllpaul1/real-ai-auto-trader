@@ -833,8 +833,8 @@ Be concise and actionable.
             # Get stored patterns from database
             patterns = await self.db.trading_patterns.find(
                 {"coin_id": coin_id},
-                {"_id": 0}
-            ).sort("confidence", -1).limit(10).to_list(10)
+                {"_id": 0}  # Exclude _id from results
+            ).sort("confidence", -1).limit(limit).to_list(limit)
             
             if not patterns:
                 # Generate patterns based on current conditions
