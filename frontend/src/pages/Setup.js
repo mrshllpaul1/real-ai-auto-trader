@@ -38,7 +38,6 @@ const Setup = () => {
       setConfigStatus({
         email: emailRes.data?.configured || false,
         emailRecipient: emailRes.data?.default_recipient || '',
-        smsPhone: notifRes.data?.sms_phone || '',
         // These are always configured from the handoff
         kraken: true,
         coinmarketcap: true,
@@ -62,11 +61,6 @@ const Setup = () => {
 
 # Email Notifications (Resend)
 RESEND_API_KEY=${credentials.RESEND_API_KEY || 'your_resend_api_key_here'}
-
-# SMS Notifications (Twilio) - Optional
-TWILIO_ACCOUNT_SID=${credentials.TWILIO_ACCOUNT_SID || 'your_twilio_account_sid'}
-TWILIO_AUTH_TOKEN=${credentials.TWILIO_AUTH_TOKEN || 'your_twilio_auth_token'}
-TWILIO_PHONE_NUMBER=${credentials.TWILIO_PHONE_NUMBER || '+1234567890'}
 `;
     navigator.clipboard.writeText(template);
     toast.success('Template copied to clipboard!');
