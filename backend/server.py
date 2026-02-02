@@ -162,6 +162,18 @@ automated_trader = AutomatedWeeklyTrader(
 auto_trade.set_dependencies(db, automated_trader, alert_service, sentiment_analyzer)
 logger.info("🤖 Automated Weekly Trader initialized")
 
+# Initialize Aggressive Growth Engine
+from services.growth_engine import AggressiveGrowthEngine
+growth_engine = AggressiveGrowthEngine(
+    db=db,
+    kraken_service=kraken_service,
+    gem_finder=gem_finder,
+    ai_trainer=ai_trainer,
+    alert_service=alert_service
+)
+growth.set_dependencies(db, growth_engine)
+logger.info("🚀 Aggressive Growth Engine initialized ($500→$100k)")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
