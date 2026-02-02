@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
 
-router = APIRouter(prefix="/api/ai-selection", tags=["AI Selection"])
+router = APIRouter(prefix="/ai-selection", tags=["AI Selection"])
 
 # Global references (set during app startup)
 db = None
