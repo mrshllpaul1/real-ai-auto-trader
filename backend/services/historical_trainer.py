@@ -361,6 +361,8 @@ Be concise and actionable.
             'hidden_gems_found': 0,
             'avg_gem_multiplier': 0,
             'training_accuracy': 0,
+            'data_source': 'REAL_MARKET_DATA_ONLY',
+            'simulated_data_used': False,
             'started_at': datetime.now().isoformat(),
             'coin_summaries': []
         }
@@ -371,7 +373,7 @@ Be concise and actionable.
             try:
                 print(f"\nTraining on {coin.upper()}...")
                 
-                # Generate historical data
+                # Fetch REAL historical data (NEVER simulated)
                 df = await self.generate_historical_data(coin, start_year)
                 if df.empty:
                     print(f"  No data available for {coin}")
