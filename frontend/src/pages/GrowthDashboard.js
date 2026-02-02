@@ -605,7 +605,10 @@ const GrowthDashboard = () => {
         transition={{ delay: 0.25 }}
         className="mb-8"
       >
-        <CoinUniverseManager />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <CoinUniverseManager />
+          <AIDiscoveryPanel />
+        </div>
       </motion.div>
 
       {/* Open Positions */}
