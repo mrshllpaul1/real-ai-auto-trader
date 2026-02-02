@@ -78,8 +78,9 @@ async def setup_default_schedule(paper_trade: bool = True):
     """
     Set up the default passive income schedule:
     - Monitor positions every hour
-    - Compound profits daily
-    - Weekly trading on Mondays
+    - Compound profits daily at midnight
+    - Weekly AI retraining on Mondays at 6 AM UTC
+    - Weekly trading on Mondays at 8 AM UTC
     """
     if scheduler_service is None:
         raise HTTPException(status_code=500, detail="Scheduler not initialized")
