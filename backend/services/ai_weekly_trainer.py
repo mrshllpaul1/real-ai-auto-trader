@@ -234,7 +234,10 @@ class AIWeeklyTrainer:
         category = coin_info.get('category', 'mid')
         cat_score = self.learned_weights['category_scores'].get(category, 50)
         
-        # Calculate weighted total
+        # Sentiment score (will be enhanced async if service available)
+        sentiment_score = 50  # Default neutral
+        
+        # Calculate weighted total (NOW WITH SENTIMENT)
         weights = self.learned_weights
         total = (
             momentum * weights['momentum'] +
@@ -242,7 +245,8 @@ class AIWeeklyTrainer:
             volume * weights['volume'] +
             trend * weights['trend'] +
             hist_score * weights['historical_performance'] +
-            cat_score * weights['category_preference']
+            cat_score * weights['category_preference'] +
+            sentiment_score * weights.get('sentiment', 0.12)
         )
         
         return {
@@ -256,13 +260,15 @@ class AIWeeklyTrainer:
                 'volume': volume,
                 'trend': trend,
                 'historical': hist_score,
-                'category': cat_score
+                'category': cat_score,
+                'sentiment': sentiment_score
             },
             'metrics': {
                 'week_change': round(week_change, 2),
                 'volatility': round(volatility_raw, 2),
                 'current_price': closes[-1]
-            }
+            },
+            'sentiment_pending': True  # Will be enhanced async
         }
     
     async def select_portfolio(self, week_start: datetime) -> Dict[str, Any]:
