@@ -200,16 +200,23 @@ class TestGrowthSchedulerIntegration:
     
     def test_full_autopilot_workflow(self):
         """Test complete autopilot setup workflow"""
-        # 1. Stop scheduler if running
-        requests.post(f"{BASE_URL}/api/scheduler/stop")
+        import time
         
-        # 2. Setup default schedule
+        # 1. Stop scheduler if running
+        stop_response = requests.post(f"{BASE_URL}/api/scheduler/stop")
+        assert stop_response.status_code == 200
+        
+        # Small delay to ensure scheduler state is updated
+        time.sleep(0.5)
+        
+        # 2. Setup default schedule (this also starts the scheduler)
         setup_response = requests.post(f"{BASE_URL}/api/scheduler/setup-default?paper_trade=true")
         assert setup_response.status_code == 200
         assert setup_response.json()['success'] == True
         
         # 3. Verify scheduler is running with jobs
         status_response = requests.get(f"{BASE_URL}/api/scheduler/status")
+        assert status_response.status_code == 200
         status = status_response.json()
         assert status['running'] == True
         assert status['job_count'] >= 3
