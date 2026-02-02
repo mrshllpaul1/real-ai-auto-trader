@@ -88,3 +88,39 @@ async def get_sentiment_history(coin_id: str, days: int = 7):
         "history": history,
         "count": len(history)
     }
+
+
+@router.get("/trending")
+async def get_trending_news(limit: int = 20):
+    """
+    Get trending/rising crypto news from CryptoPanic.
+    Great for discovering market-moving events.
+    """
+    if not _sentiment_service:
+        raise HTTPException(status_code=503, detail="Sentiment service not initialized")
+    
+    if limit > 50:
+        limit = 50
+    
+    news = await _sentiment_service.get_trending_news(limit)
+    return {
+        "news": news,
+        "count": len(news),
+        "source": "cryptopanic"
+    }
+
+
+@router.get("/news/{filter_type}")
+async def get_filtered_news(filter_type: str):
+    """
+    Get news filtered by community sentiment.
+    filter_type: 'bullish' or 'bearish'
+    """
+    if not _sentiment_service:
+        raise HTTPException(status_code=503, detail="Sentiment service not initialized")
+    
+    if filter_type not in ['bullish', 'bearish']:
+        raise HTTPException(status_code=400, detail="filter_type must be 'bullish' or 'bearish'")
+    
+    result = await _sentiment_service.get_bullish_bearish_news(filter_type)
+    return result
