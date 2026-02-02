@@ -175,10 +175,10 @@ async def retrain_now(coins: list = None):
 @router.get("/coin-universe")
 async def get_coin_universe():
     """Get the full coin universe used for training"""
-    from services.coin_universe import get_training_coins, get_gem_candidates, CATEGORIES
+    from services.dynamic_coin_universe import get_training_coins, get_gem_candidates, CATEGORIES
     
-    all_coins = get_training_coins()
-    gems = get_gem_candidates()
+    all_coins = await get_training_coins()
+    gems = await get_gem_candidates()
     
     return {
         "total_coins": len(all_coins),
