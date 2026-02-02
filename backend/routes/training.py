@@ -385,6 +385,106 @@ async def train_all_systems(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class UniverseTrainingRequest(BaseModel):
+    max_coins: int = 50
+    start_year: int = 2020
+    include_discovered: bool = True
+
+
+@router.post("/train-universe")
+async def train_with_full_universe(
+    request: UniverseTrainingRequest,
+    background_tasks: BackgroundTasks,
+    db = Depends(get_database)
+):
+    """
+    FULL UNIVERSE TRAINING: Train AI on ALL coins from dynamic universe.
+    Includes AI-discovered coins for comprehensive learning.
+    Uses REAL market data from Twelve Data API + CryptoPanic sentiment.
+    """
+    from services.historical_trainer import HistoricalTrainer
+    from services.enhanced_historical_trainer import EnhancedHistoricalTrainer
+    from services.ai_weekly_trainer import AIWeeklyTrainer
+    from services.dynamic_coin_universe import get_training_coins, get_universe_manager
+    
+    try:
+        historical_trainer = HistoricalTrainer(db)
+        enhanced_trainer = EnhancedHistoricalTrainer(db)
+        weekly_trainer = AIWeeklyTrainer(db)
+        
+        # Get ALL coins from dynamic universe
+        try:
+            all_coins = await get_training_coins()
+            universe_mgr = get_universe_manager()
+            
+            # Get AI-discovered coins if requested
+            discovered_coins = []
+            if request.include_discovered and universe_mgr:
+                discovered = await universe_mgr.get_ai_discovered_coins()
+                discovered_coins = [c['coin_id'] for c in discovered if c.get('active', True)]
+        except Exception as e:
+            all_coins = ['bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot']
+            discovered_coins = []
+        
+        # Use requested number of coins (up to max available)
+        training_coins = all_coins[:request.max_coins]
+        
+        # Ensure AI-discovered coins are included
+        for coin in discovered_coins:
+            if coin not in training_coins:
+                training_coins.append(coin)
+        
+        # Queue all training tasks
+        background_tasks.add_task(
+            historical_trainer.train_on_historical_data,
+            training_coins, request.start_year, True
+        )
+        
+        background_tasks.add_task(
+            enhanced_trainer.train_with_real_data,
+            training_coins
+        )
+        
+        background_tasks.add_task(
+            historical_trainer.train_profitable_gems,
+            training_coins, 2.0, request.start_year
+        )
+        
+        # Save updated weights with sentiment parameters
+        background_tasks.add_task(
+            weekly_trainer.save_weights
+        )
+        
+        return {
+            "message": "FULL UNIVERSE TRAINING started with REAL DATA + SENTIMENT",
+            "systems": [
+                "Historical Trainer (patterns + hidden gems)",
+                "Enhanced Historical Trainer (technical indicators)",
+                "Profitable Gems Trainer (success patterns)",
+                "AI Weekly Trainer (sentiment-enhanced)"
+            ],
+            "training_parameters": {
+                "sentiment_weight": 0.12,
+                "momentum_weight": 0.18,
+                "volatility_weight": 0.13,
+                "volume_weight": 0.18,
+                "trend_weight": 0.18,
+                "historical_weight": 0.13,
+                "category_weight": 0.08,
+            },
+            "coins": training_coins,
+            "coin_count": len(training_coins),
+            "ai_discovered_included": discovered_coins,
+            "start_year": request.start_year,
+            "data_source": "REAL_MARKET_DATA_ONLY (Twelve Data API)",
+            "sentiment_source": "AI News Analysis (CryptoPanic + LLM)",
+            "status": "processing",
+            "note": f"Training {len(training_coins)} coins. May take 10-15 minutes. Check /status endpoint."
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/ai-weights")
 async def get_ai_weights(db = Depends(get_database)):
     """
