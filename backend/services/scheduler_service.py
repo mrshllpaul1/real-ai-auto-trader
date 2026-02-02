@@ -474,6 +474,100 @@ class SchedulerService:
             logger.error(f"  ❌ Weekly trade error: {e}")
             return {'error': str(e)}
     
+    async def _run_weekly_retrain(
+        self,
+        coins: list = None
+    ) -> Dict[str, Any]:
+        """
+        Execute weekly AI retraining with real market data.
+        This updates the AI's pattern recognition and hidden gem detection.
+        """
+        timestamp = datetime.utcnow()
+        logger.info(f"🧠 [{timestamp.strftime('%H:%M')}] Running weekly AI retraining...")
+        
+        if coins is None:
+            coins = ['bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot']
+        
+        results = {
+            'timestamp': timestamp.isoformat(),
+            'coins': coins,
+            'historical_trainer': None,
+            'enhanced_trainer': None,
+            'total_patterns': 0,
+            'hidden_gems_found': 0,
+            'success': False
+        }
+        
+        try:
+            # Run Historical Trainer
+            if self.historical_trainer:
+                logger.info(f"  📊 Training Historical Trainer on {len(coins)} coins...")
+                hist_result = await self.historical_trainer.train_on_historical_data(
+                    coins=coins,
+                    start_year=2020,
+                    include_hidden_gems=True
+                )
+                results['historical_trainer'] = {
+                    'success': True,
+                    'patterns': hist_result.get('total_patterns', 0),
+                    'gems': hist_result.get('hidden_gems_found', 0),
+                    'accuracy': hist_result.get('training_accuracy', 0)
+                }
+                results['total_patterns'] += hist_result.get('total_patterns', 0)
+                results['hidden_gems_found'] += hist_result.get('hidden_gems_found', 0)
+                logger.info(f"    ✅ Historical: {hist_result.get('total_patterns', 0)} patterns, {hist_result.get('hidden_gems_found', 0)} gems")
+            
+            # Run Enhanced Trainer
+            if self.enhanced_trainer:
+                logger.info(f"  🎯 Training Enhanced Trainer on {len(coins)} coins...")
+                enh_result = await self.enhanced_trainer.train_with_real_data(coins=coins)
+                results['enhanced_trainer'] = {
+                    'success': True,
+                    'patterns': enh_result.get('total_patterns', 0),
+                    'gems': enh_result.get('hidden_gems_found', 0),
+                    'accuracy': enh_result.get('training_accuracy', 0)
+                }
+                results['total_patterns'] += enh_result.get('total_patterns', 0)
+                results['hidden_gems_found'] += enh_result.get('hidden_gems_found', 0)
+                logger.info(f"    ✅ Enhanced: {enh_result.get('total_patterns', 0)} patterns, {enh_result.get('hidden_gems_found', 0)} gems")
+            
+            results['success'] = True
+            
+            # Store execution record
+            execution = {
+                'job_id': 'weekly_retrain',
+                'timestamp': timestamp.isoformat(),
+                'success': True,
+                'coins': coins,
+                'total_patterns': results['total_patterns'],
+                'hidden_gems_found': results['hidden_gems_found']
+            }
+            await self.db.scheduler_executions.insert_one(execution)
+            
+            # Send alert
+            if self.alert_service:
+                await self.alert_service.send_alert(
+                    title="🧠 Weekly AI Retraining Complete",
+                    message=f"Trained on {len(coins)} coins\nPatterns: {results['total_patterns']}\nGems Found: {results['hidden_gems_found']}",
+                    alert_type="retraining",
+                    priority="normal"
+                )
+            
+            logger.info(f"  ✅ Weekly retrain complete: {results['total_patterns']} patterns, {results['hidden_gems_found']} gems")
+            return results
+            
+        except Exception as e:
+            logger.error(f"  ❌ Weekly retrain error: {e}")
+            
+            await self.db.scheduler_executions.insert_one({
+                'job_id': 'weekly_retrain',
+                'timestamp': timestamp.isoformat(),
+                'success': False,
+                'error': str(e)
+            })
+            
+            return {'success': False, 'error': str(e)}
+    
     async def get_execution_history(self, limit: int = 50) -> list:
         """Get recent scheduler execution history"""
         history = await self.db.scheduler_executions.find(
