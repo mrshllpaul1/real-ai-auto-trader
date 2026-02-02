@@ -270,3 +270,85 @@ async def get_gem_entry_signals(db = Depends(get_database)):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+@router.post("/train-enhanced")
+async def train_enhanced_historical(
+    request: EnhancedTrainingRequest,
+    background_tasks: BackgroundTasks,
+    trainer = Depends(get_enhanced_trainer)
+):
+    """
+    ENHANCED TRAINING: Train AI with REAL market data and news sentiment.
+    Uses Twelve Data API for historical OHLCV data.
+    NEVER uses simulated data - only real market data.
+    """
+    try:
+        background_tasks.add_task(
+            trainer.train_with_real_data,
+            request.coins
+        )
+        
+        return {
+            "message": "Enhanced AI training started with REAL DATA",
+            "coins": request.coins,
+            "data_source": "REAL_MARKET_DATA_ONLY",
+            "status": "processing",
+            "note": "Training uses Twelve Data API for real OHLCV data. Check /status endpoint for progress."
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/train-all")
+async def train_all_systems(
+    background_tasks: BackgroundTasks,
+    db = Depends(get_database)
+):
+    """
+    COMPREHENSIVE TRAINING: Train ALL AI systems with REAL market data.
+    - Historical Trainer (patterns + hidden gems)
+    - Enhanced Historical Trainer (technical indicators + gems)
+    - Profitable Gems Trainer (success patterns)
+    
+    All training uses REAL market data from Twelve Data API.
+    """
+    from services.historical_trainer import HistoricalTrainer
+    from services.enhanced_historical_trainer import EnhancedHistoricalTrainer
+    
+    try:
+        historical_trainer = HistoricalTrainer(db)
+        enhanced_trainer = EnhancedHistoricalTrainer(db)
+        
+        coins = ['bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot']
+        
+        # Queue all training tasks
+        background_tasks.add_task(
+            historical_trainer.train_on_historical_data,
+            coins, 2020, True
+        )
+        
+        background_tasks.add_task(
+            enhanced_trainer.train_with_real_data,
+            coins
+        )
+        
+        background_tasks.add_task(
+            historical_trainer.train_profitable_gems,
+            coins, 2.0, 2020
+        )
+        
+        return {
+            "message": "ALL AI training systems started with REAL DATA",
+            "systems": [
+                "Historical Trainer (patterns + hidden gems)",
+                "Enhanced Historical Trainer (technical indicators)",
+                "Profitable Gems Trainer (success patterns)"
+            ],
+            "coins": coins,
+            "data_source": "REAL_MARKET_DATA_ONLY (Twelve Data API)",
+            "status": "processing",
+            "note": "Training may take 5-10 minutes. Check /status endpoint for progress."
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
