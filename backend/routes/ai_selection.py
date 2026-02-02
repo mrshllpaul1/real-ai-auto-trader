@@ -85,7 +85,7 @@ async def run_weekly_simulation(request: SimulationRequest, background_tasks: Ba
     Run a full weekly paper trading simulation.
     This is a long-running task that runs in the background.
     """
-    if not simulation_runner:
+    if simulation_runner is None:
         raise HTTPException(status_code=500, detail="Simulation runner not initialized")
     
     try:
