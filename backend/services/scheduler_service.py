@@ -239,6 +239,30 @@ class SchedulerService:
         logger.info(f"📅 Weekly trader job added ({day_of_week} at {hour}:00 UTC, {mode})")
         return {'success': True, 'job_id': job_id, 'schedule': f'{day_of_week} at {hour}:00 UTC'}
     
+    async def add_discovery_job(self, hour: int = 10) -> Dict[str, Any]:
+        """Add daily AI discovery job to find new coins"""
+        job_id = 'daily_discovery'
+        
+        if self.scheduler.get_job(job_id):
+            self.scheduler.remove_job(job_id)
+        
+        self.scheduler.add_job(
+            self._run_discovery,
+            trigger=CronTrigger(hour=hour),
+            id=job_id,
+            name='Daily AI Discovery',
+            replace_existing=True
+        )
+        
+        self.active_jobs[job_id] = {
+            'type': 'discovery',
+            'hour': hour,
+            'created_at': datetime.utcnow().isoformat()
+        }
+        
+        logger.info(f"🔍 Discovery job added (daily at {hour}:00 UTC)")
+        return {'success': True, 'job_id': job_id, 'hour': hour}
+    
     async def add_weekly_retrain_job(
         self,
         day_of_week: str = 'mon',
