@@ -220,6 +220,17 @@ const GrowthDashboard = () => {
             <h1 className="text-4xl md:text-5xl font-bold mb-2 flex items-center gap-3">
               <Rocket className="text-[#00FF94]" />
               $500 → $100,000
+              {/* Always visible mode badge */}
+              <Badge 
+                className={`text-lg px-4 py-1 ${
+                  isRealMode 
+                    ? 'bg-[#00FF94]/20 text-[#00FF94] border border-[#00FF94]' 
+                    : 'bg-[#FF9500]/20 text-[#FF9500] border border-[#FF9500]'
+                }`}
+                data-testid="mode-badge-header"
+              >
+                {isRealMode ? '💰 LIVE' : '📝 PAPER'}
+              </Badge>
             </h1>
             <p className="text-[#A1A1AA]">Aggressive Growth Engine • Always hunting • Always compounding</p>
           </div>
