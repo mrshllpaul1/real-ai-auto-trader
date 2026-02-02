@@ -10,6 +10,7 @@ import { motion } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
 import AIPortfolioSection from '../components/AIPortfolioSection';
+import AICoinSelectionSection from '../components/AICoinSelectionSection';
 
 const AutoTrading = () => {
   const [config, setConfig] = useState({
