@@ -239,6 +239,49 @@ class SchedulerService:
         logger.info(f"📅 Weekly trader job added ({day_of_week} at {hour}:00 UTC, {mode})")
         return {'success': True, 'job_id': job_id, 'schedule': f'{day_of_week} at {hour}:00 UTC'}
     
+    async def add_weekly_retrain_job(
+        self,
+        day_of_week: str = 'mon',
+        hour: int = 6,
+        coins: list = None
+    ) -> Dict[str, Any]:
+        """
+        Add weekly AI retraining job.
+        Runs every Monday at 6 AM UTC by default (before trading at 8 AM).
+        """
+        job_id = 'weekly_retrain'
+        
+        if coins is None:
+            coins = ['bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot']
+        
+        if self.scheduler.get_job(job_id):
+            self.scheduler.remove_job(job_id)
+        
+        self.scheduler.add_job(
+            self._run_weekly_retrain,
+            trigger=CronTrigger(day_of_week=day_of_week, hour=hour),
+            id=job_id,
+            name='Weekly AI Retraining',
+            kwargs={'coins': coins},
+            replace_existing=True
+        )
+        
+        self.active_jobs[job_id] = {
+            'type': 'weekly_retrain',
+            'day_of_week': day_of_week,
+            'hour': hour,
+            'coins': coins,
+            'created_at': datetime.utcnow().isoformat()
+        }
+        
+        logger.info(f"🧠 Weekly retrain job added ({day_of_week} at {hour}:00 UTC)")
+        return {
+            'success': True, 
+            'job_id': job_id, 
+            'schedule': f'{day_of_week} at {hour}:00 UTC',
+            'coins': coins
+        }
+    
     async def remove_job(self, job_id: str) -> Dict[str, Any]:
         """Remove a scheduled job"""
         if self.scheduler.get_job(job_id):
