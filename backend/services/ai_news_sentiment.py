@@ -2,6 +2,7 @@
 AI News Sentiment Analysis Service
 Provides real-time sentiment analysis for crypto coins using news data and LLM analysis.
 Integrates with training, gem finding, coin selection, strategy execution, and discovery.
+Uses the CryptoPanic library for news feeds.
 """
 
 import asyncio
@@ -12,19 +13,39 @@ from dotenv import load_dotenv
 import httpx
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
+# Import CryptoPanic library
+try:
+    from cryptopanic import CryptoPanicClient, CryptoPanicAPIError
+    CRYPTOPANIC_AVAILABLE = True
+except ImportError:
+    CRYPTOPANIC_AVAILABLE = False
+    print("Warning: cryptopanic library not installed")
+
 load_dotenv()
 
 
 class AINewsSentimentService:
     """
     AI-powered news sentiment analysis for crypto coins.
-    Uses CryptoPanic API for news and Emergent LLM for sentiment analysis.
+    Uses CryptoPanic API library for news and Emergent LLM for sentiment analysis.
     """
     
     def __init__(self, db):
         self.db = db
         self.api_key = os.getenv('EMERGENT_LLM_KEY')
         self.cryptopanic_key = os.getenv('CRYPTOPANIC_API_KEY', '')
+        
+        # Initialize CryptoPanic client if available
+        self.cryptopanic_client = None
+        if CRYPTOPANIC_AVAILABLE and self.cryptopanic_key:
+            try:
+                self.cryptopanic_client = CryptoPanicClient(
+                    auth_token=self.cryptopanic_key,
+                    timeout=30
+                )
+                print("✅ CryptoPanic client initialized")
+            except Exception as e:
+                print(f"CryptoPanic init error: {e}")
         
         # Cache settings
         self.cache_ttl = 3600  # 1 hour cache
