@@ -168,7 +168,7 @@ async def seed_historical_data(background_tasks: BackgroundTasks):
     # Run in background
     async def seed():
         try:
-            await seeder.seed_extended_historical()
+            await seeder.seed_all_coins(days=365)
         except Exception as e:
             print(f"Seeding error: {e}")
     
@@ -177,6 +177,62 @@ async def seed_historical_data(background_tasks: BackgroundTasks):
     return {
         'success': True,
         'message': 'Historical data seeding started in background'
+    }
+
+
+@router.post("/train-ai")
+async def train_ai_weekly(background_tasks: BackgroundTasks):
+    """
+    Train AI week-by-week from 2009 to 2026.
+    Portfolio: 10 coins + 1 gem.
+    Learns from each week's outcomes.
+    """
+    from services.ai_weekly_trainer import AIWeeklyTrainer
+    from datetime import datetime
+    
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    trainer = AIWeeklyTrainer(db)
+    
+    # Run training in background
+    async def train():
+        try:
+            await trainer.train_full_period(
+                start_date=datetime(2009, 1, 5),
+                end_date=datetime(2026, 1, 31)
+            )
+        except Exception as e:
+            print(f"Training error: {e}")
+    
+    background_tasks.add_task(lambda: asyncio.create_task(train()))
+    
+    return {
+        'success': True,
+        'message': 'AI training started in background (2009-2026)',
+        'portfolio_config': '10 main coins + 1 gem'
+    }
+
+
+@router.get("/training-status")
+async def get_training_status():
+    """Get AI training status and learned weights"""
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    # Get latest training weights
+    weights = await db.ai_training_weights.find_one({}, {'_id': 0})
+    
+    # Get latest training run
+    latest_run = await db.ai_training_runs.find_one(
+        {}, {'_id': 0, 'weekly_results': 0},
+        sort=[('completed_at', -1)]
+    )
+    
+    return {
+        'trained': weights is not None,
+        'weights': weights,
+        'latest_run': latest_run
     }
 
 
