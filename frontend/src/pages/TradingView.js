@@ -11,13 +11,16 @@ import { motion } from 'framer-motion';
 import { marketAPI, tradingAPI } from '../services/api';
 import { toast } from 'sonner';
 import { TrendingUp, TrendingDown, CandlestickChart, LineChart, BarChart3 } from 'lucide-react';
+import { useTradingMode } from '../context/TradingModeContext';
 
 const TradingView = () => {
+  // Use global trading mode context for consistency across pages
+  const { mode: tradingMode, setMode: setTradingMode } = useTradingMode();
+  
   const [selectedCoin, setSelectedCoin] = useState('bitcoin');
   const [chartType, setChartType] = useState('candlestick');
   const [timeframe, setTimeframe] = useState('7');
-  const [tradingMode, setTradingMode] = useState('paper');
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount('');
   const [loading, setLoading] = useState(false);
   const [currentPrice, setCurrentPrice] = useState(null);
   const [priceChange, setPriceChange] = useState(null);
