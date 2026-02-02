@@ -67,6 +67,7 @@ from routes import auth, trading, strategies, market, risk, learning, news, trai
 from routes import auto_trading, allocation, scanner, auto_execute, backtest, rebalance
 from routes import social, notifications, alerts, email, ai_portfolio, ai_selection
 from routes import gems, auto_trade, growth, scheduler, budget, journal, ai_decisions
+from routes import ai_universe
 
 # Include routers
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
@@ -96,6 +97,7 @@ api_router.include_router(scheduler.router, tags=["Scheduler"])
 api_router.include_router(budget.router, tags=["Budget Management"])
 api_router.include_router(journal.router, tags=["Trading Journal"])
 api_router.include_router(ai_decisions.router, prefix="/ai-decisions", tags=["AI Decisions"])
+api_router.include_router(ai_universe.router, tags=["AI Universe"])
 
 # Include the router
 app.include_router(api_router)
