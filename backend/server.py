@@ -48,6 +48,22 @@ async def root_health():
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# API-level health check (accessible via /api/health)
+@api_router.get("/health")
+async def api_health_check():
+    """API health check endpoint"""
+    try:
+        await client.admin.command('ping')
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+    
+    return {
+        "status": "healthy",
+        "database": db_status,
+        "version": "1.0.0"
+    }
+
 # Health check
 @api_router.get("/")
 async def root():
