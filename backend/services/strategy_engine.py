@@ -280,10 +280,21 @@ Keep response concise and structured.
                 "status": "active"
             }
         except Exception as e:
+            print(f"AI strategy generation failed for {coin_id}: {e}")
+            # Return a fallback strategy based on technical analysis alone
             return {
-                "error": str(e),
-                "fallback_recommendation": technical_analysis.get('signal'),
-                "confidence_score": technical_analysis.get('confidence')
+                "strategy_id": f"strat_{coin_id}_{int(datetime.now().timestamp())}",
+                "coin_id": coin_id,
+                "ai_recommendation": f"**Technical Analysis Based Recommendation**\n\nSignal: {technical_analysis.get('signal')}\nConfidence: {technical_analysis.get('confidence')}%\n\nKey Factors:\n" + "\n".join([f"- {r}" for r in technical_analysis.get('reasons', [])]) + "\n\n*Note: AI analysis temporarily unavailable. This recommendation is based on technical indicators only.*",
+                "technical_signal": technical_analysis.get('signal'),
+                "confidence_score": technical_analysis.get('confidence', 50),
+                "learning_enhanced": False,
+                "news_integrated": news_sentiment is not None,
+                "historical_patterns_used": len(historical_patterns) if historical_patterns else 0,
+                "learning_data": {"has_learning_data": False, "message": "AI analysis unavailable"},
+                "news_sentiment": news_sentiment,
+                "created_at": datetime.now().isoformat(),
+                "status": "active"
             }
     
     async def generate_weekly_strategies(
