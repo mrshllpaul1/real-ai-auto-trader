@@ -241,9 +241,19 @@ class AggressiveGrowthEngine:
         if main_coins:
             main_position_size = main_capital / len(main_coins)
             for coin_data in main_coins:
-                trade = await self._execute_main_trade(
-                    coin_data, main_position_size, paper_trade
-                )
+                # Check confidence threshold for real trades
+                coin_confidence = coin_data.get('ai_score', coin_data.get('confidence', 50))
+                if not paper_trade and coin_confidence < confidence_threshold:
+                    skipped_low_confidence.append({
+                        'coin_id': coin_data.get('coin_id'),
+                        'confidence': coin_confidence,
+                        'threshold': confidence_threshold,
+                        'reason': 'Below confidence threshold - paper trade only'
+                    })
+                    # Execute as paper trade instead
+                    trade = await self._execute_main_trade(coin_data, main_position_size, paper_trade=True)
+                else:
+                    trade = await self._execute_main_trade(coin_data, main_position_size, paper_trade)
                 if trade:
                     trades.append(trade)
         
@@ -258,6 +268,8 @@ class AggressiveGrowthEngine:
             'total_trades': len(trades),
             'gem_trades': len([t for t in trades if t.get('is_gem')]),
             'main_trades': len([t for t in trades if not t.get('is_gem')]),
+            'confidence_threshold': confidence_threshold,
+            'skipped_low_confidence': skipped_low_confidence,
         }
         
         await self.db.growth_executions.insert_one(dict(execution))
@@ -274,6 +286,8 @@ class AggressiveGrowthEngine:
         print(f"\n{'='*70}")
         print(f"✅ Executed {len(trades)} trades")
         print(f"💎 Gems: {execution['gem_trades']} | 📊 Main: {execution['main_trades']}")
+        if skipped_low_confidence:
+            print(f"⚠️ Skipped {len(skipped_low_confidence)} trades (below {confidence_threshold}% confidence)")
         print(f"{'='*70}\n")
         
         return {'success': True, 'execution': execution}
