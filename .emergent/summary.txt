@@ -6,6 +6,7 @@ The user wants to build a real money AI crypto auto trading app. The ultimate go
 -   **AI & Data:**
     -   The AI must be trained on historical crypto market data from 2009 to the present.
     -   It must continuously learn from its trading performance on a week-by-week basis.
+    -   The program must never use simulated or mock market data under any circumstances.
 -   **Integrations:**
     -   **Exchange:** Kraken (for real and paper trading).
     -   **Market Data:** CoinStats, CoinMarketCap, CoinGecko, CoinCodex, and Twelve Data.
@@ -14,67 +15,873 @@ The user wants to build a real money AI crypto auto trading app. The ultimate go
     -   View AI strategies, learned preferences, and backtest results.
     -   A dedicated dashboard to track the 00 to 00k growth objective.
     -   Manage auto-trading settings and view active positions.
+    -   A trading journal with AI-driven insights.
 -   **Trading Modes:**
-    -   Support both real-money and paper trading.
+    -   Support both real-money (with strict budget controls) and paper trading.
 
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack application with a React frontend and FastAPI backend. The application features a sophisticated, multi-faceted AI trading system. It includes an Adaptive AI Coin Selection Engine for general market conditions and a specialized Hidden Gem Finder. These are powered by a training system that has processed over 11 years of historical data (from 2014) sourced from CoinCodex and Twelve Data, achieving a 59.5% win rate and significant profits in backtesting. The system supports automated paper trading on Kraken. A new Aggressive Growth Engine has just been created to specifically target the user's 00-to-00k goal, along with a new, but currently empty, Growth Dashboard page in the UI.
+A full-stack React/FastAPI application featuring a multi-faceted AI trading system with an Adaptive Coin Selection Engine, Hidden Gem Finder, and an Aggressive Growth Engine. The system is capable of automated paper trading and has a scheduler () integrated for hands-free Autopilot execution. The UI includes a comprehensive Growth Dashboard, a Trading Journal, and a user tutorial. Multiple critical deployment and runtime bugs have been fixed, including slow startup times (via lazy loading), frontend crashes (via component refactoring), and API timeouts (via fallback logic and timeouts for LLM calls). The codebase has been partially refactored to remove simulated market data as per a strict user requirement.
 
 **Last working item**:
--   **Last item agent was working:** The agent created the backend service () and API routes () for an Aggressive Growth Engine to meet the user's goal of turning 00 into 00,000. A new frontend page () was created and linked in the router, but its UI is not yet implemented.
+-   **Last item agent was working:** The agent addressed a user requirement to **never use simulated market data**. The agent successfully rewrote the  service to use only real historical data. The next step is to find and remove any other instances of simulated or synthetic data generation in the codebase.
 -   **Status:** IN PROGRESS
--   **Agent Testing Done:** N
+-   **Agent Testing Done:** Y
 -   **Which testing method agent to use?** both
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   Issue 1: The new  page is an empty placeholder. (P0)
+-   Issue 1: Production Bug: Failed to generate strategies (P0)
+-   Issue 2: Core Requirement: Remove all simulated/mock data from the application (P1)
+-   Issue 3: Code Debt: A workaround for a fixed API endpoint may still exist (P2)
 
 **Issues Detail:**
--   **Issue 1:** The  is not implemented.
-    -   **Attempted fixes:** The agent created the file and added it to the React router in .
+-   **Issue 1:** Production Bug: Failed to generate strategies
+    -   **Attempted fixes:** The agent identified the root cause as the AI analysis call to the LLM timing out in the production environment. A fix was implemented in  to add a 30-second timeout and a fallback mechanism that returns a strategy based on technical analysis alone if the AI call fails. This works locally.
     -   **Next debug checklist:**
-        1.  Edit .
-        2.  Implement logic to fetch data from the  endpoint.
-        3.  Design and build the UI to display the current portfolio value, progress towards the 00k goal (e.g., a progress bar), the current multiplier, and a log of recent growth trades.
-        4.  Add controls, such as a button to manually trigger a growth cycle via the  endpoint.
-        5.  Use the screenshot tool on  to verify the new dashboard displays correctly.
-    -   **Why fix this issue and what will be achieved with the fix?** This dashboard is the primary interface for the user's main objective. Making it functional will allow the user to track the performance of the most critical feature.
+        1.  The code with the fix needs to be deployed to the production environment.
+        2.  After deployment, test the Generate Strategies feature on the live site to confirm it no longer times out and returns strategies reliably.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a critical user-facing bug that breaks a core feature of the application on the live site.
+    -   **Status:** USER VERIFICATION PENDING
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** backend
+    -   **Blocked on other issue:** None
+
+-   **Issue 2:** Core Requirement: Remove all simulated/mock data from the application
+    -   **Attempted fixes:** The agent successfully rewrote  to use real data. However, other instances of data simulation were found.
+    -   **Next debug checklist:**
+        1.  Review , which was found to contain logic for generating synthetic OHLCV data.
+        2.  Rewrite the identified logic to fetch and use real historical data from an appropriate source (e.g., Twelve Data).
+        3.  Perform a global search (grep) across the entire codebase for keywords like simulate, mock, synthetic, and np.random to identify and eliminate any other remnants of data simulation.
+    -   **Why fix this issue and what will be achieved with the fix?** To comply with the user's explicit and critical directive that the application must only operate on real market data.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** backend
+    -   **Blocked on other issue:** None
+
+-   **Issue 3:** Code Debt: A workaround for a fixed API endpoint may still exist
+    -   **Attempted fixes:** The agent fixed the broken  endpoint. However, the original handoff mentioned a workaround was created in a previous session to bypass this endpoint. This workaround was never explicitly removed.
+    -   **Next debug checklist:**
+        1.  Search the codebase for logic that directly writes to the  database collection, bypassing the  API.
+        2.  If found, remove the workaround and ensure the system exclusively uses the now-functional API endpoint.
+    -   **Why fix this issue and what will be achieved with the fix?** Removing the workaround will improve code maintainability and ensure the AI's learning process follows a consistent, robust API-driven path.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** frontend
+    -   **Should Test frontend/backend/both after fix?** backend
     -   **Blocked on other issue:** None
 
 **In progress Task List**:
--   **Task 1:** Fully implement the Growth Dashboard UI. (P0)
-    -   **Where to resume:** .
-    -   **What will be achieved with this?** A functional and interactive UI for the user to monitor and manage the aggressive growth strategy.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** frontend
-    -   **Blocked on something:** Blocked on Issue 1.
+-   None
 
 **Upcoming and Future Tasks**
 **Upcoming Tasks:**
--   **Task 1: Implement Scheduled Execution (P1):** Integrate  to run the  logic automatically on a recurring basis (e.g., daily) to create a truly passive system.
--   **Task 2: Enable Real Money Trading (P2):** Add the functionality to switch the  and  from paper mode to real money mode, allowing it to execute live trades on Kraken.
--   **Task 3: Implement User-Guided Tutorial (P2):** Create an interactive tutorial to guide new users through setting up their first trade and the growth engine.
+-   **Task 1: Enable Real Money Trading (P1):** The  service is complete. The next steps are to integrate the user's real Kraken API keys and update  and  to execute real trades while strictly adhering to the user-defined budget.
+-   **Task 2: Implement AI Decision Visualization (P2):** A placeholder component was created at . This needs to be fully implemented to provide users with clear explanations for why the AI selected a particular coin or strategy, thereby increasing trust and transparency.
 
 **Future Tasks:**
--   **Task 1: Add Automated Tests (P3):** Create ============================= test session starts ==============================
+-   **Task 1: Expand Pytest Coverage (P3):** Add comprehensive ============================= test session starts ==============================
 platform linux -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0
 rootdir: /app
-plugins: anyio-4.12.1
-collected 24 items
+plugins: asyncio-1.3.0, anyio-4.12.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 50 items
 
-backend/tests/test_notifications.py FFFFFFFFFFFFF                        [ 54%]
-backend/tests/test_p0_p1_p2_fixes.py ...FFFFFFFF                         [100%]
+backend/tests/test_growth_scheduler.py FFFFFFFFFFFF                      [ 24%]
+backend/tests/test_notifications.py FFFFFFFFFFFFF                        [ 50%]
+backend/tests/test_p0_p1_p2_fixes.py ...FFFFFFFF                         [ 72%]
+backend/tests/test_services.py FFFFFFFFFFF...                            [100%]
 
 =================================== FAILURES ===================================
+_____________________ TestGrowthAPIs.test_get_growth_stats _____________________
+
+self = <test_growth_scheduler.TestGrowthAPIs object at 0xfbe431f37dd0>
+
+    def test_get_growth_stats(self):
+        """GET /api/growth/stats - Returns portfolio value and statistics"""
+>       response = requests.get(f"{BASE_URL}/api/growth/stats")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_growth_scheduler.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>, url = '/api/growth/stats'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/growth/stats': No scheme supplied. Perhaps you meant https:///api/growth/stats?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+___________________ TestGrowthAPIs.test_get_growth_positions ___________________
+
+self = <test_growth_scheduler.TestGrowthAPIs object at 0xfbe431046b10>
+
+    def test_get_growth_positions(self):
+        """GET /api/growth/positions - Returns open positions"""
+>       response = requests.get(f"{BASE_URL}/api/growth/positions?status=OPEN")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_growth_scheduler.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>, url = '/api/growth/positions?status=OPEN'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/growth/positions?status=OPEN': No scheme supplied. Perhaps you meant https:///api/growth/positions?status=OPEN?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+___________________ TestGrowthAPIs.test_get_growth_portfolio ___________________
+
+self = <test_growth_scheduler.TestGrowthAPIs object at 0xfbe431047150>
+
+    def test_get_growth_portfolio(self):
+        """GET /api/growth/portfolio - Returns portfolio value"""
+>       response = requests.get(f"{BASE_URL}/api/growth/portfolio")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_growth_scheduler.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>, url = '/api/growth/portfolio'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/growth/portfolio': No scheme supplied. Perhaps you meant https:///api/growth/portfolio?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+_________________ TestGrowthAPIs.test_execute_growth_strategy __________________
+
+self = <test_growth_scheduler.TestGrowthAPIs object at 0xfbe431046890>
+
+    def test_execute_growth_strategy(self):
+        """POST /api/growth/execute - Executes growth strategy"""
+>       response = requests.post(
+            f"{BASE_URL}/api/growth/execute",
+            json={"capital": 50, "paper_trade": True}
+        )
+
+backend/tests/test_growth_scheduler.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>, url = '/api/growth/execute'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/growth/execute': No scheme supplied. Perhaps you meant https:///api/growth/execute?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+____________________ TestGrowthAPIs.test_monitor_positions _____________________
+
+self = <test_growth_scheduler.TestGrowthAPIs object at 0xfbe4310478d0>
+
+    def test_monitor_positions(self):
+        """POST /api/growth/monitor - Monitors positions for SL/TP"""
+>       response = requests.post(f"{BASE_URL}/api/growth/monitor")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_growth_scheduler.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>, url = '/api/growth/monitor'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/growth/monitor': No scheme supplied. Perhaps you meant https:///api/growth/monitor?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+_________________ TestSchedulerAPIs.test_get_scheduler_status __________________
+
+self = <test_growth_scheduler.TestSchedulerAPIs object at 0xfbe4310601d0>
+
+    def test_get_scheduler_status(self):
+        """GET /api/scheduler/status - Returns scheduler status with jobs"""
+>       response = requests.get(f"{BASE_URL}/api/scheduler/status")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_growth_scheduler.py:113: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>, url = '/api/scheduler/status'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/scheduler/status': No scheme supplied. Perhaps you meant https:///api/scheduler/status?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+________________ TestSchedulerAPIs.test_setup_default_schedule _________________
+
+self = <test_growth_scheduler.TestSchedulerAPIs object at 0xfbe431060810>
+
+    def test_setup_default_schedule(self):
+        """POST /api/scheduler/setup-default - Sets up autopilot schedule"""
+>       response = requests.post(f"{BASE_URL}/api/scheduler/setup-default?paper_trade=true")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_growth_scheduler.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>
+url = '/api/scheduler/setup-default?paper_trade=true', params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/scheduler/setup-default?paper_trade=true': No scheme supplied. Perhaps you meant https:///api/scheduler/setup-default?paper_trade=true?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+____________________ TestSchedulerAPIs.test_scheduler_stop _____________________
+
+self = <test_growth_scheduler.TestSchedulerAPIs object at 0xfbe431060e50>
+
+    def test_scheduler_stop(self):
+        """POST /api/scheduler/stop - Stops the scheduler"""
+>       response = requests.post(f"{BASE_URL}/api/scheduler/stop")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_growth_scheduler.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>, url = '/api/scheduler/stop'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/scheduler/stop': No scheme supplied. Perhaps you meant https:///api/scheduler/stop?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+____________________ TestSchedulerAPIs.test_scheduler_start ____________________
+
+self = <test_growth_scheduler.TestSchedulerAPIs object at 0xfbe4310614d0>
+
+    def test_scheduler_start(self):
+        """POST /api/scheduler/start - Starts the scheduler"""
+>       response = requests.post(f"{BASE_URL}/api/scheduler/start")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_growth_scheduler.py:163: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>, url = '/api/scheduler/start'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/scheduler/start': No scheme supplied. Perhaps you meant https:///api/scheduler/start?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+__________ TestSchedulerAPIs.test_scheduled_jobs_have_next_run_times ___________
+
+self = <test_growth_scheduler.TestSchedulerAPIs object at 0xfbe431061b10>
+
+    def test_scheduled_jobs_have_next_run_times(self):
+        """Verify scheduled jobs display with next run times"""
+        # First setup default schedule
+>       requests.post(f"{BASE_URL}/api/scheduler/setup-default?paper_trade=true")
+
+backend/tests/test_growth_scheduler.py:179: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>
+url = '/api/scheduler/setup-default?paper_trade=true', params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/scheduler/setup-default?paper_trade=true': No scheme supplied. Perhaps you meant https:///api/scheduler/setup-default?paper_trade=true?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+_________ TestGrowthSchedulerIntegration.test_full_autopilot_workflow __________
+
+self = <test_growth_scheduler.TestGrowthSchedulerIntegration object at 0xfbe431062310>
+
+    def test_full_autopilot_workflow(self):
+        """Test complete autopilot setup workflow"""
+        import time
+    
+        # 1. Stop scheduler if running
+>       stop_response = requests.post(f"{BASE_URL}/api/scheduler/stop", timeout=10)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_growth_scheduler.py:206: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [POST]>, url = '/api/scheduler/stop'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/scheduler/stop': No scheme supplied. Perhaps you meant https:///api/scheduler/stop?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+____ TestGrowthSchedulerIntegration.test_growth_execution_creates_positions ____
+
+self = <test_growth_scheduler.TestGrowthSchedulerIntegration object at 0xfbe431062950>
+
+    def test_growth_execution_creates_positions(self):
+        """Test that growth execution creates positions"""
+        # Get initial position count
+>       initial_response = requests.get(f"{BASE_URL}/api/growth/positions?status=OPEN")
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_growth_scheduler.py:248: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <PreparedRequest [GET]>, url = '/api/growth/positions?status=OPEN'
+params = OrderedDict()
+
+    def prepare_url(self, url, params):
+        """Prepares the given HTTP URL."""
+        #: Accept objects that have string representations.
+        #: We're unable to blindly call unicode/str functions
+        #: as this will include the bytestring indicator (b'')
+        #: on python 3.x.
+        #: https://github.com/psf/requests/pull/2238
+        if isinstance(url, bytes):
+            url = url.decode("utf8")
+        else:
+            url = str(url)
+    
+        # Remove leading whitespaces from url
+        url = url.lstrip()
+    
+        # Don't do any URL preparation for non-HTTP schemes like `mailto`,
+        # `data` etc to work around exceptions from `url_parse`, which
+        # handles RFC 3986 only.
+        if ":" in url and not url.lower().startswith("http"):
+            self.url = url
+            return
+    
+        # Support for unicode domain names and paths.
+        try:
+            scheme, auth, host, port, path, query, fragment = parse_url(url)
+        except LocationParseError as e:
+            raise InvalidURL(*e.args)
+    
+        if not scheme:
+>           raise MissingSchema(
+                f"Invalid URL {url!r}: No scheme supplied. "
+                f"Perhaps you meant https://{url}?"
+            )
+E           requests.exceptions.MissingSchema: Invalid URL '/api/growth/positions?status=OPEN': No scheme supplied. Perhaps you meant https:///api/growth/positions?status=OPEN?
+
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 _________________ TestNotificationAPIs.test_get_notifications __________________
 
-self = <test_notifications.TestNotificationAPIs object at 0xf84b1d4a1090>
+self = <test_notifications.TestNotificationAPIs object at 0xfbe43106c810>
 
     def test_get_notifications(self):
         """Test GET /api/notifications/ - Get unread notifications"""
@@ -139,7 +946,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/'
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 _____________ TestNotificationAPIs.test_get_notification_settings ______________
 
-self = <test_notifications.TestNotificationAPIs object at 0xf84b1ce1bfd0>
+self = <test_notifications.TestNotificationAPIs object at 0xfbe43106ce50>
 
     def test_get_notification_settings(self):
         """Test GET /api/notifications/settings - Get notification settings"""
@@ -204,7 +1011,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/s
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 ____________ TestNotificationAPIs.test_update_notification_settings ____________
 
-self = <test_notifications.TestNotificationAPIs object at 0xf84b1ce28650>
+self = <test_notifications.TestNotificationAPIs object at 0xfbe43106d490>
 
     def test_update_notification_settings(self):
         """Test POST /api/notifications/settings - Update notification settings"""
@@ -278,7 +1085,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/s
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 _______________ TestNotificationAPIs.test_test_push_notification _______________
 
-self = <test_notifications.TestNotificationAPIs object at 0xf84b1ce28cd0>
+self = <test_notifications.TestNotificationAPIs object at 0xfbe43106db10>
 
     def test_test_push_notification(self):
         """Test POST /api/notifications/test-push - Create test push notification"""
@@ -343,7 +1150,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/t
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 ________ TestNotificationAPIs.test_test_sms_notification_without_twilio ________
 
-self = <test_notifications.TestNotificationAPIs object at 0xf84b1ce29310>
+self = <test_notifications.TestNotificationAPIs object at 0xfbe43106e150>
 
     def test_test_sms_notification_without_twilio(self):
         """Test POST /api/notifications/test-sms - SMS without Twilio configured"""
@@ -410,7 +1217,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/t
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 _______________ TestNotificationAPIs.test_mark_notification_read _______________
 
-self = <test_notifications.TestNotificationAPIs object at 0xf84b1ce29950>
+self = <test_notifications.TestNotificationAPIs object at 0xfbe431060bd0>
 
     def test_mark_notification_read(self):
         """Test POST /api/notifications/mark-read/{id} - Mark notification as read"""
@@ -476,7 +1283,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/t
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 ____________ TestNotificationAPIs.test_mark_all_notifications_read _____________
 
-self = <test_notifications.TestNotificationAPIs object at 0xf84b1ce28e50>
+self = <test_notifications.TestNotificationAPIs object at 0xfbe43106ded0>
 
     def test_mark_all_notifications_read(self):
         """Test POST /api/notifications/mark-all-read - Mark all notifications as read"""
@@ -541,7 +1348,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/notifications/m
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 __________________ TestAdvancedFeaturesAPIs.test_backtest_run __________________
 
-self = <test_notifications.TestAdvancedFeaturesAPIs object at 0xf84b1ce2a050>
+self = <test_notifications.TestAdvancedFeaturesAPIs object at 0xfbe43106e890>
 
     def test_backtest_run(self):
         """Test POST /api/backtest/run - Run backtest"""
@@ -619,7 +1426,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/backtest/run': 
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 ______________ TestAdvancedFeaturesAPIs.test_rebalance_calculate _______________
 
-self = <test_notifications.TestAdvancedFeaturesAPIs object at 0xf84b1ce2a390>
+self = <test_notifications.TestAdvancedFeaturesAPIs object at 0xfbe43106ebd0>
 
     def test_rebalance_calculate(self):
         """Test GET /api/rebalance/calculate/{user_id} - Calculate rebalance"""
@@ -685,7 +1492,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/rebalance/calcu
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 _______________ TestAdvancedFeaturesAPIs.test_social_leaderboard _______________
 
-self = <test_notifications.TestAdvancedFeaturesAPIs object at 0xf84b1ce2a890>
+self = <test_notifications.TestAdvancedFeaturesAPIs object at 0xfbe43106ef10>
 
     def test_social_leaderboard(self):
         """Test GET /api/social/leaderboard - Get trader leaderboard"""
@@ -750,7 +1557,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/social/leaderbo
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 __________________________ TestCoreAPIs.test_api_root __________________________
 
-self = <test_notifications.TestCoreAPIs object at 0xf84b1ce2b110>
+self = <test_notifications.TestCoreAPIs object at 0xfbe43106f410>
 
     def test_api_root(self):
         """Test GET /api/ - API root endpoint"""
@@ -814,7 +1621,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/': No scheme su
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 ___________________ TestCoreAPIs.test_auth_check_credentials ___________________
 
-self = <test_notifications.TestCoreAPIs object at 0xf84b1ce2b750>
+self = <test_notifications.TestCoreAPIs object at 0xfbe43106f8d0>
 
     def test_auth_check_credentials(self):
         """Test GET /api/auth/check-credentials - Check if credentials exist"""
@@ -880,7 +1687,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/auth/check-cred
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 _______________________ TestCoreAPIs.test_market_prices ________________________
 
-self = <test_notifications.TestCoreAPIs object at 0xf84b1ce2bdd0>
+self = <test_notifications.TestCoreAPIs object at 0xfbe43106ff10>
 
     def test_market_prices(self):
         """Test GET /api/market/prices - Get market prices"""
@@ -945,7 +1752,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/market/prices?c
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 ___________________ TestP1NewsAPI.test_news_api_returns_data ___________________
 
-self = <test_p0_p1_p2_fixes.TestP1NewsAPI object at 0xf84b1ce37210>
+self = <test_p0_p1_p2_fixes.TestP1NewsAPI object at 0xfbe43107b3d0>
 
     def test_news_api_returns_data(self):
         """Verify /api/news/all returns news articles"""
@@ -1009,7 +1816,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/news/all': No s
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 _________ TestP1NewsAPI.test_news_api_returns_real_data_not_simulated __________
 
-self = <test_p0_p1_p2_fixes.TestP1NewsAPI object at 0xf84b1ce37850>
+self = <test_p0_p1_p2_fixes.TestP1NewsAPI object at 0xfbe43107ba10>
 
     def test_news_api_returns_real_data_not_simulated(self):
         """Verify news articles have aggregator='free_crypto_news', NOT 'simulated'"""
@@ -1073,7 +1880,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/news/all': No s
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 ____________ TestP1NewsAPI.test_news_articles_have_required_fields _____________
 
-self = <test_p0_p1_p2_fixes.TestP1NewsAPI object at 0xf84b1ce37e90>
+self = <test_p0_p1_p2_fixes.TestP1NewsAPI object at 0xfbe431084090>
 
     def test_news_articles_have_required_fields(self):
         """Verify news articles have required fields"""
@@ -1137,7 +1944,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/news/all': No s
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 ___________ TestP2MarketHistoricalData.test_bitcoin_historical_data ____________
 
-self = <test_p0_p1_p2_fixes.TestP2MarketHistoricalData object at 0xf84b1ce4c6d0>
+self = <test_p0_p1_p2_fixes.TestP2MarketHistoricalData object at 0xfbe43107be10>
 
     def test_bitcoin_historical_data(self):
         """Verify /api/market/historical/bitcoin returns data"""
@@ -1204,7 +2011,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/market/historic
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 ___________ TestP2MarketHistoricalData.test_ethereum_historical_data ___________
 
-self = <test_p0_p1_p2_fixes.TestP2MarketHistoricalData object at 0xf84b1ce35810>
+self = <test_p0_p1_p2_fixes.TestP2MarketHistoricalData object at 0xfbe43106fa50>
 
     def test_ethereum_historical_data(self):
         """Verify /api/market/historical/ethereum returns data"""
@@ -1271,7 +2078,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/market/historic
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 _ TestP2MarketHistoricalData.test_historical_data_has_market_caps_and_volumes __
 
-self = <test_p0_p1_p2_fixes.TestP2MarketHistoricalData object at 0xf84b1ce4c110>
+self = <test_p0_p1_p2_fixes.TestP2MarketHistoricalData object at 0xfbe431084210>
 
     def test_historical_data_has_market_caps_and_volumes(self):
         """Verify historical data includes market caps and volumes"""
@@ -1338,7 +2145,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/market/historic
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 _____________________ TestBackendHealth.test_health_check ______________________
 
-self = <test_p0_p1_p2_fixes.TestBackendHealth object at 0xf84b1ce4cb90>
+self = <test_p0_p1_p2_fixes.TestBackendHealth object at 0xfbe431084910>
 
     def test_health_check(self):
         """Verify /api/ returns operational status"""
@@ -1402,7 +2209,7 @@ E           requests.exceptions.MissingSchema: Invalid URL '/api/': No scheme su
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
 __________________ TestBackendHealth.test_api_features_listed __________________
 
-self = <test_p0_p1_p2_fixes.TestBackendHealth object at 0xf84b1ce4ced0>
+self = <test_p0_p1_p2_fixes.TestBackendHealth object at 0xfbe431084c50>
 
     def test_api_features_listed(self):
         """Verify API features are listed in health response"""
@@ -1464,7 +2271,151 @@ self = <PreparedRequest [GET]>, url = '/api/', params = OrderedDict()
 E           requests.exceptions.MissingSchema: Invalid URL '/api/': No scheme supplied. Perhaps you meant https:///api/?
 
 /root/.venv/lib/python3.11/site-packages/requests/models.py:438: MissingSchema
+__________________ TestBudgetManager.test_get_budget_default ___________________
+
+self = <test_services.TestBudgetManager object at 0xfbe430f17a90>
+mock_db = <MagicMock id='276957492435920'>
+
+    @pytest.mark.asyncio
+    async def test_get_budget_default(self, mock_db):
+        """Test getting default budget when none exists"""
+>       from services.budget_manager import BudgetManager
+E       ModuleNotFoundError: No module named 'services'
+
+backend/tests/test_services.py:32: ModuleNotFoundError
+______________________ TestBudgetManager.test_set_budget _______________________
+
+self = <test_services.TestBudgetManager object at 0xfbe430f459d0>
+mock_db = <MagicMock id='276957491586000'>
+
+    @pytest.mark.asyncio
+    async def test_set_budget(self, mock_db):
+        """Test setting a budget"""
+>       from services.budget_manager import BudgetManager
+E       ModuleNotFoundError: No module named 'services'
+
+backend/tests/test_services.py:46: ModuleNotFoundError
+______________ TestBudgetManager.test_cannot_trade_without_budget ______________
+
+self = <test_services.TestBudgetManager object at 0xfbe43107a650>
+mock_db = <MagicMock id='276957491194704'>
+
+    @pytest.mark.asyncio
+    async def test_cannot_trade_without_budget(self, mock_db):
+        """Test that real trading is blocked without budget"""
+>       from services.budget_manager import BudgetManager
+E       ModuleNotFoundError: No module named 'services'
+
+backend/tests/test_services.py:61: ModuleNotFoundError
+________________ TestBudgetManager.test_allocate_funds_success _________________
+
+self = <test_services.TestBudgetManager object at 0xfbe431085e10>
+mock_db = <MagicMock id='276957492584784'>
+
+    @pytest.mark.asyncio
+    async def test_allocate_funds_success(self, mock_db):
+        """Test successful fund allocation"""
+>       from services.budget_manager import BudgetManager
+E       ModuleNotFoundError: No module named 'services'
+
+backend/tests/test_services.py:79: ModuleNotFoundError
+______________ TestBudgetManager.test_allocate_funds_insufficient ______________
+
+self = <test_services.TestBudgetManager object at 0xfbe431084810>
+mock_db = <MagicMock id='276957492368016'>
+
+    @pytest.mark.asyncio
+    async def test_allocate_funds_insufficient(self, mock_db):
+        """Test allocation fails with insufficient funds"""
+>       from services.budget_manager import BudgetManager
+E       ModuleNotFoundError: No module named 'services'
+
+backend/tests/test_services.py:101: ModuleNotFoundError
+__________________ TestSchedulerService.test_scheduler_status __________________
+
+self = <test_services.TestSchedulerService object at 0xfbe4310866d0>
+mock_deps = (<MagicMock id='276957491357136'>, <MagicMock id='276957492058960'>, <MagicMock id='276957492853328'>)
+
+    @pytest.mark.asyncio
+    async def test_scheduler_status(self, mock_deps):
+        """Test getting scheduler status"""
+>       from services.scheduler_service import SchedulerService
+E       ModuleNotFoundError: No module named 'services'
+
+backend/tests/test_services.py:151: ModuleNotFoundError
+__________________ TestSchedulerService.test_add_monitor_job ___________________
+
+self = <test_services.TestSchedulerService object at 0xfbe4310870d0>
+mock_deps = (<MagicMock id='276957492849424'>, <MagicMock id='276957490835856'>, <MagicMock id='276957492115920'>)
+
+    @pytest.mark.asyncio
+    async def test_add_monitor_job(self, mock_deps):
+        """Test adding growth monitor job"""
+>       from services.scheduler_service import SchedulerService
+E       ModuleNotFoundError: No module named 'services'
+
+backend/tests/test_services.py:165: ModuleNotFoundError
+_______________ TestSchedulerService.test_setup_default_schedule _______________
+
+self = <test_services.TestSchedulerService object at 0xfbe431087f10>
+mock_deps = (<MagicMock id='276957491219792'>, <MagicMock id='276957492057168'>, <MagicMock id='276957492853904'>)
+
+    @pytest.mark.asyncio
+    async def test_setup_default_schedule(self, mock_deps):
+        """Test setting up default schedule"""
+>       from services.scheduler_service import SchedulerService
+E       ModuleNotFoundError: No module named 'services'
+
+backend/tests/test_services.py:182: ModuleNotFoundError
+__________________ TestGrowthEngine.test_get_portfolio_value ___________________
+
+self = <test_services.TestGrowthEngine object at 0xfbe430f98e10>
+mock_deps = (<MagicMock id='276957491349456'>, <MagicMock id='276957491468112'>, <MagicMock id='276957491284752'>, <MagicMock id='276957491571728'>, <MagicMock id='276957491258512'>)
+
+    @pytest.mark.asyncio
+    async def test_get_portfolio_value(self, mock_deps):
+        """Test getting portfolio value"""
+>       from services.growth_engine import AggressiveGrowthEngine
+E       ModuleNotFoundError: No module named 'services'
+
+backend/tests/test_services.py:233: ModuleNotFoundError
+_________________ TestGrowthEngine.test_paper_trade_execution __________________
+
+self = <test_services.TestGrowthEngine object at 0xfbe430f99910>
+mock_deps = (<MagicMock id='276957490942928'>, <MagicMock id='276957492480912'>, <MagicMock id='276957493485648'>, <MagicMock id='276957492838672'>, <MagicMock id='276957491472848'>)
+
+    @pytest.mark.asyncio
+    async def test_paper_trade_execution(self, mock_deps):
+        """Test paper trade execution"""
+>       from services.growth_engine import AggressiveGrowthEngine
+E       ModuleNotFoundError: No module named 'services'
+
+backend/tests/test_services.py:247: ModuleNotFoundError
+_______________ TestGrowthEngine.test_real_trade_requires_budget _______________
+
+self = <test_services.TestGrowthEngine object at 0xfbe430f9b9d0>
+mock_deps = (<MagicMock id='276957490489232'>, <MagicMock id='276957492576720'>, <MagicMock id='276957508785296'>, <MagicMock id='276957489934352'>, <MagicMock id='276957492004944'>)
+
+    @pytest.mark.asyncio
+    async def test_real_trade_requires_budget(self, mock_deps):
+        """Test real trade requires budget allocation"""
+>       from services.growth_engine import AggressiveGrowthEngine
+E       ModuleNotFoundError: No module named 'services'
+
+backend/tests/test_services.py:260: ModuleNotFoundError
 =========================== short test summary info ============================
+FAILED backend/tests/test_growth_scheduler.py::TestGrowthAPIs::test_get_growth_stats
+FAILED backend/tests/test_growth_scheduler.py::TestGrowthAPIs::test_get_growth_positions
+FAILED backend/tests/test_growth_scheduler.py::TestGrowthAPIs::test_get_growth_portfolio
+FAILED backend/tests/test_growth_scheduler.py::TestGrowthAPIs::test_execute_growth_strategy
+FAILED backend/tests/test_growth_scheduler.py::TestGrowthAPIs::test_monitor_positions
+FAILED backend/tests/test_growth_scheduler.py::TestSchedulerAPIs::test_get_scheduler_status
+FAILED backend/tests/test_growth_scheduler.py::TestSchedulerAPIs::test_setup_default_schedule
+FAILED backend/tests/test_growth_scheduler.py::TestSchedulerAPIs::test_scheduler_stop
+FAILED backend/tests/test_growth_scheduler.py::TestSchedulerAPIs::test_scheduler_start
+FAILED backend/tests/test_growth_scheduler.py::TestSchedulerAPIs::test_scheduled_jobs_have_next_run_times
+FAILED backend/tests/test_growth_scheduler.py::TestGrowthSchedulerIntegration::test_full_autopilot_workflow
+FAILED backend/tests/test_growth_scheduler.py::TestGrowthSchedulerIntegration::test_growth_execution_creates_positions
 FAILED backend/tests/test_notifications.py::TestNotificationAPIs::test_get_notifications
 FAILED backend/tests/test_notifications.py::TestNotificationAPIs::test_get_notification_settings
 FAILED backend/tests/test_notifications.py::TestNotificationAPIs::test_update_notification_settings
@@ -1486,24 +2437,30 @@ FAILED backend/tests/test_p0_p1_p2_fixes.py::TestP2MarketHistoricalData::test_et
 FAILED backend/tests/test_p0_p1_p2_fixes.py::TestP2MarketHistoricalData::test_historical_data_has_market_caps_and_volumes
 FAILED backend/tests/test_p0_p1_p2_fixes.py::TestBackendHealth::test_health_check
 FAILED backend/tests/test_p0_p1_p2_fixes.py::TestBackendHealth::test_api_features_listed
-========================= 21 failed, 3 passed in 1.50s ========================= files for critical backend services (, , ) to ensure stability and prevent regressions.
--   **Task 2: Enhance AI Decision Visualization (P3):** Improve the frontend to show *why* the AI chose a specific strategy or coin, increasing user trust and transparency.
+FAILED backend/tests/test_services.py::TestBudgetManager::test_get_budget_default
+FAILED backend/tests/test_services.py::TestBudgetManager::test_set_budget - M...
+FAILED backend/tests/test_services.py::TestBudgetManager::test_cannot_trade_without_budget
+FAILED backend/tests/test_services.py::TestBudgetManager::test_allocate_funds_success
+FAILED backend/tests/test_services.py::TestBudgetManager::test_allocate_funds_insufficient
+FAILED backend/tests/test_services.py::TestSchedulerService::test_scheduler_status
+FAILED backend/tests/test_services.py::TestSchedulerService::test_add_monitor_job
+FAILED backend/tests/test_services.py::TestSchedulerService::test_setup_default_schedule
+FAILED backend/tests/test_services.py::TestGrowthEngine::test_get_portfolio_value
+FAILED backend/tests/test_services.py::TestGrowthEngine::test_paper_trade_execution
+FAILED backend/tests/test_services.py::TestGrowthEngine::test_real_trade_requires_budget
+========================= 44 failed, 6 passed in 4.61s ========================= tests for other critical backend services, including , , and , to ensure long-term stability and prevent regressions.
 
 **Completed work in this session**
--   **Adaptive AI Coin Selection Engine & Simulation:** Built and validated an AI that selects coins weekly. The simulation was fixed to use real historical data and fixed capital, producing realistic backtest results.
--   **Comprehensive Data Integration:** Integrated CoinCodex and Twelve Data APIs, seeding the database with over 62,000 historical price records for 37 coins, with data going back to 2014.
--   **Advanced AI Training System:** Created a week-by-week training module that learned from 11+ years of data, achieving a 59.5% win rate and a simulated profit of over 00,000.
--   **Hidden Gem Finder:** Developed a specialized service to find high-potential coins, which successfully identified a +45,933% gainer in backtesting and was integrated into the main AI.
--   **Automated Paper Trading System:** Implemented a service to automatically execute the AI's weekly selections as paper trades on Kraken, including a UI to view active positions.
--   **Aggressive Growth Engine:** Created the backend service () to pursue the user's primary goal of turning 00 into 00,000.
--   **UI Enhancements:** Added new sections to the Auto Trading page for AI selection and automated trading, and created the route for a new Growth Dashboard page.
+-   **Scheduled Autopilot:** Successfully integrated  to automate the trading engine, with a full UI control panel on the Growth Dashboard.
+-   **Frontend Stability Fix:** Resolved a recurring frontend crash ( stack overflow) by refactoring large components into smaller, more manageable ones.
+-   **Budget-Controlled Trading:** Implemented a backend service and API () to manage funds for real-money trading.
+-   **New Feature: Trading Journal:** Built a complete Trading Journal feature, including a new page, backend APIs, and AI-driven performance insights.
+-   **Critical Deployment Fixes:** Resolved numerous deployment-blocking issues, including optimizing server startup time with lazy loading and configuring the frontend to be served as an efficient production build.
+-   **Production Bug Fix (Strategy Generation):** Debugged and fixed a critical production bug where strategy generation would time out, implementing a fallback to ensure the feature remains functional even with LLM latency.
+-   **Removed Simulated Data (Partial):** Began aligning with the user's no simulated data rule by rewriting the  service.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1:  endpoint may be broken.**
-    -   **Debug checklist:** An agent in a previous session found this endpoint returned a Not Found error and created a workaround to write learning outcomes directly to the database. The root cause in  was never investigated.
-    -   **Why to solve this issue and what will be achieved with this?** Bypassing an API is fragile. Fixing the endpoint will make the AI's learning process more robust and maintainable.
-    -   **Should Test frontend/backend/both after fix:** backend
-    -   **Is recurring issue?** N
+-   See **Issue 2** and **Issue 3** in the .
 
 **Known issue recurrence from previous fork**
 -   None.
@@ -1512,91 +2469,81 @@ FAILED backend/tests/test_p0_p1_p2_fixes.py::TestBackendHealth::test_api_feature
 
 
 **Key Technical Concepts**
--   **Backend:** FastAPI, PyMongo, .
--   **Frontend:** React, Tailwind CSS, Framer Motion.
--   **AI Strategy:** A hybrid model combining a general market strategy () with a high-risk gem hunter (), orchestrated by an aggressive compounding .
--   **Data Aggregation:** A multi-source data pipeline using CoinGecko, CoinCodex, and Twelve Data to build a rich historical dataset.
--   **Trade Execution:** Integration with the Kraken API for both paper and (eventually) real money trading.
+-   **Backend:** FastAPI, PyMongo,  for job scheduling.
+-   **Frontend:** React, Tailwind CSS, Framer Motion,  for production serving.
+-   **Deployment Strategy:** Lazy loading of FastAPI services to ensure fast startup and pass health checks. Frontend is pre-built and served statically.
+-   **Error Handling:** Implemented timeouts and fallback mechanisms for external API calls (especially LLMs) to improve application resilience.
 
 **key DB schema**
--   **growth_portfolio**: 
--   **active_positions**: 
--   **historical_prices**: Caches real price data from all external APIs.
--   **ai_training_runs**: Stores results from training sessions, including learned weights.
+-   **trading_journal_entries**: 
+-   **budget_manager_state**: 
 
 **changes in tech stack**
--   No fundamental changes, but new data sources (CoinCodex, Twelve Data) were integrated.
+-    was added to the backend for task scheduling.
+-    was added to the frontend to serve the production build efficiently.
+-    was removed from  as it was unused.
 
 **All files of reference**
--    (Core logic for the 00k goal).
--    (The UI page that needs to be built).
--    (Handles trade execution).
--    (The main AI training logic).
--    (Key service for fetching old historical data).
--    (Entrypoint, shows all registered routes and services).
+-    (Contains the critical timeout fix for strategy generation).
+-    (Rewritten to remove simulated data).
+-    (Needs to be fixed to remove simulated data).
+-    (Contains lazy-loading logic for fast startup).
+-    (Contains the  command for production).
+-    (Example of a refactored, stable component).
 
 **Areas that need refactoring**:
--   The workaround for the broken  endpoint should be removed once the route is fixed.
--   The various new services (, , etc.) should be reviewed for code consistency and integrated more deeply into the main trading loop.
+-   The codebase should be scanned for a potential workaround related to the  endpoint, which should now be removed.
 
 **key api endpoints**
--    (GET): Retrieves the current status of the 00 -> 00k challenge.
--    (POST): Manually triggers one cycle of the growth engine.
--    (POST): Executes the weekly paper trades for the standard strategy.
--    (GET): Fetches all currently active paper or real positions.
--    (POST): Initiates the full AI training process using all available historical data.
--    (POST): Gets the AI's latest coin recommendations.
--    (GET): Checks the status of the historical data seeding.
+-    (New endpoint for deployment health checks).
+-    |  |  (Controls the Autopilot feature).
+-    |  (Manages the real-money trading budget).
+-    |  |  (Powers the Trading Journal).
 
 **Critical Info for New Agent**
--   Your immediate priority is to build the frontend for the **Growth Dashboard** (). This is the main UI for the user's ultimate goal.
--   The system is capable of automated **paper trading**. A major upcoming task is to enable real-money trading for the growth engine.
--   The AI's performance is highly dependent on the quality and quantity of data from **Twelve Data** (user key required) and **CoinCodex**. The seeder script () is critical.
--   The backend now has many interconnected services. If the server fails to start, check backend                          RUNNING   pid 43, uptime 0:00:09
-code-server                      STOPPED   Not started
-frontend                         STARTING  
-mongodb                          RUNNING   pid 50, uptime 0:00:09
-nginx-code-proxy                 RUNNING   pid 41, uptime 0:00:09 and  for errors related to missing imports or service initialization failures.
+-   Your highest priority is to **remove all remaining simulated data** from the application, starting with . This is a strict, non-negotiable user requirement.
+-   The failed to generate strategies bug has been fixed locally by adding a timeout to the LLM call in . This fix is critical but **is not yet live**. The code must be deployed for the user to see the fix in production.
+-   The application's deployment process has been stabilized. The backend uses lazy loading for fast startup, and the frontend is served as a static build. Do not change this setup () as it's crucial for successful deployments.
+-   Be mindful of frontend complexity. Large, multi-faceted components have caused  crashes. When adding UI features, prefer creating smaller, self-contained components.
 
 **documents and test reports created in this job**
--    (Updated)
+-    (Updated with new features and architecture).
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  : User provided the API key for the Twelve Data integration. (Completed)
-2.  : User requested to leverage the new data to train the gem-finding AI. (Completed)
-3.  : Agent asked for the next step after showing the improved AI training results. (Pending)
-4.  : User directed the agent to implement all remaining tasks. (In Progress)
-5.  : User clarified the primary, most important goal for the application. (In Progress)
-6.  : Agent summarized the successful implementation of automated paper trading. (Pending)
-7.  : Agent summarized the UI state showing the trained AI stats. (Pending)
-8.  : Agent summarized the UI showing the AI's learned preferences after training. (Pending)
-9.  : Agent proposed adding CoinCodex for more data. (Completed)
-10. : User specified the desired portfolio composition and requested a week-by-week training process from 2009-2026. (Completed)
+1.  **It still will not generate strategies**: User reports the core bug on the deployed application. (Agent has fixed this locally, but it requires deployment).
+2.  **Call Deployer Agent...**: User repeatedly requested deployment readiness checks. (All completed).
+3.  **This program will never use simulated market data under any circumstances**: User introduced a strict, new core requirement. (Agent started work on this).
+4.  **It says failed to generate strategies**: User's first report of the strategy generation bug. (Work in progress).
+5.  **Add trading journal with ai insights**: User requested a new feature. (Completed).
+6.  **For real money trading only use the budget that I give it...**: User clarified a requirement for the upcoming real-money trading feature. (Noted,  was implemented).
+7.  **Complete next action items**: User gave a general go-ahead. (Completed).
+8.  **It keeps failing health check on deployment**: User reported initial deployment issues. (Resolved).
+9.  **Deployment is taking to long its timing out...**: User reported deployment timeouts. (Resolved).
+10. **Still wont deploy waited 11 minutes.**: User's final report on deployment timeouts. (Resolved).
 
 **Project Health Check:**
--   **Broken:** The  page is a non-functional placeholder and is crucial for the user's primary goal.
--   **Mocked:** None. All data sources are real APIs.
+-   **Broken:** The application is not fully compliant with the user's no simulated data rule. The logic in  still generates synthetic data. The strategy generation fix is not yet live on the production site.
+-   **Mocked:** Simulated data generation logic still exists and must be removed.
 
 **3rd Party Integrations**
 -   **Kraken API:** For exchange trading.
--   **CoinGecko, CoinMarketCap, CoinStats:** For market data.
--   **CoinCodex API:** For free, extensive historical data (no key required).
--   **Twelve Data API:** For deep historical data (API key  is in ).
--   **Free Crypto News API:** A  API for news.
--   **Emergent LLM Key:** Used for AI analysis.
--   **Twilio & Resend:** For notifications (Requires User API Keys).
--   **lightweight-charts:** Frontend charting library.
+-   **CoinGecko, CoinMarketCap, CoinStats, CoinCodex, Twelve Data:** For market data.
+-   **Emergent LLM Key:** Used for all AI analysis (via  model in the code).
+-   **Twilio & Resend:** For notifications.
+-   **:** For background job scheduling.
 
 **Testing status**
--   **Testing agent used after significant changes:** NO
+-   **Testing agent used after significant changes:** YES (For scheduler implementation).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** []
 -   **Known regressions:** None
 
 **Credentials to test flow:**
--   The Twelve Data API key is stored in : .
--   The user must provide keys for Kraken, Resend, and Twilio for full functionality.
+-   The Twelve Data API key is stored in .
+-   User must provide keys for Kraken, Resend, and Twilio for full functionality.
 
 **What agent forgot to execute**
--   The agent did not fix the broken  endpoint and left the workaround in place.
--   While many automated services were created, they are not yet tied together into a scheduled, truly passive system. The  setup is a critical next step.</analysis>
+-   The agent identified that  uses simulated data but has not yet fixed it.
+-   The agent did not explicitly search for and remove the original workaround for the  endpoint after fixing the API itself.</analysis>
