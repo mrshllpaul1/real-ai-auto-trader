@@ -33,14 +33,16 @@ const AIPortfolioSection = () => {
     try {
       setLoading(true);
       const userId = localStorage.getItem('user_id') || 'default';
-      await api.post('/ai-portfolio/initialize', {
+      const response = await api.post('/ai-portfolio/initialize', {
         user_id: userId,
         initial_capital: initialCapital
       });
       toast.success(`AI Portfolio initialized with $${initialCapital}!`);
       await loadPortfolio();
     } catch (error) {
-      toast.error('Failed to initialize AI portfolio');
+      const errorMsg = error.response?.data?.detail || error.message || 'Unknown error';
+      console.error('Initialize error:', errorMsg);
+      toast.error(`Failed to initialize AI portfolio: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
