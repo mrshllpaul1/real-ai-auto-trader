@@ -119,23 +119,38 @@ class AIWeeklyTrainer:
         saved = await self.db.ai_training_weights.find_one({}, {'_id': 0})
         if saved:
             self.learned_weights = saved.get('weights', self.learned_weights)
+            self.total_weeks = saved.get('total_weeks_trained', 0)
+            self.total_profit = saved.get('total_profit', 0)
+            self.winning_weeks = saved.get('winning_weeks', 0)
             print("✅ Loaded existing training weights")
         else:
             print("🆕 Starting with fresh weights")
     
-    async def save_training_state(self):
+    async def load_weights(self):
+        """Alias for initialize_training_data"""
+        await self.initialize_training_data()
+    
+    async def save_weights(self):
         """Save current learned weights to database"""
         await self.db.ai_training_weights.replace_one(
             {},
             {
                 'weights': self.learned_weights,
                 'total_weeks_trained': self.total_weeks,
+                'winning_weeks': self.winning_weeks,
                 'total_profit': self.total_profit,
                 'win_rate': (self.winning_weeks / self.total_weeks * 100) if self.total_weeks > 0 else 0,
-                'updated_at': datetime.now().isoformat()
+                'updated_at': datetime.now().isoformat(),
+                'sentiment_enabled': True,
+                'version': '2.0_sentiment'
             },
             upsert=True
         )
+        print("✅ AI weights saved with sentiment parameters")
+    
+    async def save_training_state(self):
+        """Save current learned weights to database (alias for save_weights)"""
+        await self.save_weights()
     
     async def get_coin_data(self, coin_id: str, week_start: datetime) -> Optional[Dict]:
         """Get price data for a coin around a specific week"""
