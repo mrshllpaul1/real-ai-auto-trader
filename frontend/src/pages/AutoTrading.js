@@ -11,6 +11,7 @@ import api from '../services/api';
 import { toast } from 'sonner';
 import AIPortfolioSection from '../components/AIPortfolioSection';
 import AICoinSelectionSection from '../components/AICoinSelectionSection';
+import AutomatedTradingSection from '../components/AutomatedTradingSection';
 
 const AutoTrading = () => {
   const [config, setConfig] = useState({
