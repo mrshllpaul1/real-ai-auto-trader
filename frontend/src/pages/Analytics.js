@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { motion } from 'framer-motion';
 import api, { tradingAPI } from '../services/api';
-import { TrendingUp, TrendingDown, DollarSign, Activity, PieChart as PieIcon, BarChart3, Target, Zap } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Activity, PieChart as PieIcon, BarChart3, Target, Zap, Wallet, TestTube, RefreshCw } from 'lucide-react';
 
 const Analytics = () => {
   const [portfolio, setPortfolio] = useState(null);
@@ -15,6 +15,12 @@ const Analytics = () => {
   const [allocationData, setAllocationData] = useState([]);
   const [aiStats, setAiStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Real money data
+  const [realPortfolio, setRealPortfolio] = useState(null);
+  const [krakenBalance, setKrakenBalance] = useState(null);
+  const [growthStats, setGrowthStats] = useState(null);
+  const [realPositions, setRealPositions] = useState([]);
 
   useEffect(() => {
     loadAnalytics();
@@ -22,16 +28,37 @@ const Analytics = () => {
 
   const loadAnalytics = async () => {
     try {
-      const [portfolioRes, historyRes] = await Promise.all([
+      const [portfolioRes, historyRes, growthRes, realPosRes, krakenRes, budgetRes] = await Promise.all([
         tradingAPI.getPortfolio().catch(() => ({ data: {} })),
-        tradingAPI.getTradeHistory('all', 50).catch(() => ({ data: { trades: [] } }))
+        tradingAPI.getTradeHistory('all', 50).catch(() => ({ data: { trades: [] } })),
+        api.get('/growth/stats').catch(() => ({ data: {} })),
+        api.get('/growth/positions?status=OPEN').catch(() => ({ data: { positions: [] } })),
+        api.get('/trading/balance').catch(() => ({ data: null })),
+        api.get('/budget/').catch(() => ({ data: null }))
       ]);
 
       setPortfolio(portfolioRes.data || {});
       setTradeHistory(historyRes.data?.trades || []);
-      setAiStats({});
+      setGrowthStats(growthRes.data);
+      setRealPositions(realPosRes.data?.positions || []);
+      setKrakenBalance(krakenRes.data);
+      
+      // Build real portfolio from growth stats and Kraken
+      const growth = growthRes.data;
+      if (growth?.portfolio) {
+        setRealPortfolio({
+          total_value: growth.portfolio.total_value || 0,
+          starting_capital: growth.portfolio.starting_capital || 500,
+          realized_profit: growth.portfolio.realized_profit || 0,
+          open_positions: growth.portfolio.open_positions || 0,
+          multiplier: growth.portfolio.current_multiplier || 1,
+          progress_pct: growth.portfolio.progress_pct || 0
+        });
+      }
+      
+      setAiStats(growth?.statistics || {});
 
-      // Generate performance data
+      // Generate performance data from trades
       const trades = historyRes.data?.trades || [];
       const perfData = trades.length > 0 ? trades.slice(0, 20).reverse().map((trade, i) => ({
         trade: i + 1,
@@ -51,13 +78,51 @@ const Analytics = () => {
       });
       setPerformanceData(perfData);
 
-      // Generate allocation data
-      setAllocationData([
-        { name: 'BTC', value: 45, color: '#F7931A' },
-        { name: 'ETH', value: 30, color: '#627EEA' },
-        { name: 'SOL', value: 15, color: '#00FFA3' },
-        { name: 'Others', value: 10, color: '#9D00FF' }
-      ]);
+      // Build allocation from real positions
+      const positionAllocation = {};
+      const positions = realPosRes.data?.positions || [];
+      positions.forEach(pos => {
+        const coinId = pos.coin_id?.toUpperCase() || 'OTHER';
+        const value = (pos.quantity || 0) * (pos.entry_price || 0);
+        positionAllocation[coinId] = (positionAllocation[coinId] || 0) + value;
+      });
+      
+      // Convert to allocation data with colors
+      const colorMap = {
+        'BTC': '#F7931A', 'BITCOIN': '#F7931A',
+        'ETH': '#627EEA', 'ETHEREUM': '#627EEA',
+        'SOL': '#00FFA3', 'SOLANA': '#00FFA3',
+        'XRP': '#23292F', 'RIPPLE': '#23292F',
+        'ADA': '#0033AD', 'CARDANO': '#0033AD',
+        'DOT': '#E6007A', 'POLKADOT': '#E6007A',
+        'AVAX': '#E84142', 'AVALANCHE': '#E84142',
+        'SUI': '#4DA2FF',
+        'APT': '#2DD8A3', 'APTOS': '#2DD8A3',
+        'UNI': '#FF007A', 'UNISWAP': '#FF007A',
+        'AAVE': '#B6509E',
+        'TRX': '#FF0013', 'TRON': '#FF0013'
+      };
+      
+      const totalValue = Object.values(positionAllocation).reduce((a, b) => a + b, 0) || 1;
+      const allocArray = Object.entries(positionAllocation)
+        .map(([name, value]) => ({
+          name: name.substring(0, 4).toUpperCase(),
+          value: Math.round((value / totalValue) * 100),
+          color: colorMap[name.toUpperCase()] || '#9D00FF'
+        }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 6);
+      
+      if (allocArray.length > 0) {
+        setAllocationData(allocArray);
+      } else {
+        setAllocationData([
+          { name: 'BTC', value: 45, color: '#F7931A' },
+          { name: 'ETH', value: 30, color: '#627EEA' },
+          { name: 'SOL', value: 15, color: '#00FFA3' },
+          { name: 'Others', value: 10, color: '#9D00FF' }
+        ]);
+      }
 
     } catch (error) {
       console.error('Error loading analytics:', error);
