@@ -3,10 +3,68 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, TrendingUp, BarChart3, Settings, Sparkles,
   Brain, Newspaper, Zap, Radar, Bot, FlaskConical, BookOpen,
-  Menu, X, ChevronLeft, Key
+  Menu, X, ChevronLeft, Key, Wallet, TestTube
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NotificationCenter from './NotificationCenter';
+import { useTradingMode } from '../context/TradingModeContext';
+
+// Trading Mode Indicator component
+const TradingModeIndicator = ({ isCollapsed, mobile }) => {
+  const { mode, isRealMode, toggleMode } = useTradingMode();
+  
+  if (isCollapsed && !mobile) {
+    // Compact indicator for collapsed sidebar
+    return (
+      <button
+        onClick={toggleMode}
+        className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
+          isRealMode 
+            ? 'bg-[#00FF94]/20 border border-[#00FF94]/50' 
+            : 'bg-[#FF9500]/20 border border-[#FF9500]/50'
+        }`}
+        title={`Click to switch to ${isRealMode ? 'Paper' : 'Real'} Trading`}
+        data-testid="trading-mode-indicator-compact"
+      >
+        {isRealMode ? (
+          <Wallet size={18} className="text-[#00FF94]" />
+        ) : (
+          <TestTube size={18} className="text-[#FF9500]" />
+        )}
+      </button>
+    );
+  }
+  
+  // Full indicator with label
+  return (
+    <button
+      onClick={toggleMode}
+      className={`w-full mt-2 p-2 rounded-lg flex items-center gap-2 transition-all active:scale-[0.98] ${
+        isRealMode 
+          ? 'bg-[#00FF94]/10 border border-[#00FF94]/30 hover:bg-[#00FF94]/20' 
+          : 'bg-[#FF9500]/10 border border-[#FF9500]/30 hover:bg-[#FF9500]/20'
+      }`}
+      title={`Click to switch to ${isRealMode ? 'Paper' : 'Real'} Trading`}
+      data-testid="trading-mode-indicator"
+    >
+      {isRealMode ? (
+        <>
+          <div className="w-2 h-2 rounded-full bg-[#00FF94] animate-pulse" />
+          <Wallet size={16} className="text-[#00FF94]" />
+          <span className="text-sm font-bold text-[#00FF94]">REAL</span>
+          <span className="text-xs text-[#A1A1AA] ml-auto">Live Money</span>
+        </>
+      ) : (
+        <>
+          <div className="w-2 h-2 rounded-full bg-[#FF9500]" />
+          <TestTube size={16} className="text-[#FF9500]" />
+          <span className="text-sm font-bold text-[#FF9500]">PAPER</span>
+          <span className="text-xs text-[#A1A1AA] ml-auto">Practice</span>
+        </>
+      )}
+    </button>
+  );
+};
 
 // Mobile menu button component
 const MobileMenuButton = ({ isOpen, onClick }) => (
@@ -49,6 +107,8 @@ const SidebarContent = ({ isCollapsed, mobile, navItems }) => (
         {(!isCollapsed || mobile) && <NotificationCenter />}
       </div>
       {(!isCollapsed || mobile) && <p className="text-xs text-[#A1A1AA] mt-1">Real Money Auto Trading</p>}
+      {/* Trading Mode Indicator */}
+      <TradingModeIndicator isCollapsed={isCollapsed} mobile={mobile} />
     </div>
     <nav className="flex-1 p-2 md:p-4 overflow-y-auto" data-testid="sidebar-nav">
       <ul className="space-y-1">
