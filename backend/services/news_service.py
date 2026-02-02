@@ -226,32 +226,12 @@ class CryptoNewsAggregator:
             print(f"CMC news error: {str(e)}")
             return await self._get_simulated_news(limit)
     
-    async def _get_simulated_news(self, limit: int = 10) -> List[Dict[str, Any]]:
-        """Generate simulated news when APIs fail"""
-        simulated = [
-            {'title': 'Bitcoin ETF inflows continue strong momentum', 'sentiment': 'positive', 'source': 'Market Analysis'},
-            {'title': 'Ethereum Layer 2 adoption reaches new highs', 'sentiment': 'positive', 'source': 'DeFi News'},
-            {'title': 'Solana ecosystem expands with new DeFi protocols', 'sentiment': 'positive', 'source': 'Solana Daily'},
-            {'title': 'Institutional crypto adoption accelerates globally', 'sentiment': 'positive', 'source': 'Institutional Insights'},
-            {'title': 'DeFi TVL shows steady growth across chains', 'sentiment': 'neutral', 'source': 'DeFi Pulse'},
-            {'title': 'Crypto market volatility remains elevated', 'sentiment': 'neutral', 'source': 'Market Watch'},
-            {'title': 'New regulatory framework proposed for stablecoins', 'sentiment': 'neutral', 'source': 'Regulatory News'},
-            {'title': 'NFT market sees renewed interest from collectors', 'sentiment': 'positive', 'source': 'NFT Insider'},
-            {'title': 'Cross-chain bridges improve security measures', 'sentiment': 'positive', 'source': 'Security Weekly'},
-            {'title': 'AI-powered trading tools gain popularity', 'sentiment': 'positive', 'source': 'Tech Trends'},
-        ]
-        
-        now = datetime.now()
-        return [
-            {
-                **item,
-                'published_at': (now - timedelta(hours=i*2)).isoformat(),
-                'url': '#',
-                'aggregator': 'simulated',
-                'currencies': []
-            }
-            for i, item in enumerate(simulated[:limit])
-        ]
+    async def _get_unavailable_news_response(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Return empty list when all news APIs fail.
+        NEVER returns simulated or fake news - only real news data is used.
+        """
+        return []
     
     def _extract_sentiment_from_votes(self, votes: Dict) -> str:
         """Extract sentiment from CryptoPanic votes"""
