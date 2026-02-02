@@ -62,6 +62,8 @@ api_router.include_router(alerts.router, prefix="/alerts", tags=["Price Alerts"]
 api_router.include_router(email.router, prefix="/email", tags=["Email Notifications"])
 api_router.include_router(ai_portfolio.router, prefix="/ai-portfolio", tags=["AI Portfolio Manager"])
 api_router.include_router(ai_selection.router, tags=["AI Coin Selection"])
+api_router.include_router(gems.router, tags=["Gem Finder"])
+api_router.include_router(auto_trade.router, tags=["Automated Trading"])
 
 # Include the router in the main app
 app.include_router(api_router)
