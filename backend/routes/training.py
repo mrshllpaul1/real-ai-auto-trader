@@ -328,7 +328,7 @@ async def train_all_systems(
         # Get all coins from dynamic universe
         try:
             all_coins = await get_training_coins()
-        except:
+        except Exception:
             all_coins = ['bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot', 
                         'avalanche', 'chainlink', 'polygon', 'dogecoin', 'shiba-inu']
         
