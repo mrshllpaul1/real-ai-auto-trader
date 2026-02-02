@@ -1,3 +1,9 @@
+"""
+Historical Trainer
+AI-powered training on REAL historical cryptocurrency data ONLY.
+NEVER uses simulated, synthetic, or fake data under any circumstances.
+"""
+
 import numpy as np
 import pandas as pd
 from typing import Dict, Any, List
@@ -5,13 +11,14 @@ from datetime import datetime, timedelta
 import os
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 from dotenv import load_dotenv
+from .twelvedata_service import get_twelvedata_service
 
 load_dotenv()
 
 class HistoricalTrainer:
     """
     AI-powered historical trainer with hidden gems detection
-    Trains on 16+ years of crypto data and identifies 10-100x opportunities
+    Trains on REAL crypto data ONLY - NO SIMULATED DATA
     """
     
     def __init__(self, db):
@@ -19,6 +26,7 @@ class HistoricalTrainer:
         self.model_path = '/app/backend/models/historical/'
         os.makedirs(self.model_path, exist_ok=True)
         self.llm_api_key = os.getenv('EMERGENT_LLM_KEY')
+        self.twelvedata = get_twelvedata_service()
     
     async def generate_historical_data(
         self,
@@ -26,66 +34,56 @@ class HistoricalTrainer:
         start_year: int = 2009,
         end_year: int = 2025
     ) -> pd.DataFrame:
-        """Generate comprehensive historical data for training"""
-        print(f"Generating historical data for {coin_id} ({start_year}-{end_year})...")
+        """
+        Fetch REAL historical data from database or Twelve Data API.
+        NEVER generates fake or simulated data.
         
-        # Coin-specific parameters based on historical reality
-        coin_params = {
-            'bitcoin': {'start': 2009, 'initial': 0.0008, 'growth': 0.0015, 'volatility': 0.05},
-            'ethereum': {'start': 2015, 'initial': 2.80, 'growth': 0.0012, 'volatility': 0.06},
-            'solana': {'start': 2020, 'initial': 0.77, 'growth': 0.002, 'volatility': 0.08},
-            'cardano': {'start': 2017, 'initial': 0.02, 'growth': 0.001, 'volatility': 0.07},
-            'polkadot': {'start': 2020, 'initial': 2.90, 'growth': 0.0008, 'volatility': 0.06},
-            'avalanche': {'start': 2020, 'initial': 3.50, 'growth': 0.001, 'volatility': 0.07},
-            'chainlink': {'start': 2017, 'initial': 0.11, 'growth': 0.0009, 'volatility': 0.06},
-        }
+        Returns:
+            DataFrame with real OHLCV data, or empty DataFrame if unavailable.
+        """
+        print(f"📊 Fetching REAL data for {coin_id}...")
         
-        params = coin_params.get(coin_id, {'start': start_year, 'initial': 1.0, 'growth': 0.001, 'volatility': 0.05})
-        
-        actual_start = max(start_year, params['start'])
-        start_date = datetime(actual_start, 1, 1)
-        end_date = datetime(end_year, 12, 31)
-        dates = pd.date_range(start_date, min(end_date, datetime.now()), freq='D')
-        
-        if len(dates) == 0:
-            return pd.DataFrame()
-        
-        np.random.seed(hash(coin_id) % 2**32)
-        
-        prices = [params['initial']]
-        volumes = [100000]
-        
-        for i in range(1, len(dates)):
-            trend = prices[-1] * (1 + params['growth'])
-            noise = np.random.normal(0, params['volatility'])
+        # First try to get from cached historical_prices in database
+        try:
+            cached = await self.db.historical_prices.find(
+                {"coin_id": coin_id},
+                {"_id": 0}
+            ).sort("timestamp", 1).to_list(5000)
             
-            # Add market cycles (4-year Bitcoin halving cycles)
-            cycle = np.sin(i / 1460 * 2 * np.pi) * 0.15
-            
-            # Add occasional pump events (hidden gem behavior)
-            pump = 0
-            if np.random.random() < 0.001:  # 0.1% chance of pump
-                pump = np.random.uniform(0.1, 0.5)
-            
-            new_price = trend * (1 + noise + cycle + pump)
-            prices.append(max(0.0001, new_price))
-            
-            # Volume correlates with price movement
-            vol_change = abs(noise) * 5
-            new_volume = volumes[-1] * (1 + vol_change + np.random.normal(0, 0.1))
-            volumes.append(max(1000, new_volume))
+            if cached and len(cached) >= 100:
+                print(f"  ✓ Found {len(cached)} cached records in database")
+                df = pd.DataFrame(cached)
+                df['date'] = pd.to_datetime(df['timestamp'])
+                df['coin_id'] = coin_id
+                return df
+        except Exception as e:
+            print(f"  ⚠️ Database query error: {e}")
         
-        df = pd.DataFrame({
-            'date': dates,
-            'open': [p * (1 + np.random.uniform(-0.01, 0.01)) for p in prices],
-            'high': [p * (1 + abs(np.random.normal(0, 0.02))) for p in prices],
-            'low': [p * (1 - abs(np.random.normal(0, 0.02))) for p in prices],
-            'close': prices,
-            'volume': volumes,
-            'coin_id': coin_id
-        })
+        # Fetch from Twelve Data API if not enough cached data
+        try:
+            print(f"  📥 Fetching from Twelve Data API...")
+            records = await self.twelvedata.fetch_historical_for_db(coin_id, days=365)
+            
+            if records and len(records) > 0:
+                print(f"  ✓ Retrieved {len(records)} records from Twelve Data")
+                
+                # Cache in database for future use
+                try:
+                    await self.db.historical_prices.delete_many({'coin_id': coin_id})
+                    await self.db.historical_prices.insert_many(records)
+                except Exception as cache_err:
+                    print(f"  ⚠️ Cache write failed: {cache_err}")
+                
+                df = pd.DataFrame(records)
+                df['date'] = pd.to_datetime(df['timestamp'])
+                df['coin_id'] = coin_id
+                return df
+        except Exception as e:
+            print(f"  ⚠️ Twelve Data API error: {e}")
         
-        return df
+        # Return empty DataFrame if no real data available - NEVER fake it
+        print(f"  ❌ WARNING: No real historical data available for {coin_id}")
+        return pd.DataFrame()
     
     def calculate_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
         """Calculate comprehensive technical indicators"""
