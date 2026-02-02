@@ -154,12 +154,16 @@ class StrategyEngine:
         historical_patterns: List[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Generate AI-powered strategy recommendation using LLM with news and learning integration"""
+        import asyncio
+        
         try:
-            chat = LlmChat(
-                api_key=self.llm_api_key,
-                session_id=f"strategy_{coin_id}_{datetime.now().timestamp()}",
-                system_message="You are an expert cryptocurrency trading analyst with machine learning capabilities and access to comprehensive market intelligence. You learn from past predictions, analyze news sentiment, and use 16+ years of historical patterns. Provide concise, actionable trading strategies based on multi-source analysis."
-            ).with_model("openai", "gpt-5.2")
+            # Set a timeout for AI call (30 seconds)
+            async def get_ai_response():
+                chat = LlmChat(
+                    api_key=self.llm_api_key,
+                    session_id=f"strategy_{coin_id}_{datetime.now().timestamp()}",
+                    system_message="You are an expert cryptocurrency trading analyst with machine learning capabilities and access to comprehensive market intelligence. You learn from past predictions, analyze news sentiment, and use 16+ years of historical patterns. Provide concise, actionable trading strategies based on multi-source analysis."
+                ).with_model("openai", "gpt-5.2")
             
             # Include learning insights in the prompt
             learning_context = ""
