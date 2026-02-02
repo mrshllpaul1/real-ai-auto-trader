@@ -306,47 +306,78 @@ async def train_all_systems(
     db = Depends(get_database)
 ):
     """
-    COMPREHENSIVE TRAINING: Train ALL AI systems with REAL market data.
+    COMPREHENSIVE TRAINING: Train ALL AI systems with REAL market data + SENTIMENT.
     - Historical Trainer (patterns + hidden gems)
     - Enhanced Historical Trainer (technical indicators + gems)
     - Profitable Gems Trainer (success patterns)
+    - AI Weekly Trainer (sentiment-enhanced selection)
     
     All training uses REAL market data from Twelve Data API.
+    NOW INCLUDES: AI News Sentiment Analysis integration.
     """
     from services.historical_trainer import HistoricalTrainer
     from services.enhanced_historical_trainer import EnhancedHistoricalTrainer
+    from services.ai_weekly_trainer import AIWeeklyTrainer
+    from services.dynamic_coin_universe import get_training_coins
     
     try:
         historical_trainer = HistoricalTrainer(db)
         enhanced_trainer = EnhancedHistoricalTrainer(db)
+        weekly_trainer = AIWeeklyTrainer(db)
         
-        coins = ['bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot']
+        # Get all coins from dynamic universe
+        try:
+            all_coins = await get_training_coins()
+        except:
+            all_coins = ['bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot', 
+                        'avalanche', 'chainlink', 'polygon', 'dogecoin', 'shiba-inu']
+        
+        # Limit for initial training
+        training_coins = all_coins[:20]
         
         # Queue all training tasks
         background_tasks.add_task(
             historical_trainer.train_on_historical_data,
-            coins, 2020, True
+            training_coins, 2020, True
         )
         
         background_tasks.add_task(
             enhanced_trainer.train_with_real_data,
-            coins
+            training_coins
         )
         
         background_tasks.add_task(
             historical_trainer.train_profitable_gems,
-            coins, 2.0, 2020
+            training_coins, 2.0, 2020
+        )
+        
+        # NEW: Save updated weights with sentiment parameters
+        background_tasks.add_task(
+            weekly_trainer.save_weights
         )
         
         return {
-            "message": "ALL AI training systems started with REAL DATA",
+            "message": "ALL AI training systems started with REAL DATA + SENTIMENT",
             "systems": [
                 "Historical Trainer (patterns + hidden gems)",
                 "Enhanced Historical Trainer (technical indicators)",
-                "Profitable Gems Trainer (success patterns)"
+                "Profitable Gems Trainer (success patterns)",
+                "AI Weekly Trainer (sentiment-enhanced, NEW weights)"
             ],
-            "coins": coins,
+            "new_parameters": {
+                "sentiment_weight": 0.12,
+                "momentum_weight": 0.18,
+                "volatility_weight": 0.13,
+                "volume_weight": 0.18,
+                "trend_weight": 0.18,
+                "historical_weight": 0.13,
+                "category_weight": 0.08,
+                "total": "100%"
+            },
+            "coins": training_coins,
+            "coin_count": len(training_coins),
             "data_source": "REAL_MARKET_DATA_ONLY (Twelve Data API)",
+            "sentiment_source": "AI News Analysis (CryptoPanic + LLM)",
             "status": "processing",
             "note": "Training may take 5-10 minutes. Check /status endpoint for progress."
         }
