@@ -101,8 +101,8 @@ const AutomatedTradingSection = () => {
                 <CardTitle className="text-2xl font-heading flex items-center gap-3">
                   <Bot className="text-[#00FF94]" size={28} />
                   Automated Weekly Trading
-                  <Badge className={paperMode ? "bg-[#FF9500]/20 text-[#FF9500]" : "bg-[#FF0055]/20 text-[#FF0055]"}>
-                    {paperMode ? 'PAPER' : 'REAL'}
+                  <Badge className={isPaperMode ? "bg-[#FF9500]/20 text-[#FF9500]" : "bg-[#FF0055]/20 text-[#FF0055]"}>
+                    {isPaperMode ? 'PAPER' : 'REAL'}
                   </Badge>
                 </CardTitle>
                 <CardDescription>
@@ -113,7 +113,7 @@ const AutomatedTradingSection = () => {
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-[#A1A1AA]">Paper Mode</span>
                   <Switch
-                    checked={paperMode}
+                    checked={isPaperMode}
                     onCheckedChange={handlePaperModeChange}
                     data-testid="paper-mode-switch"
                   />
