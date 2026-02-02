@@ -198,6 +198,12 @@ logger.info("💰 Budget Manager initialized")
 growth_engine.budget_manager = budget_manager
 logger.info("🔗 Growth Engine linked to Budget Manager")
 
+# Initialize Trading Journal
+from services.trading_journal import TradingJournalService
+journal_service = TradingJournalService(db)
+journal.set_dependencies(journal_service)
+logger.info("📝 Trading Journal initialized")
+
 
 @app.on_event("startup")
 async def startup_event():
