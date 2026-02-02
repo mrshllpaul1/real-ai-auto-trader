@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from routes import auth, trading, strategies, market, risk, learning, news, training, auto_trading, allocation, scanner, auto_execute, backtest, rebalance, social, notifications, alerts, email
+from routes import auth, trading, strategies, market, risk, learning, news, training, auto_trading, allocation, scanner, auto_execute, backtest, rebalance, social, notifications, alerts, email, ai_portfolio
 
 
 ROOT_DIR = Path(__file__).parent
