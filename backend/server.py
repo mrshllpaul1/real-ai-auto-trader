@@ -99,6 +99,7 @@ api_router.include_router(journal.router, tags=["Trading Journal"])
 api_router.include_router(ai_decisions.router, prefix="/ai-decisions", tags=["AI Decisions"])
 api_router.include_router(ai_universe.router, tags=["AI Universe"])
 api_router.include_router(ai_discovery.router, tags=["AI Discovery"])
+api_router.include_router(sentiment.router, tags=["Sentiment Analysis"])
 
 # Include the router
 app.include_router(api_router)
