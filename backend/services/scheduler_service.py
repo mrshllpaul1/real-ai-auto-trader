@@ -254,8 +254,8 @@ class SchedulerService:
         
         # Use all coins from universe if not specified
         if coins is None:
-            from services.coin_universe import get_training_coins
-            coins = get_training_coins()
+            from services.dynamic_coin_universe import get_training_coins
+            coins = await get_training_coins()
         
         if self.scheduler.get_job(job_id):
             self.scheduler.remove_job(job_id)
@@ -494,8 +494,8 @@ class SchedulerService:
         
         # Use all coins from universe if not specified
         if coins is None:
-            from services.coin_universe import get_training_coins
-            coins = get_training_coins()
+            from services.dynamic_coin_universe import get_training_coins
+            coins = await get_training_coins()
         
         logger.info(f"  📊 Training on {len(coins)} coins from universe")
         
@@ -591,10 +591,10 @@ class SchedulerService:
     
     async def setup_default_schedule(self, paper_trade: bool = True) -> Dict[str, Any]:
         """Set up the default passive income schedule with full universe training"""
-        from services.coin_universe import get_training_coins
+        from services.dynamic_coin_universe import get_training_coins
         
         results = {}
-        all_coins = get_training_coins()
+        all_coins = await get_training_coins()
         
         # 1. Monitor positions every hour
         results['monitor'] = await self.add_growth_monitor_job(interval_hours=1)
