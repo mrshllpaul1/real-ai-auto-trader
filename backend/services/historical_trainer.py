@@ -825,7 +825,8 @@ Be concise and actionable.
     async def get_similar_historical_patterns(
         self, 
         coin_id: str, 
-        current_conditions: Dict[str, Any]
+        current_conditions: Dict[str, Any],
+        limit: int = 10
     ) -> List[Dict[str, Any]]:
         """Find similar historical patterns to current market conditions"""
         try:
