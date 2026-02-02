@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { motion } from 'framer-motion';
 import api, { authAPI, riskAPI } from '../services/api';
 import { toast } from 'sonner';
-import { Shield, Key, Settings as SettingsIcon, Bell, Phone, MessageSquare } from 'lucide-react';
+import { Shield, Key, Settings as SettingsIcon, Bell, Smartphone, Vibrate } from 'lucide-react';
 
 const Settings = () => {
   const [apiKey, setApiKey] = useState('');
@@ -25,12 +25,12 @@ const Settings = () => {
   });
   const [notificationSettings, setNotificationSettings] = useState({
     push_enabled: true,
-    sms_enabled: true,
-    sms_phone: '2104412761',
+    vibration_enabled: true,
     notify_trade_open: true,
     notify_trade_close: true,
     notify_high_alerts: true,
-    notify_medium_alerts: false
+    notify_medium_alerts: false,
+    notify_ai_discoveries: true
   });
   const [loading, setLoading] = useState(false);
 
