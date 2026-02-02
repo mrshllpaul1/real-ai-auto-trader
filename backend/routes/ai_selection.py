@@ -72,7 +72,7 @@ async def select_best_coins(request: SelectionRequest):
 @router.get("/selection-status")
 async def get_selection_status():
     """Get current status of the coin selection engine"""
-    if not coin_selector:
+    if coin_selector is None:
         raise HTTPException(status_code=500, detail="Coin selector not initialized")
     
     status = await coin_selector.get_selection_status()
