@@ -248,11 +248,14 @@ class SchedulerService:
         """
         Add weekly AI retraining job.
         Runs every Monday at 6 AM UTC by default (before trading at 8 AM).
+        Uses ALL coins from the coin universe for comprehensive training.
         """
         job_id = 'weekly_retrain'
         
+        # Use all coins from universe if not specified
         if coins is None:
-            coins = ['bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot']
+            from services.coin_universe import get_training_coins
+            coins = get_training_coins()
         
         if self.scheduler.get_job(job_id):
             self.scheduler.remove_job(job_id)
@@ -271,15 +274,18 @@ class SchedulerService:
             'day_of_week': day_of_week,
             'hour': hour,
             'coins': coins,
+            'coin_count': len(coins),
             'created_at': datetime.utcnow().isoformat()
         }
         
-        logger.info(f"🧠 Weekly retrain job added ({day_of_week} at {hour}:00 UTC)")
+        logger.info(f"🧠 Weekly retrain job added ({day_of_week} at {hour}:00 UTC) - {len(coins)} coins")
         return {
             'success': True, 
             'job_id': job_id, 
             'schedule': f'{day_of_week} at {hour}:00 UTC',
-            'coins': coins
+            'coin_count': len(coins),
+            'coins': coins[:10] if len(coins) > 10 else coins,  # Show first 10 for brevity
+            'note': f'Training on {len(coins)} coins from universe' if len(coins) > 10 else None
         }
     
     async def remove_job(self, job_id: str) -> Dict[str, Any]:
