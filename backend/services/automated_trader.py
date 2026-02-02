@@ -267,8 +267,9 @@ class AutomatedWeeklyTrader:
             else:
                 print(f"  📝 {coin_id}: Paper trade ${amount_usd:.2f} @ ${current_price:.4f} {'💎' if is_gem else ''}")
             
-            # Store position
-            await self.db.active_positions.insert_one(trade_record)
+            # Store position (copy to avoid ObjectId issues)
+            position_doc = dict(trade_record)
+            await self.db.active_positions.insert_one(position_doc)
             
             return trade_record
             
