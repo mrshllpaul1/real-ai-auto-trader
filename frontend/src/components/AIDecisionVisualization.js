@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { 
   TrendingUp, TrendingDown, Activity, BarChart3, 
-  Zap, Target, Clock, Sparkles
+  Zap, Target, Clock, Sparkles, RefreshCw, Brain,
+  ChevronDown, ChevronUp, Info
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 /**
  * AI Decision Visualization Component
