@@ -335,6 +335,29 @@ const AutoTrading = () => {
         </CardContent>
       </Card>
 
+      {/* AI Portfolio Manager */}
+      <Card className="bg-[#0A0A0A] border-[#1F1F1F] border-l-4 border-l-[#9D00FF]" data-testid="ai-portfolio-card">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl font-heading flex items-center gap-3">
+                <TrendingUp className="text-[#9D00FF]" size={28} />
+                AI Portfolio Manager
+                <Badge className="bg-[#9D00FF]/20 text-[#9D00FF] border-[#9D00FF]/30">
+                  AUTONOMOUS
+                </Badge>
+              </CardTitle>
+              <CardDescription>
+                Let AI develop and manage its own portfolio with your allocated funds
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <AIPortfolioSection />
+        </CardContent>
+      </Card>
+
       {/* Mobile Instructions */}
       <Card className="bg-[#0A0A0A] border-[#1F1F1F]" data-testid="mobile-instructions-card">
         <CardHeader>
