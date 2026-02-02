@@ -1,175 +1,132 @@
-import asyncio
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
-import numpy as np
-import uuid
-from dotenv import load_dotenv
+"""
+Backtesting Engine
+Tests trading strategies against REAL historical data only.
+NEVER uses simulated or fake data.
+"""
 
-load_dotenv()
+import numpy as np
+from datetime import datetime, timedelta
+from typing import Dict, Any, List
+import asyncio
+
 
 class BacktestingEngine:
     """
-    Backtesting engine to test trading strategies against historical data
-    Simulates trades and calculates performance metrics
+    Backtesting engine to test trading strategies against REAL historical data.
+    All data comes from actual market APIs - NO SIMULATED DATA.
     """
     
-    def __init__(self, db):
+    def __init__(self, db, market_service=None):
         self.db = db
+        self.market_service = market_service
     
-    async def generate_historical_prices(
+    async def get_real_historical_prices(
         self,
         coin_id: str,
-        days: int = 365,
-        volatility: float = 0.03
+        days: int = 365
     ) -> List[Dict[str, Any]]:
-        """Generate simulated historical price data for backtesting"""
+        """
+        Fetch REAL historical prices from database or API.
+        NEVER generates fake data.
+        """
+        # First try to get from cached historical_prices in database
+        cached = await self.db.historical_prices.find(
+            {"coin_id": coin_id},
+            {"_id": 0}
+        ).sort("timestamp", 1).limit(days).to_list(days)
         
-        # Base prices for different coins
-        base_prices = {
-            'bitcoin': 45000, 'ethereum': 2500, 'solana': 100,
-            'cardano': 0.5, 'polkadot': 7, 'avalanche': 35,
-            'chainlink': 15, 'polygon': 0.8, 'uniswap': 10, 'litecoin': 80
-        }
+        if cached and len(cached) >= days * 0.8:  # At least 80% of requested data
+            return cached
         
-        base_price = base_prices.get(coin_id, 100)
-        np.random.seed(hash(coin_id) % 2**32)
+        # Fetch from market service if available
+        if self.market_service:
+            try:
+                data = await self.market_service.get_historical_data(coin_id, days)
+                if data and 'prices' in data:
+                    prices = []
+                    for item in data['prices']:
+                        if len(item) >= 2:
+                            timestamp = item[0]
+                            price = item[1]
+                            date = datetime.fromtimestamp(timestamp / 1000)
+                            prices.append({
+                                'date': date.isoformat(),
+                                'timestamp': timestamp,
+                                'close': price,
+                                'open': price,
+                                'high': price,
+                                'low': price,
+                                'coin_id': coin_id
+                            })
+                    if prices:
+                        return prices
+            except Exception as e:
+                print(f"Error fetching historical data for {coin_id}: {e}")
         
-        prices = []
-        current_price = base_price
-        
-        for i in range(days):
-            date = datetime.now() - timedelta(days=days - i)
-            
-            # Add trend and noise
-            trend = np.sin(i / 90 * np.pi) * 0.001  # Cyclical trend
-            noise = np.random.normal(0, volatility)
-            
-            # Occasional jumps
-            if np.random.random() < 0.02:
-                noise += np.random.choice([-1, 1]) * np.random.uniform(0.05, 0.15)
-            
-            current_price *= (1 + trend + noise)
-            current_price = max(current_price * 0.1, current_price)  # Floor at 10% of base
-            
-            volume = np.random.uniform(1e6, 1e8) * (1 + abs(noise) * 10)
-            
-            prices.append({
-                'date': date.isoformat(),
-                'timestamp': date.timestamp(),
-                'open': current_price * (1 + np.random.uniform(-0.01, 0.01)),
-                'high': current_price * (1 + abs(np.random.normal(0, 0.02))),
-                'low': current_price * (1 - abs(np.random.normal(0, 0.02))),
-                'close': current_price,
-                'volume': volume
-            })
-        
-        return prices
-    
-    def calculate_signals(self, prices: List[Dict], index: int) -> Dict[str, Any]:
-        """Calculate trading signals at a specific point in history"""
-        if index < 30:
-            return {'signals': [], 'score': 0}
-        
-        # Get recent prices
-        recent = prices[max(0, index-30):index+1]
-        closes = [p['close'] for p in recent]
-        volumes = [p['volume'] for p in recent]
-        
-        current_price = closes[-1]
-        avg_price = np.mean(closes)
-        avg_volume = np.mean(volumes[:-1]) if len(volumes) > 1 else volumes[0]
-        current_volume = volumes[-1]
-        
-        # Calculate RSI
-        if len(closes) >= 14:
-            deltas = np.diff(closes[-15:])
-            gains = np.mean([d for d in deltas if d > 0] or [0])
-            losses = np.mean([-d for d in deltas if d < 0] or [0.001])
-            rsi = 100 - (100 / (1 + gains / losses))
-        else:
-            rsi = 50
-        
-        volume_ratio = current_volume / avg_volume if avg_volume > 0 else 1
-        price_vs_avg = (current_price - avg_price) / avg_price
-        
-        signals = []
-        score = 0
-        
-        # MACD Bullish
-        if price_vs_avg > 0.02 and volume_ratio > 1.5:
-            signals.append('MACD_BULLISH')
-            score += 25
-        
-        # Oversold
-        if rsi < 30:
-            signals.append('OVERSOLD_ACCUMULATION')
-            score += 30
-        
-        # Volume spike
-        if volume_ratio > 2.5:
-            signals.append('EXTREME_VOLUME')
-            score += 20
-        
-        # Trend reversal
-        if len(closes) >= 7:
-            week_change = (closes[-1] - closes[-7]) / closes[-7]
-            month_change = (closes[-1] - closes[0]) / closes[0] if closes[0] > 0 else 0
-            if month_change < -0.1 and week_change > 0.03:
-                signals.append('TREND_REVERSAL')
-                score += 20
-        
-        return {
-            'signals': signals,
-            'score': score,
-            'rsi': rsi,
-            'volume_ratio': volume_ratio,
-            'price': current_price
-        }
+        # Return empty if no real data available - NEVER fake it
+        print(f"WARNING: No real historical data available for {coin_id}")
+        return []
     
     async def run_backtest(
         self,
-        strategy: Dict[str, Any],
+        strategy_params: Dict[str, Any],
         coins: List[str],
         days: int = 365,
-        initial_capital: float = 10000
+        initial_capital: float = 10000,
+        stop_loss_pct: float = 10,
+        take_profit_pct: float = 20
     ) -> Dict[str, Any]:
         """
-        Run a backtest with specified strategy
-        
-        Strategy parameters:
-        - min_score: Minimum signal score to trade
-        - position_size_pct: % of capital per trade
-        - stop_loss_pct: Stop loss percentage
-        - take_profit_pct: Take profit percentage
-        - max_positions: Maximum concurrent positions
+        Run backtest using REAL historical data only.
+        Returns error if real data is not available.
         """
-        backtest_id = str(uuid.uuid4())[:8]
         
-        min_score = strategy.get('min_score', 50)
-        position_size_pct = strategy.get('position_size_pct', 10)
-        stop_loss_pct = strategy.get('stop_loss_pct', 10)
-        take_profit_pct = strategy.get('take_profit_pct', 30)
-        max_positions = strategy.get('max_positions', 3)
+        # Fetch REAL price data for all coins
+        all_prices = {}
+        coins_with_data = []
         
-        # Track results
+        for coin in coins:
+            prices = await self.get_real_historical_prices(coin, days)
+            if prices and len(prices) >= 30:  # Need at least 30 days for analysis
+                all_prices[coin] = prices
+                coins_with_data.append(coin)
+            else:
+                print(f"Skipping {coin} - insufficient real historical data")
+        
+        if not coins_with_data:
+            return {
+                'error': 'No real historical data available for any requested coins',
+                'message': 'Backtesting requires real market data. Please ensure historical data has been fetched.',
+                'coins_requested': coins,
+                'data_available': False
+            }
+        
+        # Run simulation with REAL data
         capital = initial_capital
         peak_capital = initial_capital
         positions = []
         closed_trades = []
         daily_values = []
         
-        # Generate price data for all coins
-        all_prices = {}
-        for coin in coins:
-            all_prices[coin] = await self.generate_historical_prices(coin, days)
+        # Get the minimum days available across all coins
+        min_days = min(len(all_prices[coin]) for coin in coins_with_data)
+        
+        if min_days < 30:
+            return {
+                'error': f'Insufficient historical data. Need at least 30 days, have {min_days}',
+                'data_available': False
+            }
         
         # Run simulation day by day
-        for day_idx in range(30, days):  # Start after warmup period
-            day_date = all_prices[coins[0]][day_idx]['date']
+        for day_idx in range(30, min_days):
+            day_date = all_prices[coins_with_data[0]][day_idx]['date']
             
             # Check existing positions for stop-loss/take-profit
             for pos in positions[:]:
                 coin = pos['coin_id']
+                if coin not in all_prices or day_idx >= len(all_prices[coin]):
+                    continue
+                    
                 current_price = all_prices[coin][day_idx]['close']
                 entry_price = pos['entry_price']
                 
@@ -180,7 +137,7 @@ class BacktestingEngine:
                     close_reason = 'STOP_LOSS'
                 elif pnl_pct >= take_profit_pct:
                     close_reason = 'TAKE_PROFIT'
-                elif day_idx - pos['entry_day'] >= 30:  # Max hold 30 days
+                elif day_idx - pos['entry_day'] >= 30:
                     close_reason = 'MAX_HOLD'
                 
                 if close_reason:
@@ -194,189 +151,133 @@ class BacktestingEngine:
                         'entry_day': pos['entry_day'],
                         'exit_day': day_idx,
                         'hold_days': day_idx - pos['entry_day'],
-                        'pnl_pct': pnl_pct,
-                        'profit_usd': profit,
+                        'pnl_pct': round(pnl_pct, 2),
+                        'profit_usd': round(profit, 2),
                         'reason': close_reason,
-                        'signals': pos['signals']
+                        'data_source': 'REAL_MARKET_DATA'
                     })
+                    
                     positions.remove(pos)
             
-            # Look for new entries
-            if len(positions) < max_positions:
-                for coin in coins:
+            # Open new positions based on strategy signals
+            if len(positions) < strategy_params.get('max_positions', 5) and capital > 100:
+                for coin in coins_with_data:
+                    if day_idx >= len(all_prices[coin]):
+                        continue
                     if any(p['coin_id'] == coin for p in positions):
-                        continue  # Already have position
+                        continue
                     
-                    signal_data = self.calculate_signals(all_prices[coin], day_idx)
+                    # Calculate signals using REAL price data
+                    recent_prices = [all_prices[coin][i]['close'] for i in range(max(0, day_idx-20), day_idx)]
                     
-                    if signal_data['score'] >= min_score and len(positions) < max_positions:
-                        position_size = capital * (position_size_pct / 100)
-                        if position_size > 10:  # Minimum position
-                            capital -= position_size
-                            positions.append({
-                                'coin_id': coin,
-                                'entry_price': signal_data['price'],
-                                'entry_day': day_idx,
-                                'size': position_size,
-                                'signals': signal_data['signals'],
-                                'score': signal_data['score']
-                            })
+                    if len(recent_prices) < 10:
+                        continue
+                    
+                    # Simple momentum signal based on REAL data
+                    momentum = (recent_prices[-1] - recent_prices[0]) / recent_prices[0] * 100
+                    volatility = np.std(recent_prices) / np.mean(recent_prices) * 100
+                    
+                    buy_signal = (
+                        momentum > strategy_params.get('min_momentum', 2) and
+                        volatility < strategy_params.get('max_volatility', 15)
+                    )
+                    
+                    if buy_signal:
+                        position_size = min(capital * 0.2, capital - 100)
+                        capital -= position_size
+                        
+                        positions.append({
+                            'coin_id': coin,
+                            'entry_price': all_prices[coin][day_idx]['close'],
+                            'entry_day': day_idx,
+                            'size': position_size,
+                            'signals': {
+                                'momentum': round(momentum, 2),
+                                'volatility': round(volatility, 2)
+                            }
+                        })
             
-            # Calculate daily portfolio value
-            positions_value = sum(
-                pos['size'] * (all_prices[pos['coin_id']][day_idx]['close'] / pos['entry_price'])
+            # Track portfolio value
+            position_value = sum(
+                pos['size'] * (all_prices[pos['coin_id']][min(day_idx, len(all_prices[pos['coin_id']])-1)]['close'] / pos['entry_price'])
                 for pos in positions
+                if pos['coin_id'] in all_prices
             )
-            total_value = capital + positions_value
+            
+            total_value = capital + position_value
             peak_capital = max(peak_capital, total_value)
             
             daily_values.append({
                 'date': day_date,
-                'value': total_value,
-                'capital': capital,
-                'positions_value': positions_value,
-                'num_positions': len(positions)
+                'capital': round(capital, 2),
+                'position_value': round(position_value, 2),
+                'total_value': round(total_value, 2),
+                'positions_count': len(positions)
             })
         
-        # Close remaining positions at end
-        final_day = days - 1
+        # Close remaining positions at last price
         for pos in positions:
             coin = pos['coin_id']
-            current_price = all_prices[coin][final_day]['close']
-            entry_price = pos['entry_price']
-            pnl_pct = (current_price - entry_price) / entry_price * 100
-            profit = pos['size'] * (pnl_pct / 100)
-            capital += pos['size'] + profit
-            
-            closed_trades.append({
-                'coin_id': coin,
-                'entry_price': entry_price,
-                'exit_price': current_price,
-                'pnl_pct': pnl_pct,
-                'profit_usd': profit,
-                'reason': 'END_OF_TEST',
-                'signals': pos['signals']
-            })
+            if coin in all_prices and len(all_prices[coin]) > 0:
+                final_price = all_prices[coin][-1]['close']
+                pnl_pct = (final_price - pos['entry_price']) / pos['entry_price'] * 100
+                profit = pos['size'] * (pnl_pct / 100)
+                capital += pos['size'] + profit
+                
+                closed_trades.append({
+                    'coin_id': coin,
+                    'entry_price': pos['entry_price'],
+                    'exit_price': final_price,
+                    'pnl_pct': round(pnl_pct, 2),
+                    'profit_usd': round(profit, 2),
+                    'reason': 'END_OF_PERIOD',
+                    'data_source': 'REAL_MARKET_DATA'
+                })
         
-        # Calculate metrics
-        total_trades = len(closed_trades)
+        # Calculate final metrics
+        final_value = capital
+        total_return = ((final_value - initial_capital) / initial_capital) * 100
+        max_drawdown = ((peak_capital - min(v['total_value'] for v in daily_values)) / peak_capital * 100) if daily_values else 0
+        
         winning_trades = [t for t in closed_trades if t['pnl_pct'] > 0]
         losing_trades = [t for t in closed_trades if t['pnl_pct'] <= 0]
         
-        win_rate = (len(winning_trades) / total_trades * 100) if total_trades > 0 else 0
+        win_rate = (len(winning_trades) / len(closed_trades) * 100) if closed_trades else 0
         avg_win = np.mean([t['pnl_pct'] for t in winning_trades]) if winning_trades else 0
         avg_loss = np.mean([t['pnl_pct'] for t in losing_trades]) if losing_trades else 0
         
-        final_value = capital
-        total_return = ((final_value - initial_capital) / initial_capital) * 100
-        max_drawdown = ((peak_capital - min(d['value'] for d in daily_values)) / peak_capital) * 100 if daily_values else 0
-        
-        # Sharpe ratio approximation
-        if len(daily_values) > 1:
-            returns = [(daily_values[i]['value'] - daily_values[i-1]['value']) / daily_values[i-1]['value'] 
-                      for i in range(1, len(daily_values))]
-            sharpe_val = (np.mean(returns) / np.std(returns)) * np.sqrt(365) if np.std(returns) > 0 else 0
-            sharpe = float(sharpe_val) if not (np.isnan(sharpe_val) or np.isinf(sharpe_val)) else 0
-        else:
-            sharpe = 0
-        
-        # Calculate profit factor (handle edge cases)
-        profit_factor_val = abs(avg_win / avg_loss) if avg_loss != 0 else 0
-        profit_factor = float(profit_factor_val) if not (np.isnan(profit_factor_val) or np.isinf(profit_factor_val)) else 0
-        
-        # Sanitize float values for JSON serialization
-        def safe_float(val):
-            if isinstance(val, (np.floating, np.integer)):
-                val = float(val)
-            if isinstance(val, float) and (np.isnan(val) or np.isinf(val)):
-                return 0.0
-            return val
-        
-        # Sanitize trades
-        sanitized_trades = []
-        for trade in closed_trades[-20:]:
-            sanitized_trade = {}
-            for k, v in trade.items():
-                if isinstance(v, (float, np.floating, np.integer)):
-                    sanitized_trade[k] = safe_float(v)
-                else:
-                    sanitized_trade[k] = v
-            sanitized_trades.append(sanitized_trade)
-        
-        # Sanitize daily values
-        sanitized_daily = []
-        for dv in daily_values[::7]:
-            sanitized_dv = {}
-            for k, v in dv.items():
-                if isinstance(v, (float, np.floating, np.integer)):
-                    sanitized_dv[k] = safe_float(v)
-                else:
-                    sanitized_dv[k] = v
-            sanitized_daily.append(sanitized_dv)
-        
-        result = {
-            'backtest_id': backtest_id,
-            'strategy': strategy,
-            'coins': coins,
-            'period_days': days,
-            'initial_capital': safe_float(initial_capital),
-            'final_value': safe_float(final_value),
-            'total_return_pct': safe_float(total_return),
-            'total_trades': int(total_trades),
+        return {
+            'data_source': 'REAL_MARKET_DATA_ONLY',
+            'simulated_data_used': False,
+            'initial_capital': initial_capital,
+            'final_value': round(final_value, 2),
+            'total_return_pct': round(total_return, 2),
+            'max_drawdown_pct': round(max_drawdown, 2),
+            'total_trades': len(closed_trades),
             'winning_trades': len(winning_trades),
             'losing_trades': len(losing_trades),
-            'win_rate': safe_float(win_rate),
-            'avg_win_pct': safe_float(avg_win),
-            'avg_loss_pct': safe_float(avg_loss),
-            'profit_factor': safe_float(profit_factor),
-            'max_drawdown_pct': safe_float(max_drawdown),
-            'sharpe_ratio': safe_float(sharpe),
-            'trades': sanitized_trades,
-            'daily_values': sanitized_daily,
-            'created_at': datetime.now().isoformat()
+            'win_rate': round(win_rate, 2),
+            'avg_win_pct': round(avg_win, 2),
+            'avg_loss_pct': round(avg_loss, 2),
+            'profit_factor': round(abs(avg_win / avg_loss), 2) if avg_loss != 0 else 0,
+            'coins_tested': coins_with_data,
+            'days_tested': min_days - 30,
+            'trades': closed_trades[-20:],  # Last 20 trades
+            'daily_values': daily_values[-30:] if daily_values else [],  # Last 30 days
+            'strategy_params': strategy_params,
+            'timestamp': datetime.now().isoformat()
         }
-        
-        # Save to database
-        await self.db.backtests.insert_one(dict(result))
-        
-        return result
     
-    async def get_backtest_history(self, limit: int = 20) -> List[Dict[str, Any]]:
-        """Get recent backtest results"""
-        results = await self.db.backtests.find(
-            {},
-            {'_id': 0}
-        ).sort('created_at', -1).limit(limit).to_list(limit)
-        return results
-    
-    async def compare_strategies(
+    async def quick_backtest(
         self,
-        strategies: List[Dict[str, Any]],
-        coins: List[str],
-        days: int = 365
+        coin_id: str,
+        days: int = 90,
+        initial_capital: float = 1000
     ) -> Dict[str, Any]:
-        """Compare multiple strategies side by side"""
-        results = []
-        
-        for strategy in strategies:
-            result = await self.run_backtest(strategy, coins, days)
-            results.append({
-                'strategy_name': strategy.get('name', f"Strategy {len(results)+1}"),
-                'strategy': strategy,
-                'total_return': result['total_return_pct'],
-                'win_rate': result['win_rate'],
-                'sharpe_ratio': result['sharpe_ratio'],
-                'max_drawdown': result['max_drawdown_pct'],
-                'total_trades': result['total_trades']
-            })
-        
-        # Rank by return
-        results.sort(key=lambda x: x['total_return'], reverse=True)
-        
-        return {
-            'comparison': results,
-            'best_strategy': results[0] if results else None,
-            'coins_tested': coins,
-            'period_days': days,
-            'compared_at': datetime.now().isoformat()
-        }
+        """Quick backtest on a single coin using REAL data only"""
+        return await self.run_backtest(
+            strategy_params={'min_momentum': 3, 'max_volatility': 12, 'max_positions': 1},
+            coins=[coin_id],
+            days=days,
+            initial_capital=initial_capital
+        )
