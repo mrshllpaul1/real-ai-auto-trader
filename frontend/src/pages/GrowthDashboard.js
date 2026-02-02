@@ -607,7 +607,10 @@ const GrowthDashboard = () => {
         transition={{ delay: 0.22 }}
         className="mb-8"
       >
-        <MarketSentimentPanel />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <MarketSentimentPanel />
+          <CryptoNewsFeed />
+        </div>
       </motion.div>
 
       {/* Coin Universe Manager */}
