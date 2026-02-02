@@ -58,6 +58,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/growth" element={<GrowthDashboard />} />
+              <Route path="/journal" element={<TradingJournal />} />
               <Route path="/strategies" element={<StrategySelector />} />
               <Route path="/trading" element={<TradingView />} />
               <Route path="/analytics" element={<Analytics />} />
