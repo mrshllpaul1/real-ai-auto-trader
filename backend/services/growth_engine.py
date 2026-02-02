@@ -107,6 +107,51 @@ class AggressiveGrowthEngine:
             'sei': 'SEIUSD', 'celestia': 'TIAUSD',
         }
     
+    async def _get_market_sentiment(self) -> Dict[str, Any]:
+        """Get overall market sentiment for strategy adjustment"""
+        if not self._sentiment_service:
+            try:
+                from services.ai_news_sentiment import get_sentiment_service
+                self._sentiment_service = get_sentiment_service()
+            except:
+                pass
+        
+        if self._sentiment_service:
+            try:
+                return await self._sentiment_service.get_market_sentiment()
+            except Exception as e:
+                print(f"Market sentiment error: {e}")
+        
+        return {'market_score': 50, 'market_label': 'neutral', 'confidence': 30}
+    
+    async def _get_coin_sentiment(self, coin_id: str, symbol: str = None) -> Dict:
+        """Get sentiment for a specific coin"""
+        if not self._sentiment_service:
+            try:
+                from services.ai_news_sentiment import get_sentiment_service
+                self._sentiment_service = get_sentiment_service()
+            except:
+                pass
+        
+        if self._sentiment_service:
+            try:
+                return await self._sentiment_service.get_coin_sentiment(coin_id, symbol)
+            except Exception as e:
+                print(f"Coin sentiment error: {e}")
+        
+        return {'score': 50, 'label': 'neutral'}
+    
+    def _apply_sentiment_to_position_size(self, base_amount: float, sentiment: Dict) -> float:
+        """Adjust position size based on sentiment"""
+        score = sentiment.get('score', 50)
+        
+        if score >= 70:  # Bullish
+            return base_amount * self.config['bullish_sentiment_boost']
+        elif score <= 30:  # Bearish
+            return base_amount * self.config['bearish_sentiment_reduce']
+        else:
+            return base_amount
+    
     async def get_current_portfolio_value(self) -> Dict[str, Any]:
         """Get current portfolio value and progress toward goal"""
         # Get account balance
