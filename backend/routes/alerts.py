@@ -10,7 +10,7 @@ class CreateAlertRequest(BaseModel):
     coin_id: str
     condition: str = 'above'  # above, below
     target_price: float
-    notification_type: str = 'push'  # push, sms, both
+    notification_type: str = 'push'  # push only (with vibration)
 
 async def get_alert_service():
     global _alert_service
