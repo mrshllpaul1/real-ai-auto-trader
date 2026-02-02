@@ -181,7 +181,12 @@ class AutomatedWeeklyTrader:
             'total_invested': sum(t.get('amount_usd', 0) for t in trades)
         }
         
-        await self.db.weekly_executions.insert_one(execution)
+        # Store execution record (exclude _id from response)
+        execution_doc = dict(execution)
+        await self.db.weekly_executions.insert_one(execution_doc)
+        
+        # Remove _id for response
+        execution.pop('_id', None)
         
         # Send alert
         if self.alert_service and not paper_trade:
