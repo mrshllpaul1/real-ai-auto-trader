@@ -264,7 +264,7 @@ class AggressiveGrowthEngine:
         skipped_low_confidence = []
         
         # 1. Find and buy gems
-        print(f"\n💎 Scanning for gems...")
+        print("\n💎 Scanning for gems...")
         gems = await self.gem_finder.find_gems(datetime.now(), max_gems=self.config['max_gem_positions'])
         
         if gems:
@@ -287,7 +287,7 @@ class AggressiveGrowthEngine:
                     trades.append(trade)
         
         # 2. Select and buy main coins
-        print(f"\n📊 Selecting main coins...")
+        print("\n📊 Selecting main coins...")
         portfolio = await self.ai_trainer.select_portfolio(datetime.now())
         
         main_coins = portfolio.get('main_coins', [])[:10]
