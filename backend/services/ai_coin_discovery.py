@@ -252,13 +252,17 @@ class AICoinDiscoveryService:
     
     async def _analyze_candidate(self, candidate: Dict) -> Dict[str, Any]:
         """
-        Analyze a candidate coin and score its potential
+        Analyze a candidate coin and score its potential.
+        Now includes AI news sentiment analysis.
         """
         coin_id = candidate.get('id')
         symbol = candidate.get('symbol', '')
         
         # Fetch detailed data
         details = await self._get_coin_details(coin_id)
+        
+        # Get sentiment analysis
+        sentiment_data = await self._get_sentiment(coin_id, symbol)
         
         # Calculate scores
         scores = {
@@ -267,15 +271,17 @@ class AICoinDiscoveryService:
             'momentum_score': self._score_momentum(details.get('price_changes', {})),
             'community_score': self._score_community(details.get('community_data', {})),
             'development_score': self._score_development(details.get('developer_data', {})),
+            'sentiment_score': sentiment_data.get('score', 50),
         }
         
-        # Weighted total score
+        # Weighted total score (now includes sentiment)
         weights = {
-            'market_cap_score': 0.15,
-            'volume_score': 0.25,
-            'momentum_score': 0.30,
-            'community_score': 0.15,
-            'development_score': 0.15,
+            'market_cap_score': 0.12,
+            'volume_score': 0.22,
+            'momentum_score': 0.25,
+            'community_score': 0.13,
+            'development_score': 0.13,
+            'sentiment_score': 0.15,
         }
         
         total_score = sum(scores[k] * weights[k] for k in scores)
