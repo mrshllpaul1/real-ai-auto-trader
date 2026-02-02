@@ -500,14 +500,14 @@ const Settings = () => {
                   {loading ? 'Saving...' : 'Save Settings'}
                 </Button>
                 <Button
-                  onClick={testSms}
+                  onClick={testPushNotification}
                   variant="outline"
-                  className="border-[#FFB800] text-[#FFB800] hover:bg-[#FFB800]/10"
-                  disabled={loading || !notificationSettings.sms_enabled}
-                  data-testid="test-sms-btn"
+                  className="border-[#00FF94] text-[#00FF94] hover:bg-[#00FF94]/10"
+                  disabled={loading}
+                  data-testid="test-push-btn"
                 >
-                  <MessageSquare size={16} className="mr-2" />
-                  Test SMS
+                  <Bell size={16} className="mr-2" />
+                  Test Push
                 </Button>
               </div>
             </CardContent>
