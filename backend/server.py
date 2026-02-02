@@ -80,6 +80,40 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Initialize AI Portfolio Manager
+from services.ai_portfolio_manager import AIPortfolioManager
+from services.market_data_service import MarketDataService
+from services.news_service import CryptoNewsAggregator
+from services.kraken_service import KrakenAuthenticator, KrakenTradeService
+
+# Set up services for AI Portfolio Manager
+market_service = MarketDataService()
+news_service = CryptoNewsAggregator()
+
+# Initialize Kraken if credentials available
+kraken_api_key = os.getenv('KRAKEN_API_KEY')
+kraken_api_secret = os.getenv('KRAKEN_API_SECRET')
+kraken_service = None
+
+if kraken_api_key and kraken_api_secret:
+    kraken_auth = KrakenAuthenticator(kraken_api_key, kraken_api_secret)
+    kraken_service = KrakenTradeService(kraken_auth)
+    logger.info("✅ Kraken service initialized for real trading")
+else:
+    logger.warning("⚠️ Kraken credentials not found - real trading disabled")
+
+# Initialize AI Portfolio Manager
+ai_portfolio_mgr = AIPortfolioManager(
+    db=db,
+    kraken_service=kraken_service,
+    market_service=market_service,
+    news_service=news_service
+)
+
+# Inject into routes
+ai_portfolio.ai_portfolio_manager = ai_portfolio_mgr
+logger.info("🤖 AI Portfolio Manager initialized")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
