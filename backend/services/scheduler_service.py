@@ -471,6 +471,49 @@ class SchedulerService:
             logger.error(f"  ❌ Compound error: {e}")
             return {'error': str(e)}
     
+    async def _run_discovery(self) -> Dict[str, Any]:
+        """Execute AI coin discovery scan"""
+        timestamp = datetime.utcnow()
+        logger.info(f"🔍 [{timestamp.strftime('%H:%M')}] Running AI discovery scan...")
+        
+        try:
+            from services.ai_coin_discovery import get_discovery_service
+            discovery_service = get_discovery_service()
+            
+            if not discovery_service:
+                logger.warning("  ⚠️ Discovery service not available")
+                return {'error': 'Discovery service not initialized'}
+            
+            result = await discovery_service.run_discovery_scan()
+            
+            execution = {
+                'job_id': 'daily_discovery',
+                'timestamp': timestamp.isoformat(),
+                'success': True,
+                'candidates_found': result.get('candidates_found', 0),
+                'coins_added': result.get('coins_added', []),
+                'coins_pending': result.get('coins_pending', [])
+            }
+            await self.db.scheduler_executions.insert_one(execution)
+            
+            added = result.get('coins_added', [])
+            pending = result.get('coins_pending', [])
+            
+            if added and self.alert_service:
+                await self.alert_service.send_alert(
+                    title="🔍 AI Discovery Complete",
+                    message=f"Found {result.get('candidates_found', 0)} candidates\nAdded: {', '.join(added) if added else 'None'}",
+                    alert_type="discovery",
+                    priority="high" if added else "normal"
+                )
+            
+            logger.info(f"  ✅ Discovery complete: {len(added)} added, {len(pending)} pending")
+            return result
+            
+        except Exception as e:
+            logger.error(f"  ❌ Discovery error: {e}")
+            return {'error': str(e)}
+    
     async def _run_weekly_trade(self, paper_trade: bool = True) -> Dict[str, Any]:
         """Execute weekly automated trading"""
         timestamp = datetime.utcnow()
