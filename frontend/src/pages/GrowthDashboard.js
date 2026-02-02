@@ -244,7 +244,7 @@ const GrowthDashboard = () => {
         animate={{ y: 0, opacity: 1 }}
         className="mb-8"
       >
-        <Tabs value={tradingMode} onValueChange={setTradingMode} className="w-full">
+        <Tabs value={tradingMode} onValueChange={handleTradingModeChange} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-[#0A0A0A] p-1 h-auto">
             <TabsTrigger 
               value="paper" 
