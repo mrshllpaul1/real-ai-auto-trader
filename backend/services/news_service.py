@@ -297,10 +297,10 @@ class CryptoNewsAggregator:
         # Combine all sources
         all_news = free_news + cryptopanic_news + cmc_news
         
-        # If no real news found, use simulated fallback (last resort)
+        # If no real news found, return empty (NEVER use simulated data)
         if len(all_news) == 0:
-            print("Warning: All news APIs failed, using simulated fallback")
-            all_news = await self._get_simulated_news(limit_per_source)
+            print("Warning: All news APIs failed, returning empty list (no simulated data allowed)")
+            all_news = []
         
         # Sort by published date (most recent first)
         all_news.sort(
