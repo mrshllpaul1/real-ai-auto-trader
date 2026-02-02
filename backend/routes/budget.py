@@ -28,6 +28,10 @@ class AllocateFundsRequest(BaseModel):
     purpose: str
 
 
+class SetConfidenceThresholdRequest(BaseModel):
+    threshold: float  # 0-100
+
+
 @router.get("/")
 async def get_budget():
     """Get current trading budget"""
@@ -53,6 +57,35 @@ async def set_budget(request: SetBudgetRequest):
         amount=request.amount,
         enable_real_trading=request.enable_real_trading
     )
+
+
+@router.post("/confidence-threshold")
+async def set_confidence_threshold(request: SetConfidenceThresholdRequest):
+    """
+    Set the minimum AI confidence required for real trades.
+    - Trades with confidence >= threshold will execute with real money
+    - Trades below threshold will only be paper traded
+    - Default is 70% (conservative)
+    - Range: 0-100
+    """
+    if budget_manager is None:
+        raise HTTPException(status_code=500, detail="Budget manager not initialized")
+    
+    if request.threshold < 0 or request.threshold > 100:
+        raise HTTPException(status_code=400, detail="Threshold must be between 0 and 100")
+    
+    return await budget_manager.set_confidence_threshold(request.threshold)
+
+
+@router.get("/confidence-check")
+async def check_confidence(confidence: float):
+    """
+    Check if a confidence level meets the threshold for real trading.
+    """
+    if budget_manager is None:
+        raise HTTPException(status_code=500, detail="Budget manager not initialized")
+    
+    return await budget_manager.check_confidence_for_trade(confidence)
 
 
 @router.post("/allocate")
