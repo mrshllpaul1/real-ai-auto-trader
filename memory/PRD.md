@@ -9,6 +9,30 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 - Ability to search for "hidden gems" with 10-100x potential
 - Support both real-money and paper trading with budget controls
 - Kraken exchange integration for live trading
+- **Dynamic coin universe** - AI can discover and add new coins
+
+---
+
+## What's Been Implemented (Feb 2, 2026 - Session 4)
+
+### ✅ Dynamic Coin Universe (NEW - Feb 2, 2026)
+- [x] **Database-backed coin universe** - Coins stored in MongoDB for persistence
+- [x] **AI coin discovery** - AI can add new coins to the universe
+- [x] **Complete CRUD API** - Add, view, update, deactivate coins
+- [x] **Category management** - 15 categories including 'discovered' for AI finds
+- [x] **Gem candidate expansion** - Dynamic gems include AI-discovered coins
+- [x] **Scheduler integration** - Retraining uses dynamic universe
+- [x] **Frontend component** - CoinUniverseManager on Growth Dashboard
+- [x] **New API endpoints**:
+  - `GET /api/ai-universe/stats` - Universe statistics
+  - `GET /api/ai-universe/coins` - All active coins
+  - `GET /api/ai-universe/coins/gems` - Gem candidates
+  - `GET /api/ai-universe/coins/discovered` - AI-discovered coins
+  - `POST /api/ai-universe/coins/ai-discover` - Add new coin via AI
+  - `DELETE /api/ai-universe/coin/{coin_id}` - Deactivate coin
+  - `GET /api/ai-universe/categories` - List categories
+- [x] **Test coverage**: 14 tests, 100% pass rate
+- [x] **Current universe**: 78 coins (77 base + 1 AI-discovered 'kaspa')
 
 ---
 
