@@ -20,7 +20,7 @@ const TradingView = () => {
   const [selectedCoin, setSelectedCoin] = useState('bitcoin');
   const [chartType, setChartType] = useState('candlestick');
   const [timeframe, setTimeframe] = useState('7');
-  const [amount, setAmount('');
+  const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const [currentPrice, setCurrentPrice] = useState(null);
   const [priceChange, setPriceChange] = useState(null);
