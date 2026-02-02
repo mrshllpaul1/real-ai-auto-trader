@@ -1,7 +1,7 @@
 """
 Hidden Gem Finder AI
 Specializes in finding coins with 10-100x potential.
-Analyzes volatility patterns, volume spikes, and early momentum.
+Analyzes volatility patterns, volume spikes, early momentum, and NEWS SENTIMENT.
 """
 
 import asyncio
@@ -19,6 +19,7 @@ class HiddenGemFinder:
     """
     AI specialized in finding hidden gems with massive upside potential.
     Looks for early signs of breakout coins.
+    Now includes AI-powered news sentiment analysis.
     """
     
     # Categories that typically contain gems
@@ -36,17 +37,25 @@ class HiddenGemFinder:
     def __init__(self, db):
         self.db = db
         
-        # Gem-specific scoring weights
+        # Gem-specific scoring weights (now includes sentiment)
         self.gem_weights = {
-            'volatility_potential': 0.25,    # High volatility = opportunity
-            'volume_spike': 0.25,            # Volume precedes price
-            'price_momentum': 0.20,          # Early momentum detection
+            'volatility_potential': 0.20,    # High volatility = opportunity
+            'volume_spike': 0.20,            # Volume precedes price
+            'price_momentum': 0.15,          # Early momentum detection
             'market_cap_potential': 0.15,    # Smaller = more upside
             'trend_breakout': 0.15,          # Breaking resistance
+            'news_sentiment': 0.15,          # AI news sentiment
         }
         
         # Learned gem performance
         self.gem_scores = {}
+        
+        # Sentiment service reference
+        self._sentiment_service = None
+    
+    def set_sentiment_service(self, service):
+        """Set the sentiment service for news analysis"""
+        self._sentiment_service = service
     
     async def load_learned_scores(self):
         """Load learned gem scores from database"""
