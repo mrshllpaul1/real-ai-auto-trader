@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Target, TrendingUp, TrendingDown, Loader2, BarChart3, Calendar, Play } from 'lucide-react';
+import { Brain, Target, TrendingUp, TrendingDown, Loader2, BarChart3, Calendar, Play, GraduationCap, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
@@ -11,12 +11,15 @@ const AICoinSelectionSection = () => {
   const [selectedCoins, setSelectedCoins] = useState([]);
   const [simulationResults, setSimulationResults] = useState(null);
   const [dataStatus, setDataStatus] = useState(null);
+  const [trainingStatus, setTrainingStatus] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [training, setTraining] = useState(false);
   const [marketCondition, setMarketCondition] = useState('neutral');
 
   useEffect(() => {
     loadDataStatus();
     loadLatestSimulation();
+    loadTrainingStatus();
   }, []);
 
   const loadDataStatus = async () => {
@@ -39,12 +42,21 @@ const AICoinSelectionSection = () => {
     }
   };
 
+  const loadTrainingStatus = async () => {
+    try {
+      const response = await api.get('/ai-selection/training-status');
+      setTrainingStatus(response.data);
+    } catch (error) {
+      console.error('Error loading training status:', error);
+    }
+  };
+
   const selectCoinsForWeek = async () => {
     setLoading(true);
     try {
       const response = await api.post('/ai-selection/select-coins', {
         market_condition: marketCondition,
-        max_coins: 5
+        max_coins: 10
       });
       setSelectedCoins(response.data.selected_coins || []);
       toast.success(`Selected ${response.data.total_selected} coins for trading!`);
@@ -68,6 +80,19 @@ const AICoinSelectionSection = () => {
     }
   };
 
+  const startTraining = async () => {
+    setTraining(true);
+    try {
+      await api.post('/ai-selection/train-ai');
+      toast.success('AI training started! Training 2009-2026 data in background.');
+      setTimeout(loadTrainingStatus, 60000);
+    } catch (error) {
+      toast.error('Failed to start training');
+    } finally {
+      setTraining(false);
+    }
+  };
+
   const getScoreColor = (score) => {
     if (score >= 70) return 'text-[#00FF94]';
     if (score >= 50) return 'text-[#007AFF]';
@@ -86,10 +111,10 @@ const AICoinSelectionSection = () => {
             <CardTitle className="text-2xl font-heading flex items-center gap-3">
               <Brain className="text-[#9D00FF]" size={28} />
               Adaptive AI Coin Selection Engine
+              <Badge className="bg-[#00FF94]/20 text-[#00FF94]">10 + 1 GEM</Badge>
             </CardTitle>
             <CardDescription className="text-[#A1A1AA]">
-              AI automatically selects the best coins each week based on momentum, volatility, volume, and trend analysis.
-              Works in both bull and bear markets.
+              AI selects 10 main coins + 1 hidden gem each week. Learns from 100+ coins, adapts to market conditions.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -104,31 +129,110 @@ const AICoinSelectionSection = () => {
                 </div>
               </div>
               <div className="flex-1 min-w-[150px] p-4 bg-[#0A0A0A] rounded-lg">
-                <div className="text-xs text-[#A1A1AA] mb-1">Data Status</div>
+                <div className="text-xs text-[#A1A1AA] mb-1">AI Status</div>
                 <Badge 
-                  className={dataStatus?.ready_for_simulation 
+                  className={trainingStatus?.trained 
                     ? 'bg-[#00FF94]/20 text-[#00FF94]' 
-                    : 'bg-[#FF0055]/20 text-[#FF0055]'
+                    : 'bg-[#FF9500]/20 text-[#FF9500]'
                   }
                 >
-                  {dataStatus?.ready_for_simulation ? 'READY' : 'NEEDS DATA'}
+                  {trainingStatus?.trained ? 'TRAINED' : 'NOT TRAINED'}
                 </Badge>
+                {trainingStatus?.weights && (
+                  <div className="text-xs text-[#A1A1AA] mt-1">
+                    {trainingStatus.weights.total_weeks_trained} weeks learned
+                  </div>
+                )}
               </div>
-              {!dataStatus?.ready_for_simulation && (
-                <Button
-                  onClick={seedHistoricalData}
-                  disabled={loading}
-                  className="bg-[#9D00FF] hover:bg-[#7A00CC] text-white"
-                  data-testid="seed-data-btn"
-                >
-                  {loading ? <Loader2 className="animate-spin mr-2" size={16} /> : <BarChart3 className="mr-2" size={16} />}
-                  Seed Historical Data
-                </Button>
-              )}
+              <div className="flex-1 min-w-[150px] p-4 bg-[#0A0A0A] rounded-lg">
+                <div className="text-xs text-[#A1A1AA] mb-1">Win Rate</div>
+                <div className={`text-lg font-bold ${trainingStatus?.weights?.win_rate >= 50 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                  {trainingStatus?.weights?.win_rate?.toFixed(1) || 0}%
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Training Status & Controls */}
+      {trainingStatus?.trained && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.05 }}
+        >
+          <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
+            <CardHeader>
+              <CardTitle className="text-xl font-heading flex items-center gap-2">
+                <GraduationCap className="text-[#9D00FF]" size={24} />
+                AI Learned Preferences
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Top Coins */}
+                <div>
+                  <h4 className="text-sm font-bold text-[#A1A1AA] mb-2">Top Performing Coins</h4>
+                  <div className="space-y-1">
+                    {trainingStatus.weights?.weights?.coin_scores && 
+                      Object.entries(trainingStatus.weights.weights.coin_scores)
+                        .sort(([,a], [,b]) => b - a)
+                        .slice(0, 5)
+                        .map(([coin, score]) => (
+                          <div key={coin} className="flex justify-between text-sm p-1 bg-[#121212] rounded">
+                            <span className="capitalize">{coin}</span>
+                            <span className={getScoreColor(score)}>{score.toFixed(1)}</span>
+                          </div>
+                        ))
+                    }
+                  </div>
+                </div>
+                {/* Category Preferences */}
+                <div>
+                  <h4 className="text-sm font-bold text-[#A1A1AA] mb-2">Category Performance</h4>
+                  <div className="space-y-1">
+                    {trainingStatus.weights?.weights?.category_scores && 
+                      Object.entries(trainingStatus.weights.weights.category_scores)
+                        .sort(([,a], [,b]) => b - a)
+                        .slice(0, 5)
+                        .map(([cat, score]) => (
+                          <div key={cat} className="flex justify-between text-sm p-1 bg-[#121212] rounded">
+                            <span className="capitalize">{cat}</span>
+                            <span className={getScoreColor(score)}>{score.toFixed(1)}</span>
+                          </div>
+                        ))
+                    }
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-4 flex gap-2">
+                <Button
+                  onClick={startTraining}
+                  disabled={training}
+                  variant="outline"
+                  className="border-[#9D00FF] text-[#9D00FF] hover:bg-[#9D00FF]/10"
+                  data-testid="retrain-btn"
+                >
+                  {training ? <Loader2 className="animate-spin mr-2" size={16} /> : <GraduationCap className="mr-2" size={16} />}
+                  Retrain AI
+                </Button>
+                <Button
+                  onClick={seedHistoricalData}
+                  disabled={loading}
+                  variant="outline"
+                  className="border-[#333] text-[#A1A1AA]"
+                  data-testid="seed-more-btn"
+                >
+                  {loading ? <Loader2 className="animate-spin mr-2" size={16} /> : <BarChart3 className="mr-2" size={16} />}
+                  Seed More Data
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* AI Coin Selection */}
       <motion.div
@@ -143,7 +247,7 @@ const AICoinSelectionSection = () => {
               Select Best Coins This Week
             </CardTitle>
             <CardDescription>
-              Let AI analyze market conditions and pick the best coins to trade
+              AI picks 10 main coins + 1 gem based on learned preferences
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -182,27 +286,32 @@ const AICoinSelectionSection = () => {
               ) : (
                 <Brain className="mr-2" size={20} />
               )}
-              Select Best Coins
+              Select 10 Coins + 1 Gem
             </Button>
 
             {/* Selected Coins Display */}
             {selectedCoins.length > 0 && (
               <div className="space-y-3 mt-4">
-                <h4 className="text-sm font-bold text-[#A1A1AA]">AI Selected Coins:</h4>
+                <h4 className="text-sm font-bold text-[#A1A1AA]">AI Selected Portfolio:</h4>
                 {selectedCoins.map((coin, index) => (
                   <motion.div
                     key={coin.coin_id}
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: index * 0.1 }}
+                    transition={{ delay: index * 0.05 }}
                     className="p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <Badge className="bg-[#9D00FF]/20 text-[#9D00FF] border-[#9D00FF]/30">
+                        <Badge className={index === 0 ? "bg-[#FFD700]/20 text-[#FFD700] border-[#FFD700]/30" : "bg-[#9D00FF]/20 text-[#9D00FF] border-[#9D00FF]/30"}>
                           #{index + 1}
                         </Badge>
                         <span className="font-bold text-white">{coin.symbol}</span>
+                        {coin.category === 'meme' || coin.category === 'ai' || coin.category === 'new' ? (
+                          <Badge className="bg-[#FF9500]/20 text-[#FF9500] text-xs">
+                            <Sparkles size={10} className="mr-1" />GEM
+                          </Badge>
+                        ) : null}
                       </div>
                       <div className={`text-xl font-bold ${getScoreColor(coin.total_score)}`}>
                         {coin.total_score}
