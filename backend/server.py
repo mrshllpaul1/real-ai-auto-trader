@@ -23,6 +23,28 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Health check endpoint at root level (required for Kubernetes/deployment)
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for deployment"""
+    try:
+        # Verify MongoDB connection
+        await client.admin.command('ping')
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+    
+    return {
+        "status": "healthy",
+        "database": db_status,
+        "version": "1.0.0"
+    }
+
+@app.get("/")
+async def root_health():
+    """Root health check"""
+    return {"status": "ok", "service": "ai-crypto-trading"}
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
