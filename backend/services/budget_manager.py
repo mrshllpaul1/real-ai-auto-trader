@@ -65,6 +65,7 @@ class BudgetManager:
             "available_budget": max(0, amount - used),
             "paper_budget": 500,  # Paper trading always available
             "real_trading_enabled": enable_real_trading and amount > 0,
+            "ai_confidence_threshold": existing.get("ai_confidence_threshold", 70),  # Default 70%
             "updated_at": datetime.utcnow().isoformat()
         }
         
@@ -76,6 +77,56 @@ class BudgetManager:
         
         logger.info(f"Budget set: ${amount} (Real trading: {budget['real_trading_enabled']})")
         return budget
+    
+    async def set_confidence_threshold(
+        self,
+        threshold: float,
+        user_id: str = "default"
+    ) -> Dict[str, Any]:
+        """
+        Set the minimum AI confidence required for real trades.
+        Trades with confidence below this threshold will only be paper traded.
+        """
+        if threshold < 0 or threshold > 100:
+            raise ValueError("Confidence threshold must be between 0 and 100")
+        
+        await self.collection.update_one(
+            {"user_id": user_id},
+            {"$set": {
+                "ai_confidence_threshold": threshold,
+                "updated_at": datetime.utcnow().isoformat()
+            }},
+            upsert=True
+        )
+        
+        logger.info(f"AI confidence threshold set to {threshold}%")
+        
+        return {
+            "success": True,
+            "ai_confidence_threshold": threshold,
+            "message": f"AI will only execute real trades with {threshold}%+ confidence"
+        }
+    
+    async def check_confidence_for_trade(
+        self,
+        confidence: float,
+        user_id: str = "default"
+    ) -> Dict[str, Any]:
+        """
+        Check if a trade's confidence meets the threshold for real execution.
+        """
+        budget = await self.get_budget(user_id)
+        threshold = budget.get("ai_confidence_threshold", 70)
+        
+        meets_threshold = confidence >= threshold
+        
+        return {
+            "confidence": confidence,
+            "threshold": threshold,
+            "meets_threshold": meets_threshold,
+            "recommendation": "EXECUTE_REAL" if meets_threshold else "PAPER_ONLY",
+            "message": f"Confidence {confidence}% {'meets' if meets_threshold else 'below'} threshold of {threshold}%"
+        }
     
     async def allocate_funds(
         self,
