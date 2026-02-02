@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import AutopilotControl from '../components/AutopilotControl';
 import UserTutorial from '../components/UserTutorial';
 import CoinUniverseManager from '../components/CoinUniverseManager';
+import AIDiscoveryPanel from '../components/AIDiscoveryPanel';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
