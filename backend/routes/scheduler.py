@@ -135,6 +135,42 @@ async def add_compound_job(schedule: CompoundSchedule):
     return await scheduler_service.add_compound_job(hour=schedule.hour)
 
 
+@router.post("/jobs/weekly-retrain")
+async def add_weekly_retrain(schedule: RetrainSchedule):
+    """
+    Add weekly AI retraining job.
+    
+    - Runs on Mondays at 6 AM UTC by default (before trading at 8 AM)
+    - Trains both Historical and Enhanced trainers
+    - Uses REAL market data only from Twelve Data API
+    - Updates pattern recognition and hidden gem detection
+    """
+    if scheduler_service is None:
+        raise HTTPException(status_code=500, detail="Scheduler not initialized")
+    
+    return await scheduler_service.add_weekly_retrain_job(
+        day_of_week=schedule.day_of_week,
+        hour=schedule.hour,
+        coins=schedule.coins
+    )
+
+
+@router.post("/jobs/retrain-now")
+async def retrain_now(coins: list = None):
+    """
+    Trigger AI retraining immediately.
+    
+    - Runs Historical Trainer (patterns + hidden gems)
+    - Runs Enhanced Trainer (technical indicators)
+    - Uses REAL market data only
+    """
+    if scheduler_service is None:
+        raise HTTPException(status_code=500, detail="Scheduler not initialized")
+    
+    result = await scheduler_service._run_weekly_retrain(coins=coins)
+    return result
+
+
 @router.delete("/jobs/{job_id}")
 async def remove_job(job_id: str):
     """Remove a scheduled job"""
