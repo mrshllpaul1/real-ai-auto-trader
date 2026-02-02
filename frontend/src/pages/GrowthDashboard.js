@@ -287,6 +287,83 @@ const GrowthDashboard = () => {
         </motion.div>
       </div>
 
+      {/* Autopilot Control */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.38 }}
+        className="mb-8"
+      >
+        <Card className="bg-gradient-to-r from-[#9D00FF]/10 to-[#007AFF]/10 border-[#9D00FF]/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Zap className="text-[#9D00FF]" />
+              Autopilot Mode
+              {schedulerStatus?.running && schedulerStatus?.job_count > 0 && (
+                <Badge className="bg-[#00FF94]/20 text-[#00FF94] ml-2">ACTIVE</Badge>
+              )}
+            </CardTitle>
+            <CardDescription className="text-[#A1A1AA]">
+              Let AI trade automatically while you sleep
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap items-center gap-4 mb-4">
+              <Button
+                onClick={setupAutoPilot}
+                disabled={schedulerLoading}
+                className="bg-[#9D00FF] hover:bg-[#7B00CC] text-white font-bold"
+                data-testid="autopilot-btn"
+              >
+                {schedulerLoading ? <Loader2 className="animate-spin mr-2" /> : <Zap className="mr-2" />}
+                Activate Autopilot
+              </Button>
+              
+              {schedulerStatus?.running ? (
+                <Button
+                  onClick={stopScheduler}
+                  disabled={schedulerLoading}
+                  variant="outline"
+                  className="border-[#FF0055] text-[#FF0055]"
+                >
+                  <Power className="mr-2" size={16} />
+                  Stop
+                </Button>
+              ) : (
+                <Button
+                  onClick={startScheduler}
+                  disabled={schedulerLoading}
+                  variant="outline"
+                  className="border-[#00FF94] text-[#00FF94]"
+                >
+                  <Power className="mr-2" size={16} />
+                  Start
+                </Button>
+              )}
+            </div>
+            
+            {schedulerStatus?.jobs && schedulerStatus.jobs.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-sm text-[#A1A1AA] mb-2">Scheduled Jobs:</div>
+                {schedulerStatus.jobs.map((job, i) => (
+                  <div key={i} className="flex items-center justify-between p-2 bg-[#121212] rounded-lg text-sm">
+                    <div className="flex items-center gap-2">
+                      {job.id === 'growth_monitor' && <Clock size={14} className="text-[#007AFF]" />}
+                      {job.id === 'weekly_trader' && <Calendar size={14} className="text-[#FF9500]" />}
+                      {job.id === 'daily_compound' && <DollarSign size={14} className="text-[#00FF94]" />}
+                      <span>{job.name}</span>
+                    </div>
+                    <span className="text-[#A1A1AA]">
+                      Next: {job.next_run ? new Date(job.next_run).toLocaleString() : 'N/A'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* Open Positions */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
