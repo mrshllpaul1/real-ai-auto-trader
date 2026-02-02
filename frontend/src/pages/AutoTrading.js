@@ -14,16 +14,10 @@ import AICoinSelectionSection from '../components/AICoinSelectionSection';
 import AutomatedTradingSection from '../components/AutomatedTradingSection';
 
 const AutoTrading = () => {
-  // Global trading mode from localStorage
-  const getTradingModeFromStorage = () => {
-    const saved = localStorage.getItem('growth_trading_mode');
-    return saved === 'real';
-  };
-  
   const [config, setConfig] = useState({
     enabled: false,
-    paper_trading_enabled: !getTradingModeFromStorage(),
-    real_trading_enabled: getTradingModeFromStorage(),
+    paper_trading_enabled: true,
+    real_trading_enabled: false,
     amount_per_trade: 100,
     min_confidence: 70,
     max_daily_trades: 10
@@ -37,43 +31,29 @@ const AutoTrading = () => {
   const [botPortfolio, setBotPortfolio] = useState(null);
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [tradingModeInitialized, setTradingModeInitialized] = useState(false);
 
-  // Sync trading mode with localStorage on mount and when it changes
+  // Initialize trading mode from localStorage FIRST before anything else
   useEffect(() => {
-    const syncMode = () => {
-      const isReal = getTradingModeFromStorage();
-      setConfig(prev => ({
-        ...prev,
-        paper_trading_enabled: !isReal,
-        real_trading_enabled: isReal
-      }));
-    };
-    
-    // Initial sync
-    syncMode();
-    
-    // Listen for storage changes from other tabs
-    const handleStorageChange = (e) => {
-      if (e.key === 'growth_trading_mode') {
-        const isReal = e.newValue === 'real';
-        setConfig(prev => ({
-          ...prev,
-          paper_trading_enabled: !isReal,
-          real_trading_enabled: isReal
-        }));
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => window.removeEventListener('storage', handleStorageChange);
+    const savedMode = localStorage.getItem('growth_trading_mode');
+    const isReal = savedMode === 'real';
+    setConfig(prev => ({
+      ...prev,
+      paper_trading_enabled: !isReal,
+      real_trading_enabled: isReal
+    }));
+    setTradingModeInitialized(true);
   }, []);
 
+  // Load config AFTER trading mode is initialized
   useEffect(() => {
-    loadConfig();
-    loadStatus();
-    const interval = setInterval(loadStatus, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    if (tradingModeInitialized) {
+      loadConfig();
+      loadStatus();
+      const interval = setInterval(loadStatus, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [tradingModeInitialized]);
 
   const loadConfig = async () => {
     try {
