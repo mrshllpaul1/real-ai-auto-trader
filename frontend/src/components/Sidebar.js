@@ -236,7 +236,12 @@ const Sidebar = () => {
         data-testid="desktop-sidebar"
       >
         <CollapseButton isCollapsed={isCollapsed} onClick={() => setIsCollapsed(!isCollapsed)} />
-        <SidebarContent isCollapsed={isCollapsed} mobile={false} navItems={navItems} />
+        <SidebarContent 
+          isCollapsed={isCollapsed} 
+          mobile={false} 
+          navItems={navItems}
+          tradingMode={<TradingModeIndicator isCollapsed={isCollapsed} mobile={false} />}
+        />
       </motion.div>
     </>
   );
