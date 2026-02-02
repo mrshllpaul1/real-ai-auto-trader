@@ -15,7 +15,24 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ## What's Been Implemented (Feb 2, 2026 - Session 4)
 
-### ✅ AI News Sentiment Analysis (NEW - Feb 2, 2026)
+### ✅ CryptoPanic News Feed Integration (NEW - Feb 2, 2026)
+- [x] **Installed cryptopanic library** - `pip install cryptopanic==0.1.0`
+- [x] **Enhanced sentiment service** - Uses CryptoPanic library for news fetching
+- [x] **Additional data extraction**:
+  - Panic score
+  - Vote sentiment (bullish/bearish from community votes)
+  - Currencies mentioned in news
+  - Trending/rising/hot news filters
+- [x] **New API endpoints**:
+  - `GET /api/sentiment/trending` - Trending/rising news
+  - `GET /api/sentiment/news/bullish` - Bullish news filter
+  - `GET /api/sentiment/news/bearish` - Bearish news filter
+- [x] **Frontend component** - CryptoNewsFeed with Trending/Bullish/Bearish tabs
+- [x] **CryptoPanic attribution** - Proper credit to data source
+
+**Setup Required:** Register at `cryptopanic.com/developers/api/` (free tier) and add `CRYPTOPANIC_API_KEY` to `/app/backend/.env`
+
+### ✅ AI News Sentiment Analysis (Feb 2, 2026)
 - [x] **Comprehensive sentiment service** (`ai_news_sentiment.py`) - Analyzes news for all coins
 - [x] **LLM-powered analysis** - Uses GPT-5.2 via Emergent LLM Key for sentiment scoring
 - [x] **News sources** - CryptoPanic API + CoinGecko status updates
