@@ -203,30 +203,37 @@ class TestGrowthSchedulerIntegration:
         import time
         
         # 1. Stop scheduler if running
-        stop_response = requests.post(f"{BASE_URL}/api/scheduler/stop")
+        stop_response = requests.post(f"{BASE_URL}/api/scheduler/stop", timeout=10)
         assert stop_response.status_code == 200
         
         # Small delay to ensure scheduler state is updated
-        time.sleep(0.5)
+        time.sleep(1)
         
         # 2. Setup default schedule (this also starts the scheduler)
-        setup_response = requests.post(f"{BASE_URL}/api/scheduler/setup-default?paper_trade=true")
+        setup_response = requests.post(f"{BASE_URL}/api/scheduler/setup-default?paper_trade=true", timeout=10)
         assert setup_response.status_code == 200
         assert setup_response.json()['success'] == True
         
-        # 3. Verify scheduler is running with jobs
-        status_response = requests.get(f"{BASE_URL}/api/scheduler/status")
+        time.sleep(0.5)
+        
+        # 3. Verify scheduler is running with jobs (with retry)
+        for attempt in range(3):
+            status_response = requests.get(f"{BASE_URL}/api/scheduler/status", timeout=10)
+            if status_response.status_code == 200:
+                break
+            time.sleep(1)
+        
         assert status_response.status_code == 200
         status = status_response.json()
         assert status['running'] == True
         assert status['job_count'] >= 3
         
         # 4. Verify growth stats accessible
-        stats_response = requests.get(f"{BASE_URL}/api/growth/stats")
+        stats_response = requests.get(f"{BASE_URL}/api/growth/stats", timeout=10)
         assert stats_response.status_code == 200
         
         # 5. Verify positions accessible
-        positions_response = requests.get(f"{BASE_URL}/api/growth/positions?status=OPEN")
+        positions_response = requests.get(f"{BASE_URL}/api/growth/positions?status=OPEN", timeout=10)
         assert positions_response.status_code == 200
         
     def test_growth_execution_creates_positions(self):
