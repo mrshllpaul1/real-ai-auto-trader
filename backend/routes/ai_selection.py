@@ -115,7 +115,7 @@ async def run_weekly_simulation(request: SimulationRequest, background_tasks: Ba
 @router.get("/simulation-results")
 async def get_simulation_results(limit: int = 10):
     """Get recent simulation results"""
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     results = await db.weekly_simulations.find(
@@ -131,7 +131,7 @@ async def get_simulation_results(limit: int = 10):
 @router.get("/simulation-results/{simulation_id}")
 async def get_simulation_detail(simulation_id: str):
     """Get detailed results for a specific simulation"""
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     result = await db.weekly_simulations.find_one(
@@ -160,7 +160,7 @@ async def seed_historical_data(background_tasks: BackgroundTasks):
     """
     from services.historical_data_seeder import HistoricalDataSeeder
     
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     seeder = HistoricalDataSeeder(db)
@@ -183,7 +183,7 @@ async def seed_historical_data(background_tasks: BackgroundTasks):
 @router.get("/historical-data-status")
 async def get_historical_data_status():
     """Check status of historical price data"""
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     total_records = await db.historical_prices.count_documents({})
