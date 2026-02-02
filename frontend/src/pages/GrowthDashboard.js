@@ -4,24 +4,37 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
 import { 
   Rocket, Target, TrendingUp, Sparkles, DollarSign, 
-  Loader2, RefreshCw, Trophy, Flame
+  Loader2, RefreshCw, Trophy, Flame, Shield, HelpCircle, Zap
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
 import AutopilotControl from '../components/AutopilotControl';
+import UserTutorial from '../components/UserTutorial';
+import { AIDecisionsPanel, generateAIReasoning } from '../components/AIDecisionVisualization';
 
 const GrowthDashboard = () => {
   const [stats, setStats] = useState(null);
   const [positions, setPositions] = useState([]);
+  const [budget, setBudget] = useState(null);
   const [loading, setLoading] = useState(false);
   const [executing, setExecuting] = useState(false);
   const [paperMode, setPaperMode] = useState(true);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [budgetInput, setBudgetInput] = useState('');
+  const [settingBudget, setSettingBudget] = useState(false);
 
   useEffect(() => {
     loadData();
+    loadBudget();
+    // Show tutorial on first visit
+    const tutorialSeen = localStorage.getItem('tutorial_completed');
+    if (!tutorialSeen) {
+      setShowTutorial(true);
+    }
     const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -37,6 +50,42 @@ const GrowthDashboard = () => {
     } catch (error) {
       console.error('Error:', error);
     }
+  };
+
+  const loadBudget = async () => {
+    try {
+      const response = await api.get('/budget/');
+      setBudget(response.data);
+    } catch (error) {
+      console.error('Budget error:', error);
+    }
+  };
+
+  const handleSetBudget = async () => {
+    const amount = parseFloat(budgetInput);
+    if (isNaN(amount) || amount < 0) {
+      toast.error('Please enter a valid budget amount');
+      return;
+    }
+    setSettingBudget(true);
+    try {
+      const response = await api.post('/budget/set', {
+        amount: amount,
+        enable_real_trading: true
+      });
+      setBudget(response.data);
+      toast.success(`Budget set to $${amount}. Real trading enabled!`);
+      setBudgetInput('');
+    } catch (error) {
+      toast.error('Failed to set budget');
+    } finally {
+      setSettingBudget(false);
+    }
+  };
+
+  const completeTutorial = () => {
+    localStorage.setItem('tutorial_completed', 'true');
+    setShowTutorial(false);
   };
 
   const executeGrowth = async () => {
