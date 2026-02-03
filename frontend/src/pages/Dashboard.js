@@ -33,13 +33,15 @@ const Dashboard = () => {
         ]);
       };
 
-      const [portfolioRes, pricesRes, strategiesRes] = await Promise.all([
+      const [portfolioRes, krakenRes, pricesRes, strategiesRes] = await Promise.all([
         timeoutPromise(tradingAPI.getPortfolio(), 8000).catch(() => ({ data: null })),
+        timeoutPromise(tradingAPI.getKrakenPortfolio(), 10000).catch(() => ({ data: null })),
         timeoutPromise(marketAPI.getPrices('bitcoin,ethereum,solana'), 8000).catch(() => ({ data: {} })),
         timeoutPromise(strategyAPI.getStrategies('active', 3), 8000).catch(() => ({ data: { strategies: [] } }))
       ]);
 
       setPortfolio(portfolioRes.data);
+      setKrakenPortfolio(krakenRes.data);
       setPrices(pricesRes.data);
       setStrategies(strategiesRes.data?.strategies || []);
     } catch (error) {
