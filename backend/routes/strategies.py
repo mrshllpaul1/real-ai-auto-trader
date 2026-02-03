@@ -29,6 +29,8 @@ async def generate_strategies(
     market_service = Depends(get_market_service)
 ):
     """Generate AI-powered trading strategies with learning, news, and historical pattern integration"""
+    import asyncio
+    
     try:
         from services.learning_engine import AILearningEngine
         from services.news_service import CryptoNewsAggregator
@@ -38,26 +40,36 @@ async def generate_strategies(
         news_service = CryptoNewsAggregator()
         historical_trainer = HistoricalTrainer(db)
         
-        # Get historical data for each coin
+        # Get historical data for each coin - with timeout
         historical_data = {}
         
-        for pair in request.coin_pairs:
+        for pair in request.coin_pairs[:3]:  # Limit to 3 coins max
             coin_id = pair.split('/')[0].lower()
             
-            # Get historical data
-            hist_data = await market_service.get_historical_data(coin_id, days=30)
-            
-            # Get current market data
-            market_data = await market_service.get_coin_price([coin_id])
-            
-            historical_data[coin_id] = {
-                **hist_data,
-                **market_data.get(coin_id, {})
-            }
+            try:
+                # Get historical data with 10s timeout
+                hist_data = await asyncio.wait_for(
+                    market_service.get_historical_data(coin_id, days=30),
+                    timeout=10.0
+                )
+                
+                # Get current market data with 5s timeout
+                market_data = await asyncio.wait_for(
+                    market_service.get_coin_price([coin_id]),
+                    timeout=5.0
+                )
+                
+                historical_data[coin_id] = {
+                    **hist_data,
+                    **market_data.get(coin_id, {})
+                }
+            except asyncio.TimeoutError:
+                print(f"Timeout fetching data for {coin_id}, skipping...")
+                continue
         
         # Generate strategies with full intelligence integration
         strategies = []
-        for pair in request.coin_pairs:
+        for pair in request.coin_pairs[:3]:
             coin_id = pair.split('/')[0].lower()
             
             try:
