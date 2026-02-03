@@ -17,16 +17,24 @@ const AILearning = () => {
     loadLearningData();
   }, []);
 
+  // Timeout wrapper to prevent infinite loading
+  const timeoutPromise = (promise, ms = 10000) => {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
+    ]);
+  };
+
   const loadLearningData = async () => {
     try {
       setLoading(true);
       const [reportRes, indicatorsRes] = await Promise.all([
-        api.get('/learning/report').catch(() => ({ data: null })),
-        api.get('/learning/indicators/performance').catch(() => ({ data: { indicators: [] } }))
+        timeoutPromise(api.get('/learning/report'), 8000).catch(() => ({ data: null })),
+        timeoutPromise(api.get('/learning/indicators/performance'), 8000).catch(() => ({ data: { indicators: [] } }))
       ]);
 
       setLearningReport(reportRes.data);
-      setIndicators(indicatorsRes.data.indicators || []);
+      setIndicators(indicatorsRes.data?.indicators || []);
     } catch (error) {
       console.error('Error loading learning data:', error);
     } finally {
