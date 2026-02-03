@@ -104,15 +104,16 @@ const CryptoNewsFeed = () => {
 
   const loadNews = useCallback(async () => {
     try {
+      // Use the CryptoPanic direct API routes (more reliable)
       const [trendingRes, bullishRes, bearishRes] = await Promise.all([
-        api.get('/sentiment/trending?limit=15'),
-        api.get('/sentiment/news/bullish'),
-        api.get('/sentiment/news/bearish')
+        api.get('/news/trending?limit=15').catch(() => ({ data: { news: [] } })),
+        api.get('/news/bullish?limit=15').catch(() => ({ data: { news: [] } })),
+        api.get('/news/bearish?limit=15').catch(() => ({ data: { news: [] } }))
       ]);
       
-      setTrendingNews(trendingRes.data.news || []);
-      setBullishNews(bullishRes.data.news || []);
-      setBearishNews(bearishRes.data.news || []);
+      setTrendingNews(trendingRes.data?.news || []);
+      setBullishNews(bullishRes.data?.news || []);
+      setBearishNews(bearishRes.data?.news || []);
     } catch (error) {
       console.error('News load error:', error);
     } finally {
