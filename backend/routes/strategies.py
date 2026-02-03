@@ -178,6 +178,130 @@ async def generate_strategies(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+async def _generate_strategies_background(user_id: str, coin_pairs: List[str]):
+    """Background task for strategy generation"""
+    global _strategy_generation_status
+    
+    _strategy_generation_status["running"] = True
+    _strategy_generation_status["started_at"] = datetime.now().isoformat()
+    _strategy_generation_status["progress"] = 0
+    _strategy_generation_status["message"] = "Initializing..."
+    _strategy_generation_status["error"] = None
+    
+    try:
+        from server import db
+        from services.strategy_engine import StrategyEngine
+        from services.market_data_service import MarketDataService
+        from services.learning_engine import AILearningEngine
+        from services.news_service import CryptoNewsAggregator
+        from services.historical_trainer import HistoricalTrainer
+        
+        strategy_engine = StrategyEngine()
+        market_service = MarketDataService()
+        learning_engine = AILearningEngine(db)
+        news_service = CryptoNewsAggregator()
+        historical_trainer = HistoricalTrainer(db)
+        
+        _strategy_generation_status["progress"] = 10
+        _strategy_generation_status["message"] = "Fetching market data..."
+        
+        historical_data = {}
+        for i, pair in enumerate(coin_pairs[:3]):
+            coin_id = pair.split('/')[0].lower()
+            _strategy_generation_status["message"] = f"Fetching data for {coin_id}..."
+            
+            try:
+                hist_data = await asyncio.wait_for(
+                    market_service.get_historical_data(coin_id, days=30),
+                    timeout=15.0
+                )
+                market_data = await asyncio.wait_for(
+                    market_service.get_coin_price([coin_id]),
+                    timeout=10.0
+                )
+                historical_data[coin_id] = {**hist_data, **market_data.get(coin_id, {})}
+            except asyncio.TimeoutError:
+                continue
+            
+            _strategy_generation_status["progress"] = 10 + (i + 1) * 20
+        
+        _strategy_generation_status["progress"] = 70
+        _strategy_generation_status["message"] = "Generating strategies..."
+        
+        strategies = []
+        for pair in coin_pairs[:3]:
+            coin_id = pair.split('/')[0].lower()
+            coin_data = historical_data.get(coin_id, {}).get('prices', [])
+            
+            if not coin_data:
+                continue
+            
+            indicators = strategy_engine.calculate_technical_indicators(coin_data)
+            technical_analysis = strategy_engine.generate_rule_based_signals(indicators)
+            market_data = historical_data.get(coin_id, {})
+            
+            ai_strategy = await strategy_engine.generate_ai_strategy(
+                coin_id, technical_analysis, market_data
+            )
+            strategies.append(ai_strategy)
+        
+        _strategy_generation_status["progress"] = 90
+        _strategy_generation_status["message"] = "Saving strategies..."
+        
+        for strategy in strategies:
+            strategy_to_store = {**strategy, 'user_id': user_id}
+            await db.strategies.insert_one(strategy_to_store)
+            strategy.pop('_id', None)
+        
+        _strategy_generation_status["progress"] = 100
+        _strategy_generation_status["message"] = "Complete!"
+        _strategy_generation_status["result"] = {
+            "strategies": strategies,
+            "count": len(strategies),
+            "generated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        _strategy_generation_status["error"] = str(e)
+        _strategy_generation_status["message"] = f"Error: {str(e)}"
+    finally:
+        _strategy_generation_status["running"] = False
+
+
+@router.post("/generate-async")
+async def generate_strategies_async(request: AsyncStrategyRequest, background_tasks: BackgroundTasks):
+    """
+    Generate strategies asynchronously (non-blocking).
+    
+    Starts strategy generation in background - check /generation-status for progress.
+    Use this for production to avoid request timeouts.
+    """
+    global _strategy_generation_status
+    
+    if _strategy_generation_status["running"]:
+        return {
+            "status": "already_running",
+            "started_at": _strategy_generation_status.get("started_at"),
+            "progress": _strategy_generation_status.get("progress"),
+            "message": _strategy_generation_status.get("message")
+        }
+    
+    background_tasks.add_task(_generate_strategies_background, request.user_id, request.coin_pairs)
+    
+    return {
+        "status": "started",
+        "message": f"Generating strategies for {len(request.coin_pairs)} coins in background",
+        "check_status": "/api/strategies/generation-status"
+    }
+
+
+@router.get("/generation-status")
+async def get_generation_status():
+    """Get status of background strategy generation"""
+    return get_strategy_generation_status()
+
+
 @router.get("/list/{user_id}")
 async def get_strategies(
     user_id: str,
