@@ -1,13 +1,34 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime
+import asyncio
 
 router = APIRouter()
+
+# Background task status tracking
+_strategy_generation_status = {
+    "running": False,
+    "started_at": None,
+    "progress": 0,
+    "message": "",
+    "result": None,
+    "error": None
+}
+
+def get_strategy_generation_status():
+    return _strategy_generation_status.copy()
+
 
 class StrategyRequest(BaseModel):
     user_id: str
     coin_pairs: List[str]
+
+
+class AsyncStrategyRequest(BaseModel):
+    user_id: str
+    coin_pairs: List[str]
+    notify_on_complete: Optional[bool] = False
 
 async def get_database():
     from server import db
