@@ -54,6 +54,12 @@ class OHLCVUpdateSchedule(BaseModel):
     coins: Optional[list] = None  # None = update all stored coins
 
 
+class OHLCVExpansionSchedule(BaseModel):
+    day_of_week: Optional[str] = 'sun'
+    hour: Optional[int] = 4  # 4 AM UTC
+    batch_size: Optional[int] = 50
+
+
 @router.get("/status")
 async def get_scheduler_status():
     """Get current scheduler status and active jobs"""
