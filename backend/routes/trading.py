@@ -136,6 +136,89 @@ async def get_portfolio_performance(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/kraken/trades")
+async def get_kraken_trades(limit: int = 50):
+    """Get real trade history from Kraken exchange"""
+    try:
+        from server import kraken_service
+        if not kraken_service:
+            return {"trades": [], "count": 0, "error": "Kraken service not initialized"}
+        
+        # Get trades history from Kraken
+        result = await kraken_service.get_trades_history()
+        trades_dict = result.get("trades", {})
+        
+        # Convert to list format
+        trades = []
+        for trade_id, trade_data in trades_dict.items():
+            trades.append({
+                "id": trade_id,
+                "pair": trade_data.get("pair", ""),
+                "type": trade_data.get("type", ""),  # buy/sell
+                "ordertype": trade_data.get("ordertype", ""),
+                "price": float(trade_data.get("price", 0)),
+                "volume": float(trade_data.get("vol", 0)),
+                "cost": float(trade_data.get("cost", 0)),
+                "fee": float(trade_data.get("fee", 0)),
+                "time": trade_data.get("time", 0),
+                "timestamp": datetime.fromtimestamp(trade_data.get("time", 0)).isoformat() if trade_data.get("time") else None
+            })
+        
+        # Sort by time, most recent first
+        trades.sort(key=lambda x: x.get("time", 0), reverse=True)
+        
+        return {
+            "trades": trades[:limit],
+            "count": len(trades),
+            "total": result.get("count", len(trades))
+        }
+    except Exception as e:
+        print(f"Error fetching Kraken trades: {e}")
+        return {"trades": [], "count": 0, "error": str(e)}
+
+@router.get("/kraken/orders")
+async def get_kraken_closed_orders(limit: int = 50):
+    """Get closed orders from Kraken exchange"""
+    try:
+        from server import kraken_service
+        if not kraken_service:
+            return {"orders": [], "count": 0, "error": "Kraken service not initialized"}
+        
+        # Get closed orders from Kraken
+        result = await kraken_service.get_closed_orders()
+        orders_dict = result.get("closed", {})
+        
+        # Convert to list format
+        orders = []
+        for order_id, order_data in orders_dict.items():
+            descr = order_data.get("descr", {})
+            orders.append({
+                "id": order_id,
+                "pair": descr.get("pair", ""),
+                "type": descr.get("type", ""),  # buy/sell
+                "ordertype": descr.get("ordertype", ""),
+                "price": float(descr.get("price", 0)),
+                "volume": float(order_data.get("vol", 0)),
+                "vol_exec": float(order_data.get("vol_exec", 0)),
+                "cost": float(order_data.get("cost", 0)),
+                "fee": float(order_data.get("fee", 0)),
+                "status": order_data.get("status", ""),
+                "opentm": order_data.get("opentm", 0),
+                "closetm": order_data.get("closetm", 0),
+                "timestamp": datetime.fromtimestamp(order_data.get("closetm", 0)).isoformat() if order_data.get("closetm") else None
+            })
+        
+        # Sort by close time, most recent first
+        orders.sort(key=lambda x: x.get("closetm", 0), reverse=True)
+        
+        return {
+            "orders": orders[:limit],
+            "count": len(orders)
+        }
+    except Exception as e:
+        print(f"Error fetching Kraken orders: {e}")
+        return {"orders": [], "count": 0, "error": str(e)}
+
 async def get_market_service():
     from services.market_data_service import MarketDataService
     return MarketDataService()
