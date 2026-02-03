@@ -319,6 +319,12 @@ async def initialize_services():
         historical_data.set_dependencies(db, historical_downloader, cryptocompare_service)
         logger.info("✅ CryptoCompare Historical Data service initialized")
         
+        # AI Learning Loop Service
+        from services.ai_learning_loop import get_learning_loop_service
+        learning_loop_service = get_learning_loop_service(db)
+        ai_learning_loop.set_dependencies(db, learning_loop_service)
+        logger.info("✅ AI Learning Loop service initialized")
+        
         # Start scheduler
         await scheduler_service.start()
         
