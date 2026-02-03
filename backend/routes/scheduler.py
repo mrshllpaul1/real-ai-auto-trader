@@ -55,7 +55,9 @@ async def get_scheduler_status():
     if scheduler_service is None:
         raise HTTPException(status_code=500, detail="Scheduler not initialized")
     
-    return scheduler_service.get_status()
+    status = scheduler_service.get_status()
+    status["scheduled_jobs"] = scheduler_service.get_scheduled_jobs()
+    return status
 
 
 @router.post("/start")
