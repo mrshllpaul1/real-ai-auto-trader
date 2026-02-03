@@ -86,14 +86,17 @@ async def start_download(
             "message": "Download already in progress. Check /download-status for updates."
         }
     
-    # Start download in background
+    # Start download in background using proper async handling
     async def run_download():
         await _downloader.download_all_coins(
             coins=request.coins,
             max_days=request.max_days
         )
     
-    background_tasks.add_task(asyncio.create_task, run_download())
+    # Use asyncio.create_task within the event loop context
+    import asyncio
+    loop = asyncio.get_event_loop()
+    loop.create_task(run_download())
     
     return {
         "status": "started",
