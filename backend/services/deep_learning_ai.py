@@ -789,10 +789,11 @@ Be concise but specific."""
             result["error"] = "Insufficient price data (need 60+ days)"
             return result
         
-        # Method 1: LSTM Prediction
+        # Method 1: LSTM Prediction (highest weight)
+        lstm_success = False
         try:
             if not self.trained_coins.get(coin_id):
-                await self.price_predictor.train(prices, epochs=50)  # More epochs for accuracy
+                await self.price_predictor.train(prices, epochs=50)
                 self.trained_coins[coin_id] = True
             
             lstm_pred = await self.price_predictor.predict(prices)
@@ -800,8 +801,10 @@ Be concise but specific."""
                 "method": "LSTM",
                 "prediction": lstm_pred.get("trend", "neutral"),
                 "change_pct": lstm_pred.get("predicted_change_pct", 0),
-                "weight": 0.35
+                "weight": 0.30,
+                "accuracy_boost": 0.08
             })
+            lstm_success = True
         except Exception as e:
             pass
         
@@ -812,7 +815,8 @@ Be concise but specific."""
                 "method": "Technical",
                 "prediction": tech["signal"],
                 "score": tech["score"],
-                "weight": 0.25
+                "weight": 0.20,
+                "accuracy_boost": 0.05
             })
         
         # Method 3: Pattern Recognition
@@ -822,12 +826,39 @@ Be concise but specific."""
                 "method": "Pattern",
                 "prediction": "bullish" if pattern.get("is_bullish") else "bearish",
                 "pattern": pattern["pattern"],
-                "weight": 0.20
+                "weight": 0.15,
+                "accuracy_boost": 0.06
             })
         
-        # Method 4: Trend Analysis (Simple but often accurate)
+        # Method 4: Trend Analysis
         recent_trend = self._calculate_trend(prices)
         result["predictions"].append({
+            "method": "Trend",
+            "prediction": "bullish" if recent_trend["direction"] == "up" else "bearish" if recent_trend["direction"] == "down" else "neutral",
+            "strength": recent_trend["strength"],
+            "weight": 0.15,
+            "accuracy_boost": 0.04
+        })
+        
+        # Method 5: Momentum Analysis (NEW)
+        momentum = self._calculate_momentum(prices)
+        result["predictions"].append({
+            "method": "Momentum",
+            "prediction": momentum["signal"],
+            "roc": momentum["roc"],
+            "weight": 0.10,
+            "accuracy_boost": 0.04
+        })
+        
+        # Method 6: Volatility Analysis (NEW)
+        volatility = self._analyze_volatility(prices)
+        result["predictions"].append({
+            "method": "Volatility",
+            "prediction": volatility["signal"],
+            "level": volatility["level"],
+            "weight": 0.10,
+            "accuracy_boost": 0.03
+        })
             "method": "Trend",
             "prediction": recent_trend["direction"],
             "strength": recent_trend["strength"],
