@@ -20,6 +20,7 @@ import TradingJournal from "./pages/TradingJournal";
 import DeepLearningAI from "./pages/DeepLearningAI";
 import AIChat from "./pages/AIChat";
 import Sidebar from "./components/Sidebar";
+import FloatingAIChat from "./components/FloatingAIChat";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "framer-motion";
 import { TradingModeProvider } from "./context/TradingModeContext";
@@ -80,6 +81,11 @@ function App() {
                 <Route path="/setup" element={<Setup />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+              {/* Floating AI Chat - hidden on AI Chat page */}
+              <Routes>
+                <Route path="/ai-chat" element={null} />
+                <Route path="*" element={<FloatingAIChat />} />
               </Routes>
             </motion.main>
           </div>
