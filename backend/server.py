@@ -223,6 +223,13 @@ async def initialize_services():
         simulation.set_dependencies(db, market_service)
         logger.info("✅ Historical Simulation initialized")
         
+        # Initialize Ensemble AI & Universe Optimizer
+        from services.ensemble_ai import get_ensemble_predictor, get_universe_optimizer
+        ensemble_predictor = get_ensemble_predictor(db, market_service, deep_ai)
+        universe_optimizer = get_universe_optimizer(db, market_service, ensemble_predictor, deep_ai)
+        ensemble.set_dependencies(db, market_service, ensemble_predictor, universe_optimizer, deep_ai)
+        logger.info("✅ Ensemble AI & Universe Optimizer initialized")
+        
         # Kraken service (optional)
         global kraken_service
         kraken_api_key = os.getenv('KRAKEN_API_KEY')
