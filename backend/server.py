@@ -241,6 +241,8 @@ async def initialize_services():
             kraken_auth = KrakenAuthenticator(kraken_api_key, kraken_api_secret)
             kraken_service = KrakenTradeService(kraken_auth)
             logger.info("✅ Kraken service initialized")
+            # Set Kraken service for AI Chat trading
+            ai_chat.set_kraken_service(kraken_service)
         else:
             kraken_service = None
             logger.warning("⚠️ Kraken service not initialized - missing API keys")
