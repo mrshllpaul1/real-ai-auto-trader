@@ -17,6 +17,7 @@ import Guide from "./pages/Guide";
 import Setup from "./pages/Setup";
 import GrowthDashboard from "./pages/GrowthDashboard";
 import TradingJournal from "./pages/TradingJournal";
+import DeepLearningAI from "./pages/DeepLearningAI";
 import Sidebar from "./components/Sidebar";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "framer-motion";
@@ -66,6 +67,7 @@ function App() {
                 <Route path="/trading" element={<TradingView />} />
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/learning" element={<AILearning />} />
+                <Route path="/deep-learning" element={<DeepLearningAI />} />
                 <Route path="/news" element={<NewsAndIntelligence />} />
                 <Route path="/news-filters" element={<NewsFilters />} />
                 <Route path="/auto-trading" element={<AutoTrading />} />
