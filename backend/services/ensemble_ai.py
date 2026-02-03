@@ -159,12 +159,8 @@ class EnsembleAIPredictor:
         score = 50
         if rsi < 30:
             score += 20  # Oversold - bullish
-            signal_rsi = "bullish"
         elif rsi > 70:
             score -= 20  # Overbought - bearish
-            signal_rsi = "bearish"
-        else:
-            signal_rsi = "neutral"
         
         if prices[-1] > sma_20:
             score += 15
