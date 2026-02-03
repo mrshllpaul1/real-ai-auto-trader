@@ -141,28 +141,8 @@ const EnsembleAI = () => {
       console.error('Error fetching status:', err);
     }
   }, []);
-  const fetchComparison = async () => {
-    try {
-      const res = await fetch(`${API}/api/ensemble/comparison`);
-      const data = await res.json();
-      setComparison(data);
-    } catch (err) {
-      console.error('Error fetching comparison:', err);
-    }
-  };
 
-  // Fetch hidden gems
-  const fetchHiddenGems = async () => {
-    try {
-      const res = await fetch(`${API}/api/ensemble/hidden-gems`);
-      const data = await res.json();
-      setHiddenGems(data);
-    } catch (err) {
-      console.error('Error fetching hidden gems:', err);
-    }
-  };
-
-  // Start universe rebuild
+  // Start universe rebuild with polling
   const startRebuild = async () => {
     setRebuilding(true);
     try {
@@ -175,11 +155,17 @@ const EnsembleAI = () => {
       
       if (data.status === 'started') {
         toast.info(`Analyzing ${analyzeCount} coins... This may take a few minutes.`);
-        // Start polling
-        const interval = setInterval(fetchBuildStatus, 2000);
-        setPollInterval(interval);
+        // Start polling with async interval
+        const pollStatus = async () => {
+          const completed = await fetchBuildStatus();
+          if (!completed) {
+            setTimeout(pollStatus, 2000);
+          }
+        };
+        pollStatus();
       } else if (data.status === 'already_running') {
         toast.warning('Rebuild already in progress');
+        setRebuilding(false);
       }
     } catch (err) {
       toast.error('Failed to start rebuild');
