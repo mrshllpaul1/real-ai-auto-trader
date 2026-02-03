@@ -135,6 +135,74 @@ class MarketDataService:
             "fetched_at": datetime.now().isoformat()
         }
     
+    async def get_historical_from_kraken(self, coin_id: str, days: int = 30) -> Dict[str, Any]:
+        """Get historical OHLC data from Kraken public API as fallback"""
+        try:
+            import httpx
+            
+            # Map coin IDs to Kraken pairs
+            pair_map = {
+                'bitcoin': 'XBTUSD',
+                'ethereum': 'ETHUSD',
+                'solana': 'SOLUSD',
+                'cardano': 'ADAUSD',
+                'dogecoin': 'DOGEUSD',
+                'ripple': 'XRPUSD',
+                'polkadot': 'DOTUSD',
+                'litecoin': 'LTCUSD',
+                'chainlink': 'LINKUSD',
+                'avalanche-2': 'AVAXUSD',
+            }
+            
+            pair = pair_map.get(coin_id.lower(), f"{coin_id.upper()[:3]}USD")
+            
+            # Use daily interval (1440 minutes) for historical view
+            interval = 1440 if days > 7 else 60  # Daily or hourly
+            
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                response = await client.get(
+                    "https://api.kraken.com/0/public/OHLC",
+                    params={"pair": pair, "interval": interval}
+                )
+                data = response.json()
+                
+                if data.get("error"):
+                    print(f"Kraken OHLC error for {coin_id}: {data['error']}")
+                    return None
+                
+                result = data.get("result", {})
+                # Get the first key that's not 'last'
+                ohlc_data = None
+                for key in result:
+                    if key != "last":
+                        ohlc_data = result[key]
+                        break
+                
+                if not ohlc_data:
+                    return None
+                
+                # Convert OHLC to price format [timestamp_ms, close_price]
+                # OHLC format: [time, open, high, low, close, vwap, volume, count]
+                prices = []
+                for candle in ohlc_data[-days:]:  # Last N days
+                    timestamp_ms = int(candle[0]) * 1000
+                    close_price = float(candle[4])
+                    prices.append([timestamp_ms, close_price])
+                
+                return {
+                    "coin_id": coin_id,
+                    "days": days,
+                    "prices": prices,
+                    "market_caps": [],
+                    "total_volumes": [],
+                    "source": "kraken",
+                    "fetched_at": datetime.now().isoformat()
+                }
+                
+        except Exception as e:
+            print(f"Kraken historical data error for {coin_id}: {e}")
+            return None
+    
     async def get_trending_coins(self) -> List[Dict[str, Any]]:
         """Get trending cryptocurrencies with caching"""
         try:
