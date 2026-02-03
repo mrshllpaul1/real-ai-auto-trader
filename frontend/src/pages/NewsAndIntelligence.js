@@ -162,6 +162,168 @@ const NewsAndIntelligence = () => {
         </Card>
       )}
 
+      {/* CoinDesk Market Sentiment */}
+      {coindeskSentiment && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className="bg-[#0A0A0A] border-[#00FF94]/30 glow-green" data-testid="coindesk-sentiment-card">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-[#00FF94]/20">
+                    <TrendingUp className="text-[#00FF94]" size={24} />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-heading flex items-center gap-2">
+                      CoinDesk Market Sentiment
+                      <Badge className="bg-[#00FF94]/20 text-[#00FF94] text-xs">LIVE</Badge>
+                    </CardTitle>
+                    <CardDescription>
+                      AI-analyzed sentiment from {coindeskSentiment.articles_analyzed || 0} recent articles
+                    </CardDescription>
+                  </div>
+                </div>
+                <Button
+                  onClick={loadCoinDeskData}
+                  variant="outline"
+                  size="sm"
+                  className="border-[#00FF94]/30 text-[#00FF94] hover:bg-[#00FF94]/10"
+                >
+                  <RefreshCw size={14} className="mr-1" />
+                  Refresh
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div className="p-4 bg-[#121212] rounded-xl border border-[#1F1F1F]">
+                  <div className="text-xs text-[#A1A1AA] mb-2">Overall Sentiment</div>
+                  <Badge 
+                    className="text-lg px-3 py-1"
+                    style={{
+                      backgroundColor: coindeskSentiment.overall_sentiment === 'BULLISH' ? '#00FF9420' :
+                                      coindeskSentiment.overall_sentiment === 'BEARISH' ? '#FF005520' : '#007AFF20',
+                      color: coindeskSentiment.overall_sentiment === 'BULLISH' ? '#00FF94' :
+                            coindeskSentiment.overall_sentiment === 'BEARISH' ? '#FF0055' : '#007AFF'
+                    }}
+                  >
+                    {coindeskSentiment.overall_sentiment}
+                  </Badge>
+                </div>
+                <div className="p-4 bg-[#121212] rounded-xl border border-[#1F1F1F]">
+                  <div className="text-xs text-[#A1A1AA] mb-2">Positive</div>
+                  <div className="text-2xl font-bold text-[#00FF94]">
+                    {coindeskSentiment.sentiment_distribution?.POSITIVE || 0}%
+                  </div>
+                </div>
+                <div className="p-4 bg-[#121212] rounded-xl border border-[#1F1F1F]">
+                  <div className="text-xs text-[#A1A1AA] mb-2">Negative</div>
+                  <div className="text-2xl font-bold text-[#FF0055]">
+                    {coindeskSentiment.sentiment_distribution?.NEGATIVE || 0}%
+                  </div>
+                </div>
+                <div className="p-4 bg-[#121212] rounded-xl border border-[#1F1F1F]">
+                  <div className="text-xs text-[#A1A1AA] mb-2">Neutral</div>
+                  <div className="text-2xl font-bold text-[#007AFF]">
+                    {coindeskSentiment.sentiment_distribution?.NEUTRAL || 0}%
+                  </div>
+                </div>
+              </div>
+              
+              {coindeskSentiment.top_themes?.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-xs text-[#A1A1AA]">Trending:</span>
+                  {coindeskSentiment.top_themes.map((theme, i) => (
+                    <Badge key={i} className="bg-[#1F1F1F] text-white text-xs">
+                      {theme.theme} ({theme.count})
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* CoinDesk News Feed */}
+      {coindeskNews.length > 0 && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="bg-[#0A0A0A] border-[#1F1F1F]" data-testid="coindesk-news-card">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl font-heading flex items-center gap-3">
+                  <Newspaper className="text-[#9D00FF]" />
+                  CoinDesk News Feed
+                </CardTitle>
+                <Badge className="bg-[#9D00FF]/20 text-[#9D00FF]">
+                  {coindeskNews.length} articles
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                {coindeskNews.slice(0, 15).map((article, i) => (
+                  <a
+                    key={article.id || i}
+                    href={article.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block p-3 bg-[#121212] rounded-lg border border-[#1F1F1F] hover:border-[#9D00FF]/50 transition-all"
+                  >
+                    <div className="flex items-start gap-3">
+                      {article.image_url && (
+                        <img 
+                          src={article.image_url} 
+                          alt="" 
+                          className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                          onError={(e) => e.target.style.display = 'none'}
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge 
+                            className="text-xs"
+                            style={{
+                              backgroundColor: article.sentiment === 'POSITIVE' ? '#00FF9420' :
+                                              article.sentiment === 'NEGATIVE' ? '#FF005520' : '#007AFF20',
+                              color: article.sentiment === 'POSITIVE' ? '#00FF94' :
+                                    article.sentiment === 'NEGATIVE' ? '#FF0055' : '#007AFF'
+                            }}
+                          >
+                            {article.sentiment}
+                          </Badge>
+                          <span className="text-xs text-[#71717A]">{article.source}</span>
+                          <ExternalLink size={12} className="text-[#71717A]" />
+                        </div>
+                        <h3 className="font-bold text-white text-sm line-clamp-2 mb-1">
+                          {article.title}
+                        </h3>
+                        <p className="text-xs text-[#A1A1AA] line-clamp-2">
+                          {article.body || article.subtitle}
+                        </p>
+                        <div className="flex items-center gap-2 mt-2 text-xs text-[#71717A]">
+                          <span>{new Date(article.published_at * 1000).toLocaleString()}</span>
+                          {article.categories?.length > 0 && (
+                            <span>• {article.categories.slice(0, 2).join(', ')}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
       {/* Coin Selector */}
       <Tabs value={selectedCoin} onValueChange={setSelectedCoin} className="space-y-4">
         <TabsList className="bg-[#0A0A0A] border border-[#1F1F1F]">
