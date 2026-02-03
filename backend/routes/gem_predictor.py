@@ -194,6 +194,46 @@ async def get_deep_training_status():
     return get_gem_training_status()
 
 
+@router.post("/train-ohlcv")
+async def train_on_ohlcv_data(background_tasks: BackgroundTasks):
+    """
+    Train the gem predictor using REAL historical OHLCV data.
+    
+    This method uses actual price/volume data from CryptoCompare stored in MongoDB.
+    Prerequisites: Download historical data first using /api/historical-data/download/start
+    
+    Analyzes real market data to learn:
+    - Volume surge patterns before pumps
+    - Price momentum indicators
+    - Volatility sweet spots for gems
+    - Historical gem identification (10x+ gainers)
+    
+    Updates model weights based on actual historical performance.
+    """
+    if not _gem_predictor:
+        raise HTTPException(status_code=503, detail="Gem predictor not initialized")
+    
+    from services.hidden_gem_predictor import get_gem_training_status
+    status = get_gem_training_status()
+    
+    if status.get("running"):
+        return {
+            "status": "already_running",
+            "started_at": status.get("started_at"),
+            "progress": status.get("progress"),
+            "message": status.get("message")
+        }
+    
+    background_tasks.add_task(run_ohlcv_training_task)
+    
+    return {
+        "status": "started",
+        "message": "OHLCV-based training started. Using real CryptoCompare historical data.",
+        "data_source": "cryptocompare",
+        "check_status": "/api/gems/deep-training-status"
+    }
+
+
 @router.get("/training-status")
 async def get_training_status():
     """Get the status of gem predictor training"""
