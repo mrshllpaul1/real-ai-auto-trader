@@ -189,6 +189,7 @@ const Sidebar = () => {
     { path: '/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/learning', icon: Brain, label: 'AI Learning' },
     { path: '/deep-learning', icon: Cpu, label: 'Deep Learning', highlight: true },
+    { path: '/ensemble', icon: Layers, label: 'Ensemble AI', highlight: true },
     { path: '/news', icon: Newspaper, label: 'News & Intel' },
     { path: '/guide', icon: BookOpen, label: 'Guide' },
     { path: '/setup', icon: Key, label: 'Setup', highlight: true },
