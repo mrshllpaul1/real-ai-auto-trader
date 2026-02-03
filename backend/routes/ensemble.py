@@ -179,58 +179,67 @@ async def optimize_model_weights():
     }
 
 
-async def run_universe_build(target_size: int):
+async def run_universe_build(target_size: int, analyze_count: int = 500):
     """Background task to build optimal universe"""
-    global _build_status
-    _build_status["running"] = True
-    _build_status["started_at"] = datetime.utcnow().isoformat()
-    _build_status["progress"] = 0
+    from services.ensemble_ai import run_universe_rebuild_background
     
-    try:
-        result = await _optimizer.build_optimal_universe(target_size=target_size)
-        _build_status["result"] = result
-        _build_status["progress"] = 100
-    except Exception as e:
-        _build_status["result"] = {"error": str(e)}
-    finally:
-        _build_status["running"] = False
+    if _optimizer:
+        await run_universe_rebuild_background(_optimizer, target_size, analyze_count)
 
 
-@router.post("/build-universe")
-async def build_optimal_universe(request: UniverseBuildRequest, background_tasks: BackgroundTasks):
+@router.post("/rebuild-universe")
+async def rebuild_universe(request: UniverseBuildRequest, background_tasks: BackgroundTasks):
     """
-    Build optimal trading universe from top 1000 coins.
+    Rebuild optimal trading universe from top 1000 coins.
     
-    Analyzes coins by:
-    - Market cap tier
-    - Volume/liquidity
-    - Price momentum
-    - Volatility profile
+    This is the main Ensemble AI feature that:
+    1. Analyzes up to 1000 coins using all ML/DL models
+    2. Scores each coin using ensemble of: LSTM, Technical, Pattern, Momentum, Trend, Volatility
+    3. Builds optimal portfolio based on scores
+    4. Compares with existing recommendations
+    5. Identifies hidden gems (high score + low market cap)
     
-    Selects optimal portfolio mix.
+    Runs as background task - check /build-status for progress.
     """
+    from services.ensemble_ai import get_rebuild_status
+    
     if not _optimizer:
         raise HTTPException(status_code=503, detail="Universe optimizer not initialized")
     
-    if _build_status["running"]:
+    status = get_rebuild_status()
+    if status.get("running"):
         return {
             "status": "already_running",
-            "started_at": _build_status.get("started_at")
+            "started_at": status.get("started_at"),
+            "progress": status.get("progress"),
+            "progress_message": status.get("progress_message")
         }
     
-    background_tasks.add_task(run_universe_build, request.target_size)
+    background_tasks.add_task(run_universe_build, request.target_size, request.analyze_count)
     
     return {
         "status": "started",
         "target_size": request.target_size,
-        "message": "Universe build started. Check /build-status for progress."
+        "analyze_count": request.analyze_count,
+        "message": f"Universe rebuild started. Analyzing up to {request.analyze_count} coins. Check /build-status for progress."
     }
 
 
 @router.get("/build-status")
 async def get_build_status():
-    """Get status of universe build"""
-    return _build_status
+    """Get detailed status of universe build including progress percentage"""
+    from services.ensemble_ai import get_rebuild_status
+    
+    status = get_rebuild_status()
+    return {
+        **status,
+        "endpoints": {
+            "rebuild": "POST /api/ensemble/rebuild-universe",
+            "results": "GET /api/ensemble/optimal-universe",
+            "comparison": "GET /api/ensemble/comparison",
+            "hidden_gems": "GET /api/ensemble/hidden-gems"
+        }
+    }
 
 
 @router.get("/optimal-universe")
