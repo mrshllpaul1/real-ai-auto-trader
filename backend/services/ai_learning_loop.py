@@ -288,13 +288,20 @@ class AILearningLoopService:
         if not performance:
             return insights
         
+        # Check if performance is the "no data" response (has "message" key)
+        if "message" in performance:
+            return insights
+        
         # Rank models by accuracy
         model_accuracies = []
         for model, stats in performance.items():
+            # Skip if stats is not a dict with expected structure
+            if not isinstance(stats, dict) or "total_predictions" not in stats:
+                continue
             insights["total_predictions_analyzed"] += stats["total_predictions"]
             model_accuracies.append({
                 "model": model,
-                "accuracy": stats["accuracy_rate"],
+                "accuracy": stats.get("accuracy_rate", 0),
                 "predictions": stats["total_predictions"]
             })
         
