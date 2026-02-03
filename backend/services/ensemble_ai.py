@@ -852,8 +852,32 @@ def get_ensemble_predictor(db=None, market_service=None, deep_learning_ai=None) 
         _ensemble_predictor = EnsembleAIPredictor(db, market_service, deep_learning_ai)
     return _ensemble_predictor
 
-def get_universe_optimizer(db=None, market_service=None, ensemble=None) -> UniverseOptimizer:
+def get_universe_optimizer(db=None, market_service=None, ensemble=None, deep_learning_ai=None) -> UniverseOptimizer:
     global _universe_optimizer
     if _universe_optimizer is None:
-        _universe_optimizer = UniverseOptimizer(db, market_service, ensemble)
+        _universe_optimizer = UniverseOptimizer(db, market_service, ensemble, deep_learning_ai)
     return _universe_optimizer
+
+
+async def run_universe_rebuild_background(optimizer: UniverseOptimizer, target_size: int = 50, analyze_count: int = 500):
+    """Background task to run universe rebuild"""
+    global _universe_rebuild_status
+    
+    _universe_rebuild_status["running"] = True
+    _universe_rebuild_status["started_at"] = datetime.now(timezone.utc).isoformat()
+    _universe_rebuild_status["progress"] = 0
+    _universe_rebuild_status["progress_message"] = "Starting universe rebuild..."
+    _universe_rebuild_status["error"] = None
+    _universe_rebuild_status["result"] = None
+    
+    try:
+        result = await optimizer.build_optimal_universe(
+            target_size=target_size,
+            analyze_count=analyze_count
+        )
+        _universe_rebuild_status["result"] = result
+    except Exception as e:
+        _universe_rebuild_status["error"] = str(e)
+        _universe_rebuild_status["progress_message"] = f"Error: {str(e)}"
+    finally:
+        _universe_rebuild_status["running"] = False
