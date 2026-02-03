@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,196 +6,63 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { createChart } from 'lightweight-charts';
+import { 
+  LineChart, Line, AreaChart, Area, XAxis, YAxis, Tooltip, 
+  ResponsiveContainer, CartesianGrid, ComposedChart, Bar
+} from 'recharts';
 import { motion } from 'framer-motion';
 import { marketAPI, tradingAPI } from '../services/api';
 import { toast } from 'sonner';
-import { TrendingUp, TrendingDown, CandlestickChart, LineChart, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, CandlestickChart, LineChart as LineChartIcon, BarChart3, RefreshCw } from 'lucide-react';
 import { useTradingMode } from '../context/TradingModeContext';
 
 const TradingView = () => {
-  // Use global trading mode context for consistency across pages
   const { mode: tradingMode, setMode: setTradingMode } = useTradingMode();
   
   const [selectedCoin, setSelectedCoin] = useState('bitcoin');
-  const [chartType, setChartType] = useState('candlestick');
+  const [chartType, setChartType] = useState('area');
   const [timeframe, setTimeframe] = useState('7');
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
+  const [chartLoading, setChartLoading] = useState(true);
   const [currentPrice, setCurrentPrice] = useState(null);
   const [priceChange, setPriceChange] = useState(null);
-  const chartContainerRef = useRef(null);
-  const chartRef = useRef(null);
+  const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
     loadChartData();
-    return () => {
-      if (chartRef.current) {
-        chartRef.current.remove();
-        chartRef.current = null;
-      }
-    };
-  }, [selectedCoin, timeframe, chartType]);
+  }, [selectedCoin, timeframe]);
 
   const loadChartData = async () => {
+    setChartLoading(true);
     try {
-      let prices = [];
-      
-      try {
-        const response = await marketAPI.getHistoricalData(selectedCoin, parseInt(timeframe));
-        prices = response.data.prices || [];
-        console.log(`Loaded ${prices.length} price points for ${selectedCoin}`);
-      } catch (apiError) {
-        console.error('API error fetching historical data:', apiError);
-        // Don't use simulated data - show error state instead
-        prices = [];
-      }
+      const response = await marketAPI.getHistoricalData(selectedCoin, parseInt(timeframe));
+      const prices = response.data.prices || [];
       
       if (prices.length > 0) {
+        // Transform data for Recharts
+        const data = prices.map(([timestamp, price]) => ({
+          time: new Date(timestamp).toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric',
+            hour: timeframe <= 1 ? 'numeric' : undefined
+          }),
+          price: price,
+          timestamp: timestamp
+        }));
+        
+        setChartData(data);
         setCurrentPrice(prices[prices.length - 1][1]);
         const firstPrice = prices[0][1];
         const lastPrice = prices[prices.length - 1][1];
         setPriceChange(((lastPrice - firstPrice) / firstPrice) * 100);
       }
-
-      // Clear existing chart
-      if (chartRef.current) {
-        chartRef.current.remove();
-        chartRef.current = null;
-      }
-
-      if (!chartContainerRef.current) {
-        console.log('Chart container not ready');
-        return;
-      }
-      
-      if (prices.length === 0) {
-        console.log('No price data available');
-        return;
-      }
-
-      // Create new chart
-      const chart = createChart(chartContainerRef.current, {
-        layout: {
-          background: { type: 'solid', color: '#0A0A0A' },
-          textColor: '#A1A1AA',
-        },
-        grid: {
-          vertLines: { color: '#1F1F1F' },
-          horzLines: { color: '#1F1F1F' },
-        },
-        width: chartContainerRef.current.clientWidth,
-        height: 400,
-        crosshair: {
-          mode: 1,
-        },
-        rightPriceScale: {
-          borderColor: '#1F1F1F',
-        },
-        timeScale: {
-          borderColor: '#1F1F1F',
-          timeVisible: true,
-        },
-      });
-
-      chartRef.current = chart;
-      console.log('Chart created successfully');
-
-      // Generate OHLC data from prices
-      const ohlcData = generateOHLC(prices);
-      console.log(`Generated ${ohlcData.length} OHLC candles`);
-      console.log('Sample OHLC data:', JSON.stringify(ohlcData.slice(0, 2)));
-
-      if (chartType === 'candlestick') {
-        const candleSeries = chart.addCandlestickSeries({
-          upColor: '#00FF94',
-          downColor: '#FF0055',
-          borderDownColor: '#FF0055',
-          borderUpColor: '#00FF94',
-          wickDownColor: '#FF0055',
-          wickUpColor: '#00FF94',
-        });
-        candleSeries.setData(ohlcData);
-        console.log('Candlestick series created and data set');
-      } else if (chartType === 'line') {
-        const lineSeries = chart.addLineSeries({
-          color: '#00FF94',
-          lineWidth: 2,
-        });
-        lineSeries.setData(prices.map(([time, price]) => ({
-          time: Math.floor(time / 1000),
-          value: price,
-        })));
-        console.log('Line series created and data set');
-      } else if (chartType === 'area') {
-        const areaSeries = chart.addAreaSeries({
-          topColor: 'rgba(0, 255, 148, 0.4)',
-          bottomColor: 'rgba(0, 255, 148, 0.0)',
-          lineColor: '#00FF94',
-          lineWidth: 2,
-        });
-        areaSeries.setData(prices.map(([time, price]) => ({
-          time: Math.floor(time / 1000),
-          value: price,
-        })));
-        console.log('Area series created and data set');
-      }
-
-      chart.timeScale().fitContent();
-      console.log('fitContent called');
-      
-      // Force resize after data is set
-      setTimeout(() => {
-        if (chartRef.current && chartContainerRef.current) {
-          chartRef.current.applyOptions({ 
-            width: chartContainerRef.current.clientWidth 
-          });
-          chartRef.current.timeScale().fitContent();
-          console.log('Force resized chart');
-        }
-      }, 100);
-
-      // Handle resize
-      const handleResize = () => {
-        if (chartContainerRef.current && chartRef.current) {
-          chartRef.current.applyOptions({ 
-            width: chartContainerRef.current.clientWidth 
-          });
-        }
-      };
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
-
     } catch (error) {
       console.error('Error loading chart data:', error);
+      toast.error('Failed to load price data');
+    } finally {
+      setChartLoading(false);
     }
-  };
-
-  const generateOHLC = (prices) => {
-    // Group prices into periods and generate OHLC
-    const periodMs = parseInt(timeframe) > 30 ? 86400000 : 3600000; // Daily or hourly
-    const ohlcMap = new Map();
-
-    prices.forEach(([timestamp, price]) => {
-      const periodStart = Math.floor(timestamp / periodMs) * periodMs;
-      
-      if (!ohlcMap.has(periodStart)) {
-        ohlcMap.set(periodStart, {
-          time: Math.floor(periodStart / 1000),
-          open: price,
-          high: price,
-          low: price,
-          close: price,
-        });
-      } else {
-        const candle = ohlcMap.get(periodStart);
-        candle.high = Math.max(candle.high, price);
-        candle.low = Math.min(candle.low, price);
-        candle.close = price;
-      }
-    });
-
-    return Array.from(ohlcMap.values()).sort((a, b) => a.time - b.time);
   };
 
   const executeTrade = async (action) => {
@@ -233,6 +100,144 @@ const TradingView = () => {
     { value: 'avalanche-2', label: 'Avalanche (AVAX)', symbol: 'AVAX' },
   ];
 
+  const formatYAxis = (value) => {
+    if (value >= 1000) {
+      return `$${(value / 1000).toFixed(1)}k`;
+    }
+    return `$${value.toFixed(0)}`;
+  };
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-[#1F1F1F] border border-[#333] rounded-lg p-3 shadow-lg">
+          <p className="text-[#A1A1AA] text-sm">{label}</p>
+          <p className="text-[#00FF94] font-bold text-lg">
+            ${payload[0].value.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const renderChart = () => {
+    if (chartLoading) {
+      return (
+        <div className="h-[400px] flex items-center justify-center">
+          <RefreshCw className="animate-spin text-[#00FF94]" size={32} />
+        </div>
+      );
+    }
+
+    if (chartData.length === 0) {
+      return (
+        <div className="h-[400px] flex items-center justify-center text-[#A1A1AA]">
+          No price data available
+        </div>
+      );
+    }
+
+    const commonProps = {
+      data: chartData,
+      margin: { top: 20, right: 30, left: 20, bottom: 20 }
+    };
+
+    if (chartType === 'line') {
+      return (
+        <ResponsiveContainer width="100%" height={400}>
+          <LineChart {...commonProps}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#1F1F1F" />
+            <XAxis 
+              dataKey="time" 
+              stroke="#A1A1AA" 
+              tick={{ fill: '#A1A1AA', fontSize: 12 }}
+              axisLine={{ stroke: '#1F1F1F' }}
+            />
+            <YAxis 
+              stroke="#A1A1AA" 
+              tick={{ fill: '#A1A1AA', fontSize: 12 }}
+              tickFormatter={formatYAxis}
+              axisLine={{ stroke: '#1F1F1F' }}
+              domain={['auto', 'auto']}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Line 
+              type="monotone" 
+              dataKey="price" 
+              stroke="#00FF94" 
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 6, fill: '#00FF94' }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      );
+    }
+
+    if (chartType === 'bar') {
+      return (
+        <ResponsiveContainer width="100%" height={400}>
+          <ComposedChart {...commonProps}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#1F1F1F" />
+            <XAxis 
+              dataKey="time" 
+              stroke="#A1A1AA" 
+              tick={{ fill: '#A1A1AA', fontSize: 12 }}
+              axisLine={{ stroke: '#1F1F1F' }}
+            />
+            <YAxis 
+              stroke="#A1A1AA" 
+              tick={{ fill: '#A1A1AA', fontSize: 12 }}
+              tickFormatter={formatYAxis}
+              axisLine={{ stroke: '#1F1F1F' }}
+              domain={['auto', 'auto']}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Bar dataKey="price" fill="#00FF94" opacity={0.8} />
+          </ComposedChart>
+        </ResponsiveContainer>
+      );
+    }
+
+    // Default: Area chart
+    return (
+      <ResponsiveContainer width="100%" height={400}>
+        <AreaChart {...commonProps}>
+          <defs>
+            <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#00FF94" stopOpacity={0.3}/>
+              <stop offset="95%" stopColor="#00FF94" stopOpacity={0}/>
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="#1F1F1F" />
+          <XAxis 
+            dataKey="time" 
+            stroke="#A1A1AA" 
+            tick={{ fill: '#A1A1AA', fontSize: 12 }}
+            axisLine={{ stroke: '#1F1F1F' }}
+          />
+          <YAxis 
+            stroke="#A1A1AA" 
+            tick={{ fill: '#A1A1AA', fontSize: 12 }}
+            tickFormatter={formatYAxis}
+            axisLine={{ stroke: '#1F1F1F' }}
+            domain={['auto', 'auto']}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Area 
+            type="monotone" 
+            dataKey="price" 
+            stroke="#00FF94" 
+            strokeWidth={2}
+            fillOpacity={1} 
+            fill="url(#colorPrice)" 
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    );
+  };
+
   return (
     <div className="p-6 lg:p-12 space-y-6" data-testid="trading-view">
       <motion.div
@@ -268,15 +273,15 @@ const TradingView = () => {
                     ${currentPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                   </span>
                   {priceChange !== null && (
-                    <Badge className={`${priceChange >= 0 ? 'bg-[#00FF94]/20 text-[#00FF94]' : 'bg-[#FF0055]/20 text-[#FF0055]'}`}>
-                      {priceChange >= 0 ? <TrendingUp size={12} className="mr-1" /> : <TrendingDown size={12} className="mr-1" />}
+                    <Badge className={priceChange >= 0 ? 'bg-[#00FF94]/20 text-[#00FF94]' : 'bg-[#FF0055]/20 text-[#FF0055]'}>
+                      {priceChange >= 0 ? <TrendingUp size={14} className="mr-1" /> : <TrendingDown size={14} className="mr-1" />}
                       {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}%
                     </Badge>
                   )}
                 </div>
               )}
             </div>
-
+            
             <div className="flex items-center gap-2">
               <Select value={timeframe} onValueChange={setTimeframe}>
                 <SelectTrigger className="w-24 bg-[#121212] border-[#1F1F1F]" data-testid="timeframe-selector">
@@ -290,26 +295,8 @@ const TradingView = () => {
                   <SelectItem value="365">1Y</SelectItem>
                 </SelectContent>
               </Select>
-
-              <div className="flex bg-[#121212] rounded-lg p-1">
-                <Button
-                  size="sm"
-                  variant={chartType === 'candlestick' ? 'default' : 'ghost'}
-                  onClick={() => setChartType('candlestick')}
-                  className={chartType === 'candlestick' ? 'bg-[#00FF94] text-black' : ''}
-                  data-testid="candlestick-btn"
-                >
-                  <CandlestickChart size={16} />
-                </Button>
-                <Button
-                  size="sm"
-                  variant={chartType === 'line' ? 'default' : 'ghost'}
-                  onClick={() => setChartType('line')}
-                  className={chartType === 'line' ? 'bg-[#00FF94] text-black' : ''}
-                  data-testid="line-btn"
-                >
-                  <LineChart size={16} />
-                </Button>
+              
+              <div className="flex gap-1 bg-[#121212] rounded-lg p-1">
                 <Button
                   size="sm"
                   variant={chartType === 'area' ? 'default' : 'ghost'}
@@ -319,7 +306,35 @@ const TradingView = () => {
                 >
                   <BarChart3 size={16} />
                 </Button>
+                <Button
+                  size="sm"
+                  variant={chartType === 'line' ? 'default' : 'ghost'}
+                  onClick={() => setChartType('line')}
+                  className={chartType === 'line' ? 'bg-[#00FF94] text-black' : ''}
+                  data-testid="line-btn"
+                >
+                  <LineChartIcon size={16} />
+                </Button>
+                <Button
+                  size="sm"
+                  variant={chartType === 'bar' ? 'default' : 'ghost'}
+                  onClick={() => setChartType('bar')}
+                  className={chartType === 'bar' ? 'bg-[#00FF94] text-black' : ''}
+                  data-testid="bar-btn"
+                >
+                  <CandlestickChart size={16} />
+                </Button>
               </div>
+              
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={loadChartData}
+                disabled={chartLoading}
+                data-testid="refresh-btn"
+              >
+                <RefreshCw size={16} className={chartLoading ? 'animate-spin' : ''} />
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -329,12 +344,8 @@ const TradingView = () => {
         {/* Chart */}
         <div className="lg:col-span-2">
           <Card className="bg-[#0A0A0A] border-[#1F1F1F]" data-testid="chart-card">
-            <CardContent className="p-0">
-              <div 
-                ref={chartContainerRef} 
-                className="w-full h-[400px]" 
-                data-testid="price-chart"
-              />
+            <CardContent className="p-4">
+              {renderChart()}
             </CardContent>
           </Card>
         </div>
@@ -348,10 +359,28 @@ const TradingView = () => {
             <CardContent>
               <Tabs value={tradingMode} onValueChange={setTradingMode} className="mb-6" data-testid="trading-mode-tabs">
                 <TabsList className="grid w-full grid-cols-2 bg-[#121212]">
-                  <TabsTrigger value="paper" data-testid="paper-mode-tab">Paper</TabsTrigger>
-                  <TabsTrigger value="real" data-testid="real-mode-tab">Real</TabsTrigger>
+                  <TabsTrigger 
+                    value="paper" 
+                    className="data-[state=active]:bg-[#FF9500] data-[state=active]:text-black"
+                    data-testid="paper-mode-tab"
+                  >
+                    Paper
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="real"
+                    className="data-[state=active]:bg-[#00FF94] data-[state=active]:text-black"
+                    data-testid="real-mode-tab"
+                  >
+                    Real
+                  </TabsTrigger>
                 </TabsList>
               </Tabs>
+
+              {tradingMode === 'real' && (
+                <div className="mb-4 p-3 bg-[#FF0055]/10 border border-[#FF0055]/30 rounded-lg">
+                  <p className="text-sm text-[#FF0055]">⚠️ Real money trading enabled</p>
+                </div>
+              )}
 
               <div className="space-y-4">
                 <div>
@@ -360,57 +389,77 @@ const TradingView = () => {
                     type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.00"
-                    className="bg-[#121212] border-[#1F1F1F] font-data mt-1"
+                    placeholder="Enter amount"
+                    className="bg-[#121212] border-[#1F1F1F] mt-1"
                     data-testid="amount-input"
                   />
                 </div>
 
-                {currentPrice && amount && (
-                  <div className="p-3 bg-[#121212] rounded-lg">
-                    <div className="text-xs text-[#A1A1AA]">You will receive approximately</div>
-                    <div className="text-lg font-data font-bold text-[#00FF94]">
-                      {(parseFloat(amount) / currentPrice).toFixed(8)} {coins.find(c => c.value === selectedCoin)?.symbol}
-                    </div>
-                  </div>
-                )}
-
                 <div className="grid grid-cols-2 gap-3">
                   <Button
                     onClick={() => executeTrade('BUY')}
-                    className="bg-[#00FF94] hover:bg-[#00CC76] text-black font-bold rounded-full glow-profit"
                     disabled={loading}
-                    data-testid="buy-button"
+                    className="bg-[#00FF94] hover:bg-[#00CC76] text-black font-bold"
+                    data-testid="buy-btn"
                   >
-                    <TrendingUp size={16} className="mr-2" />
-                    BUY
+                    {loading ? 'Processing...' : 'BUY'}
                   </Button>
                   <Button
                     onClick={() => executeTrade('SELL')}
-                    className="bg-[#FF0055] hover:bg-[#CC0044] text-white font-bold rounded-full"
                     disabled={loading}
-                    data-testid="sell-button"
+                    className="bg-[#FF0055] hover:bg-[#CC0044] text-white font-bold"
+                    data-testid="sell-btn"
                   >
-                    <TrendingDown size={16} className="mr-2" />
-                    SELL
+                    {loading ? 'Processing...' : 'SELL'}
                   </Button>
                 </div>
+              </div>
 
-                {tradingMode === 'paper' && (
-                  <div className="bg-[#007AFF]/10 border border-[#007AFF]/30 rounded-lg p-4">
-                    <p className="text-xs text-[#007AFF]">
-                      📊 Paper Trading: Simulated trades, no real money.
-                    </p>
-                  </div>
-                )}
+              {/* Quick amounts */}
+              <div className="mt-6">
+                <Label className="text-[#A1A1AA] text-sm">Quick amounts</Label>
+                <div className="grid grid-cols-4 gap-2 mt-2">
+                  {['25', '50', '100', '500'].map(val => (
+                    <Button
+                      key={val}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setAmount(val)}
+                      className="border-[#1F1F1F] hover:bg-[#1F1F1F]"
+                    >
+                      ${val}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-                {tradingMode === 'real' && (
-                  <div className="bg-[#FF0055]/10 border border-[#FF0055]/30 rounded-lg p-4">
-                    <p className="text-xs text-[#FF0055]">
-                      ⚠️ Real Trading: Actual trades on Kraken exchange.
-                    </p>
-                  </div>
-                )}
+          {/* Market Info */}
+          <Card className="bg-[#0A0A0A] border-[#1F1F1F] mt-6">
+            <CardHeader>
+              <CardTitle className="text-lg font-heading">Market Info</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-[#A1A1AA]">24h Change</span>
+                <span className={priceChange >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}>
+                  {priceChange?.toFixed(2) || '0.00'}%
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#A1A1AA]">Timeframe</span>
+                <span className="text-white">{timeframe} days</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#A1A1AA]">Data Points</span>
+                <span className="text-white">{chartData.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#A1A1AA]">Mode</span>
+                <Badge className={tradingMode === 'real' ? 'bg-[#00FF94]/20 text-[#00FF94]' : 'bg-[#FF9500]/20 text-[#FF9500]'}>
+                  {tradingMode.toUpperCase()}
+                </Badge>
               </div>
             </CardContent>
           </Card>
