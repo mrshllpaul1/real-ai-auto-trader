@@ -13,12 +13,19 @@ router = APIRouter(prefix="/ai-chat", tags=["AI Chat"])
 # Dependencies
 _db = None
 _chat_service = None
+_kraken_service = None
 
 def set_dependencies(db, chat_service):
     """Set dependencies from server.py"""
     global _db, _chat_service
     _db = db
     _chat_service = chat_service
+
+
+def set_kraken_service(kraken_service):
+    """Set Kraken service for trade execution"""
+    global _kraken_service
+    _kraken_service = kraken_service
 
 
 class ChatRequest(BaseModel):
@@ -56,12 +63,185 @@ class CommandRequest(BaseModel):
     context_hint: Optional[str] = ""
 
 
+class TradeExecutionRequest(BaseModel):
+    action: str  # "buy" or "sell"
+    coin: str  # BTC, ETH, etc.
+    amount_usd: Optional[float] = None
+    amount_coin: Optional[float] = None
+    order_type: str = "market"  # "market" or "limit"
+    limit_price: Optional[float] = None
+    confirm: bool = False  # Must be True to execute
+
+
 # Global gem predictor reference
 _gem_predictor = None
 
 def set_gem_predictor(predictor):
     global _gem_predictor
     _gem_predictor = predictor
+
+
+# Pending trade confirmations (in-memory, for confirmation flow)
+_pending_trades = {}
+
+
+@router.post("/execute-trade")
+async def execute_trade_command(request: TradeExecutionRequest):
+    """
+    Execute a real trade via AI chat command.
+    
+    IMPORTANT: This executes REAL trades on Kraken!
+    
+    Flow:
+    1. First call with confirm=False to get trade preview
+    2. Second call with confirm=True to execute the trade
+    
+    Example:
+    - {"action": "buy", "coin": "BTC", "amount_usd": 100, "confirm": false} -> Preview
+    - {"action": "buy", "coin": "BTC", "amount_usd": 100, "confirm": true} -> Execute
+    """
+    global _pending_trades
+    
+    if not _kraken_service:
+        raise HTTPException(status_code=503, detail="Trading service not initialized. Kraken API not connected.")
+    
+    action = request.action.lower()
+    if action not in ["buy", "sell"]:
+        raise HTTPException(status_code=400, detail="Action must be 'buy' or 'sell'")
+    
+    coin = request.coin.upper()
+    
+    # Kraken pair mapping
+    kraken_pairs = {
+        "BTC": "XXBTZUSD", "ETH": "XETHZUSD", "SOL": "SOLUSD", "XRP": "XXRPZUSD",
+        "ADA": "ADAUSD", "DOT": "DOTUSD", "AVAX": "AVAXUSD", "LINK": "LINKUSD",
+        "MATIC": "MATICUSD", "UNI": "UNIUSD", "ATOM": "ATOMUSD", "LTC": "XLTCZUSD",
+        "AAVE": "AAVEUSD", "APT": "APTUSD", "SUI": "SUIUSD", "DOGE": "XDGUSD"
+    }
+    
+    pair = kraken_pairs.get(coin)
+    if not pair:
+        raise HTTPException(status_code=400, detail=f"Coin {coin} not supported for trading. Supported: {list(kraken_pairs.keys())}")
+    
+    try:
+        # Get current price
+        ticker = await _kraken_service.get_ticker(pair)
+        if not ticker:
+            raise HTTPException(status_code=400, detail=f"Could not get price for {coin}")
+        
+        current_price = float(ticker.get('c', [0])[0])  # 'c' is last trade close
+        
+        # Calculate volume
+        if request.amount_usd:
+            volume = request.amount_usd / current_price
+        elif request.amount_coin:
+            volume = request.amount_coin
+        else:
+            raise HTTPException(status_code=400, detail="Must specify amount_usd or amount_coin")
+        
+        # Minimum order check (Kraken has minimums)
+        min_orders = {"BTC": 0.0001, "ETH": 0.01, "SOL": 0.1, "XRP": 10, "ADA": 10, "DOGE": 50}
+        min_vol = min_orders.get(coin, 0.1)
+        
+        if volume < min_vol:
+            raise HTTPException(status_code=400, detail=f"Order too small. Minimum for {coin}: {min_vol}")
+        
+        trade_preview = {
+            "action": action,
+            "coin": coin,
+            "pair": pair,
+            "volume": round(volume, 8),
+            "price": current_price,
+            "total_usd": round(volume * current_price, 2),
+            "order_type": request.order_type,
+            "limit_price": request.limit_price if request.order_type == "limit" else None,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+        if not request.confirm:
+            # Return preview, require confirmation
+            trade_id = f"{action}_{coin}_{datetime.utcnow().timestamp()}"
+            _pending_trades[trade_id] = trade_preview
+            
+            return {
+                "status": "confirmation_required",
+                "trade_id": trade_id,
+                "preview": trade_preview,
+                "message": f"⚠️ CONFIRM: {action.upper()} {volume:.6f} {coin} at ${current_price:.2f} = ${trade_preview['total_usd']:.2f} USD",
+                "instruction": "Set confirm=true to execute this trade",
+                "warning": "This will execute a REAL trade on your Kraken account!"
+            }
+        
+        # Execute the trade
+        order_result = await _kraken_service.create_order(
+            symbol=pair,
+            side=action,
+            order_type=request.order_type,
+            volume=volume,
+            price=request.limit_price if request.order_type == "limit" else None
+        )
+        
+        if not order_result:
+            raise HTTPException(status_code=500, detail="Order execution failed")
+        
+        # Log trade to database
+        trade_record = {
+            "source": "ai_chat",
+            "action": action,
+            "coin": coin,
+            "pair": pair,
+            "volume": volume,
+            "price": current_price,
+            "total_usd": trade_preview['total_usd'],
+            "order_type": request.order_type,
+            "order_result": order_result,
+            "executed_at": datetime.utcnow(),
+            "success": True
+        }
+        
+        if _db:
+            await _db.ai_chat_trades.insert_one(trade_record)
+        
+        return {
+            "status": "executed",
+            "success": True,
+            "trade": trade_preview,
+            "order_result": order_result,
+            "message": f"✅ Successfully {action.upper()} {volume:.6f} {coin} at ${current_price:.2f}",
+            "total_usd": trade_preview['total_usd'],
+            "txid": order_result.get('txid', [])
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        # Log failed trade attempt
+        if _db:
+            await _db.ai_chat_trades.insert_one({
+                "source": "ai_chat",
+                "action": action,
+                "coin": coin,
+                "error": str(e),
+                "attempted_at": datetime.utcnow(),
+                "success": False
+            })
+        raise HTTPException(status_code=500, detail=f"Trade execution error: {str(e)}")
+
+
+@router.get("/trade-history")
+async def get_ai_trade_history(limit: int = 20):
+    """Get history of trades executed via AI chat"""
+    if not _db:
+        raise HTTPException(status_code=503, detail="Database not available")
+    
+    trades = await _db.ai_chat_trades.find(
+        {}, {"_id": 0}
+    ).sort("executed_at", -1).limit(limit).to_list(limit)
+    
+    return {
+        "count": len(trades),
+        "trades": trades
+    }
 
 
 @router.post("/execute-command")
