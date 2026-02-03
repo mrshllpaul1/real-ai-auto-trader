@@ -53,7 +53,7 @@ export const strategyAPI = {
     api.post('/strategies/generate', {
       user_id: localStorage.getItem('user_id') || 'demo_user',
       coin_pairs
-    }),
+    }, { timeout: 90000 }),  // 90 second timeout for AI strategy generation
   getStrategies: (status = 'active', limit = 10) =>
     api.get(`/strategies/list/${localStorage.getItem('user_id') || 'demo_user'}`, {
       params: { status, limit }
