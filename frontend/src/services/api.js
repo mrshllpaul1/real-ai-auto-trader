@@ -5,7 +5,7 @@ const API = `${BACKEND_URL}/api`;
 
 const api = axios.create({
   baseURL: API,
-  timeout: 30000,  // Increased timeout for slow API calls
+  timeout: 60000,  // Increased timeout to 60s for Kraken API calls
 });
 
 // Request interceptor
