@@ -494,7 +494,7 @@ class UniverseOptimizer:
                     analysis = await self._analyze_coin_with_ensemble(coin)
                     if analysis and analysis.get('ensemble_score', 0) > 30:
                         analyzed.append(analysis)
-                except Exception as e:
+                except Exception:
                     continue
                 
                 # Rate limiting
@@ -591,7 +591,7 @@ class UniverseOptimizer:
                         ai_prediction_score += 10
                     elif momentum_result.get('signal') == 'bearish':
                         ai_prediction_score -= 5
-        except Exception as e:
+        except Exception:
             pass  # Continue without AI prediction
         
         # Calculate ensemble score (weighted combination)
