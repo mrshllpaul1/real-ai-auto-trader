@@ -174,10 +174,10 @@ class GemBacktester:
                     predictions_detail.append({
                         "coin": coin,
                         "test_date": historical_data[-1]["date"],
-                        "gem_score": gem_score,
-                        "predicted_gem": predicted_gem,
-                        "actual_gem": was_gem,
-                        "correct": predicted_gem == was_gem
+                        "gem_score": float(gem_score),
+                        "predicted_gem": bool(predicted_gem),
+                        "actual_gem": bool(was_gem),
+                        "correct": bool(predicted_gem == was_gem)
                     })
                     
             except Exception as e:
