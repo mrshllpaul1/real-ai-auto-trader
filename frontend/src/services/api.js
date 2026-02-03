@@ -81,6 +81,16 @@ export const marketAPI = {
   getCryptoNews: () => api.get('/market/news'),
 };
 
+// CoinDesk News APIs
+export const coindeskAPI = {
+  getNews: (limit = 20, lang = 'EN') => api.get('/coindesk/news', { params: { limit, lang } }),
+  getCoinNews: (symbol, limit = 10) => api.get(`/coindesk/news/coin/${symbol}`, { params: { limit } }),
+  getSentiment: () => api.get('/coindesk/sentiment'),
+  getNewsBySentiment: (sentiment, limit = 10) => api.get(`/coindesk/news/sentiment/${sentiment}`, { params: { limit } }),
+  getStatus: () => api.get('/coindesk/status'),
+  getCategories: () => api.get('/coindesk/categories'),
+};
+
 // Risk Management APIs
 export const riskAPI = {
   getSettings: () => api.get(`/risk/settings/${localStorage.getItem('user_id') || 'demo_user'}`),
