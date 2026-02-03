@@ -745,6 +745,158 @@ class SchedulerService:
             'next_run_mst': f'{day_of_week.capitalize()} at {mst_hour}:00 MST'
         }
     
+    async def add_daily_ohlcv_update_job(
+        self,
+        hour: int = 4,  # 4 AM UTC
+        coins: list = None
+    ) -> Dict[str, Any]:
+        """
+        Add daily OHLCV data update job.
+        Updates historical data for AI training with latest market data.
+        Default: Every day at 4 AM UTC
+        """
+        job_id = 'daily_ohlcv_update'
+        
+        if self.scheduler.get_job(job_id):
+            self.scheduler.remove_job(job_id)
+        
+        self.scheduler.add_job(
+            self._run_daily_ohlcv_update,
+            trigger=CronTrigger(hour=hour),
+            id=job_id,
+            name='Daily OHLCV Data Update',
+            kwargs={'coins': coins},
+            replace_existing=True
+        )
+        
+        self.active_jobs[job_id] = {
+            'type': 'daily_ohlcv_update',
+            'hour': hour,
+            'coins': coins,
+            'created_at': datetime.utcnow().isoformat()
+        }
+        
+        logger.info(f"📊 Daily OHLCV update job added (daily at {hour}:00 UTC)")
+        return {
+            'success': True, 
+            'job_id': job_id, 
+            'schedule': f'Daily at {hour}:00 UTC',
+            'coins': 'all stored' if not coins else coins
+        }
+    
+    async def _run_daily_ohlcv_update(self, coins: list = None) -> Dict[str, Any]:
+        """
+        Execute daily OHLCV data update.
+        Downloads latest data for all coins in the database.
+        """
+        timestamp = datetime.utcnow()
+        logger.info(f"📊 [{timestamp.strftime('%H:%M')}] Running daily OHLCV update...")
+        
+        try:
+            from services.historical_data_downloader import get_historical_downloader
+            from services.coindesk_service import get_cryptocompare_service
+            
+            downloader = get_historical_downloader(self.db)
+            crypto_service = get_cryptocompare_service()
+            
+            if not downloader or not crypto_service:
+                logger.warning("  ⚠️ Historical data services not available")
+                return {'error': 'Services not initialized'}
+            
+            # Get coins to update (from DB or specified)
+            if coins:
+                coins_to_update = coins
+            else:
+                # Get all coins currently in the database
+                existing_symbols = await self.db.historical_ohlcv.distinct("symbol")
+                coins_to_update = existing_symbols if existing_symbols else []
+            
+            if not coins_to_update:
+                logger.info("  ℹ️ No coins to update")
+                return {'message': 'No coins to update'}
+            
+            logger.info(f"  📊 Updating {len(coins_to_update)} coins...")
+            
+            results = {
+                'coins_updated': 0,
+                'coins_failed': 0,
+                'new_records': 0,
+                'errors': []
+            }
+            
+            for coin in coins_to_update[:50]:  # Limit to 50 to avoid timeouts
+                try:
+                    # Get latest 30 days to update recent data
+                    data = await crypto_service.get_historical_daily(coin, limit=30)
+                    
+                    if "error" not in data and data.get("data"):
+                        # Update/insert new records
+                        for candle in data["data"]:
+                            await self.db.historical_ohlcv.update_one(
+                                {"symbol": coin.upper(), "timestamp": candle["timestamp"]},
+                                {"$set": {
+                                    "symbol": coin.upper(),
+                                    "timestamp": candle["timestamp"],
+                                    "date": candle["date"],
+                                    "open": candle["open"],
+                                    "high": candle["high"],
+                                    "low": candle["low"],
+                                    "close": candle["close"],
+                                    "volume_from": candle["volume_from"],
+                                    "volume_to": candle["volume_to"],
+                                    "source": "cryptocompare",
+                                    "updated_at": datetime.utcnow()
+                                }},
+                                upsert=True
+                            )
+                        results['coins_updated'] += 1
+                        results['new_records'] += len(data["data"])
+                    else:
+                        results['coins_failed'] += 1
+                        results['errors'].append({'coin': coin, 'error': data.get('error', 'No data')})
+                    
+                    # Brief delay to respect rate limits
+                    await asyncio.sleep(0.3)
+                    
+                except Exception as e:
+                    results['coins_failed'] += 1
+                    results['errors'].append({'coin': coin, 'error': str(e)})
+            
+            # Store execution record
+            execution = {
+                'job_id': 'daily_ohlcv_update',
+                'timestamp': timestamp.isoformat(),
+                'success': True,
+                'coins_updated': results['coins_updated'],
+                'new_records': results['new_records']
+            }
+            await self.db.scheduler_executions.insert_one(execution)
+            
+            logger.info(f"  ✅ OHLCV update complete: {results['coins_updated']} coins, {results['new_records']} records")
+            
+            # Send alert
+            if self.alert_service and results['coins_updated'] > 0:
+                await self.alert_service.send_alert(
+                    title="📊 Daily OHLCV Update Complete",
+                    message=f"Updated {results['coins_updated']} coins\n{results['new_records']} new records added",
+                    alert_type="ohlcv_update",
+                    priority="low"
+                )
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"  ❌ OHLCV update error: {e}")
+            
+            await self.db.scheduler_executions.insert_one({
+                'job_id': 'daily_ohlcv_update',
+                'timestamp': timestamp.isoformat(),
+                'success': False,
+                'error': str(e)
+            })
+            
+            return {'error': str(e)}
+    
     def get_scheduled_jobs(self) -> Dict[str, Any]:
         """Get all scheduled jobs from APScheduler"""
         jobs = {}
