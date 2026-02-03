@@ -3,17 +3,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Newspaper, TrendingUp, Brain, History, Zap, AlertCircle } from 'lucide-react';
+import { Newspaper, TrendingUp, Brain, History, Zap, AlertCircle, ExternalLink, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
-import api from '../services/api';
+import api, { coindeskAPI } from '../services/api';
 import { toast } from 'sonner';
 
 const NewsAndIntelligence = () => {
   const [news, setNews] = useState([]);
+  const [coindeskNews, setCoindeskNews] = useState([]);
+  const [coindeskSentiment, setCoindeskSentiment] = useState(null);
   const [trainingStatus, setTrainingStatus] = useState(null);
   const [sentiment, setSentiment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedCoin, setSelectedCoin] = useState('bitcoin');
+  const [activeTab, setActiveTab] = useState('coindesk');
 
   useEffect(() => {
     loadData();
