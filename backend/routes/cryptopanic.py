@@ -84,16 +84,20 @@ async def get_trending_news(limit: int = Query(20, le=50)):
 
 @router.get("/hot")
 async def get_hot_news(limit: int = Query(20, le=50)):
-    """Get hot/popular crypto news"""
-    if not _cryptopanic_service or not _cryptopanic_service.is_available:
-        raise HTTPException(status_code=503, detail="CryptoPanic service not available")
+    """Get hot/popular crypto news with fallback"""
+    if _cryptopanic_service and _cryptopanic_service.is_available:
+        news = await _cryptopanic_service.get_hot_news(limit)
+        if news:
+            return {"filter": "hot", "news": news, "count": len(news), "source": "cryptopanic"}
     
-    news = await _cryptopanic_service.get_hot_news(limit)
-    return {
-        "filter": "hot",
-        "news": news,
-        "count": len(news)
-    }
+    if _news_aggregator:
+        try:
+            news = await _news_aggregator.get_free_crypto_news(limit=limit)
+            return {"filter": "hot", "news": news, "count": len(news), "source": "free_crypto_news"}
+        except Exception as e:
+            print(f"Free news fallback error: {e}")
+    
+    return {"filter": "hot", "news": [], "count": 0}
 
 
 @router.get("/bullish")
