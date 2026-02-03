@@ -745,6 +745,18 @@ class SchedulerService:
             'next_run_mst': f'{day_of_week.capitalize()} at {mst_hour}:00 MST'
         }
     
+    def get_scheduled_jobs(self) -> Dict[str, Any]:
+        """Get all scheduled jobs from APScheduler"""
+        jobs = {}
+        for job in self.scheduler.get_jobs():
+            trigger_info = str(job.trigger)
+            jobs[job.id] = {
+                'name': job.name,
+                'trigger': trigger_info,
+                'next_run': job.next_run_time.isoformat() if job.next_run_time else None
+            }
+        return jobs
+    
     async def get_execution_history(self, limit: int = 50) -> list:
         """Get recent scheduler execution history"""
         history = await self.db.scheduler_executions.find(
