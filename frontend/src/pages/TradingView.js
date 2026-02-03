@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { createChart } from 'lightweight-charts';
+import { createChart, CandlestickSeries, LineSeries, AreaSeries } from 'lightweight-charts';
 import { motion } from 'framer-motion';
 import { marketAPI, tradingAPI } from '../services/api';
 import { toast } from 'sonner';
