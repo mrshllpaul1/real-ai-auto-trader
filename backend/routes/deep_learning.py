@@ -239,3 +239,91 @@ async def get_lstm_info():
             "Confidence scoring"
         ]
     }
+
+
+class PreLaunchAnalysisRequest(BaseModel):
+    coin_name: str
+    category: Optional[str] = "privacy"
+    description: Optional[str] = ""
+    similar_coins: Optional[List[str]] = None
+
+
+class ImprovedPredictionRequest(BaseModel):
+    coin_id: str
+    target_accuracy: Optional[float] = 0.55
+
+
+@router.post("/analyze-prelaunch")
+async def analyze_prelaunch_coin(request: PreLaunchAnalysisRequest):
+    """
+    Analyze a pre-launch cryptocurrency.
+    
+    Since pre-launch coins don't have price history, this uses:
+    - Comparable coin analysis
+    - Category performance trends
+    - AI-powered opinion generation
+    
+    Categories: privacy, defi, layer2, ai, gaming, infrastructure, general
+    """
+    if not _deep_ai:
+        raise HTTPException(status_code=503, detail="Deep Learning AI not initialized")
+    
+    result = await _deep_ai.analyze_prelaunch_coin(
+        coin_name=request.coin_name,
+        coin_description=request.description,
+        similar_coins=request.similar_coins,
+        category=request.category
+    )
+    
+    return result
+
+
+@router.post("/improved-prediction/{coin_id}")
+async def get_improved_prediction(coin_id: str, target_accuracy: float = 0.55):
+    """
+    Get improved prediction with target accuracy above 55%.
+    
+    Uses ensemble of:
+    - LSTM neural network
+    - Technical analysis
+    - Pattern recognition
+    - Trend analysis
+    
+    Returns accuracy estimate and whether target is met.
+    """
+    if not _deep_ai:
+        raise HTTPException(status_code=503, detail="Deep Learning AI not initialized")
+    
+    if not _market_service:
+        raise HTTPException(status_code=503, detail="Market service not available")
+    
+    # Get price data
+    hist_data = await _market_service.get_historical_data(coin_id, days=90)
+    if not hist_data or not hist_data.get('prices'):
+        raise HTTPException(status_code=404, detail=f"No price data for {coin_id}")
+    
+    prices = [p[1] for p in hist_data['prices']]
+    
+    result = await _deep_ai.get_improved_prediction(
+        coin_id=coin_id,
+        prices=prices,
+        target_accuracy=target_accuracy
+    )
+    
+    return result
+
+
+@router.get("/prelaunch-categories")
+async def get_prelaunch_categories():
+    """Get available categories for pre-launch coin analysis"""
+    return {
+        "categories": [
+            {"id": "privacy", "name": "Privacy Coins", "potential_score": 75, "examples": ["Monero", "Zcash", "ZKP"]},
+            {"id": "defi", "name": "DeFi", "potential_score": 70, "examples": ["Uniswap", "Aave", "Curve"]},
+            {"id": "layer2", "name": "Layer 2 Solutions", "potential_score": 80, "examples": ["Polygon", "Arbitrum", "Optimism"]},
+            {"id": "ai", "name": "AI & Machine Learning", "potential_score": 85, "examples": ["Fetch.ai", "SingularityNET"]},
+            {"id": "gaming", "name": "Gaming & Metaverse", "potential_score": 65, "examples": ["Axie", "Sandbox", "Gala"]},
+            {"id": "infrastructure", "name": "Infrastructure", "potential_score": 75, "examples": ["Chainlink", "The Graph"]},
+            {"id": "general", "name": "General Purpose", "potential_score": 50, "examples": ["Bitcoin", "Ethereum"]}
+        ]
+    }
