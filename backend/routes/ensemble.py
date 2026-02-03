@@ -1,12 +1,14 @@
 """
 Ensemble AI & Universe Optimizer API Routes
 Combines all ML/DL models for optimal predictions.
+Analyzes top 1000 coins and rebuilds optimal trading universe.
 """
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
+import asyncio
 
 router = APIRouter(prefix="/ensemble", tags=["Ensemble AI"])
 
@@ -15,13 +17,15 @@ _db = None
 _market_service = None
 _ensemble = None
 _optimizer = None
+_deep_learning_ai = None
 
-def set_dependencies(db, market_service, ensemble, optimizer):
-    global _db, _market_service, _ensemble, _optimizer
+def set_dependencies(db, market_service, ensemble, optimizer, deep_learning_ai=None):
+    global _db, _market_service, _ensemble, _optimizer, _deep_learning_ai
     _db = db
     _market_service = market_service
     _ensemble = ensemble
     _optimizer = optimizer
+    _deep_learning_ai = deep_learning_ai
 
 
 class PredictionRequest(BaseModel):
