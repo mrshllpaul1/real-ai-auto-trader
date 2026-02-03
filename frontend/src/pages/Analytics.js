@@ -26,16 +26,24 @@ const Analytics = () => {
     loadAnalytics();
   }, []);
 
+  // Timeout wrapper to prevent infinite loading
+  const timeoutPromise = (promise, ms = 10000) => {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
+    ]);
+  };
+
   const loadAnalytics = async () => {
     try {
       const [portfolioRes, historyRes, growthRes, realPosRes, krakenRes, budgetRes, krakenTradesRes] = await Promise.all([
-        tradingAPI.getPortfolio().catch(() => ({ data: {} })),
-        tradingAPI.getTradeHistory('all', 50).catch(() => ({ data: { trades: [] } })),
-        api.get('/growth/stats').catch(() => ({ data: {} })),
-        api.get('/growth/positions?status=OPEN').catch(() => ({ data: { positions: [] } })),
-        api.get('/trading/balance').catch(() => ({ data: null })),
-        api.get('/budget/').catch(() => ({ data: null })),
-        api.get('/trading/kraken/trades?limit=50').catch(() => ({ data: { trades: [] } }))
+        timeoutPromise(tradingAPI.getPortfolio(), 8000).catch(() => ({ data: {} })),
+        timeoutPromise(tradingAPI.getTradeHistory('all', 50), 8000).catch(() => ({ data: { trades: [] } })),
+        timeoutPromise(api.get('/growth/stats'), 8000).catch(() => ({ data: {} })),
+        timeoutPromise(api.get('/growth/positions?status=OPEN'), 8000).catch(() => ({ data: { positions: [] } })),
+        timeoutPromise(api.get('/trading/balance'), 8000).catch(() => ({ data: null })),
+        timeoutPromise(api.get('/budget/'), 8000).catch(() => ({ data: null })),
+        timeoutPromise(api.get('/trading/kraken/trades?limit=50'), 8000).catch(() => ({ data: { trades: [] } }))
       ]);
 
       setPortfolio(portfolioRes.data || {});
