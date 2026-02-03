@@ -111,6 +111,7 @@ api_router.include_router(ai_universe_expand.router, tags=["AI Universe Expansio
 api_router.include_router(gem_predictor.router, tags=["Hidden Gem Predictor"])
 api_router.include_router(simulation.router, tags=["Historical Simulation"])
 api_router.include_router(ensemble.router, tags=["Ensemble AI"])
+api_router.include_router(coindesk.router, tags=["CoinDesk News"])
 
 # Include the router
 app.include_router(api_router)
