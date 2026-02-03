@@ -202,7 +202,7 @@ const CryptoNewsFeed = () => {
               <div className="text-center py-8 text-[#71717A]">
                 <Newspaper size={32} className="mx-auto mb-2 opacity-50" />
                 <p>No trending news available</p>
-                <p className="text-xs mt-1">Configure CRYPTOPANIC_API_KEY for live news</p>
+                <p className="text-xs mt-1">News feed will refresh automatically</p>
               </div>
             )}
           </TabsContent>
