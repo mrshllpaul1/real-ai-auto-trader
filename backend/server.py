@@ -70,7 +70,7 @@ from routes import auth, trading, strategies, market, risk, learning, news, trai
 from routes import auto_trading, allocation, scanner, auto_execute, backtest, rebalance
 from routes import social, notifications, alerts, email, ai_portfolio, ai_selection
 from routes import gems, auto_trade, growth, scheduler, budget, journal, ai_decisions
-from routes import ai_universe, ai_discovery, sentiment, cryptopanic, deep_learning
+from routes import ai_universe, ai_discovery, sentiment, cryptopanic, deep_learning, ai_chat
 
 # Include routers
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
@@ -105,6 +105,7 @@ api_router.include_router(ai_discovery.router, tags=["AI Discovery"])
 api_router.include_router(sentiment.router, tags=["Sentiment Analysis"])
 api_router.include_router(cryptopanic.router, tags=["Crypto News"])
 api_router.include_router(deep_learning.router, tags=["Deep Learning AI"])
+api_router.include_router(ai_chat.router, tags=["AI Chat"])
 
 # Include the router
 app.include_router(api_router)
