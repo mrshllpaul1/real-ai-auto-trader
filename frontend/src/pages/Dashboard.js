@@ -53,11 +53,12 @@ const Dashboard = () => {
 
   const statCards = [
     {
-      title: 'Total Portfolio Value',
-      value: portfolio ? `$${portfolio.current_value?.toLocaleString() || '0'}` : '$0',
-      change: portfolio?.profit_loss_percentage || 0,
-      icon: DollarSign,
-      color: '#00FF94'
+      title: 'Kraken Portfolio',
+      value: krakenPortfolio?.total_value_usd ? `$${krakenPortfolio.total_value_usd.toLocaleString()}` : '$0',
+      change: 0,
+      icon: Wallet,
+      color: '#00FF94',
+      subtitle: krakenPortfolio?.holdings_count ? `${krakenPortfolio.holdings_count} assets` : ''
     },
     {
       title: 'Total Profit/Loss',
