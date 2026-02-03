@@ -666,8 +666,10 @@ TWILIO_PHONE_NUMBER=      # User must provide
 
 ## Future Enhancements
 - ✅ ~~Ensemble AI combining all ML/DL models~~ (COMPLETED Feb 3, 2026)
+- ✅ ~~CoinDesk API Integration~~ (COMPLETED Feb 3, 2026)
 - Historical training for Hidden Gem Predictor
 - AI Chat Action Execution (execute commands like "add coin to watchlist")
+- Refactor sync endpoints to async
 - Push notifications for gem alerts
 - Backtest gem prediction accuracy against historical data
 - Custom strategy builder UI
