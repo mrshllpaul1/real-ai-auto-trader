@@ -2,32 +2,53 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, TrendingUp, Calendar, Target, Sparkles, BarChart3 } from 'lucide-react';
+import { BookOpen, TrendingUp, Calendar, Target, Sparkles, BarChart3, RefreshCw } from 'lucide-react';
 import api from '../services/api';
 
 export default function TradingJournal() {
   const [stats, setStats] = useState(null);
   const [daily, setDaily] = useState(null);
   const [insights, setInsights] = useState(null);
+  const [krakenTrades, setKrakenTrades] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const s = await api.get('/journal/stats?days=30');
-        const d = await api.get('/journal/daily');
-        const i = await api.get('/journal/ai-insights?days=30');
-        setStats(s.data);
-        setDaily(d.data);
-        setInsights(i.data);
-      } catch (e) { console.error(e); }
-    };
-    load();
+    loadJournalData();
   }, []);
 
-  const pnl = stats?.total_pnl || 0;
+  const loadJournalData = async () => {
+    setLoading(true);
+    try {
+      const [statsRes, dailyRes, insightsRes, tradesRes] = await Promise.all([
+        api.get('/journal/stats?days=30').catch(() => ({ data: null })),
+        api.get('/journal/daily').catch(() => ({ data: null })),
+        api.get('/journal/ai-insights?days=30').catch(() => ({ data: null })),
+        api.get('/trading/kraken/trades?limit=50').catch(() => ({ data: { trades: [] } }))
+      ]);
+      
+      setStats(statsRes.data);
+      setDaily(dailyRes.data);
+      setInsights(insightsRes.data);
+      setKrakenTrades(tradesRes.data?.trades || []);
+    } catch (e) { 
+      console.error('Journal load error:', e); 
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Calculate stats from Kraken trades if journal stats are empty
+  const realTradesCount = krakenTrades.length;
+  const realPnL = krakenTrades.reduce((sum, t) => {
+    // Simple P&L calculation - this is approximate
+    return sum + (t.type === 'sell' ? t.cost - t.fee : -(t.cost + t.fee));
+  }, 0);
+
+  const pnl = stats?.total_pnl || realPnL || 0;
   const winRate = stats?.win_rate || 0;
   const gemWin = insights?.gem_performance?.gem_win_rate || 0;
   const regWin = insights?.gem_performance?.regular_win_rate || 0;
+  const totalTrades = (stats?.total_trades || 0) + realTradesCount;
 
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-8">
