@@ -13,6 +13,32 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ---
 
+## What's Been Implemented (Feb 3, 2026 - Session 5)
+
+### ✅ Trading Mode Persistence Bug Fix (P0 COMPLETE - Feb 3, 2026)
+- [x] **Fixed TradingView.js** - Changed from local `useState('paper')` to global `useTradingMode()` context
+- [x] **Global TradingModeContext** - Verified working across all pages
+- [x] **localStorage persistence** - `growth_trading_mode` key persists correctly
+- [x] **Testing agent validation** - 5/5 frontend tests passed:
+  - Growth to Dashboard navigation ✅
+  - Dashboard back to Growth ✅
+  - TradingView page uses global context ✅
+  - Auto Trading page syncs correctly ✅
+  - Sidebar mode indicator works ✅
+- [x] **Viewport testing** - Works on mobile (375x812) and desktop (1920x1080)
+
+### ✅ News Filters Page (P2 COMPLETE - Feb 3, 2026)
+- [x] **New page route** - `/news-filters` added to App.js
+- [x] **Full filtering UI** - Search, coin filter dropdown (BTC, ETH, SOL, etc.)
+- [x] **News tabs** - Trending, Hot, Bullish, Bearish, Important
+- [x] **Market Sentiment Overview** - Score, bullish/bearish counts, trending count
+- [x] **Coin-specific sentiment** - AI analysis when filtering by specific coin
+- [x] **Top mentioned coins** - Click to filter by coin
+- [x] **Real-time refresh** - 60-second auto-refresh
+- [x] **CryptoPanic integration** - Uses `/api/news/*` endpoints
+
+---
+
 ## What's Been Implemented (Feb 2, 2026 - Session 4)
 
 ### ✅ Trading Mode Persistence Fix (Feb 2, 2026)
