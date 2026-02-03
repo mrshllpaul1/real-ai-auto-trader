@@ -193,6 +193,12 @@ async def initialize_services():
         deep_learning.set_dependencies(db, market_service)
         logger.info("✅ Deep Learning AI initialized")
         
+        # Initialize AI Chat Service
+        from services.ai_chat_service import AIChatService
+        chat_service = AIChatService(db, market_service, news_service)
+        ai_chat.set_dependencies(db, chat_service)
+        logger.info("✅ AI Chat Service initialized")
+        
         # Kraken service (optional)
         global kraken_service
         kraken_api_key = os.getenv('KRAKEN_API_KEY')
