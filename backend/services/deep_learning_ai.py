@@ -958,7 +958,6 @@ Be concise but specific."""
             "level": level,
             "volatility_pct": std_pct
         }
-        return result
 
     def _calculate_trend(self, prices: List[float], window: int = 14) -> Dict[str, Any]:
         """Calculate recent price trend"""
