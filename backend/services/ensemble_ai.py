@@ -802,10 +802,17 @@ class UniverseOptimizer:
             cursor = self.db.universe_builds.find().sort("built_at", -1).limit(2)
             builds = await cursor.to_list(length=2)
             
+            # Remove MongoDB _id from builds
+            for build in builds:
+                build.pop('_id', None)
+            
             if len(builds) < 2:
+                current_build = builds[0] if builds else None
+                if current_build:
+                    current_build.pop('_id', None)
                 return {
                     "message": "Not enough historical data for comparison",
-                    "current_build": builds[0] if builds else None
+                    "current_build": current_build
                 }
             
             current = builds[0]
