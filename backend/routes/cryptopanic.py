@@ -47,15 +47,38 @@ async def get_trending_news(limit: int = Query(20, le=50)):
     """
     Get trending/rising crypto news.
     These are news articles gaining traction across the crypto community.
+    Falls back to free news API if CryptoPanic quota is exceeded.
     """
-    if not _cryptopanic_service or not _cryptopanic_service.is_available:
-        raise HTTPException(status_code=503, detail="CryptoPanic service not available")
+    # Try CryptoPanic first
+    if _cryptopanic_service and _cryptopanic_service.is_available:
+        news = await _cryptopanic_service.get_trending_news(limit)
+        if news:
+            return {
+                "filter": "trending",
+                "news": news,
+                "count": len(news),
+                "source": "cryptopanic"
+            }
     
-    news = await _cryptopanic_service.get_trending_news(limit)
+    # Fallback to free news aggregator
+    if _news_aggregator:
+        try:
+            news = await _news_aggregator.get_free_crypto_news(limit=limit)
+            return {
+                "filter": "trending",
+                "news": news,
+                "count": len(news),
+                "source": "free_crypto_news"
+            }
+        except Exception as e:
+            print(f"Free news fallback error: {e}")
+    
     return {
         "filter": "trending",
-        "news": news,
-        "count": len(news)
+        "news": [],
+        "count": 0,
+        "source": "none",
+        "message": "News services temporarily unavailable"
     }
 
 
