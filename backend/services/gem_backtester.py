@@ -307,8 +307,8 @@ class GemBacktester:
         correct_non_gem = [p for p in correct if not p["predicted_gem"]]
         
         return {
-            "correct_avg_score": round(correct_avg_score, 3),
-            "incorrect_avg_score": round(incorrect_avg_score, 3),
+            "correct_avg_score": round(float(correct_avg_score), 3),
+            "incorrect_avg_score": round(float(incorrect_avg_score), 3),
             "correct_gem_count": len(correct_gem_predictions),
             "correct_non_gem_count": len(correct_non_gem),
             "false_positive_count": len([p for p in incorrect if p["predicted_gem"]]),
