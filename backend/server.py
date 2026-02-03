@@ -304,10 +304,17 @@ async def initialize_services():
         journal.set_dependencies(journal_service)
         
         # CoinDesk News Service
-        from services.coindesk_service import get_coindesk_service
+        from services.coindesk_service import get_coindesk_service, get_cryptocompare_service
         coindesk_service = get_coindesk_service()
         coindesk.set_dependencies(coindesk_service)
         logger.info("✅ CoinDesk News service initialized")
+        
+        # CryptoCompare Historical Data Service
+        cryptocompare_service = get_cryptocompare_service()
+        from services.historical_data_downloader import get_historical_downloader
+        historical_downloader = get_historical_downloader(db)
+        historical_data.set_dependencies(db, historical_downloader, cryptocompare_service)
+        logger.info("✅ CryptoCompare Historical Data service initialized")
         
         # Start scheduler
         await scheduler_service.start()
