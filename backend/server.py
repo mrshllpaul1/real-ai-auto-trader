@@ -218,6 +218,10 @@ async def initialize_services():
         ai_chat.set_gem_predictor(hidden_gem_predictor)
         logger.info("✅ Hidden Gem Predictor initialized")
         
+        # Initialize Historical Simulation
+        simulation.set_dependencies(db, market_service)
+        logger.info("✅ Historical Simulation initialized")
+        
         # Kraken service (optional)
         global kraken_service
         kraken_api_key = os.getenv('KRAKEN_API_KEY')
