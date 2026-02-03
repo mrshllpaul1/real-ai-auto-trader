@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, TrendingUp, BarChart3, Settings, Sparkles,
   Brain, Newspaper, Zap, Radar, Bot, FlaskConical, BookOpen,
-  Menu, X, ChevronLeft, Key, Wallet, TestTube, Cpu
+  Menu, X, ChevronLeft, Key, Wallet, TestTube, Cpu, MessageCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NotificationCenter from './NotificationCenter';
