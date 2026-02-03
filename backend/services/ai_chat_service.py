@@ -220,7 +220,7 @@ Please provide a helpful, accurate response based on the conversation context.""
                 self.conversation_history[session_id] = self.conversation_history[session_id][-20:]
             
             # Store in database if available
-            if self.db:
+            if self.db is not None:
                 try:
                     await self.db.ai_chat_history.insert_one({
                         "session_id": session_id,
@@ -242,7 +242,7 @@ Please provide a helpful, accurate response based on the conversation context.""
                 "session_id": session_id,
                 "coins_mentioned": mentioned_coins,
                 "context": {
-                    "market_data_included": include_market_data and bool(context_str),
+                    "market_data_included": include_market_data and len(context_str) > 0,
                     "news_included": include_news
                 },
                 "timestamp": datetime.now(timezone.utc).isoformat(),
