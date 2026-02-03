@@ -188,6 +188,10 @@ async def initialize_services():
         market_service = MarketDataService()
         news_service = CryptoNewsAggregator()
         
+        # Initialize Deep Learning AI
+        deep_learning.set_dependencies(db, market_service)
+        logger.info("✅ Deep Learning AI initialized")
+        
         # Kraken service (optional)
         global kraken_service
         kraken_api_key = os.getenv('KRAKEN_API_KEY')
