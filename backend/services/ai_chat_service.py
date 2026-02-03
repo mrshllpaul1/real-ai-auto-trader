@@ -258,6 +258,155 @@ Please provide a helpful, accurate response based on the conversation context.""
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }
 
+    async def chat_with_deep_learning(
+        self,
+        query: str,
+        session_id: str = "default",
+        context_hint: str = "",
+        include_predictions: bool = True,
+        include_gems: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Enhanced chat with deep learning integration.
+        Includes LSTM predictions, pattern detection, and hidden gem analysis.
+        """
+        if not self.api_key:
+            return {
+                "response": "AI service is not configured.",
+                "error": True,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+        
+        try:
+            # Extract mentioned coins
+            mentioned_coins = self._extract_coin_mentions(query)
+            
+            # Initialize response components
+            predictions_data = None
+            gems_data = []
+            patterns_data = None
+            deep_context = []
+            
+            # Check if query is about predictions
+            prediction_keywords = ['predict', 'forecast', 'price', 'future', 'tomorrow', 'next week', 'outlook']
+            wants_prediction = any(kw in query.lower() for kw in prediction_keywords)
+            
+            # Check if query is about hidden gems
+            gem_keywords = ['gem', 'hidden', 'opportunity', 'undervalued', '10x', '100x', 'moon', 'potential']
+            wants_gems = any(kw in query.lower() for kw in gem_keywords)
+            
+            # Check if query is about patterns
+            pattern_keywords = ['pattern', 'chart', 'technical', 'double top', 'triangle', 'flag']
+            wants_patterns = any(kw in query.lower() for kw in pattern_keywords)
+            
+            # Get deep learning predictions if requested
+            if (include_predictions and wants_prediction) or wants_patterns:
+                try:
+                    from services.deep_learning_ai import get_deep_learning_ai
+                    deep_ai = get_deep_learning_ai(self.db)
+                    
+                    for coin_id in mentioned_coins[:2]:  # Limit to 2 coins
+                        if self.market_service:
+                            hist_data = await self.market_service.get_historical_data(coin_id, days=90)
+                            prices = [p[1] for p in hist_data.get('prices', [])]
+                            
+                            if len(prices) >= 60:
+                                # Get prediction signal
+                                signal = await deep_ai.generate_deep_signal(
+                                    coin_id=coin_id,
+                                    prices=prices,
+                                    news=None,
+                                    current_price=prices[-1]
+                                )
+                                
+                                if signal.get('final_signal'):
+                                    predictions_data = {
+                                        "coin": coin_id,
+                                        "signal": signal['final_signal'],
+                                        "confidence": signal.get('confidence', 0),
+                                        "reasoning": signal.get('reasoning', []),
+                                        "summary": f"{coin_id.title()}: {signal['final_signal']} ({signal.get('confidence', 0):.0f}% confidence)"
+                                    }
+                                    deep_context.append(f"LSTM Prediction for {coin_id}: {signal['final_signal']} with {signal.get('confidence', 0):.0f}% confidence")
+                                
+                                # Get pattern if requested
+                                if wants_patterns:
+                                    pattern = deep_ai.pattern_recognizer.detect_patterns_rule_based(prices)
+                                    if pattern.get('pattern'):
+                                        patterns_data = pattern
+                                        deep_context.append(f"Pattern detected for {coin_id}: {pattern['pattern']} ({pattern.get('confidence', 0)}% confidence)")
+                except Exception as e:
+                    print(f"Deep learning error: {e}")
+            
+            # Get hidden gems if requested
+            if include_gems and wants_gems:
+                try:
+                    if self.db is not None:
+                        # Get recent gem scans
+                        gems_cursor = self.db.gem_scans.find().sort("timestamp", -1).limit(1)
+                        recent_gems = await gems_cursor.to_list(length=1)
+                        
+                        if recent_gems and recent_gems[0].get('gems'):
+                            top_gems = recent_gems[0]['gems'][:5]
+                            gems_data = [g.get('coin_id', g.get('symbol', 'unknown')) for g in top_gems]
+                            deep_context.append(f"Top Hidden Gems: {', '.join(gems_data)}")
+                        
+                        # Also check AI-discovered coins
+                        discovered = await self.db.coin_universe.find(
+                            {"source": "ai_discovered", "is_active": True}
+                        ).sort("discovered_at", -1).limit(5).to_list(length=5)
+                        
+                        if discovered:
+                            ai_gems = [c['coin_id'] for c in discovered]
+                            gems_data.extend(ai_gems)
+                            deep_context.append(f"AI-Discovered Coins: {', '.join(ai_gems)}")
+                except Exception as e:
+                    print(f"Gems lookup error: {e}")
+            
+            # Get market context
+            market_context = await self._get_market_context(mentioned_coins)
+            if market_context:
+                deep_context.append(market_context)
+            
+            # Build enhanced prompt
+            context_str = "\n\n".join(deep_context) if deep_context else ""
+            
+            enhanced_prompt = f"""User Question: {query}
+
+{f"DEEP LEARNING ANALYSIS:{chr(10)}{context_str}" if context_str else ""}
+
+{f"Context hint: {context_hint}" if context_hint else ""}
+
+Provide a comprehensive response using the deep learning analysis above. Include specific data points and confidence levels."""
+
+            # Create LLM chat
+            chat = LlmChat(
+                api_key=self.api_key,
+                session_id=f"deep_chat_{session_id}_{datetime.now().strftime('%Y%m%d%H%M')}",
+                system_message=self.system_prompt + "\n\nYou have access to real-time deep learning predictions. Use the provided analysis data to give accurate, data-driven responses."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            response = await chat.send_message(UserMessage(text=enhanced_prompt))
+            response_text = response if isinstance(response, str) else str(response)
+            
+            return {
+                "response": response_text,
+                "query": query,
+                "session_id": session_id,
+                "coins_mentioned": mentioned_coins,
+                "predictions": predictions_data,
+                "patterns": patterns_data,
+                "gems": gems_data,
+                "deep_learning_used": bool(deep_context),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "error": False
+            }
+            
+        except Exception as e:
+            print(f"Deep chat error: {e}")
+            # Fallback to regular chat
+            return await self.chat(query, session_id)
+
     async def get_quick_analysis(self, coin_id: str) -> Dict[str, Any]:
         """Get a quick AI analysis for a specific coin"""
         query = f"Give me a brief analysis of {coin_id} including current sentiment, key levels to watch, and short-term outlook."
