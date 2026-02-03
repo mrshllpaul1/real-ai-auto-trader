@@ -231,7 +231,7 @@ async def execute_trade_command(request: TradeExecutionRequest):
 @router.get("/trade-history")
 async def get_ai_trade_history(limit: int = 20):
     """Get history of trades executed via AI chat"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=503, detail="Database not available")
     
     trades = await _db.ai_chat_trades.find(
