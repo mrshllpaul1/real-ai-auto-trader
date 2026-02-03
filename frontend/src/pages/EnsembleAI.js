@@ -73,49 +73,6 @@ const EnsembleAI = () => {
   // Polling interval for build status
   const [pollInterval, setPollInterval] = useState(null);
 
-  // Fetch ensemble status
-  const fetchStatus = useCallback(async () => {
-    try {
-      const res = await fetch(`${API}/api/ensemble/status`);
-      const data = await res.json();
-      setStatus(data);
-      setBuildStatus(data.universe_rebuild_status);
-      
-      // If rebuild is running, start polling
-      if (data.universe_rebuild_status?.running && !pollInterval) {
-        const interval = setInterval(fetchBuildStatus, 2000);
-        setPollInterval(interval);
-      }
-    } catch (err) {
-      console.error('Error fetching status:', err);
-    }
-  }, [pollInterval]);
-
-  // Fetch build status
-  const fetchBuildStatus = async () => {
-    try {
-      const res = await fetch(`${API}/api/ensemble/build-status`);
-      const data = await res.json();
-      setBuildStatus(data);
-      
-      // Stop polling if complete
-      if (!data.running && data.progress >= 100) {
-        if (pollInterval) {
-          clearInterval(pollInterval);
-          setPollInterval(null);
-        }
-        setRebuilding(false);
-        toast.success('Universe rebuild complete!');
-        // Refresh data
-        fetchUniverse();
-        fetchComparison();
-        fetchHiddenGems();
-      }
-    } catch (err) {
-      console.error('Error fetching build status:', err);
-    }
-  };
-
   // Fetch optimal universe
   const fetchUniverse = async () => {
     try {
@@ -128,6 +85,62 @@ const EnsembleAI = () => {
   };
 
   // Fetch comparison
+  const fetchComparison = async () => {
+    try {
+      const res = await fetch(`${API}/api/ensemble/comparison`);
+      const data = await res.json();
+      setComparison(data);
+    } catch (err) {
+      console.error('Error fetching comparison:', err);
+    }
+  };
+
+  // Fetch hidden gems
+  const fetchHiddenGems = async () => {
+    try {
+      const res = await fetch(`${API}/api/ensemble/hidden-gems`);
+      const data = await res.json();
+      setHiddenGems(data);
+    } catch (err) {
+      console.error('Error fetching hidden gems:', err);
+    }
+  };
+
+  // Fetch build status - must be defined before fetchStatus
+  const fetchBuildStatus = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/api/ensemble/build-status`);
+      const data = await res.json();
+      setBuildStatus(data);
+      
+      // Stop polling if complete
+      if (!data.running && data.progress >= 100) {
+        setRebuilding(false);
+        toast.success('Universe rebuild complete!');
+        // Refresh data
+        fetchUniverse();
+        fetchComparison();
+        fetchHiddenGems();
+        return true; // Signal to stop polling
+      }
+      return false;
+    } catch (err) {
+      console.error('Error fetching build status:', err);
+      return false;
+    }
+  }, []);
+
+  // Fetch ensemble status
+  const fetchStatus = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/api/ensemble/status`);
+      const data = await res.json();
+      setStatus(data);
+      setBuildStatus(data.universe_rebuild_status);
+    } catch (err) {
+      console.error('Error fetching status:', err);
+    }
+  }, []);
   const fetchComparison = async () => {
     try {
       const res = await fetch(`${API}/api/ensemble/comparison`);
