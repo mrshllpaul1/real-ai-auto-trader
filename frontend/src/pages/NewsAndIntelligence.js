@@ -20,7 +20,22 @@ const NewsAndIntelligence = () => {
 
   useEffect(() => {
     loadData();
+    loadCoinDeskData();
   }, [selectedCoin]);
+
+  const loadCoinDeskData = async () => {
+    try {
+      const [newsRes, sentimentRes] = await Promise.all([
+        coindeskAPI.getNews(20).catch(() => ({ data: { articles: [] } })),
+        coindeskAPI.getSentiment().catch(() => ({ data: null }))
+      ]);
+      
+      setCoindeskNews(newsRes.data?.articles || []);
+      setCoindeskSentiment(sentimentRes.data);
+    } catch (error) {
+      console.error('Error loading CoinDesk data:', error);
+    }
+  };
 
   const loadData = async () => {
     try {
