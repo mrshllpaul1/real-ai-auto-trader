@@ -448,22 +448,27 @@ class EnsembleAIPredictor:
 class UniverseOptimizer:
     """
     Optimizes the coin universe by analyzing top 1000 coins.
+    Uses ensemble AI predictions to build optimal trading portfolio.
     """
     
-    def __init__(self, db, market_service, ensemble_predictor):
+    def __init__(self, db, market_service, ensemble_predictor, deep_learning_ai=None):
         self.db = db
         self.market_service = market_service
         self.ensemble = ensemble_predictor
+        self.deep_learning_ai = deep_learning_ai
         self.api_key = os.getenv('EMERGENT_LLM_KEY')
         
-    async def analyze_top_coins(self, limit: int = 1000) -> List[Dict]:
-        """Analyze top coins by market cap"""
+    async def analyze_top_coins(self, limit: int = 1000, progress_callback=None) -> List[Dict]:
+        """Analyze top coins by market cap using all AI models"""
+        global _universe_rebuild_status
         analyzed = []
         
         try:
-            # Get top coins in batches
+            # Get top coins in batches (CoinGecko free tier limit)
             batch_size = 250
             all_coins = []
+            
+            _universe_rebuild_status["progress_message"] = "Fetching coin list..."
             
             for page in range(1, (limit // batch_size) + 2):
                 if len(all_coins) >= limit:
@@ -474,96 +479,239 @@ class UniverseOptimizer:
                 await asyncio.sleep(1)  # Rate limiting
             
             all_coins = all_coins[:limit]
+            _universe_rebuild_status["total_coins"] = len(all_coins)
+            _universe_rebuild_status["progress_message"] = f"Analyzing {len(all_coins)} coins..."
             
-            # Analyze each coin
+            # Analyze each coin with ensemble scoring
             for i, coin in enumerate(all_coins):
+                _universe_rebuild_status["coins_analyzed"] = i + 1
+                _universe_rebuild_status["progress"] = int((i + 1) / len(all_coins) * 80)  # 80% for analysis
+                
                 if i % 50 == 0:
-                    print(f"Analyzing coin {i+1}/{len(all_coins)}")
+                    _universe_rebuild_status["progress_message"] = f"Analyzing coin {i+1}/{len(all_coins)}: {coin.get('symbol', 'N/A').upper()}"
                 
                 try:
-                    analysis = await self._analyze_coin(coin)
-                    if analysis:
+                    analysis = await self._analyze_coin_with_ensemble(coin)
+                    if analysis and analysis.get('ensemble_score', 0) > 30:
                         analyzed.append(analysis)
                 except Exception as e:
                     continue
                 
                 # Rate limiting
                 if i % 10 == 0:
-                    await asyncio.sleep(0.5)
+                    await asyncio.sleep(0.3)
             
         except Exception as e:
             print(f"Analysis error: {e}")
+            _universe_rebuild_status["error"] = str(e)
         
         return analyzed
     
-    async def _analyze_coin(self, coin: Dict) -> Optional[Dict]:
-        """Analyze a single coin"""
+    async def _analyze_coin_with_ensemble(self, coin: Dict) -> Optional[Dict]:
+        """Analyze a single coin using all ML/DL models"""
         coin_id = coin.get('id', '')
         
-        # Basic metrics
-        market_cap = coin.get('market_cap', 0)
-        volume = coin.get('total_volume', 0)
-        price_change_24h = coin.get('price_change_24h', 0)
+        # Basic metrics from market data
+        market_cap = coin.get('market_cap', 0) or 0
+        volume = coin.get('total_volume', 0) or 0
+        price_change_24h = coin.get('price_change_24h', 0) or 0
+        price_change_7d = coin.get('price_change_7d', 0) or 0
+        current_price = coin.get('current_price', 0) or 0
         
-        # Score calculation
-        score = 50
+        # Initialize scores
+        base_score = 50
+        ai_prediction_score = 0
+        technical_score = 0
+        momentum_score = 0
+        liquidity_score = 0
+        market_cap_score = 0
         
-        # Volume/Market cap ratio (liquidity)
+        # 1. Volume/Market cap ratio (liquidity) - 15% weight
         vol_ratio = (volume / market_cap * 100) if market_cap > 0 else 0
         if vol_ratio > 20:
-            score += 15
+            liquidity_score = 15
         elif vol_ratio > 10:
-            score += 10
+            liquidity_score = 10
+        elif vol_ratio > 5:
+            liquidity_score = 5
         elif vol_ratio < 1:
-            score -= 10
+            liquidity_score = -5
         
-        # Market cap tier
-        if market_cap < 100_000_000:  # < $100M
-            score += 20  # Higher potential
+        # 2. Market cap tier - 20% weight (prefer small-mid caps for growth)
+        if market_cap < 50_000_000:  # < $50M - highest potential
+            market_cap_score = 20
+        elif market_cap < 100_000_000:  # < $100M
+            market_cap_score = 18
+        elif market_cap < 500_000_000:  # < $500M
+            market_cap_score = 15
         elif market_cap < 1_000_000_000:  # < $1B
-            score += 10
-        elif market_cap > 50_000_000_000:  # > $50B
-            score -= 5  # Lower potential but stable
+            market_cap_score = 12
+        elif market_cap < 10_000_000_000:  # < $10B
+            market_cap_score = 8
+        else:  # > $10B - more stable but less upside
+            market_cap_score = 5
         
-        # Momentum
-        if 5 < price_change_24h < 30:
-            score += 10
+        # 3. Momentum score - 20% weight
+        if 5 < price_change_24h < 15:
+            momentum_score += 10  # Strong but not overextended
+        elif 15 < price_change_24h < 30:
+            momentum_score += 7  # Strong but risky
         elif price_change_24h > 30:
-            score += 5  # Might be overextended
-        elif price_change_24h < -10:
-            score += 5  # Potential dip buy
+            momentum_score += 3  # Potentially overextended
+        elif -5 < price_change_24h < 5:
+            momentum_score += 5  # Stable
+        elif -15 < price_change_24h < -5:
+            momentum_score += 8  # Potential dip buy
+        
+        # Weekly momentum adds perspective
+        if price_change_7d and price_change_7d > 20:
+            momentum_score += 5
+        elif price_change_7d and price_change_7d > 10:
+            momentum_score += 3
+        
+        # 4. Try to get AI prediction if possible (limited to avoid API overload)
+        try:
+            if self.ensemble and market_cap > 100_000_000:  # Only for larger caps to save API calls
+                hist_data = await self.market_service.get_historical_data(coin_id, days=30)
+                if hist_data and hist_data.get('prices') and len(hist_data['prices']) >= 20:
+                    prices = [p[1] for p in hist_data['prices']]
+                    
+                    # Get technical analysis
+                    tech_result = self.ensemble._calculate_technical(prices)
+                    if tech_result.get('signal') == 'bullish':
+                        technical_score = 15
+                    elif tech_result.get('signal') == 'bearish':
+                        technical_score = -5
+                    else:
+                        technical_score = 5
+                    
+                    # Get momentum analysis
+                    momentum_result = self.ensemble._calculate_momentum(prices)
+                    if momentum_result.get('signal') == 'bullish':
+                        ai_prediction_score += 10
+                    elif momentum_result.get('signal') == 'bearish':
+                        ai_prediction_score -= 5
+        except Exception as e:
+            pass  # Continue without AI prediction
+        
+        # Calculate ensemble score (weighted combination)
+        ensemble_score = (
+            base_score +
+            liquidity_score * 0.15 +
+            market_cap_score * 0.20 +
+            momentum_score * 0.20 +
+            technical_score * 0.25 +
+            ai_prediction_score * 0.20
+        )
+        
+        # Gem potential (high score + low market cap)
+        is_gem_candidate = ensemble_score >= 60 and market_cap < 500_000_000
+        gem_potential = "HIGH" if ensemble_score >= 70 and market_cap < 200_000_000 else \
+                       "MEDIUM" if is_gem_candidate else "LOW"
         
         return {
             "coin_id": coin_id,
             "symbol": coin.get('symbol', '').upper(),
             "name": coin.get('name', ''),
+            "current_price": current_price,
             "market_cap": market_cap,
             "market_cap_rank": coin.get('market_cap_rank', 0),
             "volume_24h": volume,
-            "volume_ratio": vol_ratio,
-            "price_change_24h": price_change_24h,
-            "universe_score": min(100, max(0, score)),
+            "volume_ratio": round(vol_ratio, 2),
+            "price_change_24h": round(price_change_24h, 2) if price_change_24h else 0,
+            "price_change_7d": round(price_change_7d, 2) if price_change_7d else 0,
+            "scores": {
+                "liquidity": round(liquidity_score, 2),
+                "market_cap": round(market_cap_score, 2),
+                "momentum": round(momentum_score, 2),
+                "technical": round(technical_score, 2),
+                "ai_prediction": round(ai_prediction_score, 2)
+            },
+            "ensemble_score": round(min(100, max(0, ensemble_score)), 2),
+            "gem_potential": gem_potential,
+            "is_gem_candidate": is_gem_candidate,
             "analyzed_at": datetime.now(timezone.utc).isoformat()
         }
     
-    async def build_optimal_universe(self, target_size: int = 50) -> Dict[str, Any]:
+    async def get_existing_portfolio(self) -> Dict[str, Any]:
+        """Get current portfolio recommendations from database"""
+        existing = {
+            "coins": [],
+            "strategies": [],
+            "gem_picks": []
+        }
+        
+        if self.db is None:
+            return existing
+        
+        try:
+            # Get current optimal universe
+            cursor = self.db.optimal_universe.find().sort("universe_score", -1).limit(50)
+            universe_coins = await cursor.to_list(length=50)
+            for coin in universe_coins:
+                coin.pop('_id', None)
+                existing["coins"].append(coin)
+            
+            # Get recent strategies
+            strat_cursor = self.db.strategies.find().sort("created_at", -1).limit(5)
+            strategies = await strat_cursor.to_list(length=5)
+            for s in strategies:
+                s.pop('_id', None)
+                existing["strategies"].append({
+                    "name": s.get("name", "Strategy"),
+                    "allocations": s.get("allocations", []),
+                    "created_at": s.get("created_at")
+                })
+            
+            # Get recent gem picks
+            gem_cursor = self.db.gem_scans.find().sort("timestamp", -1).limit(3)
+            gems = await gem_cursor.to_list(length=3)
+            for g in gems:
+                if g.get('gems'):
+                    for gem in g['gems'][:10]:
+                        gem.pop('_id', None) if isinstance(gem, dict) else None
+                        existing["gem_picks"].append(gem)
+            
+        except Exception as e:
+            print(f"Error getting existing portfolio: {e}")
+        
+        return existing
+    
+    async def build_optimal_universe(self, target_size: int = 50, analyze_count: int = 500) -> Dict[str, Any]:
         """
         Build an optimal trading universe from top 1000 coins.
+        Uses ensemble AI to score and rank all coins.
         """
+        global _universe_rebuild_status
+        
         result = {
             "status": "building",
             "target_size": target_size,
+            "analyze_count": analyze_count,
             "started_at": datetime.now(timezone.utc).isoformat()
         }
         
+        _universe_rebuild_status["progress_message"] = "Getting existing portfolio for comparison..."
+        
+        # Get existing portfolio for comparison
+        existing_portfolio = await self.get_existing_portfolio()
+        existing_symbols = set(c.get('symbol', '').upper() for c in existing_portfolio.get('coins', []))
+        
+        _universe_rebuild_status["progress"] = 5
+        
         # Analyze all coins
-        analyzed = await self.analyze_top_coins(limit=500)  # Start with 500
+        analyzed = await self.analyze_top_coins(limit=analyze_count)
         
         if not analyzed:
-            return {"error": "Failed to analyze coins"}
+            result["error"] = "Failed to analyze coins"
+            _universe_rebuild_status["error"] = "Failed to analyze coins"
+            return result
         
-        # Sort by score
-        analyzed.sort(key=lambda x: x['universe_score'], reverse=True)
+        _universe_rebuild_status["progress"] = 85
+        _universe_rebuild_status["progress_message"] = "Building optimal portfolio..."
+        
+        # Sort by ensemble score
+        analyzed.sort(key=lambda x: x['ensemble_score'], reverse=True)
         
         # Select top coins for universe
         selected = analyzed[:target_size]
@@ -579,7 +727,7 @@ class UniverseOptimizer:
         
         for coin in selected:
             mcap = coin.get('market_cap', 0)
-            score = coin.get('universe_score', 0)
+            score = coin.get('ensemble_score', 0)
             
             if mcap > 10_000_000_000:
                 categories["large_cap"].append(coin)
@@ -591,8 +739,11 @@ class UniverseOptimizer:
                 categories["micro_cap"].append(coin)
             
             # Hidden gems: high score, low market cap
-            if score >= 70 and mcap < 500_000_000:
+            if coin.get('is_gem_candidate'):
                 categories["hidden_gems"].append(coin)
+        
+        _universe_rebuild_status["progress"] = 90
+        _universe_rebuild_status["progress_message"] = "Saving to database..."
         
         # Save to database
         if self.db is not None:
@@ -607,16 +758,36 @@ class UniverseOptimizer:
                         "added_at": datetime.now(timezone.utc)
                     })
                 
-                # Save summary
+                # Save build summary
                 await self.db.universe_builds.insert_one({
                     "built_at": datetime.now(timezone.utc),
                     "coins_analyzed": len(analyzed),
                     "coins_selected": len(selected),
                     "categories": {k: len(v) for k, v in categories.items()},
-                    "top_10": [c['symbol'] for c in selected[:10]]
+                    "top_10": [c['symbol'] for c in selected[:10]],
+                    "hidden_gems": [c['symbol'] for c in categories["hidden_gems"][:10]]
                 })
             except Exception as e:
                 print(f"DB error: {e}")
+        
+        _universe_rebuild_status["progress"] = 95
+        _universe_rebuild_status["progress_message"] = "Computing portfolio comparison..."
+        
+        # Compute portfolio comparison
+        new_symbols = set(c.get('symbol', '').upper() for c in selected)
+        comparison = {
+            "overlap": list(existing_symbols & new_symbols),
+            "added": list(new_symbols - existing_symbols),
+            "removed": list(existing_symbols - new_symbols),
+            "overlap_count": len(existing_symbols & new_symbols),
+            "added_count": len(new_symbols - existing_symbols),
+            "removed_count": len(existing_symbols - new_symbols),
+            "existing_portfolio_size": len(existing_portfolio.get('coins', [])),
+            "new_portfolio_size": len(selected),
+            "avg_existing_score": round(sum(c.get('universe_score', 0) for c in existing_portfolio.get('coins', [])) / max(1, len(existing_portfolio.get('coins', []))), 2),
+            "avg_new_score": round(sum(c.get('ensemble_score', 0) for c in selected) / max(1, len(selected)), 2),
+            "recommendations_changed": len(new_symbols - existing_symbols) > 0
+        }
         
         result["status"] = "completed"
         result["coins_analyzed"] = len(analyzed)
@@ -624,9 +795,51 @@ class UniverseOptimizer:
         result["categories"] = {k: len(v) for k, v in categories.items()}
         result["top_coins"] = selected[:20]
         result["hidden_gems"] = categories["hidden_gems"][:10]
+        result["comparison"] = comparison
         result["completed_at"] = datetime.now(timezone.utc).isoformat()
         
+        _universe_rebuild_status["progress"] = 100
+        _universe_rebuild_status["progress_message"] = "Complete!"
+        _universe_rebuild_status["result"] = result
+        _universe_rebuild_status["comparison"] = comparison
+        
         return result
+    
+    async def get_weekly_recommendations_comparison(self) -> Dict[str, Any]:
+        """Compare current and previous week's recommendations"""
+        if self.db is None:
+            return {"error": "Database not available"}
+        
+        try:
+            # Get two most recent builds
+            cursor = self.db.universe_builds.find().sort("built_at", -1).limit(2)
+            builds = await cursor.to_list(length=2)
+            
+            if len(builds) < 2:
+                return {
+                    "message": "Not enough historical data for comparison",
+                    "current_build": builds[0] if builds else None
+                }
+            
+            current = builds[0]
+            previous = builds[1]
+            
+            current_top = set(current.get('top_10', []))
+            previous_top = set(previous.get('top_10', []))
+            
+            return {
+                "current_build_date": current.get('built_at'),
+                "previous_build_date": previous.get('built_at'),
+                "current_top_10": list(current_top),
+                "previous_top_10": list(previous_top),
+                "retained": list(current_top & previous_top),
+                "new_additions": list(current_top - previous_top),
+                "dropped": list(previous_top - current_top),
+                "current_gems": current.get('hidden_gems', []),
+                "previous_gems": previous.get('hidden_gems', [])
+            }
+        except Exception as e:
+            return {"error": str(e)}
 
 
 # Singleton instances
