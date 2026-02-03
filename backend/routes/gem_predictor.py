@@ -116,6 +116,16 @@ async def run_deep_training_task():
         _gem_training_status["running"] = False
 
 
+async def run_ohlcv_training_task():
+    """Background task for OHLCV-based training"""
+    try:
+        await _gem_predictor.train_on_ohlcv_data()
+    except Exception as e:
+        from services.hidden_gem_predictor import _gem_training_status
+        _gem_training_status["error"] = str(e)
+        _gem_training_status["running"] = False
+
+
 @router.post("/train")
 async def train_gem_predictor(background_tasks: BackgroundTasks):
     """
