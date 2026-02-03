@@ -292,6 +292,61 @@ async def run_ohlcv_update_now(coins: list = None):
     return await scheduler_service._run_daily_ohlcv_update(coins=coins)
 
 
+@router.post("/jobs/weekly-ohlcv-expansion")
+async def add_weekly_ohlcv_expansion(schedule: OHLCVExpansionSchedule):
+    """
+    Add weekly OHLCV expansion job to download 50 more coins every Sunday.
+    
+    Continues until all AI favorite coins (200+) are completed.
+    
+    Default: Every Sunday at 4 AM UTC
+    
+    - Downloads next batch of coins not yet in database
+    - Automatically stops when all coins are complete
+    - Tracks progress and sends alerts
+    """
+    if scheduler_service is None:
+        raise HTTPException(status_code=500, detail="Scheduler not initialized")
+    
+    return await scheduler_service.add_weekly_ohlcv_expansion_job(
+        day_of_week=schedule.day_of_week,
+        hour=schedule.hour,
+        batch_size=schedule.batch_size
+    )
+
+
+@router.post("/jobs/ohlcv-expansion-now")
+async def run_ohlcv_expansion_now(batch_size: int = 50):
+    """
+    Manually trigger OHLCV expansion immediately.
+    
+    Downloads the next batch of coins not yet in the database.
+    """
+    if scheduler_service is None:
+        raise HTTPException(status_code=500, detail="Scheduler not initialized")
+    
+    return await scheduler_service._run_weekly_ohlcv_expansion(batch_size=batch_size)
+
+
+@router.get("/ohlcv-expansion-status")
+async def get_ohlcv_expansion_status():
+    """
+    Get status of OHLCV expansion progress.
+    
+    Shows how many AI coins have been downloaded and how many remain.
+    """
+    if scheduler_service is None:
+        raise HTTPException(status_code=500, detail="Scheduler not initialized")
+    
+    from services.historical_data_downloader import get_historical_downloader
+    downloader = get_historical_downloader(scheduler_service.db)
+    
+    if not downloader:
+        raise HTTPException(status_code=500, detail="Downloader not initialized")
+    
+    return await downloader.get_next_batch_to_download(50)
+
+
 @router.get("/history")
 async def get_execution_history(limit: int = 50):
     """Get scheduler execution history"""
