@@ -49,6 +49,11 @@ class GemRetrainSchedule(BaseModel):
     hour: Optional[int] = 9  # 9 AM UTC = 2 AM MST
 
 
+class OHLCVUpdateSchedule(BaseModel):
+    hour: Optional[int] = 4  # 4 AM UTC
+    coins: Optional[list] = None  # None = update all stored coins
+
+
 @router.get("/status")
 async def get_scheduler_status():
     """Get current scheduler status and active jobs"""
