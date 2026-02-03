@@ -421,7 +421,7 @@ _learning_loop_service = None
 def get_learning_loop_service(db: AsyncIOMotorDatabase = None) -> AILearningLoopService:
     """Get or create learning loop service instance"""
     global _learning_loop_service
-    if _learning_loop_service is None and db:
+    if _learning_loop_service is None and db is not None:
         _learning_loop_service = AILearningLoopService(db)
     return _learning_loop_service
 
