@@ -208,6 +208,15 @@ async def initialize_services():
         ai_universe_expand.set_dependencies(db, market_service, universe_expander)
         logger.info("✅ AI Universe Expander initialized")
         
+        # Initialize Hidden Gem Predictor
+        from services.hidden_gem_predictor import get_gem_predictor
+        from services.deep_learning_ai import get_deep_learning_ai
+        deep_ai = get_deep_learning_ai(db)
+        hidden_gem_predictor = get_gem_predictor(db, market_service, deep_ai)
+        gem_predictor.set_dependencies(db, hidden_gem_predictor)
+        ai_chat.set_gem_predictor(hidden_gem_predictor)
+        logger.info("✅ Hidden Gem Predictor initialized")
+        
         # Kraken service (optional)
         global kraken_service
         kraken_api_key = os.getenv('KRAKEN_API_KEY')
