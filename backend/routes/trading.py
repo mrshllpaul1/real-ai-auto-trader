@@ -276,7 +276,6 @@ async def get_kraken_portfolio():
     Returns all holdings with current prices and total portfolio value.
     Cached for 60 seconds to avoid rate limits.
     """
-    import time
     global _kraken_portfolio_cache
     
     # Check cache
