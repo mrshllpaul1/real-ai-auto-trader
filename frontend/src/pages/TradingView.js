@@ -141,6 +141,18 @@ const TradingView = () => {
       }
 
       chart.timeScale().fitContent();
+      console.log('fitContent called');
+      
+      // Force resize after data is set
+      setTimeout(() => {
+        if (chartRef.current && chartContainerRef.current) {
+          chartRef.current.applyOptions({ 
+            width: chartContainerRef.current.clientWidth 
+          });
+          chartRef.current.timeScale().fitContent();
+          console.log('Force resized chart');
+        }
+      }, 100);
 
       // Handle resize
       const handleResize = () => {
