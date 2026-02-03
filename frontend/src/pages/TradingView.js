@@ -44,19 +44,11 @@ const TradingView = () => {
       try {
         const response = await marketAPI.getHistoricalData(selectedCoin, parseInt(timeframe));
         prices = response.data.prices || [];
+        console.log(`Loaded ${prices.length} price points for ${selectedCoin}`);
       } catch (apiError) {
-        console.log('Using simulated data due to API error');
-        // Generate simulated price data
-        const now = Date.now();
-        const days = parseInt(timeframe);
-        const basePrice = selectedCoin === 'bitcoin' ? 45000 : selectedCoin === 'ethereum' ? 2500 : 100;
-        
-        for (let i = days; i >= 0; i--) {
-          const timestamp = now - (i * 24 * 60 * 60 * 1000);
-          const randomChange = (Math.random() - 0.5) * 0.1;
-          const price = basePrice * (1 + randomChange);
-          prices.push([timestamp, price]);
-        }
+        console.error('API error fetching historical data:', apiError);
+        // Don't use simulated data - show error state instead
+        prices = [];
       }
       
       if (prices.length > 0) {
@@ -72,7 +64,15 @@ const TradingView = () => {
         chartRef.current = null;
       }
 
-      if (!chartContainerRef.current) return;
+      if (!chartContainerRef.current) {
+        console.log('Chart container not ready');
+        return;
+      }
+      
+      if (prices.length === 0) {
+        console.log('No price data available');
+        return;
+      }
 
       // Create new chart
       const chart = createChart(chartContainerRef.current, {
