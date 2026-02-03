@@ -24,7 +24,7 @@ const Dashboard = () => {
   const loadDashboardData = async () => {
     try {
       // Add timeout wrapper to prevent infinite loading
-      const timeoutPromise = (promise, ms = 10000) => {
+      const timeoutPromise = (promise, ms = 25000) => {
         return Promise.race([
           promise,
           new Promise((_, reject) => 
@@ -34,10 +34,10 @@ const Dashboard = () => {
       };
 
       const [portfolioRes, krakenRes, pricesRes, strategiesRes] = await Promise.all([
-        timeoutPromise(tradingAPI.getPortfolio(), 8000).catch(() => ({ data: null })),
-        timeoutPromise(tradingAPI.getKrakenPortfolio(), 10000).catch(() => ({ data: null })),
-        timeoutPromise(marketAPI.getPrices('bitcoin,ethereum,solana'), 8000).catch(() => ({ data: {} })),
-        timeoutPromise(strategyAPI.getStrategies('active', 3), 8000).catch(() => ({ data: { strategies: [] } }))
+        timeoutPromise(tradingAPI.getPortfolio(), 20000).catch(() => ({ data: null })),
+        timeoutPromise(tradingAPI.getKrakenPortfolio(), 25000).catch(() => ({ data: null })),
+        timeoutPromise(marketAPI.getPrices('bitcoin,ethereum,solana'), 20000).catch(() => ({ data: {} })),
+        timeoutPromise(strategyAPI.getStrategies('active', 3), 20000).catch(() => ({ data: { strategies: [] } }))
       ]);
 
       setPortfolio(portfolioRes.data);
