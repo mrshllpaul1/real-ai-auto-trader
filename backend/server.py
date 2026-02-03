@@ -16,6 +16,9 @@ db_name = os.environ.get('DB_NAME', 'crypto_trading_db')
 client = AsyncIOMotorClient(mongo_url)
 db = client[db_name]
 
+# Global service reference for trading routes
+kraken_service = None
+
 # Create the main app
 app = FastAPI(
     title="AI Crypto Trading API",
