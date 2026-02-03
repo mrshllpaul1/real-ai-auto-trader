@@ -110,6 +110,7 @@ api_router.include_router(ai_chat.router, tags=["AI Chat"])
 api_router.include_router(ai_universe_expand.router, tags=["AI Universe Expansion"])
 api_router.include_router(gem_predictor.router, tags=["Hidden Gem Predictor"])
 api_router.include_router(simulation.router, tags=["Historical Simulation"])
+api_router.include_router(ensemble.router, tags=["Ensemble AI"])
 
 # Include the router
 app.include_router(api_router)
