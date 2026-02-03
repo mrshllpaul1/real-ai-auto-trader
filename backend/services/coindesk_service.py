@@ -360,8 +360,269 @@ class CoinDeskService:
         }
 
 
-# Singleton instance
+# CryptoCompare Historical Data Service
+class CryptoCompareHistoricalService:
+    """
+    CryptoCompare Historical Data API client.
+    Uses the same API key as CoinDesk (they share the platform).
+    Provides historical OHLCV data for AI training.
+    """
+    
+    def __init__(self, api_key: str = None):
+        self.api_key = api_key or COINDESK_API_KEY
+        self.base_url = "https://min-api.cryptocompare.com/data/v2"
+        
+        # Cache for historical data
+        self._hist_cache = {}
+        self._cache_ttl = 3600  # 1 hour cache for historical data
+        
+    async def _request(self, endpoint: str, params: Dict = None) -> Dict[str, Any]:
+        """Make authenticated request to CryptoCompare API"""
+        if not self.api_key:
+            return {"error": "CryptoCompare API key not configured"}
+        
+        url = f"{self.base_url}{endpoint}"
+        
+        if params is None:
+            params = {}
+        params["api_key"] = self.api_key
+        
+        try:
+            async with AsyncClient(timeout=60) as client:
+                response = await client.get(url, params=params)
+                _track_credits(1)  # Track credit usage
+                
+                if response.status_code == 200:
+                    return response.json()
+                elif response.status_code == 429:
+                    return {"error": "Rate limit exceeded", "status": 429}
+                else:
+                    return {"error": f"API error: {response.status_code}", "status": response.status_code}
+        except Exception as e:
+            return {"error": str(e)}
+    
+    async def get_historical_daily(
+        self,
+        coin_symbol: str,
+        to_symbol: str = "USD",
+        limit: int = 2000,
+        to_ts: int = None
+    ) -> Dict[str, Any]:
+        """
+        Get historical daily OHLCV data for a coin.
+        
+        Args:
+            coin_symbol: Cryptocurrency symbol (e.g., BTC, ETH)
+            to_symbol: Target currency (default: USD)
+            limit: Number of days (max 2000)
+            to_ts: Unix timestamp to get data up to (optional)
+        
+        Returns:
+            Dict with OHLCV data array
+        """
+        cache_key = f"daily_{coin_symbol}_{to_symbol}_{limit}_{to_ts or 'latest'}"
+        
+        # Check cache
+        if cache_key in self._hist_cache:
+            cached = self._hist_cache[cache_key]
+            if time.time() - cached["timestamp"] < self._cache_ttl:
+                return cached["data"]
+        
+        params = {
+            "fsym": coin_symbol.upper(),
+            "tsym": to_symbol.upper(),
+            "limit": min(limit, 2000)
+        }
+        
+        if to_ts:
+            params["toTs"] = to_ts
+        
+        result = await self._request("/histoday", params)
+        
+        if "Data" in result and "Data" in result["Data"]:
+            ohlcv_data = []
+            for candle in result["Data"]["Data"]:
+                ohlcv_data.append({
+                    "timestamp": candle.get("time"),
+                    "date": datetime.fromtimestamp(candle.get("time", 0), tz=timezone.utc).isoformat(),
+                    "open": candle.get("open", 0),
+                    "high": candle.get("high", 0),
+                    "low": candle.get("low", 0),
+                    "close": candle.get("close", 0),
+                    "volume_from": candle.get("volumefrom", 0),
+                    "volume_to": candle.get("volumeto", 0)
+                })
+            
+            response = {
+                "symbol": coin_symbol.upper(),
+                "to_symbol": to_symbol.upper(),
+                "timeframe": "daily",
+                "data": ohlcv_data,
+                "count": len(ohlcv_data),
+                "time_from": ohlcv_data[0]["date"] if ohlcv_data else None,
+                "time_to": ohlcv_data[-1]["date"] if ohlcv_data else None,
+                "source": "cryptocompare"
+            }
+            
+            # Cache the response
+            self._hist_cache[cache_key] = {
+                "data": response,
+                "timestamp": time.time()
+            }
+            
+            return response
+        
+        return result
+    
+    async def get_historical_hourly(
+        self,
+        coin_symbol: str,
+        to_symbol: str = "USD",
+        limit: int = 2000,
+        to_ts: int = None
+    ) -> Dict[str, Any]:
+        """
+        Get historical hourly OHLCV data for a coin.
+        
+        Args:
+            coin_symbol: Cryptocurrency symbol (e.g., BTC, ETH)
+            to_symbol: Target currency (default: USD)
+            limit: Number of hours (max 2000)
+            to_ts: Unix timestamp to get data up to (optional)
+        
+        Returns:
+            Dict with OHLCV data array
+        """
+        cache_key = f"hourly_{coin_symbol}_{to_symbol}_{limit}_{to_ts or 'latest'}"
+        
+        # Check cache
+        if cache_key in self._hist_cache:
+            cached = self._hist_cache[cache_key]
+            if time.time() - cached["timestamp"] < self._cache_ttl:
+                return cached["data"]
+        
+        params = {
+            "fsym": coin_symbol.upper(),
+            "tsym": to_symbol.upper(),
+            "limit": min(limit, 2000)
+        }
+        
+        if to_ts:
+            params["toTs"] = to_ts
+        
+        result = await self._request("/histohour", params)
+        
+        if "Data" in result and "Data" in result["Data"]:
+            ohlcv_data = []
+            for candle in result["Data"]["Data"]:
+                ohlcv_data.append({
+                    "timestamp": candle.get("time"),
+                    "date": datetime.fromtimestamp(candle.get("time", 0), tz=timezone.utc).isoformat(),
+                    "open": candle.get("open", 0),
+                    "high": candle.get("high", 0),
+                    "low": candle.get("low", 0),
+                    "close": candle.get("close", 0),
+                    "volume_from": candle.get("volumefrom", 0),
+                    "volume_to": candle.get("volumeto", 0)
+                })
+            
+            response = {
+                "symbol": coin_symbol.upper(),
+                "to_symbol": to_symbol.upper(),
+                "timeframe": "hourly",
+                "data": ohlcv_data,
+                "count": len(ohlcv_data),
+                "time_from": ohlcv_data[0]["date"] if ohlcv_data else None,
+                "time_to": ohlcv_data[-1]["date"] if ohlcv_data else None,
+                "source": "cryptocompare"
+            }
+            
+            # Cache the response
+            self._hist_cache[cache_key] = {
+                "data": response,
+                "timestamp": time.time()
+            }
+            
+            return response
+        
+        return result
+    
+    async def get_full_history(
+        self,
+        coin_symbol: str,
+        to_symbol: str = "USD",
+        max_days: int = 5000
+    ) -> Dict[str, Any]:
+        """
+        Get full historical data by fetching multiple batches.
+        Useful for AI training on long-term data.
+        
+        Args:
+            coin_symbol: Cryptocurrency symbol
+            to_symbol: Target currency
+            max_days: Maximum number of days to fetch (fetched in 2000-day batches)
+        
+        Returns:
+            Dict with combined OHLCV data
+        """
+        all_data = []
+        current_ts = None
+        batches_fetched = 0
+        max_batches = (max_days // 2000) + 1
+        
+        while batches_fetched < max_batches:
+            result = await self.get_historical_daily(
+                coin_symbol=coin_symbol,
+                to_symbol=to_symbol,
+                limit=2000,
+                to_ts=current_ts
+            )
+            
+            if "error" in result or "data" not in result or len(result.get("data", [])) == 0:
+                break
+            
+            batch_data = result["data"]
+            
+            # Prepend older data (API returns newest to oldest when using toTs)
+            all_data = batch_data + all_data
+            
+            # Get the oldest timestamp for next batch
+            if batch_data:
+                current_ts = batch_data[0]["timestamp"] - 86400  # Go back 1 day
+            
+            batches_fetched += 1
+            
+            # If we got less than limit, we've reached the beginning
+            if len(batch_data) < 2000:
+                break
+            
+            # Brief delay to respect rate limits
+            await asyncio.sleep(0.2)
+        
+        # Remove duplicates and sort
+        seen_timestamps = set()
+        unique_data = []
+        for candle in sorted(all_data, key=lambda x: x["timestamp"]):
+            if candle["timestamp"] not in seen_timestamps:
+                seen_timestamps.add(candle["timestamp"])
+                unique_data.append(candle)
+        
+        return {
+            "symbol": coin_symbol.upper(),
+            "to_symbol": to_symbol.upper(),
+            "timeframe": "daily",
+            "data": unique_data,
+            "count": len(unique_data),
+            "batches_fetched": batches_fetched,
+            "time_from": unique_data[0]["date"] if unique_data else None,
+            "time_to": unique_data[-1]["date"] if unique_data else None,
+            "source": "cryptocompare"
+        }
+
+
+# Singleton instances
 _coindesk_service = None
+_cryptocompare_service = None
 
 def get_coindesk_service() -> CoinDeskService:
     """Get or create CoinDesk service instance"""
@@ -369,3 +630,11 @@ def get_coindesk_service() -> CoinDeskService:
     if _coindesk_service is None:
         _coindesk_service = CoinDeskService()
     return _coindesk_service
+
+
+def get_cryptocompare_service() -> CryptoCompareHistoricalService:
+    """Get or create CryptoCompare historical service instance"""
+    global _cryptocompare_service
+    if _cryptocompare_service is None:
+        _cryptocompare_service = CryptoCompareHistoricalService()
+    return _cryptocompare_service
