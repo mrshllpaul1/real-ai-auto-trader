@@ -633,6 +633,23 @@ _simulation_status = {
     "result": None
 }
 
+def _convert_to_serializable(obj):
+    """Convert numpy types to native Python types"""
+    import numpy as np
+    if isinstance(obj, np.bool_):
+        return bool(obj)
+    elif isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {k: _convert_to_serializable(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_convert_to_serializable(item) for item in obj]
+    return obj
+
 async def run_simulation_task(db, market_service):
     """Background task to run the simulation"""
     global _simulator, _simulation_status
@@ -644,7 +661,8 @@ async def run_simulation_task(db, market_service):
     try:
         _simulator = HistoricalTradingSimulator(db, market_service)
         result = await _simulator.run_simulation(speed="monthly")
-        _simulation_status["result"] = result
+        # Convert numpy types to native Python
+        _simulation_status["result"] = _convert_to_serializable(result)
         _simulation_status["progress"] = 100
     except Exception as e:
         _simulation_status["result"] = {"error": str(e)}
@@ -652,7 +670,7 @@ async def run_simulation_task(db, market_service):
         _simulation_status["running"] = False
 
 def get_simulation_status():
-    return _simulation_status
+    return _convert_to_serializable(_simulation_status)
 
 def get_simulator():
     return _simulator
