@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, TrendingUp, BarChart3, Settings, Sparkles,
   Brain, Newspaper, Zap, Radar, Bot, FlaskConical, BookOpen,
-  Menu, X, ChevronLeft, Key, Wallet, TestTube
+  Menu, X, ChevronLeft, Key, Wallet, TestTube, Cpu
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NotificationCenter from './NotificationCenter';
@@ -187,6 +187,7 @@ const Sidebar = () => {
     { path: '/trading', icon: TrendingUp, label: 'Trading' },
     { path: '/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/learning', icon: Brain, label: 'AI Learning' },
+    { path: '/deep-learning', icon: Cpu, label: 'Deep Learning', highlight: true },
     { path: '/news', icon: Newspaper, label: 'News & Intel' },
     { path: '/guide', icon: BookOpen, label: 'Guide' },
     { path: '/setup', icon: Key, label: 'Setup', highlight: true },
