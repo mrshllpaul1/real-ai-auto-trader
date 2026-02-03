@@ -170,8 +170,18 @@ class CryptoPanicService:
         
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.get(url, params=request_params)
+            data = response.json()
+            
+            # Check for API quota exceeded error
+            if data.get('status') == 'api_error':
+                error_info = data.get('info', '')
+                if 'quota exceeded' in error_info.lower():
+                    print(f"⚠️ CryptoPanic API quota exceeded: {error_info}")
+                    return {'results': [], 'quota_exceeded': True}
+                raise Exception(f"CryptoPanic API error: {error_info}")
+            
             response.raise_for_status()
-            return response.json()
+            return data
     
     async def get_news(
         self,
