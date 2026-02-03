@@ -52,13 +52,21 @@ const AutoTrading = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Timeout wrapper to prevent infinite loading
+  const timeoutPromise = (promise, ms = 10000) => {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
+    ]);
+  };
+
   const loadConfig = async () => {
     try {
       const userId = localStorage.getItem('user_id') || 'demo_user';
       const [configRes, allocationRes, portfolioRes] = await Promise.all([
-        api.get(`/auto-trading/config/${userId}`).catch(() => ({ data: { configured: false } })),
-        api.get(`/allocation/allocation/${userId}`).catch(() => ({ data: { allocated: false } })),
-        api.get(`/allocation/portfolio/${userId}`).catch(() => ({ data: { initialized: false } }))
+        timeoutPromise(api.get(`/auto-trading/config/${userId}`), 8000).catch(() => ({ data: { configured: false } })),
+        timeoutPromise(api.get(`/allocation/allocation/${userId}`), 8000).catch(() => ({ data: { allocated: false } })),
+        timeoutPromise(api.get(`/allocation/portfolio/${userId}`), 8000).catch(() => ({ data: { initialized: false } }))
       ]);
       
       if (configRes.data.configured) {
