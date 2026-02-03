@@ -28,17 +28,38 @@ const Analytics = () => {
 
   const loadAnalytics = async () => {
     try {
-      const [portfolioRes, historyRes, growthRes, realPosRes, krakenRes, budgetRes] = await Promise.all([
+      const [portfolioRes, historyRes, growthRes, realPosRes, krakenRes, budgetRes, krakenTradesRes] = await Promise.all([
         tradingAPI.getPortfolio().catch(() => ({ data: {} })),
         tradingAPI.getTradeHistory('all', 50).catch(() => ({ data: { trades: [] } })),
         api.get('/growth/stats').catch(() => ({ data: {} })),
         api.get('/growth/positions?status=OPEN').catch(() => ({ data: { positions: [] } })),
         api.get('/trading/balance').catch(() => ({ data: null })),
-        api.get('/budget/').catch(() => ({ data: null }))
+        api.get('/budget/').catch(() => ({ data: null })),
+        api.get('/trading/kraken/trades?limit=50').catch(() => ({ data: { trades: [] } }))
       ]);
 
       setPortfolio(portfolioRes.data || {});
-      setTradeHistory(historyRes.data?.trades || []);
+      
+      // Combine paper trades with real Kraken trades
+      const paperTrades = historyRes.data?.trades || [];
+      const realTrades = krakenTradesRes.data?.trades || [];
+      
+      // Format real trades to match paper trade format
+      const formattedRealTrades = realTrades.map(t => ({
+        ...t,
+        coin_pair: t.pair,
+        action: t.type?.toUpperCase(),
+        executed_price: t.price,
+        quantity: t.volume,
+        total_value: t.cost,
+        mode: 'real',
+        timestamp: t.timestamp,
+        source: 'kraken'
+      }));
+      
+      // Set combined trade history
+      setTradeHistory([...formattedRealTrades, ...paperTrades]);
+      
       setGrowthStats(growthRes.data);
       setRealPositions(realPosRes.data?.positions || []);
       setKrakenBalance(krakenRes.data);
