@@ -192,6 +192,30 @@ const AIPortfolioSection = () => {
         </div>
       </div>
 
+      {/* Kraken Real Holdings */}
+      {krakenPortfolio?.holdings?.length > 0 && (
+        <div className="p-3 bg-[#121212] rounded-lg border border-[#00FF94]/30">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Wallet className="text-[#00FF94]" size={16} />
+              <span className="text-xs font-bold text-[#00FF94]">Kraken Portfolio (Real)</span>
+            </div>
+            <span className="text-sm font-bold text-[#00FF94]">${krakenPortfolio.total_value_usd?.toLocaleString()}</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {krakenPortfolio.holdings.map(h => (
+              <div key={h.asset} className="px-2 py-1 bg-[#0A0A0A] rounded border border-[#1F1F1F]">
+                <span className="text-white font-bold text-xs">{h.symbol}</span>
+                <span className="text-[#A1A1AA] text-xs ml-1">${h.value_usd?.toFixed(0)}</span>
+                <span className={`text-xs ml-1 ${h.price_change_24h >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                  ({h.price_change_24h >= 0 ? '+' : ''}{h.price_change_24h?.toFixed(1)}%)
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Target Allocation */}
       {portfolio.target_allocation && (
         <div className="p-3 bg-[#121212] rounded-lg border border-[#9D00FF]/30">
