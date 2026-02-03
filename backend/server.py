@@ -188,13 +188,16 @@ async def initialize_services():
         news_service = CryptoNewsAggregator()
         
         # Kraken service (optional)
+        global kraken_service
         kraken_api_key = os.getenv('KRAKEN_API_KEY')
         kraken_api_secret = os.getenv('KRAKEN_API_SECRET')
-        kraken_service = None
         if kraken_api_key and kraken_api_secret:
             kraken_auth = KrakenAuthenticator(kraken_api_key, kraken_api_secret)
             kraken_service = KrakenTradeService(kraken_auth)
             logger.info("✅ Kraken service initialized")
+        else:
+            kraken_service = None
+            logger.warning("⚠️ Kraken service not initialized - missing API keys")
         
         # AI Portfolio Manager
         ai_portfolio_mgr = AIPortfolioManager(db=db, kraken_service=kraken_service, market_service=market_service, news_service=news_service)
