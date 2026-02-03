@@ -7,6 +7,7 @@ import TradingView from "./pages/TradingView";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import AILearning from "./pages/AILearning";
+import AILearningLoop from "./pages/AILearningLoop";
 import NewsAndIntelligence from "./pages/NewsAndIntelligence";
 import NewsFilters from "./pages/NewsFilters";
 import AutoTrading from "./pages/AutoTrading";
