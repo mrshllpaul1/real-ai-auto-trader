@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="9" skipped="2" tests="11" time="97.788" timestamp="2026-02-03T18:29:57.771700+00:00" hostname="agent-env-4182ecc1-9ed6-4b67-b9a6-7c915c040f2c"><testcase classname="tests.test_deep_learning.TestDeepLearningStatus" name="test_get_ai_status" time="97.148"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">tests/test_deep_learning.py:20: in test_get_ai_status
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_deep_learning.TestLSTMInfo" name="test_get_lstm_info" time="0.090"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">tests/test_deep_learning.py:67: in test_get_lstm_info
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_deep_learning.TestPatternDetection" name="test_detect_patterns_bitcoin" time="0.039"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">tests/test_deep_learning.py:99: in test_detect_patterns_bitcoin
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_deep_learning.TestPatternDetection" name="test_detect_patterns_ethereum" time="0.053"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">tests/test_deep_learning.py:125: in test_detect_patterns_ethereum
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_deep_learning.TestPatternDetection" name="test_detect_patterns_solana" time="0.041"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">tests/test_deep_learning.py:137: in test_detect_patterns_solana
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_deep_learning.TestSentimentAnalysis" name="test_analyze_sentiment_bullish" time="0.041"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">tests/test_deep_learning.py:160: in test_analyze_sentiment_bullish
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_deep_learning.TestSentimentAnalysis" name="test_analyze_sentiment_bearish" time="0.042"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">tests/test_deep_learning.py:188: in test_analyze_sentiment_bearish
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_deep_learning.TestSentimentAnalysis" name="test_analyze_sentiment_mixed" time="0.041"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">tests/test_deep_learning.py:208: in test_analyze_sentiment_mixed
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_deep_learning.TestSentimentAnalysis" name="test_analyze_sentiment_empty" time="0.041"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">tests/test_deep_learning.py:222: in test_analyze_sentiment_empty
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_deep_learning.TestMultiCoinSignals" name="test_get_multi_coin_signals" time="0.000"><skipped type="pytest.skip" message="Multi-coin signals can take 2-3 minutes due to LSTM training">/app/backend/tests/test_deep_learning.py:233: Multi-coin signals can take 2-3 minutes due to LSTM training</skipped></testcase><testcase classname="tests.test_deep_learning.TestPricePrediction" name="test_predict_price_bitcoin" time="0.000"><skipped type="pytest.skip" message="Price prediction can take 1-2 minutes due to LSTM training">/app/backend/tests/test_deep_learning.py:253: Price prediction can take 1-2 minutes due to LSTM training</skipped></testcase></testsuite></testsuites>
