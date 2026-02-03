@@ -286,3 +286,133 @@ async def verify_prediction(prediction_id: str, actual_gains: dict):
         
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+# Backtester reference
+_backtester = None
+
+def set_backtester(backtester):
+    """Set backtester instance"""
+    global _backtester
+    _backtester = backtester
+
+
+# Backtest status tracking
+_backtest_status = {
+    "running": False,
+    "started_at": None,
+    "progress": 0,
+    "current_iteration": 0,
+    "target_accuracy": 0,
+    "current_accuracy": 0,
+    "message": "",
+    "result": None
+}
+
+
+def get_backtest_status() -> Dict[str, Any]:
+    """Get current backtest status"""
+    return _backtest_status.copy()
+
+
+async def run_backtest_task(target_accuracy: float, max_iterations: int):
+    """Background task for backtesting"""
+    global _backtest_status
+    
+    _backtest_status["running"] = True
+    _backtest_status["started_at"] = datetime.utcnow().isoformat()
+    _backtest_status["target_accuracy"] = target_accuracy
+    _backtest_status["message"] = "Starting backtest..."
+    
+    try:
+        result = await _backtester.run_backtest(
+            target_accuracy=target_accuracy,
+            max_iterations=max_iterations
+        )
+        
+        _backtest_status["result"] = result
+        _backtest_status["current_accuracy"] = result.get("final_accuracy", 0)
+        _backtest_status["message"] = result.get("message", "Backtest complete")
+        
+    except Exception as e:
+        _backtest_status["result"] = {"error": str(e)}
+        _backtest_status["message"] = f"Error: {str(e)}"
+    finally:
+        _backtest_status["running"] = False
+
+
+@router.post("/backtest/start")
+async def start_backtest(
+    target_accuracy: float = 75.0,
+    max_iterations: int = 10,
+    background_tasks: BackgroundTasks = None
+):
+    """
+    Start iterative backtesting to improve gem prediction accuracy.
+    
+    The backtester will:
+    1. Test current prediction model against historical data
+    2. Analyze which factors contribute to correct predictions
+    3. Adjust model weights to improve accuracy
+    4. Repeat until target accuracy is reached or max iterations hit
+    
+    Args:
+        target_accuracy: Target accuracy percentage (default: 75%)
+        max_iterations: Maximum iterations to try (default: 10)
+    """
+    global _backtest_status
+    
+    if not _backtester:
+        raise HTTPException(status_code=503, detail="Backtester not initialized")
+    
+    if _backtest_status.get("running"):
+        return {
+            "status": "already_running",
+            "current_iteration": _backtest_status.get("current_iteration"),
+            "current_accuracy": _backtest_status.get("current_accuracy"),
+            "message": "Backtest already in progress"
+        }
+    
+    # Reset status
+    _backtest_status = {
+        "running": True,
+        "started_at": datetime.utcnow().isoformat(),
+        "progress": 0,
+        "current_iteration": 0,
+        "target_accuracy": target_accuracy,
+        "current_accuracy": 0,
+        "message": "Starting backtest...",
+        "result": None
+    }
+    
+    # Run in background
+    import asyncio
+    loop = asyncio.get_event_loop()
+    loop.create_task(run_backtest_task(target_accuracy, max_iterations))
+    
+    return {
+        "status": "started",
+        "target_accuracy": target_accuracy,
+        "max_iterations": max_iterations,
+        "message": "Backtest started. Check /api/gems/backtest/status for progress.",
+        "check_status": "/api/gems/backtest/status"
+    }
+
+
+@router.get("/backtest/status")
+async def get_backtest_status_endpoint():
+    """Get current backtest status and results"""
+    return get_backtest_status()
+
+
+@router.get("/backtest/history")
+async def get_backtest_history(limit: int = 10):
+    """Get history of backtest runs"""
+    if not _backtester:
+        raise HTTPException(status_code=503, detail="Backtester not initialized")
+    
+    history = await _backtester.get_backtest_history(limit)
+    return {
+        "count": len(history),
+        "history": history
+    }
