@@ -106,7 +106,7 @@ const TradingView = () => {
       console.log(`Generated ${ohlcData.length} OHLC candles`);
 
       if (chartType === 'candlestick') {
-        const candleSeries = chart.addCandlestickSeries({
+        const candleSeries = chart.addSeries(CandlestickSeries, {
           upColor: '#00FF94',
           downColor: '#FF0055',
           borderDownColor: '#FF0055',
@@ -117,7 +117,7 @@ const TradingView = () => {
         candleSeries.setData(ohlcData);
         console.log('Candlestick series created and data set');
       } else if (chartType === 'line') {
-        const lineSeries = chart.addLineSeries({
+        const lineSeries = chart.addSeries(LineSeries, {
           color: '#00FF94',
           lineWidth: 2,
         });
@@ -127,7 +127,7 @@ const TradingView = () => {
         })));
         console.log('Line series created and data set');
       } else if (chartType === 'area') {
-        const areaSeries = chart.addAreaSeries({
+        const areaSeries = chart.addSeries(AreaSeries, {
           topColor: 'rgba(0, 255, 148, 0.4)',
           bottomColor: 'rgba(0, 255, 148, 0.0)',
           lineColor: '#00FF94',
