@@ -565,30 +565,22 @@ class UniverseOptimizer:
         elif price_change_7d and price_change_7d > 10:
             momentum_score += 3
         
-        # 4. Try to get AI prediction if possible (limited to avoid API overload)
-        try:
-            if self.ensemble and market_cap > 100_000_000:  # Only for larger caps to save API calls
-                hist_data = await self.market_service.get_historical_data(coin_id, days=30)
-                if hist_data and hist_data.get('prices') and len(hist_data['prices']) >= 20:
-                    prices = [p[1] for p in hist_data['prices']]
-                    
-                    # Get technical analysis
-                    tech_result = self.ensemble._calculate_technical(prices)
-                    if tech_result.get('signal') == 'bullish':
-                        technical_score = 15
-                    elif tech_result.get('signal') == 'bearish':
-                        technical_score = -5
-                    else:
-                        technical_score = 5
-                    
-                    # Get momentum analysis
-                    momentum_result = self.ensemble._calculate_momentum(prices)
-                    if momentum_result.get('signal') == 'bullish':
-                        ai_prediction_score += 10
-                    elif momentum_result.get('signal') == 'bearish':
-                        ai_prediction_score -= 5
-        except Exception:
-            pass  # Continue without AI prediction
+        # 4. Try to get AI prediction if possible (skipped for speed - can be enabled for deeper analysis)
+        # This would fetch historical data for each coin which is slow
+        # For faster rebuilds, we rely on market data signals instead
+        
+        # Use price change as a proxy for technical score
+        if price_change_24h and price_change_7d:
+            if price_change_24h > 5 and price_change_7d > 10:
+                technical_score = 15  # Strong bullish
+            elif price_change_24h > 0 and price_change_7d > 0:
+                technical_score = 8   # Mild bullish
+            elif price_change_24h < -5 and price_change_7d < -10:
+                technical_score = -10  # Strong bearish
+            elif price_change_24h < 0 and price_change_7d < 0:
+                technical_score = -3   # Mild bearish
+            else:
+                technical_score = 3    # Neutral/mixed
         
         # Calculate ensemble score (weighted combination)
         ensemble_score = (
