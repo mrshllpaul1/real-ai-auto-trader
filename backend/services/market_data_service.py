@@ -211,10 +211,10 @@ class MarketDataService:
             print(f"Kraken historical data error for {coin_id}: {e}")
             return None
     
-    async def get_all_coins(self, per_page: int = 250) -> List[Dict[str, Any]]:
+    async def get_all_coins(self, per_page: int = 250, page: int = 1) -> List[Dict[str, Any]]:
         """Get a list of coins with market data from CoinGecko"""
         try:
-            cache_key = f"all_coins_{per_page}"
+            cache_key = f"all_coins_{per_page}_page_{page}"
             cached = self._get_cached(cache_key, 'coins')
             if cached:
                 return cached
@@ -228,7 +228,7 @@ class MarketDataService:
                     vs_currency='usd',
                     order='market_cap_desc',
                     per_page=per_page,
-                    page=1,
+                    page=page,
                     sparkline=False,
                     price_change_percentage='24h,7d'
                 )
