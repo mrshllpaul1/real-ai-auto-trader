@@ -454,34 +454,48 @@ class UniverseOptimizer:
         self.deep_learning_ai = deep_learning_ai
         self.api_key = os.getenv('EMERGENT_LLM_KEY')
         
-    async def analyze_top_coins(self, limit: int = 1000, progress_callback=None) -> List[Dict]:
-        """Analyze top coins by market cap using all AI models"""
+    async def analyze_top_coins(self, limit: int = 1000, batch_size: int = 200, progress_callback=None) -> List[Dict]:
+        """Analyze top coins by market cap using all AI models - processes in batches"""
         global _universe_rebuild_status
         analyzed = []
         
         try:
-            # Get top coins in batches (CoinGecko free tier limit)
-            batch_size = 250
             all_coins = []
+            num_batches = (limit + batch_size - 1) // batch_size  # Ceiling division
             
-            _universe_rebuild_status["progress_message"] = "Fetching coin list..."
+            _universe_rebuild_status["progress_message"] = f"Fetching {limit} coins in {num_batches} batches of {batch_size}..."
             
-            for page in range(1, (limit // batch_size) + 2):
+            # Fetch coins in batches of 200
+            for batch_num in range(1, num_batches + 1):
+                _universe_rebuild_status["progress_message"] = f"Fetching batch {batch_num}/{num_batches} (coins {(batch_num-1)*batch_size + 1}-{min(batch_num*batch_size, limit)})..."
+                _universe_rebuild_status["progress"] = int((batch_num - 1) / num_batches * 20)  # 0-20% for fetching
+                
+                try:
+                    coins = await self.market_service.get_all_coins(per_page=batch_size, page=batch_num)
+                    if coins:
+                        all_coins.extend(coins)
+                        print(f"Batch {batch_num}: Fetched {len(coins)} coins (total: {len(all_coins)})")
+                    else:
+                        print(f"Batch {batch_num}: No coins returned, stopping")
+                        break
+                except Exception as e:
+                    print(f"Batch {batch_num} error: {e}")
+                    continue
+                
+                await asyncio.sleep(1.5)  # Rate limiting between batches
+                
                 if len(all_coins) >= limit:
                     break
-                    
-                coins = await self.market_service.get_all_coins(per_page=batch_size)
-                all_coins.extend(coins)
-                await asyncio.sleep(1)  # Rate limiting
             
             all_coins = all_coins[:limit]
             _universe_rebuild_status["total_coins"] = len(all_coins)
             _universe_rebuild_status["progress_message"] = f"Analyzing {len(all_coins)} coins..."
+            _universe_rebuild_status["progress"] = 20  # Fetching complete
             
             # Analyze each coin with ensemble scoring
             for i, coin in enumerate(all_coins):
                 _universe_rebuild_status["coins_analyzed"] = i + 1
-                _universe_rebuild_status["progress"] = int((i + 1) / len(all_coins) * 80)  # 80% for analysis
+                _universe_rebuild_status["progress"] = 20 + int((i + 1) / len(all_coins) * 60)  # 20-80% for analysis
                 
                 if i % 50 == 0:
                     _universe_rebuild_status["progress_message"] = f"Analyzing coin {i+1}/{len(all_coins)}: {coin.get('symbol', 'N/A').upper()}"
@@ -493,9 +507,9 @@ class UniverseOptimizer:
                 except Exception:
                     continue
                 
-                # Rate limiting
-                if i % 10 == 0:
-                    await asyncio.sleep(0.3)
+                # Rate limiting - lighter since we already have all the data
+                if i % 50 == 0 and i > 0:
+                    await asyncio.sleep(0.1)
             
         except Exception as e:
             print(f"Analysis error: {e}")
