@@ -148,6 +148,90 @@ async def execute_ai_command(request: CommandRequest):
     if any(word in query for word in ["predict", "forecast", "analysis"]):
         actions_to_execute.append({"type": "navigate", "path": "/deep-learning"})
     
+    # 5. Trade/Buy/Sell intents
+    if any(word in query for word in ["buy", "sell", "trade", "execute"]):
+        import re
+        coin_pattern = r'\b(btc|eth|sol|ada|dot|avax|bnb|xrp|doge|shib|matic|link|uni|atom|ltc|aave|sui|apt)\b'
+        matches = re.findall(coin_pattern, query, re.IGNORECASE)
+        
+        if matches:
+            action_type = "buy" if "buy" in query else "sell" if "sell" in query else "trade"
+            for match in matches:
+                actions_to_execute.append({
+                    "type": f"trade_{action_type}",
+                    "coin": match.upper(),
+                    "message": f"Ready to {action_type} {match.upper()}. Go to Trading page to execute."
+                })
+                actions_executed.append({"type": f"{action_type}_intent", "coin": match.upper()})
+            actions_to_execute.append({"type": "navigate", "path": "/trading"})
+    
+    # 6. Backtest intents
+    if any(word in query for word in ["backtest", "simulate", "test strategy"]):
+        actions_to_execute.append({"type": "navigate", "path": "/backtest"})
+        actions_executed.append({"type": "backtest_requested"})
+    
+    # 7. Portfolio/Balance intents
+    if any(word in query for word in ["portfolio", "balance", "holdings", "my coins"]):
+        # Get Kraken portfolio if available
+        try:
+            from routes.trading import get_kraken_portfolio
+            portfolio = await get_kraken_portfolio()
+            if portfolio and portfolio.get("holdings"):
+                holdings_summary = []
+                for h in portfolio["holdings"][:5]:
+                    holdings_summary.append({
+                        "symbol": h["symbol"],
+                        "value": h["value_usd"],
+                        "change": h.get("price_change_24h", 0)
+                    })
+                actions_executed.append({
+                    "type": "portfolio_fetched",
+                    "total": portfolio.get("total_value_usd", 0),
+                    "holdings": holdings_summary
+                })
+        except Exception as e:
+            print(f"Portfolio fetch error: {e}")
+    
+    # 8. Train/Learn intents
+    if any(word in query for word in ["train", "learn", "improve", "optimize"]):
+        if any(word in query for word in ["gem", "hidden"]):
+            try:
+                from services.hidden_gem_predictor import get_gem_training_status
+                status = get_gem_training_status()
+                if not status.get("running"):
+                    # Trigger training
+                    if _gem_predictor:
+                        await _gem_predictor.train_on_historical()
+                        actions_executed.append({"type": "training_started", "model": "gem_predictor"})
+                else:
+                    actions_executed.append({
+                        "type": "training_in_progress",
+                        "progress": status.get("progress", 0)
+                    })
+            except Exception as e:
+                print(f"Training error: {e}")
+    
+    # 9. Rebuild universe intents
+    if any(word in query for word in ["rebuild", "universe", "optimize universe", "1000 coins"]):
+        actions_to_execute.append({"type": "navigate", "path": "/ensemble"})
+        actions_executed.append({"type": "universe_rebuild_suggested"})
+    
+    # 10. News/Sentiment intents
+    if any(word in query for word in ["news", "sentiment", "headlines"]):
+        try:
+            from services.coindesk_service import get_coindesk_service
+            coindesk = get_coindesk_service()
+            sentiment = await coindesk.get_market_sentiment_summary()
+            if sentiment and not sentiment.get("error"):
+                actions_executed.append({
+                    "type": "sentiment_fetched",
+                    "overall": sentiment.get("overall_sentiment"),
+                    "positive": sentiment.get("sentiment_distribution", {}).get("POSITIVE", 0),
+                    "negative": sentiment.get("sentiment_distribution", {}).get("NEGATIVE", 0)
+                })
+        except Exception as e:
+            print(f"Sentiment fetch error: {e}")
+    
     # Get AI response with context
     ai_response = await _chat_service.chat_with_deep_learning(
         query=request.query,
