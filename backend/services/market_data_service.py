@@ -105,6 +105,10 @@ class MarketDataService:
             
         except asyncio.TimeoutError:
             print(f"Historical data timeout for {coin_id}")
+            # Try Kraken as fallback
+            kraken_data = await self.get_historical_from_kraken(coin_id, days)
+            if kraken_data:
+                return kraken_data
             # Return cached data even if expired, or generate fallback
             old_cached = self._cache.get(cache_key)
             if old_cached:
@@ -116,6 +120,10 @@ class MarketDataService:
             
         except Exception as e:
             print(f"Historical data error for {coin_id}: {str(e)}")
+            # Try Kraken as fallback
+            kraken_data = await self.get_historical_from_kraken(coin_id, days)
+            if kraken_data:
+                return kraken_data
             return self._generate_fallback_historical(coin_id, days)
     
     def _generate_fallback_historical(self, coin_id: str, days: int) -> Dict[str, Any]:
