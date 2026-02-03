@@ -1,6 +1,6 @@
 """
 CryptoPanic News API Routes
-Provides access to crypto news from CryptoPanic.
+Provides access to crypto news from CryptoPanic with fallback to free news API.
 """
 
 from fastapi import APIRouter, HTTPException, Query
@@ -11,12 +11,14 @@ router = APIRouter(prefix="/news", tags=["Crypto News"])
 
 # Will be set by server.py
 _cryptopanic_service = None
+_news_aggregator = None
 
 
-def set_dependencies(cryptopanic_service):
+def set_dependencies(cryptopanic_service, news_aggregator=None):
     """Set dependencies from server.py"""
-    global _cryptopanic_service
+    global _cryptopanic_service, _news_aggregator
     _cryptopanic_service = cryptopanic_service
+    _news_aggregator = news_aggregator
 
 
 class MultiCoinRequest(BaseModel):
