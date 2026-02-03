@@ -251,6 +251,41 @@ async def run_job_now(job_id: str):
     return await scheduler_service.run_job_now(job_id)
 
 
+@router.post("/jobs/daily-ohlcv-update")
+async def add_daily_ohlcv_update(schedule: OHLCVUpdateSchedule):
+    """
+    Add daily OHLCV data update job.
+    
+    Keeps historical data fresh by downloading latest market data daily.
+    
+    Default: Every day at 4 AM UTC
+    
+    - Updates all coins currently stored in the database
+    - Downloads latest 30 days to capture recent changes
+    - Essential for keeping AI training data current
+    """
+    if scheduler_service is None:
+        raise HTTPException(status_code=500, detail="Scheduler not initialized")
+    
+    return await scheduler_service.add_daily_ohlcv_update_job(
+        hour=schedule.hour,
+        coins=schedule.coins
+    )
+
+
+@router.post("/jobs/ohlcv-update-now")
+async def run_ohlcv_update_now(coins: list = None):
+    """
+    Manually trigger OHLCV data update immediately.
+    
+    Updates historical data for all stored coins (or specified list).
+    """
+    if scheduler_service is None:
+        raise HTTPException(status_code=500, detail="Scheduler not initialized")
+    
+    return await scheduler_service._run_daily_ohlcv_update(coins=coins)
+
+
 @router.get("/history")
 async def get_execution_history(limit: int = 50):
     """Get scheduler execution history"""
