@@ -42,6 +42,47 @@ class PatternExplainRequest(BaseModel):
     coin_id: str
 
 
+class DeepChatRequest(BaseModel):
+    query: str
+    session_id: Optional[str] = "default"
+    context_hint: Optional[str] = ""
+    include_predictions: Optional[bool] = True
+    include_gems: Optional[bool] = True
+
+
+@router.post("/ask-deep")
+async def ask_ai_deep(request: DeepChatRequest):
+    """
+    Ask the AI with deep learning integration.
+    
+    Enhanced features:
+    - LSTM price predictions
+    - Pattern detection
+    - Hidden gem analysis
+    - Sentiment from news
+    
+    Use for:
+    - Price predictions: "What's the prediction for Bitcoin?"
+    - Hidden gems: "What are today's hidden gems?"
+    - Pattern analysis: "What patterns do you see in ETH?"
+    """
+    if not _chat_service:
+        raise HTTPException(status_code=503, detail="AI Chat service not initialized")
+    
+    if not request.query or len(request.query.strip()) < 3:
+        raise HTTPException(status_code=400, detail="Query must be at least 3 characters")
+    
+    result = await _chat_service.chat_with_deep_learning(
+        query=request.query,
+        session_id=request.session_id,
+        context_hint=request.context_hint,
+        include_predictions=request.include_predictions,
+        include_gems=request.include_gems
+    )
+    
+    return result
+
+
 @router.post("/ask")
 async def ask_ai(request: ChatRequest):
     """
