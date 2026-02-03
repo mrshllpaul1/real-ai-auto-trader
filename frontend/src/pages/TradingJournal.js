@@ -65,7 +65,7 @@ export default function TradingJournal() {
               <BarChart3 size={16} />
               <span className="text-xs">Total Trades</span>
             </div>
-            <div className="text-2xl font-bold">{stats?.total_trades || 0}</div>
+            <div className="text-2xl font-bold">{totalTrades}</div>
           </CardContent>
         </Card>
 
