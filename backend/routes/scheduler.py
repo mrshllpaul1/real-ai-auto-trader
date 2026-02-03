@@ -44,6 +44,11 @@ class RetrainSchedule(BaseModel):
     coins: Optional[list] = None  # None = use all coins from universe
 
 
+class GemRetrainSchedule(BaseModel):
+    day_of_week: Optional[str] = 'sun'
+    hour: Optional[int] = 9  # 9 AM UTC = 2 AM MST
+
+
 @router.get("/status")
 async def get_scheduler_status():
     """Get current scheduler status and active jobs"""
