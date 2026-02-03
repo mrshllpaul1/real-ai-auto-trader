@@ -865,7 +865,7 @@ const DeepLearningAI = () => {
                 <div className="text-center py-12">
                   <Zap size={48} className="mx-auto mb-4 text-[#FF9500] opacity-50" />
                   <p className="text-[#A1A1AA]">
-                    Click "Get All Signals" to analyze multiple coins with deep learning
+                    Click &quot;Get All Signals&quot; to analyze multiple coins with deep learning
                   </p>
                 </div>
               )}
