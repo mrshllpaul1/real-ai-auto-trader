@@ -487,7 +487,7 @@ const EnsembleAI = () => {
               <div className="flex flex-wrap justify-between gap-4 text-sm">
                 <div>
                   <span className="text-[#A1A1AA]">Avg Old Score:</span>
-                  <span className="ml-2 text-white font-bold">{comparison.comparison.avg_existing_score}</span>
+                  <span className="ml-2 text-white font-bold">{comparison.comparison.avg_existing_score || 'N/A'}</span>
                 </div>
                 <div>
                   <span className="text-[#A1A1AA]">Avg New Score:</span>
@@ -496,11 +496,13 @@ const EnsembleAI = () => {
                 <div>
                   <span className="text-[#A1A1AA]">Improvement:</span>
                   <span className={`ml-2 font-bold ${
-                    comparison.comparison.avg_new_score > comparison.comparison.avg_existing_score 
+                    comparison.comparison.avg_new_score > (comparison.comparison.avg_existing_score || 0)
                       ? 'text-[#00FF94]' : 'text-[#FF0055]'
                   }`}>
-                    {comparison.comparison.avg_new_score > comparison.comparison.avg_existing_score ? '+' : ''}
-                    {(comparison.comparison.avg_new_score - comparison.comparison.avg_existing_score).toFixed(2)}
+                    {comparison.comparison.avg_existing_score > 0 
+                      ? `${comparison.comparison.avg_new_score > comparison.comparison.avg_existing_score ? '+' : ''}${(comparison.comparison.avg_new_score - comparison.comparison.avg_existing_score).toFixed(2)}`
+                      : 'New baseline'
+                    }
                   </span>
                 </div>
               </div>
