@@ -244,34 +244,79 @@ async def get_build_status():
 
 @router.get("/optimal-universe")
 async def get_optimal_universe():
-    """Get the current optimal universe"""
+    """Get the current optimal universe with ensemble scores"""
     if _db is None:
         raise HTTPException(status_code=503, detail="Database not available")
     
-    cursor = _db.optimal_universe.find().sort("universe_score", -1)
+    cursor = _db.optimal_universe.find().sort("ensemble_score", -1)
     coins = await cursor.to_list(length=100)
     
     for coin in coins:
         coin.pop('_id', None)
     
+    # Get categories breakdown
+    categories = {
+        "large_cap": sum(1 for c in coins if c.get('market_cap', 0) > 10_000_000_000),
+        "mid_cap": sum(1 for c in coins if 1_000_000_000 < c.get('market_cap', 0) <= 10_000_000_000),
+        "small_cap": sum(1 for c in coins if 100_000_000 < c.get('market_cap', 0) <= 1_000_000_000),
+        "micro_cap": sum(1 for c in coins if c.get('market_cap', 0) <= 100_000_000),
+        "hidden_gems": sum(1 for c in coins if c.get('is_gem_candidate'))
+    }
+    
     return {
         "count": len(coins),
         "coins": coins,
-        "top_10": [c['symbol'] for c in coins[:10]]
+        "top_10": [{"symbol": c['symbol'], "score": c.get('ensemble_score', 0)} for c in coins[:10]],
+        "categories": categories,
+        "avg_ensemble_score": round(sum(c.get('ensemble_score', 0) for c in coins) / max(1, len(coins)), 2)
+    }
+
+
+@router.get("/comparison")
+async def get_portfolio_comparison():
+    """
+    Get comparison between old and new portfolio recommendations.
+    
+    Shows which coins were:
+    - Retained (still recommended)
+    - Added (new recommendations)
+    - Removed (no longer recommended)
+    """
+    from services.ensemble_ai import get_rebuild_status
+    
+    status = get_rebuild_status()
+    
+    if status.get("comparison"):
+        return {
+            "status": "available",
+            "comparison": status["comparison"],
+            "last_rebuild": status.get("started_at")
+        }
+    
+    # Try to compute from database
+    if _optimizer:
+        comparison = await _optimizer.get_weekly_recommendations_comparison()
+        return {
+            "status": "from_history",
+            "comparison": comparison
+        }
+    
+    return {
+        "status": "no_comparison_available",
+        "message": "Run /rebuild-universe first to generate comparison"
     }
 
 
 @router.get("/hidden-gems")
 async def get_hidden_gems_from_universe():
-    """Get hidden gems from the optimal universe"""
+    """Get hidden gems from the optimal universe (high score + low market cap)"""
     if _db is None:
         raise HTTPException(status_code=503, detail="Database not available")
     
     # High score, low market cap
     cursor = _db.optimal_universe.find({
-        "universe_score": {"$gte": 65},
-        "market_cap": {"$lt": 500_000_000}
-    }).sort("universe_score", -1).limit(20)
+        "is_gem_candidate": True
+    }).sort("ensemble_score", -1).limit(20)
     
     gems = await cursor.to_list(length=20)
     
@@ -280,7 +325,12 @@ async def get_hidden_gems_from_universe():
     
     return {
         "count": len(gems),
-        "hidden_gems": gems
+        "hidden_gems": gems,
+        "criteria": {
+            "min_score": 60,
+            "max_market_cap": "$500M",
+            "description": "Coins with high ensemble AI score but low market cap = maximum growth potential"
+        }
     }
 
 
