@@ -104,6 +104,7 @@ const TradingView = () => {
       // Generate OHLC data from prices
       const ohlcData = generateOHLC(prices);
       console.log(`Generated ${ohlcData.length} OHLC candles`);
+      console.log('Sample OHLC data:', JSON.stringify(ohlcData.slice(0, 2)));
 
       if (chartType === 'candlestick') {
         const candleSeries = chart.addSeries(CandlestickSeries, {
