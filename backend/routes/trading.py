@@ -260,12 +260,30 @@ KRAKEN_TO_COINGECKO = {
 }
 
 
+# Cache for Kraken portfolio
+_kraken_portfolio_cache = {
+    "data": None,
+    "timestamp": None,
+    "ttl": 60  # Cache for 60 seconds
+}
+
+
 @router.get("/kraken/portfolio")
 async def get_kraken_portfolio():
     """
     Get complete Kraken portfolio with real-time USD values.
     Returns all holdings with current prices and total portfolio value.
+    Cached for 60 seconds to avoid rate limits.
     """
+    import time
+    global _kraken_portfolio_cache
+    
+    # Check cache
+    if (_kraken_portfolio_cache["data"] is not None and 
+        _kraken_portfolio_cache["timestamp"] is not None and
+        time.time() - _kraken_portfolio_cache["timestamp"] < _kraken_portfolio_cache["ttl"]):
+        return _kraken_portfolio_cache["data"]
+    
     try:
         from server import kraken_service
         if not kraken_service:
