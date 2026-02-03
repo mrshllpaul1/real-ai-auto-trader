@@ -301,6 +301,12 @@ async def initialize_services():
         journal_service = TradingJournalService(db)
         journal.set_dependencies(journal_service)
         
+        # CoinDesk News Service
+        from services.coindesk_service import get_coindesk_service
+        coindesk_service = get_coindesk_service()
+        coindesk.set_dependencies(coindesk_service)
+        logger.info("✅ CoinDesk News service initialized")
+        
         # Start scheduler
         await scheduler_service.start()
         
