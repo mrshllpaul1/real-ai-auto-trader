@@ -45,6 +45,9 @@ export const tradingAPI = {
       params: { mode, limit }
     }),
   getPortfolio: () => api.get(`/trading/portfolio/${localStorage.getItem('user_id') || 'demo_user'}`),
+  getKrakenPortfolio: () => api.get('/trading/kraken/portfolio'),
+  getKrakenTrades: (limit = 50) => api.get('/trading/kraken/trades', { params: { limit } }),
+  getKrakenOrders: (limit = 50) => api.get('/trading/kraken/orders', { params: { limit } }),
 };
 
 // Strategy APIs
