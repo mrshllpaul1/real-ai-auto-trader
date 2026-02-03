@@ -71,6 +71,7 @@ function App() {
                 <Route path="/trading" element={<TradingView />} />
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/learning" element={<AILearning />} />
+                <Route path="/learning-loop" element={<AILearningLoop />} />
                 <Route path="/deep-learning" element={<DeepLearningAI />} />
                 <Route path="/ensemble" element={<EnsembleAI />} />
                 <Route path="/ai-chat" element={<AIChat />} />
