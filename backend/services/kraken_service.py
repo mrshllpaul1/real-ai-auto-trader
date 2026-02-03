@@ -163,6 +163,52 @@ class KrakenTradeService:
         if response.get("error"):
             raise Exception(f"Kraken API error: {response['error']}")
         return response.get("result", {})
+    
+    async def get_trades_history(self, start: int = None, end: int = None, ofs: int = 0) -> Dict[str, Any]:
+        """Get trade history from Kraken
+        
+        Args:
+            start: Starting unix timestamp (optional)
+            end: Ending unix timestamp (optional)
+            ofs: Result offset for pagination
+            
+        Returns:
+            Dict with 'trades' containing trade history and 'count' for total
+        """
+        params = {"ofs": ofs}
+        if start:
+            params["start"] = start
+        if end:
+            params["end"] = end
+            
+        response = await self.auth.request("TradesHistory", params=params)
+        if response.get("error"):
+            print(f"Kraken trades history error: {response['error']}")
+            return {"trades": {}, "count": 0}
+        return response.get("result", {"trades": {}, "count": 0})
+    
+    async def get_closed_orders(self, start: int = None, end: int = None, ofs: int = 0) -> Dict[str, Any]:
+        """Get closed orders history from Kraken
+        
+        Args:
+            start: Starting unix timestamp (optional)
+            end: Ending unix timestamp (optional)
+            ofs: Result offset for pagination
+            
+        Returns:
+            Dict with 'closed' containing closed orders
+        """
+        params = {"ofs": ofs}
+        if start:
+            params["start"] = start
+        if end:
+            params["end"] = end
+            
+        response = await self.auth.request("ClosedOrders", params=params)
+        if response.get("error"):
+            print(f"Kraken closed orders error: {response['error']}")
+            return {"closed": {}}
+        return response.get("result", {"closed": {}})
 
 class KrakenMarketService:
     def __init__(self):
