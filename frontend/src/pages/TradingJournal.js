@@ -203,6 +203,51 @@ export default function TradingJournal() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Real Kraken Trades Section */}
+      {krakenTrades.length > 0 && (
+        <Card className="bg-[#0A0A0A] border-[#1F1F1F] mt-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="text-[#00FF94]" />
+              Real Kraken Trades
+              <Badge variant="outline" className="ml-2 text-[#00FF94] border-[#00FF94]">
+                LIVE
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {krakenTrades.map((trade, i) => (
+                <div key={trade.id || i} className="flex items-center justify-between p-3 bg-[#121212] rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Badge className={trade.type === 'buy' ? 'bg-[#00FF94]/20 text-[#00FF94]' : 'bg-[#FF0055]/20 text-[#FF0055]'}>
+                      {trade.type?.toUpperCase()}
+                    </Badge>
+                    <div>
+                      <div className="font-medium">{trade.pair}</div>
+                      <div className="text-xs text-[#A1A1AA]">
+                        {trade.timestamp ? new Date(trade.timestamp).toLocaleString() : 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-medium">{trade.volume?.toFixed(6)}</div>
+                    <div className="text-sm text-[#A1A1AA]">@ ${trade.price?.toFixed(2)}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-medium">${trade.cost?.toFixed(2)}</div>
+                    <div className="text-xs text-[#A1A1AA]">Fee: ${trade.fee?.toFixed(4)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 text-center text-sm text-[#A1A1AA]">
+              Showing {krakenTrades.length} real trades from Kraken
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
