@@ -183,11 +183,7 @@ const EnsembleAI = () => {
       setLoading(false);
     };
     loadData();
-    
-    return () => {
-      if (pollInterval) clearInterval(pollInterval);
-    };
-  }, []);
+  }, [fetchStatus, fetchBuildStatus]);
 
   if (loading) {
     return (
