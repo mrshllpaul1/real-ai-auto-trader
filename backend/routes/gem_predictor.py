@@ -106,6 +106,16 @@ async def run_training_task():
         _training_status["running"] = False
 
 
+async def run_deep_training_task():
+    """Background task for deep historical training"""
+    try:
+        await _gem_predictor.train_on_historical_deep()
+    except Exception as e:
+        from services.hidden_gem_predictor import _gem_training_status
+        _gem_training_status["error"] = str(e)
+        _gem_training_status["running"] = False
+
+
 @router.post("/train")
 async def train_gem_predictor(background_tasks: BackgroundTasks):
     """
@@ -129,6 +139,49 @@ async def train_gem_predictor(background_tasks: BackgroundTasks):
         "status": "started",
         "message": "Training started in background"
     }
+
+
+@router.post("/train-deep")
+async def train_gem_predictor_deep(background_tasks: BackgroundTasks):
+    """
+    Deep historical training on 2009-2026 gem data.
+    
+    Analyzes all historical gems (BTC, ETH, DOGE, SHIB, etc.) to learn:
+    - Optimal volume thresholds
+    - Best market cap ranges
+    - Category performance patterns
+    - Technical indicators that predicted success
+    
+    Updates model weights for better future predictions.
+    """
+    if not _gem_predictor:
+        raise HTTPException(status_code=503, detail="Gem predictor not initialized")
+    
+    from services.hidden_gem_predictor import get_gem_training_status
+    status = get_gem_training_status()
+    
+    if status.get("running"):
+        return {
+            "status": "already_running",
+            "started_at": status.get("started_at"),
+            "progress": status.get("progress"),
+            "message": status.get("message")
+        }
+    
+    background_tasks.add_task(run_deep_training_task)
+    
+    return {
+        "status": "started",
+        "message": "Deep historical training started. Analyzing 15+ years of gem data.",
+        "check_status": "/api/gems/deep-training-status"
+    }
+
+
+@router.get("/deep-training-status")
+async def get_deep_training_status():
+    """Get detailed status of deep historical training"""
+    from services.hidden_gem_predictor import get_gem_training_status
+    return get_gem_training_status()
 
 
 @router.get("/training-status")
