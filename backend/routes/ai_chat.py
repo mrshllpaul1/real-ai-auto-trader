@@ -50,6 +50,146 @@ class DeepChatRequest(BaseModel):
     include_gems: Optional[bool] = True
 
 
+class CommandRequest(BaseModel):
+    query: str
+    session_id: Optional[str] = "default"
+    context_hint: Optional[str] = ""
+
+
+# Global gem predictor reference
+_gem_predictor = None
+
+def set_gem_predictor(predictor):
+    global _gem_predictor
+    _gem_predictor = predictor
+
+
+@router.post("/execute-command")
+async def execute_ai_command(request: CommandRequest):
+    """
+    AI Command Center - Execute actions across the app via natural language.
+    
+    Supported commands:
+    - Navigation: "go to dashboard", "open analytics"
+    - Search: "find hidden gems", "search for BTC"
+    - Add: "add ETH to watchlist", "track SOL"
+    - Analyze: "analyze Bitcoin", "predict ETH price"
+    - Execute: "scan market", "get predictions"
+    """
+    if not _chat_service:
+        raise HTTPException(status_code=503, detail="AI service not initialized")
+    
+    query = request.query.lower()
+    actions_executed = []
+    actions_to_execute = []
+    gems_found = []
+    predictions = None
+    
+    # Parse intent and execute actions
+    
+    # 1. Navigation intents
+    nav_map = {
+        "dashboard": "/",
+        "home": "/",
+        "growth": "/growth",
+        "500": "/growth",
+        "journal": "/journal",
+        "scanner": "/scanner",
+        "gem": "/scanner",
+        "trading": "/trading",
+        "analytics": "/analytics",
+        "deep learning": "/deep-learning",
+        "predict": "/deep-learning",
+        "news": "/news",
+        "settings": "/settings",
+        "setup": "/setup"
+    }
+    
+    if any(word in query for word in ["go to", "open", "show", "navigate"]):
+        for key, path in nav_map.items():
+            if key in query:
+                actions_to_execute.append({"type": "navigate", "path": path})
+                actions_executed.append({"type": "navigation", "destination": path})
+                break
+    
+    # 2. Add/Track intents
+    if any(word in query for word in ["add", "track", "watch", "save"]):
+        # Extract coin symbols
+        import re
+        coin_pattern = r'\b(btc|eth|sol|ada|dot|avax|bnb|xrp|doge|shib|matic|link|uni|atom|ltc)\b'
+        matches = re.findall(coin_pattern, query, re.IGNORECASE)
+        
+        if matches:
+            coin_mapping = {
+                "btc": "bitcoin", "eth": "ethereum", "sol": "solana",
+                "ada": "cardano", "dot": "polkadot", "avax": "avalanche-2",
+                "bnb": "binancecoin", "xrp": "ripple", "doge": "dogecoin",
+                "shib": "shiba-inu", "matic": "matic-network", "link": "chainlink",
+                "uni": "uniswap", "atom": "cosmos", "ltc": "litecoin"
+            }
+            for match in matches:
+                coin_id = coin_mapping.get(match.lower(), match.lower())
+                actions_to_execute.append({"type": "add_coin", "coin": match.upper(), "coin_id": coin_id})
+                actions_executed.append({"type": "add_to_watchlist", "coin": match.upper()})
+    
+    # 3. Find/Scan intents
+    if any(word in query for word in ["find", "scan", "search", "discover"]):
+        if any(word in query for word in ["gem", "hidden", "opportunity", "potential"]):
+            # Execute gem scan
+            if _gem_predictor:
+                try:
+                    gems = await _gem_predictor.scan_for_gems(limit=10)
+                    gems_found = gems[:5]
+                    actions_executed.append({"type": "gem_scan", "found": len(gems_found)})
+                except Exception as e:
+                    print(f"Gem scan error: {e}")
+    
+    # 4. Predict intents
+    if any(word in query for word in ["predict", "forecast", "analysis"]):
+        actions_to_execute.append({"type": "navigate", "path": "/deep-learning"})
+    
+    # Get AI response with context
+    ai_response = await _chat_service.chat_with_deep_learning(
+        query=request.query,
+        session_id=request.session_id,
+        context_hint=request.context_hint,
+        include_predictions=True,
+        include_gems=True
+    )
+    
+    # Build response
+    response_text = ai_response.get("response", "I can help you with that.")
+    
+    # Add action summaries to response
+    if actions_executed:
+        action_summary = "\n\n**Actions Executed:**\n" + "\n".join([
+            f"✓ {a['type'].replace('_', ' ').title()}: {a.get('coin', a.get('destination', a.get('found', '')))}"
+            for a in actions_executed
+        ])
+        response_text += action_summary
+    
+    if gems_found:
+        gem_summary = "\n\n**💎 Hidden Gems Found:**\n" + "\n".join([
+            f"• **{g['symbol']}** - Score: {g['total_score']:.0f} ({g['gem_rating']})"
+            for g in gems_found
+        ])
+        response_text += gem_summary
+    
+    return {
+        "response": response_text,
+        "query": request.query,
+        "session_id": request.session_id,
+        "actions_executed": actions_executed,
+        "actions_to_execute": actions_to_execute,
+        "coins_mentioned": ai_response.get("coins_mentioned", []),
+        "predictions": ai_response.get("predictions"),
+        "gems": [g['symbol'] for g in gems_found] if gems_found else ai_response.get("gems", []),
+        "gems_data": gems_found,
+        "timestamp": datetime.utcnow().isoformat(),
+        "error": False
+    }
+
+
 @router.post("/ask-deep")
 async def ask_ai_deep(request: DeepChatRequest):
     """
