@@ -649,6 +649,100 @@ class SchedulerService:
             
             return {'success': False, 'error': str(e)}
     
+    async def _run_gem_predictor_retrain(self) -> Dict[str, Any]:
+        """
+        Execute gem predictor deep historical retraining.
+        Uses historical gem data (2009-2026) to update prediction model.
+        Scheduled weekly at 2 AM MST (9 AM UTC).
+        """
+        timestamp = datetime.utcnow()
+        logger.info(f"💎 [{timestamp.strftime('%H:%M')}] Running gem predictor deep retraining...")
+        
+        try:
+            # Import and run gem predictor training
+            from services.hidden_gem_predictor import get_hidden_gem_predictor
+            
+            gem_predictor = get_hidden_gem_predictor(self.db, None, None)
+            
+            if gem_predictor:
+                result = await gem_predictor.train_on_historical_deep()
+                
+                execution = {
+                    'job_id': 'gem_predictor_retrain',
+                    'timestamp': timestamp.isoformat(),
+                    'success': result.get('status') == 'completed',
+                    'patterns_discovered': len(result.get('patterns_discovered', [])),
+                    'model_accuracy': result.get('model_metrics', {}).get('final_accuracy', 0),
+                    'historical_gems': len(result.get('historical_gems', []))
+                }
+                await self.db.scheduler_executions.insert_one(execution)
+                
+                # Send alert
+                if self.alert_service:
+                    await self.alert_service.send_alert(
+                        title="💎 Gem Predictor Retrained",
+                        message=f"Analyzed {len(result.get('historical_gems', []))} historical gems\nPatterns: {len(result.get('patterns_discovered', []))}\nAccuracy: {result.get('model_metrics', {}).get('final_accuracy', 0):.1f}%",
+                        alert_type="gem_retrain",
+                        priority="normal"
+                    )
+                
+                logger.info(f"  ✅ Gem predictor retrain complete: {result.get('model_metrics', {}).get('final_accuracy', 0):.1f}% accuracy")
+                return result
+            else:
+                return {'success': False, 'error': 'Gem predictor not available'}
+                
+        except Exception as e:
+            logger.error(f"  ❌ Gem predictor retrain error: {e}")
+            
+            await self.db.scheduler_executions.insert_one({
+                'job_id': 'gem_predictor_retrain',
+                'timestamp': timestamp.isoformat(),
+                'success': False,
+                'error': str(e)
+            })
+            
+            return {'success': False, 'error': str(e)}
+    
+    async def add_gem_predictor_retrain_job(
+        self,
+        day_of_week: str = 'sun',
+        hour: int = 9  # 9 AM UTC = 2 AM MST
+    ) -> Dict[str, Any]:
+        """
+        Add weekly gem predictor retraining job.
+        Default: Every Sunday at 2 AM MST (9 AM UTC)
+        """
+        job_id = 'gem_predictor_retrain'
+        
+        if self.scheduler.get_job(job_id):
+            self.scheduler.remove_job(job_id)
+        
+        self.scheduler.add_job(
+            self._run_gem_predictor_retrain,
+            trigger=CronTrigger(day_of_week=day_of_week, hour=hour),
+            id=job_id,
+            name='Weekly Gem Predictor Retraining',
+            replace_existing=True
+        )
+        
+        self.active_jobs[job_id] = {
+            'type': 'gem_predictor_retrain',
+            'day_of_week': day_of_week,
+            'hour': hour,
+            'hour_mst': (hour - 7) % 24,  # Convert UTC to MST
+            'created_at': datetime.utcnow().isoformat()
+        }
+        
+        mst_hour = (hour - 7) % 24
+        logger.info(f"💎 Gem predictor retrain job added ({day_of_week} at {hour}:00 UTC / {mst_hour}:00 MST)")
+        return {
+            'success': True, 
+            'job_id': job_id, 
+            'schedule': f'{day_of_week} at {hour}:00 UTC ({mst_hour}:00 MST)',
+            'next_run_utc': f'{day_of_week.capitalize()} at {hour}:00 UTC',
+            'next_run_mst': f'{day_of_week.capitalize()} at {mst_hour}:00 MST'
+        }
+    
     async def get_execution_history(self, limit: int = 50) -> list:
         """Get recent scheduler execution history"""
         history = await self.db.scheduler_executions.find(
