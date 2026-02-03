@@ -287,7 +287,7 @@ What's the typical success rate and risk/reward ratio?"""
 
     async def get_chat_history(self, session_id: str, limit: int = 20) -> List[Dict]:
         """Get chat history for a session"""
-        if self.db:
+        if self.db is not None:
             cursor = self.db.ai_chat_history.find(
                 {"session_id": session_id}
             ).sort("timestamp", -1).limit(limit)
