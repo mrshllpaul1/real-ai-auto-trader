@@ -69,9 +69,6 @@ const EnsembleAI = () => {
   const [rebuilding, setRebuilding] = useState(false);
   const [targetSize, setTargetSize] = useState(50);
   const [analyzeCount, setAnalyzeCount] = useState(500);
-  
-  // Polling interval for build status
-  const [pollInterval, setPollInterval] = useState(null);
 
   // Fetch optimal universe
   const fetchUniverse = async () => {
