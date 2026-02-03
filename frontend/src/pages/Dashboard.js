@@ -151,6 +151,71 @@ const Dashboard = () => {
       {/* Market Overview */}
       <MarketOverview />
 
+      {/* Kraken Portfolio Holdings */}
+      {krakenPortfolio?.holdings?.length > 0 && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.35, duration: 0.3 }}
+        >
+          <Card className="bg-[#0A0A0A] border-[#00FF94]/30 glow-green" data-testid="kraken-portfolio-card">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-[#00FF94]/20">
+                    <Wallet className="text-[#00FF94]" size={24} />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-heading">Kraken Portfolio</CardTitle>
+                    <CardDescription>Your real exchange holdings • Updated {new Date().toLocaleTimeString()}</CardDescription>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-[#00FF94]">
+                    ${krakenPortfolio.total_value_usd?.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-[#A1A1AA]">{krakenPortfolio.holdings_count} assets</div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                {krakenPortfolio.holdings.map((holding, index) => (
+                  <div
+                    key={holding.asset}
+                    className="p-3 bg-[#121212] border border-[#1F1F1F] rounded-xl hover:border-[#00FF94]/50 transition-all"
+                    data-testid={`holding-${holding.symbol}`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-white">{holding.symbol}</span>
+                      <Badge 
+                        className="text-xs"
+                        style={{ 
+                          backgroundColor: holding.price_change_24h >= 0 ? '#00FF9420' : '#FF005520',
+                          color: holding.price_change_24h >= 0 ? '#00FF94' : '#FF0055',
+                          border: 'none'
+                        }}
+                      >
+                        {holding.price_change_24h >= 0 ? '+' : ''}{holding.price_change_24h?.toFixed(1)}%
+                      </Badge>
+                    </div>
+                    <div className="text-lg font-bold text-[#00FF94]">
+                      ${holding.value_usd?.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-[#A1A1AA]">
+                      {holding.amount?.toFixed(holding.amount < 1 ? 6 : 2)} {holding.symbol}
+                    </div>
+                    <div className="text-xs text-[#71717A] mt-1">
+                      @ ${holding.price_usd?.toLocaleString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
       {/* Bento Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Active Strategies */}
