@@ -117,7 +117,7 @@ async def get_weekly_comparison():
 @router.get("/current-universe")
 async def get_current_universe():
     """Get all coins currently in the trading universe"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=503, detail="Database not available")
     
     cursor = _db.coin_universe.find({"is_active": True})
@@ -143,7 +143,7 @@ async def get_current_universe():
 @router.get("/expansion-history")
 async def get_expansion_history(limit: int = 10):
     """Get history of universe expansions"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=503, detail="Database not available")
     
     cursor = _db.universe_expansions.find().sort("timestamp", -1).limit(limit)
