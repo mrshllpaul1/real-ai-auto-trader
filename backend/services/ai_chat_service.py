@@ -174,29 +174,36 @@ You have access to:
 
 Please provide a helpful, accurate response. If the question is about specific prices or data you don't have, acknowledge that limitation."""
 
-            # Get conversation history
+            # Build conversation context for the prompt
             history = self.conversation_history.get(session_id, [])
+            history_context = ""
+            if history:
+                recent_history = history[-4:]  # Last 2 exchanges
+                for h in recent_history:
+                    history_context += f"\nUser: {h['query']}\nAssistant: {h['response']}\n"
             
-            # Prepare messages for LLM
-            messages = [UserMessage(content=self.system_prompt)]
+            # Build final prompt with history
+            if history_context:
+                full_prompt = f"""Previous conversation:
+{history_context}
+
+Current question: {query}
+
+{f"Current Market Data:{chr(10)}{context_str}" if context_str else ""}
+
+Please provide a helpful, accurate response based on the conversation context."""
             
-            # Add recent history (last 5 exchanges)
-            for h in history[-10:]:
-                messages.append(UserMessage(content=f"User: {h['query']}"))
-                messages.append(UserMessage(content=f"Assistant: {h['response']}"))
+            # Create LLM chat with system message
+            chat = LlmChat(
+                api_key=self.api_key,
+                session_id=f"ai_chat_{session_id}_{datetime.now().strftime('%Y%m%d%H%M')}",
+                system_message=self.system_prompt
+            ).with_model("openai", "gpt-4o-mini")
             
-            # Add current query
-            messages.append(UserMessage(content=full_prompt))
+            # Send message and get response
+            response = await chat.send_message(UserMessage(text=full_prompt))
             
-            # Call LLM
-            llm = LlmChat(api_key=self.api_key)
-            response = await asyncio.to_thread(
-                llm.chat,
-                messages=messages,
-                model="gpt-4o-mini"
-            )
-            
-            response_text = response.content if hasattr(response, 'content') else str(response)
+            response_text = response if isinstance(response, str) else str(response)
             
             # Update conversation history
             if session_id not in self.conversation_history:
