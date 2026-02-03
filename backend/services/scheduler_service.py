@@ -782,6 +782,12 @@ class SchedulerService:
         # 5. AI Discovery scan daily at 10 AM
         results['discovery'] = await self.add_discovery_job(hour=10)
         
+        # 6. Gem Predictor retraining every Sunday at 2 AM MST (9 AM UTC)
+        results['gem_retrain'] = await self.add_gem_predictor_retrain_job(
+            day_of_week='sun',
+            hour=9  # 9 AM UTC = 2 AM MST
+        )
+        
         logger.info(f"📋 Default schedule configured (training on {len(all_coins)} coins)")
         
         return {
@@ -789,5 +795,5 @@ class SchedulerService:
             'jobs_configured': len(results),
             'details': results,
             'coin_universe_size': len(all_coins),
-            'message': f'Passive income schedule active! AI will retrain on {len(all_coins)} coins every Monday.'
+            'message': f'Passive income schedule active! AI will retrain on {len(all_coins)} coins every Monday, Gem Predictor retrains Sundays at 2 AM MST.'
         }
