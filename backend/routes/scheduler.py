@@ -202,6 +202,39 @@ async def remove_job(job_id: str):
     return await scheduler_service.remove_job(job_id)
 
 
+@router.post("/jobs/gem-predictor-retrain")
+async def add_gem_predictor_retrain(schedule: GemRetrainSchedule):
+    """
+    Add weekly gem predictor retraining job.
+    
+    Default: Every Sunday at 2 AM MST (9 AM UTC) - while you're sleeping!
+    
+    - Trains on 15+ years of historical gem data (2009-2026)
+    - Updates model weights based on successful gem patterns
+    - Improves hidden gem prediction accuracy
+    """
+    if scheduler_service is None:
+        raise HTTPException(status_code=500, detail="Scheduler not initialized")
+    
+    return await scheduler_service.add_gem_predictor_retrain_job(
+        day_of_week=schedule.day_of_week,
+        hour=schedule.hour
+    )
+
+
+@router.post("/jobs/gem-predictor-retrain-now")
+async def retrain_gem_predictor_now():
+    """
+    Manually trigger gem predictor retraining immediately.
+    
+    Runs deep historical training on gem data from 2009-2026.
+    """
+    if scheduler_service is None:
+        raise HTTPException(status_code=500, detail="Scheduler not initialized")
+    
+    return await scheduler_service.run_job_now('gem_predictor_retrain')
+
+
 @router.post("/jobs/{job_id}/run")
 async def run_job_now(job_id: str):
     """Manually trigger a job immediately"""
