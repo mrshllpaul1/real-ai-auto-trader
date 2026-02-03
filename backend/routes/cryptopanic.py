@@ -122,30 +122,40 @@ async def get_bullish_news(limit: int = Query(20, le=50)):
 
 @router.get("/bearish")
 async def get_bearish_news(limit: int = Query(20, le=50)):
-    """Get news with bearish community sentiment"""
-    if not _cryptopanic_service or not _cryptopanic_service.is_available:
-        raise HTTPException(status_code=503, detail="CryptoPanic service not available")
+    """Get news with bearish community sentiment with fallback"""
+    if _cryptopanic_service and _cryptopanic_service.is_available:
+        news = await _cryptopanic_service.get_bearish_news(limit)
+        if news:
+            return {"filter": "bearish", "news": news, "count": len(news), "source": "cryptopanic"}
     
-    news = await _cryptopanic_service.get_bearish_news(limit)
-    return {
-        "filter": "bearish",
-        "news": news,
-        "count": len(news)
-    }
+    if _news_aggregator:
+        try:
+            all_news = await _news_aggregator.get_free_crypto_news(limit=limit*2)
+            # Filter for bearish sentiment
+            bearish = [n for n in all_news if n.get('sentiment') in ['bearish', 'negative']][:limit]
+            return {"filter": "bearish", "news": bearish, "count": len(bearish), "source": "free_crypto_news"}
+        except Exception as e:
+            print(f"Free news fallback error: {e}")
+    
+    return {"filter": "bearish", "news": [], "count": 0}
 
 
 @router.get("/important")
 async def get_important_news(limit: int = Query(20, le=50)):
-    """Get news marked as important by the community"""
-    if not _cryptopanic_service or not _cryptopanic_service.is_available:
-        raise HTTPException(status_code=503, detail="CryptoPanic service not available")
+    """Get news marked as important by the community with fallback"""
+    if _cryptopanic_service and _cryptopanic_service.is_available:
+        news = await _cryptopanic_service.get_important_news(limit)
+        if news:
+            return {"filter": "important", "news": news, "count": len(news), "source": "cryptopanic"}
     
-    news = await _cryptopanic_service.get_important_news(limit)
-    return {
-        "filter": "important",
-        "news": news,
-        "count": len(news)
-    }
+    if _news_aggregator:
+        try:
+            news = await _news_aggregator.get_free_crypto_news(limit=limit)
+            return {"filter": "important", "news": news, "count": len(news), "source": "free_crypto_news"}
+        except Exception as e:
+            print(f"Free news fallback error: {e}")
+    
+    return {"filter": "important", "news": [], "count": 0}
 
 
 @router.get("/coin/{symbol}")
