@@ -261,6 +261,12 @@ async def initialize_services():
         gem_finder = HiddenGemFinder(db)
         gems.set_dependencies(db, gem_finder)
         
+        # Gem Backtester
+        from services.gem_backtester import get_gem_backtester
+        gem_backtester = get_gem_backtester(db, gem_predictor)
+        gem_predictor_routes.set_backtester(gem_backtester)
+        logger.info("✅ Gem Backtester initialized")
+        
         # AI Trainer
         ai_trainer = AIWeeklyTrainer(db)
         
