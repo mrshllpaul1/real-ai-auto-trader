@@ -723,7 +723,6 @@ class UniverseOptimizer:
         
         for coin in selected:
             mcap = coin.get('market_cap', 0)
-            score = coin.get('ensemble_score', 0)
             
             if mcap > 10_000_000_000:
                 categories["large_cap"].append(coin)
