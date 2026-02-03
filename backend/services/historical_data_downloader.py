@@ -382,6 +382,82 @@ class HistoricalDataDownloader:
             "collection": self.collection_name,
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
+    
+    async def get_next_batch_to_download(self, batch_size: int = 50) -> Dict[str, Any]:
+        """
+        Get the next batch of coins that haven't been downloaded yet.
+        Used by the weekly expansion job.
+        
+        Returns:
+            Dict with coins to download and progress stats
+        """
+        # Get currently stored coins
+        stored_coins = await self.db[self.collection_name].distinct("symbol")
+        stored_set = set(stored_coins)
+        
+        # Find coins not yet downloaded
+        all_coins = self.ALL_AI_COINS
+        missing_coins = [c for c in all_coins if c.upper() not in stored_set and c not in stored_set]
+        
+        # Get unique coins (remove duplicates from ALL_AI_COINS)
+        seen = set()
+        unique_missing = []
+        for coin in missing_coins:
+            if coin.upper() not in seen:
+                seen.add(coin.upper())
+                unique_missing.append(coin)
+        
+        # Get next batch
+        next_batch = unique_missing[:batch_size]
+        
+        return {
+            "total_ai_coins": len(set(c.upper() for c in all_coins)),
+            "coins_downloaded": len(stored_set),
+            "coins_remaining": len(unique_missing),
+            "next_batch": next_batch,
+            "batch_size": len(next_batch),
+            "is_complete": len(unique_missing) == 0,
+            "progress_pct": round(len(stored_set) / len(set(c.upper() for c in all_coins)) * 100, 1)
+        }
+    
+    async def download_next_batch(self, batch_size: int = 50, max_days: int = 3000) -> Dict[str, Any]:
+        """
+        Download the next batch of coins automatically.
+        Used by the weekly scheduled job.
+        """
+        batch_info = await self.get_next_batch_to_download(batch_size)
+        
+        if batch_info["is_complete"]:
+            return {
+                "status": "complete",
+                "message": "All AI coins have been downloaded!",
+                "total_coins": batch_info["coins_downloaded"],
+                "progress_pct": 100
+            }
+        
+        next_batch = batch_info["next_batch"]
+        
+        if not next_batch:
+            return {
+                "status": "complete",
+                "message": "No more coins to download",
+                "total_coins": batch_info["coins_downloaded"]
+            }
+        
+        # Download the batch
+        result = await self.download_all_coins(coins=next_batch, max_days=max_days)
+        
+        # Get updated stats
+        updated_info = await self.get_next_batch_to_download(batch_size)
+        
+        result["expansion_progress"] = {
+            "coins_downloaded": updated_info["coins_downloaded"],
+            "coins_remaining": updated_info["coins_remaining"],
+            "progress_pct": updated_info["progress_pct"],
+            "is_complete": updated_info["is_complete"]
+        }
+        
+        return result
 
 
 # Factory function
