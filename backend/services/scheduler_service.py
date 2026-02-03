@@ -745,6 +745,118 @@ class SchedulerService:
             'next_run_mst': f'{day_of_week.capitalize()} at {mst_hour}:00 MST'
         }
     
+    async def add_weekly_ohlcv_expansion_job(
+        self,
+        day_of_week: str = 'sun',
+        hour: int = 4,  # 4 AM UTC
+        batch_size: int = 50
+    ) -> Dict[str, Any]:
+        """
+        Add weekly OHLCV expansion job to download 50 more coins every Sunday.
+        Continues until all AI favorite coins are completed.
+        
+        Default: Every Sunday at 4 AM UTC
+        """
+        job_id = 'weekly_ohlcv_expansion'
+        
+        if self.scheduler.get_job(job_id):
+            self.scheduler.remove_job(job_id)
+        
+        self.scheduler.add_job(
+            self._run_weekly_ohlcv_expansion,
+            trigger=CronTrigger(day_of_week=day_of_week, hour=hour),
+            id=job_id,
+            name='Weekly OHLCV Expansion (50 coins)',
+            kwargs={'batch_size': batch_size},
+            replace_existing=True
+        )
+        
+        self.active_jobs[job_id] = {
+            'type': 'weekly_ohlcv_expansion',
+            'day_of_week': day_of_week,
+            'hour': hour,
+            'batch_size': batch_size,
+            'created_at': datetime.utcnow().isoformat()
+        }
+        
+        mst_hour = (hour - 7) % 24
+        logger.info(f"📊 Weekly OHLCV expansion job added ({day_of_week} at {hour}:00 UTC / {mst_hour}:00 MST)")
+        return {
+            'success': True, 
+            'job_id': job_id, 
+            'schedule': f'{day_of_week} at {hour}:00 UTC ({mst_hour}:00 MST)',
+            'batch_size': batch_size,
+            'message': f'Will download {batch_size} new coins every {day_of_week.capitalize()} until all AI coins are complete'
+        }
+    
+    async def _run_weekly_ohlcv_expansion(self, batch_size: int = 50) -> Dict[str, Any]:
+        """
+        Execute weekly OHLCV expansion to download next batch of coins.
+        """
+        timestamp = datetime.utcnow()
+        logger.info(f"📊 [{timestamp.strftime('%H:%M')}] Running weekly OHLCV expansion ({batch_size} coins)...")
+        
+        try:
+            from services.historical_data_downloader import get_historical_downloader
+            
+            downloader = get_historical_downloader(self.db)
+            
+            if not downloader:
+                logger.warning("  ⚠️ Historical data downloader not available")
+                return {'error': 'Downloader not initialized'}
+            
+            # Download next batch
+            result = await downloader.download_next_batch(batch_size=batch_size, max_days=3000)
+            
+            # Store execution record
+            execution = {
+                'job_id': 'weekly_ohlcv_expansion',
+                'timestamp': timestamp.isoformat(),
+                'success': True,
+                'batch_size': batch_size,
+                'result': {
+                    'coins_downloaded': result.get('coins_completed', 0),
+                    'records_added': result.get('total_records', 0),
+                    'expansion_progress': result.get('expansion_progress', {})
+                }
+            }
+            await self.db.scheduler_executions.insert_one(execution)
+            
+            progress = result.get('expansion_progress', {})
+            
+            # Send alert
+            if self.alert_service:
+                if progress.get('is_complete'):
+                    await self.alert_service.send_alert(
+                        title="🎉 OHLCV Expansion Complete!",
+                        message=f"All {progress.get('coins_downloaded', 0)} AI coins have been downloaded!",
+                        alert_type="ohlcv_expansion",
+                        priority="high"
+                    )
+                else:
+                    await self.alert_service.send_alert(
+                        title="📊 Weekly OHLCV Expansion Complete",
+                        message=f"Downloaded {result.get('coins_completed', 0)} coins\nProgress: {progress.get('progress_pct', 0)}%\nRemaining: {progress.get('coins_remaining', 0)} coins",
+                        alert_type="ohlcv_expansion",
+                        priority="low"
+                    )
+            
+            logger.info(f"  ✅ OHLCV expansion complete: {result.get('coins_completed', 0)} coins, {progress.get('progress_pct', 0)}% total progress")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"  ❌ OHLCV expansion error: {e}")
+            
+            await self.db.scheduler_executions.insert_one({
+                'job_id': 'weekly_ohlcv_expansion',
+                'timestamp': timestamp.isoformat(),
+                'success': False,
+                'error': str(e)
+            })
+            
+            return {'error': str(e)}
+    
     async def add_daily_ohlcv_update_job(
         self,
         hour: int = 4,  # 4 AM UTC
