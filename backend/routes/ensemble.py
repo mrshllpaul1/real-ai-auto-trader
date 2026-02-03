@@ -52,6 +52,23 @@ _build_status = {
 }
 
 
+@router.get("/status")
+async def get_ensemble_status():
+    """Get status of Ensemble AI system"""
+    from services.ensemble_ai import get_rebuild_status
+    
+    rebuild_status = get_rebuild_status()
+    
+    return {
+        "ensemble_initialized": _ensemble is not None,
+        "optimizer_initialized": _optimizer is not None,
+        "deep_learning_available": _deep_learning_ai is not None,
+        "model_weights": _ensemble.model_weights if _ensemble else None,
+        "universe_rebuild_status": rebuild_status,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+
 @router.post("/predict/{coin_id}")
 async def get_ensemble_prediction(coin_id: str, optimize_weights: bool = True):
     """
