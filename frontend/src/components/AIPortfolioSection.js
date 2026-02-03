@@ -4,18 +4,29 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Brain, Wallet, TrendingUp, RefreshCw, Play, Square, DollarSign, PieChart } from 'lucide-react';
-import api from '../services/api';
+import api, { tradingAPI } from '../services/api';
 import { toast } from 'sonner';
 
 const AIPortfolioSection = () => {
   const [portfolio, setPortfolio] = useState(null);
+  const [krakenPortfolio, setKrakenPortfolio] = useState(null);
   const [loading, setLoading] = useState(true);
   const [initialCapital, setInitialCapital] = useState(500);
   const [isAutonomousRunning, setIsAutonomousRunning] = useState(false);
 
   useEffect(() => {
     loadPortfolio();
+    loadKrakenPortfolio();
   }, []);
+
+  const loadKrakenPortfolio = async () => {
+    try {
+      const response = await tradingAPI.getKrakenPortfolio();
+      setKrakenPortfolio(response.data);
+    } catch (error) {
+      console.error('Error loading Kraken portfolio:', error);
+    }
+  };
 
   const loadPortfolio = async () => {
     try {
