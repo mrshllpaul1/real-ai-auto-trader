@@ -37,14 +37,48 @@ class HistoricalDataDownloader:
     Uses CryptoCompare API via the user's CoinDesk API key.
     """
     
-    # Top coins to download historical data for (prioritized by importance)
-    TOP_COINS = [
+    # MASTER LIST: All AI favorite coins (200+ coins for comprehensive training)
+    ALL_AI_COINS = [
+        # Tier 1: Major cryptocurrencies (50)
         "BTC", "ETH", "XRP", "SOL", "ADA", "DOGE", "DOT", "AVAX", "LINK", "MATIC",
         "UNI", "ATOM", "LTC", "BCH", "NEAR", "APT", "SUI", "ICP", "FIL", "ARB",
         "OP", "IMX", "AAVE", "MKR", "CRV", "SNX", "COMP", "YFI", "SUSHI", "1INCH",
         "XMR", "ZEC", "DASH", "ETC", "XLM", "VET", "ALGO", "HBAR", "EOS", "XTZ",
-        "SAND", "MANA", "AXS", "ENJ", "GALA", "APE", "SHIB", "PEPE", "FLOKI", "WIF"
+        "SAND", "MANA", "AXS", "ENJ", "GALA", "APE", "SHIB", "PEPE", "FLOKI", "WIF",
+        
+        # Tier 2: DeFi & Layer 2 (50)
+        "FTM", "RUNE", "INJ", "SEI", "TIA", "PYTH", "JUP", "W", "STRK", "BLUR",
+        "BONK", "RNDR", "FET", "AGIX", "OCEAN", "GRT", "LDO", "RPL", "SSV", "PENDLE",
+        "GMX", "DYDX", "CAKE", "JOE", "QUICK", "BAL", "KNC", "PERP", "LQTY", "SPELL",
+        "CVX", "FXS", "FRAX", "LUSD", "RAI", "MIM", "ALCX", "OHM", "TOKE", "BTRFLY",
+        "RBN", "JONES", "DPX", "LYRA", "PREMIA", "HEGIC", "OPYN", "RIBBON", "PODS", "SIREN",
+        
+        # Tier 3: Gaming & Metaverse (50)
+        "IMX", "GODS", "ILV", "YGG", "MC", "ALICE", "TLM", "STARL", "WAXP", "UFO",
+        "ATLAS", "POLIS", "GENE", "DFL", "SLP", "AXS", "MBOX", "HERO", "PYR", "REVV",
+        "TOWER", "SKILL", "WILD", "NAKA", "CEEK", "HIGH", "VOXEL", "GHST", "RACA", "DPET",
+        "BAKE", "BURGER", "MANA", "SAND", "GALA", "ENJ", "CHZ", "FLOW", "THETA", "TFUEL",
+        "AUDIO", "LPT", "LIVEPEER", "RAD", "GTC", "API3", "BAND", "TRB", "DIA", "UMA",
+        
+        # Tier 4: Infrastructure & Scaling (50)
+        "MATIC", "ARB", "OP", "ZK", "STRK", "MANTA", "BLAST", "SCROLL", "LINEA", "BASE",
+        "CELO", "KAVA", "ONE", "FTM", "GLMR", "MOVR", "ASTR", "SDN", "AURORA", "BOBA",
+        "METIS", "EVMOS", "OSMO", "JUNO", "SCRT", "AKASH", "REGEN", "DVPN", "BAND", "KAVA",
+        "ROSE", "MINA", "CKB", "KDA", "FLUX", "HNT", "IOT", "MOBILE", "QNT", "LINK",
+        "API3", "BAND", "TRB", "DIA", "UMA", "NEST", "DOS", "BNT", "LRC", "ZRX",
+        
+        # Tier 5: AI & Data (30)
+        "FET", "AGIX", "OCEAN", "NMR", "GRT", "RNDR", "THETA", "TFUEL", "LPT", "AR",
+        "FIL", "STORJ", "SIA", "ANKR", "POKT", "AIOZ", "PHB", "MDT", "DBC", "NKN",
+        "CTSI", "TRU", "GLM", "RLC", "iEXEC", "SONM", "GNO", "COW", "BAL", "DODO",
+        
+        # Tier 6: Meme & Community (20)
+        "DOGE", "SHIB", "PEPE", "FLOKI", "WIF", "BONK", "BOME", "MEW", "POPCAT", "BRETT",
+        "WOJAK", "TURBO", "LADYS", "AIDOGE", "BABYDOGE", "ELON", "SAMO", "CATE", "HOGE", "AKITA"
     ]
+    
+    # Top coins to download historical data for (prioritized by importance)
+    TOP_COINS = ALL_AI_COINS[:50]  # First 50 for quick access
     
     def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
