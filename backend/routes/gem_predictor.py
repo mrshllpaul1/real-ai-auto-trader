@@ -5,7 +5,7 @@ Endpoints for finding and predicting hidden gem cryptocurrencies.
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 router = APIRouter(prefix="/gems", tags=["Hidden Gems"])
