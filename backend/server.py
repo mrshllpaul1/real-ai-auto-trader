@@ -166,8 +166,13 @@ async def initialize_services():
         from services.cryptopanic_service import CryptoPanicService, set_cryptopanic_service
         cryptopanic_service = CryptoPanicService()
         set_cryptopanic_service(cryptopanic_service)
-        cryptopanic.set_dependencies(cryptopanic_service)
-        logger.info("✅ CryptoPanic Service initialized")
+        
+        # Initialize news aggregator for fallback
+        news_aggregator = CryptoNewsAggregator()
+        
+        # Pass both to cryptopanic routes (with fallback support)
+        cryptopanic.set_dependencies(cryptopanic_service, news_aggregator)
+        logger.info("✅ CryptoPanic Service initialized with fallback")
         
         # Initialize AI Discovery Service
         discovery_service = AICoinDiscoveryService(db, universe_manager)
