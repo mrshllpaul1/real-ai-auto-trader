@@ -201,6 +201,12 @@ async def initialize_services():
         ai_chat.set_dependencies(db, chat_service)
         logger.info("✅ AI Chat Service initialized")
         
+        # Initialize AI Universe Expander
+        from services.ai_universe_expander import get_universe_expander
+        universe_expander = get_universe_expander(db, market_service)
+        ai_universe_expand.set_dependencies(db, market_service, universe_expander)
+        logger.info("✅ AI Universe Expander initialized")
+        
         # Kraken service (optional)
         global kraken_service
         kraken_api_key = os.getenv('KRAKEN_API_KEY')
