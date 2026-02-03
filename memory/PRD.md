@@ -86,6 +86,16 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 - [x] **Frontend Integration**: Market sentiment card, trending topics, news feed with sentiment badges
 - [x] **Credit Management**: 11,000/month, 5-min cache for news, 1-hour cache for categories
 
+### ✅ Automatic Weekly Gem Predictor Retraining (COMPLETE - Feb 3, 2026)
+- [x] **Schedule**: Every Sunday at 2:00 AM MST (9:00 AM UTC) - while you sleep!
+- [x] **Training Data**: 15+ historical gems from 2009-2026
+- [x] **Auto-updates**: Model weights, patterns, accuracy metrics
+- [x] **Alerts**: Sends notification when training completes
+- [x] **APIs**:
+  - `POST /api/scheduler/jobs/gem-predictor-retrain` - Configure schedule
+  - `POST /api/scheduler/jobs/gem-predictor-retrain-now` - Trigger manually
+  - `GET /api/scheduler/status` - View all scheduled jobs
+
 ### ✅ Deep Learning Historical Training for Hidden Gem Predictor (P0 COMPLETE - Feb 3, 2026)
 - [x] **Training Data**: 15 historical gems (BTC 2009, ETH 2015, DOGE, SHIB, etc.)
 - [x] **Patterns Discovered**: 7 key patterns including optimal volume ratio, market cap ranges
