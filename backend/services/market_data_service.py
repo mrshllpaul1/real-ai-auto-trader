@@ -211,6 +211,50 @@ class MarketDataService:
             print(f"Kraken historical data error for {coin_id}: {e}")
             return None
     
+    async def get_all_coins(self, per_page: int = 250) -> List[Dict[str, Any]]:
+        """Get a list of coins with market data from CoinGecko"""
+        try:
+            cache_key = f"all_coins_{per_page}"
+            cached = self._get_cached(cache_key, 'coins')
+            if cached:
+                return cached
+            
+            loop = asyncio.get_event_loop()
+            
+            # Get coins market data
+            data = await loop.run_in_executor(
+                None,
+                lambda: self.cg.get_coins_markets(
+                    vs_currency='usd',
+                    order='market_cap_desc',
+                    per_page=per_page,
+                    page=1,
+                    sparkline=False,
+                    price_change_percentage='24h,7d'
+                )
+            )
+            
+            result = []
+            for coin in data:
+                result.append({
+                    "id": coin.get('id'),
+                    "symbol": coin.get('symbol', '').upper(),
+                    "name": coin.get('name'),
+                    "current_price": coin.get('current_price', 0),
+                    "market_cap": coin.get('market_cap', 0),
+                    "market_cap_rank": coin.get('market_cap_rank', 0),
+                    "total_volume": coin.get('total_volume', 0),
+                    "price_change_24h": coin.get('price_change_percentage_24h', 0),
+                    "price_change_7d": coin.get('price_change_percentage_7d_in_currency', 0)
+                })
+            
+            self._set_cache(cache_key, result)
+            return result
+            
+        except Exception as e:
+            print(f"Get all coins error: {str(e)}")
+            return []
+    
     async def get_trending_coins(self) -> List[Dict[str, Any]]:
         """Get trending cryptocurrencies with caching"""
         try:
