@@ -1,0 +1,164 @@
+{
+  "summary": "Ensemble AI feature testing completed successfully. All 8 backend API endpoints working correctly. Frontend UI loads with all sections and displays data properly. Fixed MongoDB ObjectId serialization bug in comparison endpoint.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Portfolio Comparison",
+        "issues": ["'Improvement: NaN' displays when avg_existing_score is 0 - cosmetic issue, not functional"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_ensemble_ai.py",
+    "/app/test_reports/pytest/pytest_ensemble_ai.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "✓ EnsembleAIPredictor properly combines 7 ML/DL models (LSTM, Technical, Pattern, Momentum, Trend, Volatility, Sentiment)",
+    "✓ UniverseOptimizer analyzes coins and builds optimal trading universe",
+    "✓ All API endpoints return correct response structures with proper error handling",
+    "✓ Frontend page has proper data-testid attribute for testing",
+    "✓ Model weights sum to 1.0 as expected",
+    "✓ Background task for universe rebuild works correctly with progress tracking",
+    "✓ Portfolio comparison shows old vs new recommendations",
+    "FIXED: MongoDB ObjectId serialization issue in get_weekly_recommendations_comparison()"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ensemble_ai.py",
+    "/app/backend/services/ensemble_ai.py"
+  ],
+  "success_rate": {
+    "backend": "100% (19/19 tests passed)",
+    "frontend": "100% (all UI elements and interactions working)"
+  },
+  "seed_data_creation": "None - uses existing market data from CoinGecko API",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Ensemble AI feature is fully functional. Backend APIs tested: GET /api/ensemble/status, POST /api/ensemble/predict/{coin_id}, POST /api/ensemble/rebuild-universe, GET /api/ensemble/build-status, GET /api/ensemble/optimal-universe, GET /api/ensemble/hidden-gems, GET /api/ensemble/comparison, GET /api/ensemble/weights, POST /api/ensemble/predict-batch, POST /api/ensemble/optimize-weights. Frontend page at /ensemble has status cards, rebuild section with progress bar, Top 10 coins list, Hidden Gems section, Portfolio Comparison, Model Weights display, and Universe Categories breakdown. Universe rebuild with 200+ coins takes ~1 minute.",
+  "features_tested": {
+    "Ensemble Status API": {
+      "endpoint": "GET /api/ensemble/status",
+      "status": "PASS",
+      "response": "Returns ensemble_initialized: true, optimizer_initialized: true, deep_learning_available: true, model_weights"
+    },
+    "Ensemble Prediction API": {
+      "endpoint": "POST /api/ensemble/predict/{coin_id}",
+      "status": "PASS",
+      "coins_tested": ["bitcoin", "ethereum"],
+      "sample_response": "Returns final_signal (STRONG_BUY/BUY/HOLD/SELL/STRONG_SELL), confidence, model_results, accuracy_estimate"
+    },
+    "Universe Rebuild API": {
+      "endpoint": "POST /api/ensemble/rebuild-universe",
+      "status": "PASS",
+      "response": "Starts background task, returns status: started"
+    },
+    "Build Status API": {
+      "endpoint": "GET /api/ensemble/build-status",
+      "status": "PASS",
+      "response": "Returns running, progress (0-100), progress_message, coins_analyzed, total_coins"
+    },
+    "Optimal Universe API": {
+      "endpoint": "GET /api/ensemble/optimal-universe",
+      "status": "PASS",
+      "response": "Returns count: 30, coins with ensemble_score, top_10, categories breakdown"
+    },
+    "Hidden Gems API": {
+      "endpoint": "GET /api/ensemble/hidden-gems",
+      "status": "PASS",
+      "response": "Returns hidden_gems list (high score + low market cap coins), criteria explanation"
+    },
+    "Portfolio Comparison API": {
+      "endpoint": "GET /api/ensemble/comparison",
+      "status": "PASS",
+      "response": "Returns overlap, added, removed coins, overlap_count, added_count, removed_count, avg scores"
+    },
+    "Model Weights API": {
+      "endpoint": "GET /api/ensemble/weights",
+      "status": "PASS",
+      "response": "Returns weights for all 7 models with descriptions"
+    },
+    "Batch Prediction API": {
+      "endpoint": "POST /api/ensemble/predict-batch",
+      "status": "PASS",
+      "response": "Returns predictions for multiple coins, enforces max 20 limit"
+    },
+    "Optimize Weights API": {
+      "endpoint": "POST /api/ensemble/optimize-weights",
+      "status": "PASS",
+      "response": "Returns old_weights and new_weights after optimization"
+    },
+    "Frontend Ensemble AI Page": {
+      "url": "/ensemble",
+      "status": "PASS",
+      "elements_verified": [
+        "Page title 'Ensemble AI'",
+        "Status cards (Ensemble Status, Universe Size, Hidden Gems, Avg Score)",
+        "Rebuild Universe section with Target Size/Analyze Count inputs",
+        "Start Rebuild button with data-testid",
+        "Progress bar during rebuild",
+        "Top 10 by Ensemble Score list",
+        "Hidden Gems section",
+        "Portfolio Comparison (Old vs New) with Retained/Added/Removed",
+        "Ensemble Model Weights display (7 models)",
+        "Universe Categories breakdown (Large/Mid/Small/Micro Cap, Hidden Gems)"
+      ]
+    },
+    "Sidebar Navigation": {
+      "status": "PASS",
+      "nav_link": "Ensemble AI link present and highlighted when active"
+    }
+  },
+  "api_response_samples": {
+    "status": {
+      "ensemble_initialized": true,
+      "optimizer_initialized": true,
+      "deep_learning_available": true,
+      "model_weights": {
+        "lstm": 0.25,
+        "technical": 0.2,
+        "pattern": 0.15,
+        "momentum": 0.15,
+        "trend": 0.1,
+        "volatility": 0.1,
+        "sentiment": 0.05
+      }
+    },
+    "prediction": {
+      "coin_id": "bitcoin",
+      "final_signal": "HOLD",
+      "confidence": 50,
+      "accuracy_estimate": 0.65,
+      "model_results": ["lstm", "technical", "pattern", "momentum", "trend", "volatility", "sentiment"]
+    },
+    "optimal_universe": {
+      "count": 30,
+      "avg_ensemble_score": 55.35,
+      "categories": {
+        "large_cap": 2,
+        "mid_cap": 23,
+        "small_cap": 5,
+        "micro_cap": 0,
+        "hidden_gems": 0
+      }
+    },
+    "comparison": {
+      "overlap_count": 26,
+      "added_count": 3,
+      "removed_count": 4,
+      "recommendations_changed": true
+    }
+  },
+  "bug_fixed": {
+    "issue": "MongoDB ObjectId serialization error in /api/ensemble/comparison endpoint",
+    "root_cause": "get_weekly_recommendations_comparison() was returning MongoDB documents with _id field which is not JSON serializable",
+    "fix": "Added build.pop('_id', None) to remove _id from builds before returning",
+    "file": "/app/backend/services/ensemble_ai.py",
+    "line": "803-808"
+  }
+}
