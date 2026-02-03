@@ -49,13 +49,21 @@ const AutoExecution = () => {
     setMode(newMode === 'live' ? 'real' : 'paper');
   };
 
+  // Timeout wrapper to prevent infinite loading
+  const timeoutPromise = useCallback((promise, ms = 10000) => {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
+    ]);
+  }, []);
+
   const loadData = useCallback(async () => {
     try {
       const [statusRes, aiRes, perfRes, profileRes] = await Promise.all([
-        api.get('/auto-exec/status').catch(() => ({ data: {} })),
-        api.get('/auto-exec/ai/status').catch(() => ({ data: {} })),
-        api.get('/auto-exec/ai/performance').catch(() => ({ data: {} })),
-        api.get('/auto-exec/risk-profile').catch(() => ({ data: {} }))
+        timeoutPromise(api.get('/auto-exec/status'), 8000).catch(() => ({ data: {} })),
+        timeoutPromise(api.get('/auto-exec/ai/status'), 8000).catch(() => ({ data: {} })),
+        timeoutPromise(api.get('/auto-exec/ai/performance'), 8000).catch(() => ({ data: {} })),
+        timeoutPromise(api.get('/auto-exec/risk-profile'), 8000).catch(() => ({ data: {} }))
       ]);
       
       setStatus(statusRes.data);
