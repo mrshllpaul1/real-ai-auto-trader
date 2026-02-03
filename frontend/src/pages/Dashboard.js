@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, DollarSign, Activity, Sparkles } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Activity, Sparkles, Wallet, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { tradingAPI, marketAPI, strategyAPI } from '../services/api';
 import { toast } from 'sonner';
@@ -10,6 +10,7 @@ import MarketOverview from '../components/MarketOverview';
 
 const Dashboard = () => {
   const [portfolio, setPortfolio] = useState(null);
+  const [krakenPortfolio, setKrakenPortfolio] = useState(null);
   const [prices, setPrices] = useState({});
   const [strategies, setStrategies] = useState([]);
   const [loading, setLoading] = useState(true);
