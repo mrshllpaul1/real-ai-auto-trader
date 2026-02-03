@@ -1,6 +1,7 @@
 """
 Ensemble AI Prediction System
 Combines all ML/DL models to optimize predictions.
+Analyzes top 1000 coins and rebuilds optimal universe.
 """
 
 import os
@@ -10,6 +11,25 @@ from typing import Dict, Any, List, Optional
 import numpy as np
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage
+
+
+# Background task tracking for universe rebuild
+_universe_rebuild_status = {
+    "running": False,
+    "started_at": None,
+    "progress": 0,
+    "progress_message": "",
+    "coins_analyzed": 0,
+    "total_coins": 0,
+    "result": None,
+    "comparison": None,
+    "error": None
+}
+
+
+def get_rebuild_status() -> Dict[str, Any]:
+    """Get current rebuild status"""
+    return _universe_rebuild_status.copy()
 
 
 class EnsembleAIPredictor:
