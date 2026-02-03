@@ -358,12 +358,18 @@ async def get_kraken_portfolio():
         # Sort by USD value (highest first)
         holdings.sort(key=lambda x: x['value_usd'], reverse=True)
         
-        return {
+        result = {
             "holdings": holdings,
             "total_value_usd": round(total_value_usd, 2),
             "holdings_count": len(holdings),
             "last_updated": datetime.utcnow().isoformat()
         }
+        
+        # Cache the result
+        _kraken_portfolio_cache["data"] = result
+        _kraken_portfolio_cache["timestamp"] = time.time()
+        
+        return result
     
     except Exception as e:
         print(f"Error fetching Kraken portfolio: {e}")
