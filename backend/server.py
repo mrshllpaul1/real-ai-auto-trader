@@ -71,7 +71,7 @@ from routes import auto_trading, allocation, scanner, auto_execute, backtest, re
 from routes import social, notifications, alerts, email, ai_portfolio, ai_selection
 from routes import gems, auto_trade, growth, scheduler, budget, journal, ai_decisions
 from routes import ai_universe, ai_discovery, sentiment, cryptopanic, deep_learning, ai_chat
-from routes import ai_universe_expand
+from routes import ai_universe_expand, gem_predictor
 
 # Include routers
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
@@ -108,6 +108,7 @@ api_router.include_router(cryptopanic.router, tags=["Crypto News"])
 api_router.include_router(deep_learning.router, tags=["Deep Learning AI"])
 api_router.include_router(ai_chat.router, tags=["AI Chat"])
 api_router.include_router(ai_universe_expand.router, tags=["AI Universe Expansion"])
+api_router.include_router(gem_predictor.router, tags=["Hidden Gem Predictor"])
 
 # Include the router
 app.include_router(api_router)
