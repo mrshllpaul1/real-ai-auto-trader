@@ -19,6 +19,7 @@ import GrowthDashboard from "./pages/GrowthDashboard";
 import TradingJournal from "./pages/TradingJournal";
 import DeepLearningAI from "./pages/DeepLearningAI";
 import AIChat from "./pages/AIChat";
+import EnsembleAI from "./pages/EnsembleAI";
 import Sidebar from "./components/Sidebar";
 import FloatingAIChat from "./components/FloatingAIChat";
 import { Toaster } from "./components/ui/sonner";
