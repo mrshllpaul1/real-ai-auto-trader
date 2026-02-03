@@ -651,9 +651,15 @@ TWILIO_PHONE_NUMBER=      # User must provide
 ---
 
 ## Future Enhancements
+- ✅ ~~Ensemble AI combining all ML/DL models~~ (COMPLETED Feb 3, 2026)
+- Historical training for Hidden Gem Predictor
+- AI Chat Action Execution (execute commands like "add coin to watchlist")
+- Push notifications for gem alerts
+- Backtest gem prediction accuracy against historical data
+- Custom strategy builder UI
+- Social Sentiment Integration (Twitter/Reddit)
 - Twilio SMS notifications (requires user credentials)
 - Email notifications with Resend (requires user API key)
-- Custom strategy builder UI
 
 ---
 
