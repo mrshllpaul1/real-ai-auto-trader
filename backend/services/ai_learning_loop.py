@@ -309,6 +309,9 @@ class AILearningLoopService:
         
         # Identify weak and strong areas
         for model, stats in performance.items():
+            # Skip if stats is not a dict with expected structure
+            if not isinstance(stats, dict) or "by_type" not in stats:
+                continue
             for pred_type, type_stats in stats.get("by_type", {}).items():
                 entry = {
                     "model": model,
