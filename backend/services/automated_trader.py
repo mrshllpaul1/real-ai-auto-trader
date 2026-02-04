@@ -415,6 +415,132 @@ class AutomatedWeeklyTrader:
             'isolation_status': 'ACTIVE'
         }
     
+    async def _execute_isolated_trade(
+        self,
+        coin_id: str,
+        symbol: str,
+        amount_usd: float,
+        stop_loss_pct: float,
+        take_profit_pct: float,
+        paper_trade: bool,
+        is_gem: bool,
+        ai_score: float
+    ) -> Optional[Dict]:
+        """
+        Execute a single trade using the ISOLATED PORTFOLIO.
+        This ensures trades ONLY use allocated AI budget, never the main portfolio.
+        """
+        try:
+            # Get current price
+            ticker = await self.kraken.get_ticker(symbol)
+            if not ticker:
+                logger.warning(f"  ❌ {coin_id}: Failed to get price")
+                return None
+            
+            current_price = float(ticker.get('c', [0])[0])
+            if current_price <= 0:
+                return None
+            
+            # Calculate quantity
+            quantity = amount_usd / current_price
+            
+            # Calculate stop/take profit prices
+            stop_price = current_price * (1 - stop_loss_pct / 100)
+            take_profit_price = current_price * (1 + take_profit_pct / 100)
+            
+            # For real trades, use isolated portfolio
+            if not paper_trade and self.isolated_portfolio:
+                # Check if trade is allowed within budget
+                can_trade = await self.isolated_portfolio.can_trade(amount_usd)
+                
+                if not can_trade.get('allowed'):
+                    logger.warning(f"  ⚠️ {coin_id}: Budget constraint - {can_trade.get('reason')}")
+                    return {
+                        'coin_id': coin_id,
+                        'symbol': symbol,
+                        'status': 'BUDGET_EXCEEDED',
+                        'reason': can_trade.get('reason'),
+                        'available': can_trade.get('available', 0)
+                    }
+                
+                # Execute real trade on Kraken
+                order = await self.kraken.create_order(
+                    symbol=symbol,
+                    side='buy',
+                    order_type='market',
+                    volume=quantity
+                )
+                
+                if order:
+                    order_id = order.get('txid', [''])[0]
+                    
+                    # Record position in isolated portfolio
+                    position_result = await self.isolated_portfolio.open_position(
+                        coin_id=coin_id,
+                        symbol=symbol,
+                        amount_usd=amount_usd,
+                        entry_price=current_price,
+                        quantity=quantity,
+                        position_type='gem' if is_gem else 'main'
+                    )
+                    
+                    if position_result.get('success'):
+                        logger.info(f"  ✅ {coin_id}: Bought ${amount_usd:.2f} @ ${current_price:.4f} (Isolated) {'💎' if is_gem else ''}")
+                        return {
+                            'coin_id': coin_id,
+                            'symbol': symbol,
+                            'side': 'buy',
+                            'amount_usd': round(amount_usd, 2),
+                            'quantity': quantity,
+                            'entry_price': current_price,
+                            'stop_loss_price': round(stop_price, 6),
+                            'take_profit_price': round(take_profit_price, 6),
+                            'is_gem': is_gem,
+                            'ai_score': ai_score,
+                            'paper_trade': False,
+                            'status': 'FILLED',
+                            'order_id': order_id,
+                            'position_id': position_result['position']['position_id'],
+                            'budget_isolated': True,
+                            'remaining_budget': position_result.get('remaining_budget', 0),
+                            'executed_at': datetime.now().isoformat()
+                        }
+                    else:
+                        logger.error(f"  ❌ {coin_id}: Failed to record position: {position_result.get('error')}")
+                else:
+                    logger.error(f"  ❌ {coin_id}: Order failed")
+                    return None
+            
+            # Paper trade - just record the trade
+            trade_record = {
+                'coin_id': coin_id,
+                'symbol': symbol,
+                'side': 'buy',
+                'amount_usd': round(amount_usd, 2),
+                'quantity': quantity,
+                'entry_price': current_price,
+                'stop_loss_price': round(stop_price, 6),
+                'take_profit_price': round(take_profit_price, 6),
+                'is_gem': is_gem,
+                'ai_score': ai_score,
+                'paper_trade': True,
+                'status': 'PAPER',
+                'budget_isolated': True,
+                'executed_at': datetime.now().isoformat()
+            }
+            
+            logger.info(f"  📝 {coin_id}: Paper trade ${amount_usd:.2f} @ ${current_price:.4f} {'💎' if is_gem else ''}")
+            
+            # Store position (copy to avoid ObjectId issues)
+            position_doc = dict(trade_record)
+            await self.db.active_positions.insert_one(position_doc)
+            
+            return trade_record
+            
+        except Exception as e:
+            logger.error(f"  ❌ {coin_id}: Error - {e}")
+            return None
+    
     async def _execute_trade(
         self,
         coin_id: str,
