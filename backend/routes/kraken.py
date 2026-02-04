@@ -386,3 +386,47 @@ async def get_auto_trader_positions():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting positions: {str(e)}")
+
+
+@router.post("/auto-trader/execute-custom-strategies")
+async def execute_custom_strategies(paper_trade: bool = True):
+    """
+    Execute all active custom strategies
+    
+    Args:
+        paper_trade: If True, simulates trades without real execution
+        
+    Returns:
+        Execution results for all strategies
+    """
+    if _automated_trader is None:
+        raise HTTPException(status_code=503, detail="Auto trader not initialized")
+    
+    try:
+        result = await _automated_trader.execute_custom_strategies(paper_trade=paper_trade)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Execution failed: {str(e)}")
+
+
+@router.post("/auto-trader/load-strategies")
+async def load_active_strategies():
+    """
+    Load/reload active custom strategies into the auto trader
+    
+    Returns:
+        Number of strategies loaded
+    """
+    if _automated_trader is None:
+        raise HTTPException(status_code=503, detail="Auto trader not initialized")
+    
+    try:
+        count = await _automated_trader.load_active_strategies()
+        return {
+            "success": True,
+            "strategies_loaded": count,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load strategies: {str(e)}")
+
