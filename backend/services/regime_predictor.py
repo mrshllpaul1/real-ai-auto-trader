@@ -669,6 +669,9 @@ class RegimePredictionEngine:
         
         self.is_trained = True
         
+        # Auto-save models after training
+        self.save_models()
+        
         # Save model accuracy to DB
         await self.db.model_training_history.insert_one({
             'timestamp': datetime.now(timezone.utc),
