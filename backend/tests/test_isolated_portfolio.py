@@ -363,7 +363,7 @@ class TestTriggerEndpoints:
     """Test trigger-related endpoints"""
     
     def test_triggers_list(self):
-        """Test /api/triggers/list - verify it returns triggers"""
+        """Test /api/triggers/list - verify it returns 36 triggers"""
         response = requests.get(f"{BASE_URL}/api/triggers/list")
         
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
@@ -383,8 +383,8 @@ class TestTriggerEndpoints:
         print(f"✅ Triggers list test passed:")
         print(f"   Trigger Count: {trigger_count}")
         
-        # Note: The requirement says 36 triggers, but we'll just verify the endpoint works
-        # The actual count may vary based on database state
+        # Verify 36 triggers as per requirement
+        assert trigger_count == 36, f"Expected 36 triggers, got {trigger_count}"
     
     def test_triggers_status(self):
         """Test /api/triggers/status - verify trigger status returns correct counts"""
