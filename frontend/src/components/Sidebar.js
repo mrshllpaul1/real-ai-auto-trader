@@ -180,6 +180,7 @@ const Sidebar = () => {
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/growth', icon: TrendingUp, label: '$500→$100k', highlight: true },
     { path: '/budget', icon: Shield, label: 'AI Budget', highlight: true },
+    { path: '/spot', icon: Wallet, label: 'Spot Trading', highlight: true },
     { path: '/positions', icon: Briefcase, label: 'Positions', highlight: true },
     { path: '/portfolio-dashboard', icon: PieChart, label: 'Portfolio', highlight: true },
     { path: '/ai-chat', icon: MessageCircle, label: 'Ask AI', highlight: true },
