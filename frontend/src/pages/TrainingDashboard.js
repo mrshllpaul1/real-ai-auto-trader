@@ -189,7 +189,16 @@ const TrainingDashboard = () => {
 
   // WebSocket connection for real-time updates
   useEffect(() => {
-    const wsUrl = API_URL.replace('http', 'ws') + '/ws/training';
+    // Construct WebSocket URL - use internal for development
+    let wsUrl;
+    if (API_URL.includes('localhost') || API_URL.includes('127.0.0.1')) {
+      wsUrl = API_URL.replace('http', 'ws') + '/ws/training';
+    } else {
+      // For production/preview, use relative WebSocket path
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      wsUrl = `${wsProtocol}//${window.location.host}/ws/training`;
+    }
+    
     let ws = null;
     let reconnectTimeout = null;
     
