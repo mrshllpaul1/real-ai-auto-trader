@@ -161,7 +161,7 @@ async def initialize_services():
         from services.gem_finder import HiddenGemFinder
         from services.ai_weekly_trainer import AIWeeklyTrainer
         from services.alert_service import AlertService
-        from services.social_sentiment import SocialSentimentAnalyzer
+        from services.social_sentiment import get_sentiment_scraper
         from services.automated_trader import AutomatedWeeklyTrader
         from services.growth_engine import AggressiveGrowthEngine
         from services.scheduler_service import SchedulerService
