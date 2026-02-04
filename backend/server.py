@@ -333,6 +333,15 @@ async def initialize_services():
         ai_learning_loop.set_dependencies(db, learning_loop_service)
         logger.info("✅ AI Learning Loop service initialized")
         
+        # Event Correlation Engine & Historical Events Database
+        from services.event_correlation_engine import get_correlation_engine
+        from services.historical_events_db import get_historical_events_db
+        correlation_engine = get_correlation_engine(db, coindesk_service, cryptocompare_service)
+        events_db = get_historical_events_db(db, coindesk_service, correlation_engine)
+        events.set_dependencies(db, correlation_engine, events_db)
+        logger.info("✅ Event Correlation Engine initialized")
+        logger.info("✅ Historical Events Database initialized")
+        
         # Start scheduler
         await scheduler_service.start()
         
