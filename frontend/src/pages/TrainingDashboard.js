@@ -369,6 +369,63 @@ const TrainingDashboard = () => {
     }
   };
 
+  // Schedule Management Functions
+  const addScheduleFromPreset = async (preset) => {
+    try {
+      const scheduleId = `${preset.config.model_type}_${Date.now()}`;
+      const res = await fetch(`${API_URL}/api/training-scheduler/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          schedule_id: scheduleId,
+          ...preset.config
+        })
+      });
+      
+      if (res.ok) {
+        setShowAddSchedule(false);
+        fetchStatuses();
+      }
+    } catch (err) {
+      console.error('Failed to add schedule:', err);
+    }
+  };
+
+  const toggleSchedule = async (scheduleId, enabled) => {
+    try {
+      await fetch(`${API_URL}/api/training-scheduler/${scheduleId}/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled })
+      });
+      fetchStatuses();
+    } catch (err) {
+      console.error('Failed to toggle schedule:', err);
+    }
+  };
+
+  const deleteSchedule = async (scheduleId) => {
+    try {
+      await fetch(`${API_URL}/api/training-scheduler/${scheduleId}`, {
+        method: 'DELETE'
+      });
+      fetchStatuses();
+    } catch (err) {
+      console.error('Failed to delete schedule:', err);
+    }
+  };
+
+  const runScheduleNow = async (scheduleId) => {
+    try {
+      await fetch(`${API_URL}/api/training-scheduler/${scheduleId}/run-now`, {
+        method: 'POST'
+      });
+      fetchStatuses();
+    } catch (err) {
+      console.error('Failed to run schedule:', err);
+    }
+  };
+
   // Get service info
   const services = servicesStatus?.services || {};
   const activeServices = Object.entries(services).filter(([_, v]) => 
