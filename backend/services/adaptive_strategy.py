@@ -59,7 +59,7 @@ class AdaptiveStrategyEngine:
             'trailing_stop_pct': 10.0,     # Trailing stop activation
             
             # Entry/Exit thresholds
-            'min_confidence': 59.0,        # Min AI confidence to enter (user-configured)
+            'min_confidence': 45.0,        # Min AI confidence to enter (lowered for bear market)
             'exit_confidence': 40.0,       # Exit if confidence drops below
             
             # Rebalance frequency
