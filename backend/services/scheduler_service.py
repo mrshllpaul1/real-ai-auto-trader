@@ -83,6 +83,11 @@ class SchedulerService:
         self.enhanced_trainer = enhanced_trainer
         logger.info("✅ AI trainers configured for scheduler")
     
+    def set_stop_loss_automation(self, stop_loss_automation):
+        """Set stop-loss automation service for scheduled checks"""
+        self.stop_loss_automation = stop_loss_automation
+        logger.info("✅ Stop-loss automation configured for scheduler")
+    
     async def start(self):
         """Start the scheduler"""
         if not self.scheduler.running:
