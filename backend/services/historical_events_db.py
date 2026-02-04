@@ -148,11 +148,159 @@ MAJOR_EVENTS = [
     {"date": "2024-03-14", "event": "Bitcoin reaches new ATH $73,750", "coins": ["BTC"], "impact": "positive", "category": "milestone"},
     {"date": "2024-04-20", "event": "Bitcoin halving 2024", "coins": ["BTC"], "impact": "positive", "category": "technology"},
     {"date": "2024-05-20", "event": "SEC approves Ethereum ETFs", "coins": ["ETH"], "impact": "positive", "category": "regulatory"},
+    {"date": "2024-06-27", "event": "Mt. Gox begins BTC repayments after 10 years", "coins": ["BTC"], "impact": "negative", "category": "exchange"},
+    {"date": "2024-07-05", "event": "Germany sells 50,000 BTC seized from Movie2k", "coins": ["BTC"], "impact": "negative", "category": "regulatory"},
     {"date": "2024-07-23", "event": "Ethereum ETFs begin trading", "coins": ["ETH"], "impact": "positive", "category": "institutional"},
+    {"date": "2024-08-05", "event": "Crypto market flash crash - Yen carry trade unwind", "coins": ["BTC", "ETH"], "impact": "negative", "category": "macro"},
+    {"date": "2024-09-18", "event": "Fed cuts rates 50bps - first cut since 2020", "coins": ["BTC"], "impact": "positive", "category": "macro"},
+    {"date": "2024-10-29", "event": "Microsoft shareholders to vote on Bitcoin treasury", "coins": ["BTC"], "impact": "positive", "category": "institutional"},
+    {"date": "2024-11-05", "event": "Trump wins US election - crypto rallies", "coins": ["BTC", "DOGE"], "impact": "positive", "category": "regulatory"},
+    {"date": "2024-11-10", "event": "Bitcoin breaks $80,000 post-election", "coins": ["BTC"], "impact": "positive", "category": "milestone"},
+    {"date": "2024-11-13", "event": "Bitcoin reaches $90,000", "coins": ["BTC"], "impact": "positive", "category": "milestone"},
+    {"date": "2024-11-21", "event": "Gensler announces SEC resignation", "coins": ["BTC", "ETH", "XRP"], "impact": "positive", "category": "regulatory"},
+    {"date": "2024-11-22", "event": "Bitcoin touches $99,000", "coins": ["BTC"], "impact": "positive", "category": "milestone"},
+    {"date": "2024-12-04", "event": "Bitcoin breaks $100,000 for first time", "coins": ["BTC"], "impact": "positive", "category": "milestone"},
+    {"date": "2024-12-05", "event": "Trump nominates Paul Atkins as SEC Chair", "coins": ["BTC", "XRP"], "impact": "positive", "category": "regulatory"},
+    {"date": "2024-12-10", "event": "Microsoft shareholders reject Bitcoin treasury proposal", "coins": ["BTC"], "impact": "negative", "category": "institutional"},
+    {"date": "2024-12-17", "event": "Bitcoin reaches ATH $108,000", "coins": ["BTC"], "impact": "positive", "category": "milestone"},
+    {"date": "2024-12-18", "event": "Fed hawkish pivot - only 2 cuts in 2025", "coins": ["BTC"], "impact": "negative", "category": "macro"},
+    {"date": "2024-12-20", "event": "Bitcoin corrects to $92,000 on Fed fears", "coins": ["BTC"], "impact": "negative", "category": "milestone"},
     
-    # 2025 Expansion
-    {"date": "2025-01-20", "event": "Trump inaugurated - pro-crypto administration", "coins": ["BTC"], "impact": "positive", "category": "regulatory"},
-    {"date": "2025-01-23", "event": "Trump signs executive order on Bitcoin reserve", "coins": ["BTC"], "impact": "positive", "category": "regulatory"},
+    # 2025 - Institutional Adoption Era
+    {"date": "2025-01-02", "event": "Bitcoin starts 2025 at $94,500", "coins": ["BTC"], "impact": "positive", "category": "milestone"},
+    {"date": "2025-01-06", "event": "MicroStrategy buys another 1,070 BTC", "coins": ["BTC"], "impact": "positive", "category": "institutional"},
+    {"date": "2025-01-09", "event": "Bitcoin ETFs see $900M single day inflow", "coins": ["BTC"], "impact": "positive", "category": "institutional"},
+    {"date": "2025-01-13", "event": "DOJ authorized to sell $6.5B Silk Road Bitcoin", "coins": ["BTC"], "impact": "negative", "category": "regulatory"},
+    {"date": "2025-01-15", "event": "Trump team considers crypto-friendly Treasury picks", "coins": ["BTC"], "impact": "positive", "category": "regulatory"},
+    {"date": "2025-01-20", "event": "Trump inaugurated - pro-crypto administration begins", "coins": ["BTC", "SOL", "XRP"], "impact": "positive", "category": "regulatory"},
+    {"date": "2025-01-21", "event": "Trump signs executive order on digital assets", "coins": ["BTC"], "impact": "positive", "category": "regulatory"},
+    {"date": "2025-01-22", "event": "Bitcoin rallies to $105,000 on Trump orders", "coins": ["BTC"], "impact": "positive", "category": "milestone"},
+    {"date": "2025-01-23", "event": "Strategic Bitcoin Reserve executive order signed", "coins": ["BTC"], "impact": "positive", "category": "regulatory"},
+    {"date": "2025-01-24", "event": "SEC drops several crypto enforcement cases", "coins": ["XRP", "SOL"], "impact": "positive", "category": "regulatory"},
+    {"date": "2025-01-25", "event": "Solana reaches $250 - new ATH", "coins": ["SOL"], "impact": "positive", "category": "milestone"},
+    {"date": "2025-01-27", "event": "Bitcoin corrects 10% on profit taking", "coins": ["BTC"], "impact": "negative", "category": "milestone"},
+    {"date": "2025-01-28", "event": "DeepSeek AI causes tech/crypto correlation sell-off", "coins": ["BTC", "ETH"], "impact": "negative", "category": "macro"},
+    {"date": "2025-01-29", "event": "FOMC holds rates steady as expected", "coins": ["BTC"], "impact": "mixed", "category": "macro"},
+    {"date": "2025-01-30", "event": "Bitcoin ETFs reach $125B total AUM", "coins": ["BTC"], "impact": "positive", "category": "institutional"},
+    {"date": "2025-01-31", "event": "XRP surges 30% on SEC case dismissal hopes", "coins": ["XRP"], "impact": "positive", "category": "regulatory"},
+    
+    # 2025 February onwards (projected/reported)
+    {"date": "2025-02-01", "event": "Trump tariffs on China cause market volatility", "coins": ["BTC"], "impact": "negative", "category": "macro"},
+    {"date": "2025-02-03", "event": "Bitcoin drops to $91,000 on tariff fears", "coins": ["BTC"], "impact": "negative", "category": "milestone"},
+]
+
+# Predictable event patterns identified from historical data
+PREDICTABLE_PATTERNS = [
+    {
+        "pattern": "halving_cycle",
+        "description": "Bitcoin halving every ~4 years reduces supply, historically followed by bull run",
+        "predictability": "HIGH",
+        "lead_time_days": 365,
+        "next_occurrence": "2028-04-XX",
+        "historical_impact": "+300-500% within 12-18 months post-halving",
+        "coins": ["BTC"],
+        "signals": ["Mining difficulty adjustments", "Block height approaching milestone"]
+    },
+    {
+        "pattern": "etf_decision_dates",
+        "description": "SEC has specific deadlines for ETF approvals - volatility expected",
+        "predictability": "HIGH",
+        "lead_time_days": 30,
+        "next_occurrence": "Ongoing - check SEC calendar",
+        "historical_impact": "+/- 5-15% on decision day",
+        "coins": ["BTC", "ETH", "SOL"],
+        "signals": ["SEC deadline calendars", "Amendment filings"]
+    },
+    {
+        "pattern": "fomc_meetings",
+        "description": "Fed rate decisions impact crypto - 8 meetings per year",
+        "predictability": "HIGH",
+        "lead_time_days": 45,
+        "next_occurrence": "Check Fed calendar",
+        "historical_impact": "+/- 3-10% depending on hawkish/dovish tone",
+        "coins": ["BTC", "ETH"],
+        "signals": ["CPI data", "Employment data", "Fed speeches"]
+    },
+    {
+        "pattern": "major_upgrades",
+        "description": "Ethereum upgrades, Bitcoin soft forks announced months ahead",
+        "predictability": "HIGH",
+        "lead_time_days": 90,
+        "next_occurrence": "ETH Pectra upgrade 2025",
+        "historical_impact": "+10-30% pre-upgrade, volatile post-upgrade",
+        "coins": ["ETH", "BTC"],
+        "signals": ["Developer announcements", "Testnet deployments"]
+    },
+    {
+        "pattern": "quarterly_earnings",
+        "description": "MicroStrategy, Coinbase, miners report quarterly - price catalyst",
+        "predictability": "HIGH",
+        "lead_time_days": 30,
+        "next_occurrence": "Every quarter",
+        "historical_impact": "+/- 5-15% for related assets",
+        "coins": ["BTC"],
+        "signals": ["Earnings calendars", "Pre-announcements"]
+    },
+    {
+        "pattern": "token_unlocks",
+        "description": "Large token unlocks create sell pressure - scheduled in advance",
+        "predictability": "HIGH",
+        "lead_time_days": 7,
+        "next_occurrence": "Check token unlock calendars",
+        "historical_impact": "-5-20% around unlock dates",
+        "coins": ["SOL", "APT", "ARB", "OP"],
+        "signals": ["TokenUnlocks.app", "Vesting schedules"]
+    },
+    {
+        "pattern": "options_expiry",
+        "description": "Large options expiries cause volatility - last Friday of month",
+        "predictability": "HIGH",
+        "lead_time_days": 7,
+        "next_occurrence": "Monthly/Quarterly",
+        "historical_impact": "Increased volatility +/- 5-10%",
+        "coins": ["BTC", "ETH"],
+        "signals": ["Open interest data", "Max pain price"]
+    },
+    {
+        "pattern": "regulatory_calendar",
+        "description": "Court cases, SEC deadlines, congressional hearings scheduled ahead",
+        "predictability": "MEDIUM",
+        "lead_time_days": 14,
+        "next_occurrence": "Various - check legal calendars",
+        "historical_impact": "+/- 10-30% depending on outcome",
+        "coins": ["XRP", "BNB", "SOL"],
+        "signals": ["Court calendars", "Congressional schedules"]
+    },
+    {
+        "pattern": "seasonal_patterns",
+        "description": "Q4 historically strongest, September historically weakest",
+        "predictability": "MEDIUM",
+        "lead_time_days": 30,
+        "next_occurrence": "Annual cycle",
+        "historical_impact": "Q4 avg +40%, Sep avg -5%",
+        "coins": ["BTC", "ETH"],
+        "signals": ["Historical data", "Tax-loss harvesting season"]
+    },
+    {
+        "pattern": "celebrity_events",
+        "description": "Elon Musk appearances, major interviews often trigger moves",
+        "predictability": "LOW",
+        "lead_time_days": 1,
+        "next_occurrence": "Unpredictable",
+        "historical_impact": "DOGE +/- 20-50%, BTC +/- 5-10%",
+        "coins": ["DOGE", "BTC"],
+        "signals": ["Social media monitoring", "Event announcements"]
+    },
+    {
+        "pattern": "exchange_issues",
+        "description": "Exchange hacks, insolvencies often have warning signs",
+        "predictability": "LOW",
+        "lead_time_days": 0,
+        "next_occurrence": "Unpredictable",
+        "historical_impact": "-10-30% market-wide",
+        "coins": ["BTC", "ETH"],
+        "signals": ["Withdrawal delays", "On-chain outflows", "Social media FUD"]
+    },
 ]
 
 
