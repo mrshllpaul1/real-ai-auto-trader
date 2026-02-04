@@ -363,14 +363,26 @@ const TrainingDashboard = () => {
             <p className="text-[#888] mt-1">Monitor and control AI model training</p>
           </div>
           
-          <button
-            onClick={fetchStatuses}
-            className="px-4 py-2 bg-[#222] rounded-xl text-white flex items-center gap-2 hover:bg-[#333] transition-colors"
-            data-testid="refresh-btn"
-          >
-            <RefreshCw size={16} />
-            Refresh
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={fetchStatuses}
+              className="px-4 py-2 bg-[#222] rounded-xl text-white flex items-center gap-2 hover:bg-[#333] transition-colors"
+              data-testid="refresh-btn"
+            >
+              <RefreshCw size={16} />
+              Refresh
+            </button>
+            
+            {/* WebSocket Status */}
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs ${
+              wsConnected 
+                ? 'bg-[#00FF94]/10 text-[#00FF94] border border-[#00FF94]/30' 
+                : 'bg-[#FF4444]/10 text-[#FF4444] border border-[#FF4444]/30'
+            }`}>
+              <div className={`w-2 h-2 rounded-full ${wsConnected ? 'bg-[#00FF94] animate-pulse' : 'bg-[#FF4444]'}`} />
+              {wsConnected ? 'Live' : 'Offline'}
+            </div>
+          </div>
         </div>
       </motion.div>
 
