@@ -244,6 +244,128 @@ const AdaptiveStrategy = () => {
         </Card>
       </motion.div>
 
+      {/* ML vs DL Comparison */}
+      {mlVsDl && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Trophy className="text-[#FFB800]" />
+                ML vs Deep Learning Comparison
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {/* Summary Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className="p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <GitBranch size={16} className="text-[#007AFF]" />
+                    <span className="text-sm text-[#A1A1AA]">ML Models</span>
+                  </div>
+                  <p className="text-2xl font-data font-bold text-white">{mlVsDl.summary?.total_ml_models || 0}</p>
+                  <p className="text-xs text-[#A1A1AA]">Avg: {mlVsDl.summary?.ml_avg_accuracy || 0}%</p>
+                </div>
+                
+                <div className="p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Cpu size={16} className="text-[#9D00FF]" />
+                    <span className="text-sm text-[#A1A1AA]">DL Models</span>
+                  </div>
+                  <p className="text-2xl font-data font-bold text-white">{mlVsDl.summary?.total_dl_models || 0}</p>
+                  <p className="text-xs text-[#A1A1AA]">Avg: {mlVsDl.summary?.dl_avg_accuracy || 0}%</p>
+                </div>
+                
+                <div className="p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Award size={16} className="text-[#FFB800]" />
+                    <span className="text-sm text-[#A1A1AA]">Winner</span>
+                  </div>
+                  <p className={`text-2xl font-bold ${mlVsDl.summary?.winner === 'ML' ? 'text-[#007AFF]' : 'text-[#9D00FF]'}`}>
+                    {mlVsDl.summary?.winner || 'N/A'}
+                  </p>
+                </div>
+                
+                <div className="p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Trophy size={16} className="text-[#00FF94]" />
+                    <span className="text-sm text-[#A1A1AA]">Best Model</span>
+                  </div>
+                  <p className="text-lg font-bold text-[#00FF94] truncate">{mlVsDl.summary?.overall_best || 'None'}</p>
+                </div>
+              </div>
+              
+              {/* Side by Side Comparison */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* ML Models */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-bold text-[#007AFF] flex items-center gap-2">
+                    <GitBranch size={16} />
+                    Machine Learning
+                  </h4>
+                  {mlVsDl.ml_models?.map((model) => (
+                    <div 
+                      key={model.name}
+                      className={`p-3 rounded-lg border ${model.is_best ? 'bg-[#007AFF]/10 border-[#007AFF]/50' : 'bg-[#121212] border-[#1F1F1F]'}`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-white font-medium">{model.name}</span>
+                          {model.is_best && <Badge className="text-xs bg-[#00FF94]/20 text-[#00FF94]">Best</Badge>}
+                        </div>
+                        <span className={`font-data font-bold ${model.accuracy >= 70 ? 'text-[#00FF94]' : 'text-[#FFB800]'}`}>
+                          {model.accuracy}%
+                        </span>
+                      </div>
+                      <Progress value={model.accuracy} className="h-1.5" />
+                      <p className="text-xs text-[#A1A1AA] mt-1">{model.category}</p>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* DL Models */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-bold text-[#9D00FF] flex items-center gap-2">
+                    <Cpu size={16} />
+                    Deep Learning
+                  </h4>
+                  {mlVsDl.dl_models?.map((model) => (
+                    <div 
+                      key={model.name}
+                      className={`p-3 rounded-lg border ${model.is_best ? 'bg-[#9D00FF]/10 border-[#9D00FF]/50' : 'bg-[#121212] border-[#1F1F1F]'}`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-white font-medium">{model.name}</span>
+                          {model.is_best && <Badge className="text-xs bg-[#00FF94]/20 text-[#00FF94]">Best</Badge>}
+                        </div>
+                        <span className={`font-data font-bold ${model.accuracy >= 70 ? 'text-[#00FF94]' : model.accuracy >= 50 ? 'text-[#FFB800]' : 'text-[#A1A1AA]'}`}>
+                          {model.accuracy ? `${model.accuracy}%` : 'N/A'}
+                        </span>
+                      </div>
+                      {model.accuracy && <Progress value={model.accuracy} className="h-1.5" />}
+                      <p className="text-xs text-[#A1A1AA] mt-1">{model.category}: {model.description?.slice(0, 50)}...</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Recommendation */}
+              {mlVsDl.recommendation && (
+                <div className="mt-4 p-4 bg-[#00FF94]/10 rounded-lg border border-[#00FF94]/30">
+                  <p className="text-sm text-[#00FF94]">
+                    <strong>Recommendation:</strong> {mlVsDl.recommendation}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
       {/* ML Model Comparison */}
       {modelComparison && (
         <motion.div
