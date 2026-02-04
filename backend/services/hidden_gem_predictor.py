@@ -53,35 +53,79 @@ class HiddenGemPredictor:
         self.min_gain_threshold = 30  # Raised from 20
         self.btc_outperform_threshold = 15  # NEW
         
-    async def scan_for_gems(self, limit: int = 50) -> List[Dict[str, Any]]:
+    async def scan_for_gems(self, limit: int = 50, use_full_universe: bool = True) -> List[Dict[str, Any]]:
         """
         Scan the market for potential hidden gems.
         Returns ranked list of coins with gem potential.
-        Uses OPTIMIZED weights from backtesting (92% accuracy).
+        Uses OPTIMIZED weights from backtesting (81.7% accuracy on 556 coins).
+        
+        Args:
+            limit: Maximum number of candidates to analyze
+            use_full_universe: If True, uses the full 548 cross-referenced coins from Kraken+CoinDesk
         """
         gems = []
         
         try:
-            # Get coins with lower market cap (more gem potential)
+            # Get BTC data for relative strength calculation
+            btc_data = None
+            btc_price_change_24h = 0
+            btc_price_change_7d = 0
+            
             if self.market_service:
-                all_coins = await self.market_service.get_all_coins(per_page=250)
-                
-                # Filter for potential gems (rank 50-300 typically have more upside)
-                candidates = [c for c in all_coins if c.get('market_cap_rank', 0) > 30 and c.get('market_cap_rank', 0) < 300]
-                
-                # Get BTC data for relative strength calculation
+                all_coins = await self.market_service.get_all_coins(per_page=10)
                 btc_coin = next((c for c in all_coins if c.get('symbol', '').upper() == 'BTC'), None)
-                btc_price_change_24h = btc_coin.get('price_change_percentage_24h', 0) if btc_coin else 0
-                btc_price_change_7d = btc_coin.get('price_change_percentage_7d', 0) if btc_coin else 0
+                if btc_coin:
+                    btc_price_change_24h = btc_coin.get('price_change_percentage_24h', 0) or 0
+                    btc_price_change_7d = btc_coin.get('price_change_percentage_7d', 0) or 0
+            
+            candidates = []
+            
+            if use_full_universe:
+                # Use the full cross-referenced universe (548 tradeable coins)
+                cross_ref_coins = await self.db["coin_cross_reference"].find(
+                    {"tradeable_on_kraken": True},
+                    {"_id": 0}
+                ).sort("market_cap_rank", 1).limit(limit * 3).to_list(limit * 3)
                 
-                for coin in candidates[:limit]:
-                    gem_score = await self._analyze_gem_potential(coin, btc_price_change_24h, btc_price_change_7d)
-                    # Use optimized threshold (0.70) instead of hardcoded 60
-                    if gem_score and gem_score['total_score'] >= (self.gem_threshold * 100):
-                        gems.append(gem_score)
-                
-                # Sort by score
-                gems.sort(key=lambda x: x['total_score'], reverse=True)
+                # Get CoinDesk data for these coins
+                for coin_ref in cross_ref_coins:
+                    symbol = coin_ref.get("symbol", "")
+                    coindesk_data = await self.db["coindesk_universe"].find_one(
+                        {"symbol": symbol},
+                        {"_id": 0}
+                    )
+                    
+                    if coindesk_data:
+                        # Skip top 30 coins (less gem potential)
+                        rank = coindesk_data.get("market_cap_rank", 0)
+                        if rank and rank > 30 and rank < 500:
+                            candidates.append({
+                                "id": symbol.lower(),
+                                "symbol": symbol,
+                                "name": coindesk_data.get("name", symbol),
+                                "current_price": coindesk_data.get("price_usd", 0),
+                                "market_cap": coindesk_data.get("market_cap_usd", 0),
+                                "market_cap_rank": rank,
+                                "total_volume": coindesk_data.get("volume_24h_usd", 0),
+                                "price_change_percentage_24h": coindesk_data.get("change_24h_pct", 0),
+                                "price_change_percentage_7d": 0,  # Would need to calculate from OHLCV
+                                "source": "coindesk_universe"
+                            })
+            else:
+                # Fallback to CoinGecko API
+                if self.market_service:
+                    all_coins = await self.market_service.get_all_coins(per_page=250)
+                    candidates = [c for c in all_coins if c.get('market_cap_rank', 0) > 30 and c.get('market_cap_rank', 0) < 300]
+            
+            # Analyze each candidate
+            for coin in candidates[:limit]:
+                gem_score = await self._analyze_gem_potential(coin, btc_price_change_24h, btc_price_change_7d)
+                # Use optimized threshold (0.70) 
+                if gem_score and gem_score['total_score'] >= (self.gem_threshold * 100):
+                    gems.append(gem_score)
+            
+            # Sort by score
+            gems.sort(key=lambda x: x['total_score'], reverse=True)
                 
         except Exception as e:
             print(f"Gem scan error: {e}")
