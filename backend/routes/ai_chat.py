@@ -434,12 +434,10 @@ async def execute_ai_command(request: CommandRequest):
                 
                 if date_match:
                     # Query specific date
-                    from datetime import datetime, timezone
                     query_date = datetime.strptime(date_match.group(1), "%Y-%m-%d").replace(tzinfo=timezone.utc)
                     
                     if coin:
                         # Get what caused price change
-                        from datetime import timedelta
                         movements = await correlation_engine.find_price_movements(
                             coin, 
                             query_date - timedelta(days=1),
