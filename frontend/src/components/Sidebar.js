@@ -182,6 +182,8 @@ const Sidebar = () => {
     { path: '/budget', icon: Shield, label: 'AI Budget', highlight: true },
     { path: '/ai-chat', icon: MessageCircle, label: 'Ask AI', highlight: true },
     { path: '/triggers', icon: Target, label: 'Event Triggers', highlight: true },
+    { path: '/trigger-performance', icon: Award, label: 'Trigger Stats', highlight: true },
+    { path: '/adaptive', icon: Gauge, label: 'Adaptive AI', highlight: true },
     { path: '/event-timeline', icon: Calendar, label: 'Event Timeline', highlight: true },
     { path: '/journal', icon: BookOpen, label: 'Journal' },
     { path: '/scanner', icon: Radar, label: 'Gem Scanner', highlight: true },
