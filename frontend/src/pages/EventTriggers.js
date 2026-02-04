@@ -39,17 +39,25 @@ const EventTriggers = () => {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
+      // Add cache-busting timestamp to prevent stale data
+      const timestamp = Date.now();
       const [statusRes, triggersRes, templatesRes, historyRes] = await Promise.all([
-        api.get('/triggers/status').catch(() => ({ data: null })),
-        api.get('/triggers/list').catch(() => ({ data: { triggers: [] } })),
-        api.get('/triggers/templates').catch(() => ({ data: { templates: {} } })),
-        api.get('/triggers/history/all?limit=50').catch(() => ({ data: { history: [] } }))
+        api.get(`/triggers/status?_t=${timestamp}`).catch(() => ({ data: null })),
+        api.get(`/triggers/list?_t=${timestamp}`).catch(() => ({ data: { triggers: [] } })),
+        api.get(`/triggers/templates?_t=${timestamp}`).catch(() => ({ data: { templates: {} } })),
+        api.get(`/triggers/history/all?limit=50&_t=${timestamp}`).catch(() => ({ data: { history: [] } }))
       ]);
 
-      setStatus(statusRes.data);
-      setTriggers(triggersRes.data?.triggers || []);
+      // Force update state with fresh data
+      if (statusRes.data) {
+        setStatus(statusRes.data);
+      }
+      const newTriggers = triggersRes.data?.triggers || [];
+      setTriggers(newTriggers);
       setTemplates(templatesRes.data?.templates || {});
       setHistory(historyRes.data?.history || []);
+      
+      console.log(`Loaded ${newTriggers.length} triggers from API`);
     } catch (error) {
       console.error('Error loading event triggers:', error);
       toast.error('Failed to load event triggers');
