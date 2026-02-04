@@ -515,6 +515,18 @@ async def initialize_services():
         )
         logger.info("✅ Prediction Enhancements initialized (8 services)")
         
+        # Inject prediction services into automated trader for enhanced coin selection
+        automated_trader.prediction_services = {
+            'order_book': order_book_analyzer,
+            'on_chain': on_chain_analytics,
+            'social': social_sentiment_service,
+            'transformer': transformer_predictor,
+            'rl_agent': rl_trading_agent,
+            'cross_asset': cross_asset_correlation,
+            'advanced_ta': advanced_ta
+        }
+        logger.info("✅ Automated Trader updated with Prediction Enhancement Services")
+        
         # Initialize Custom Strategy Builder with AI Chat integration
         from services.custom_strategy_builder import get_strategy_builder
         strategy_builder = get_strategy_builder(db, chat_service)  # Use chat_service instance
