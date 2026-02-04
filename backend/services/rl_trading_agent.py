@@ -4,14 +4,19 @@ Enhancement #5: RL agent to maximize portfolio returns with optimal entry/exit
 """
 
 import logging
+import asyncio
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 import numpy as np
 from collections import deque
 import random
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
+
+# Thread pool for CPU-bound TensorFlow operations
+_training_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="rl_train")
 
 # TensorFlow imports
 try:
