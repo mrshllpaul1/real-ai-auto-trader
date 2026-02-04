@@ -678,7 +678,7 @@ async def initialize_services():
             transformer_predictor=transformer_predictor,
             rl_agent=rl_trading_agent,
             regime_predictor=regime_pred,
-            model_persistence=model_persistence_service
+            model_persistence=None  # Model persistence is per-model, not centralized
         )
         set_learning_service(learning_service)
         logger.info("✅ Learning Service initialized")
