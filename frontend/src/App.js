@@ -79,6 +79,7 @@ function App() {
                 <Route path="/ensemble" element={<EnsembleAI />} />
                 <Route path="/triggers" element={<EventTriggers />} />
                 <Route path="/gem-backtest" element={<GemBacktester />} />
+                <Route path="/event-timeline" element={<EventTimeline />} />
                 <Route path="/ai-chat" element={<AIChat />} />
                 <Route path="/news" element={<NewsAndIntelligence />} />
                 <Route path="/news-filters" element={<NewsFilters />} />
