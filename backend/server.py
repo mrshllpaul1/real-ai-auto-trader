@@ -78,6 +78,7 @@ from routes import kraken_universe, coindesk_universe
 from routes import adaptive_strategy, performance, social_sentiment, isolated_portfolio
 from routes import stop_loss_automation as stop_loss_routes
 from routes import gem_ml_dl
+from routes import portfolio_visualization
 
 # Include routers
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
@@ -130,6 +131,7 @@ api_router.include_router(social_sentiment.router, tags=["Social Sentiment"])
 api_router.include_router(isolated_portfolio.router, tags=["Isolated Portfolio"])
 api_router.include_router(stop_loss_routes.router, tags=["Stop-Loss Automation"])
 api_router.include_router(gem_ml_dl.router, tags=["Gem ML/DL Prediction"])
+api_router.include_router(portfolio_visualization.router, tags=["Portfolio Visualization"])
 
 # Include the router
 app.include_router(api_router)
