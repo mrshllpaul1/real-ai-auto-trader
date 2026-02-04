@@ -188,8 +188,17 @@ class RegimePredictionEngine:
         if len(ohlcv_data) < 30:
             return None
         
-        # Sort by date ascending
-        data = sorted(ohlcv_data, key=lambda x: x.get('timestamp', 0))
+        # Sort by date ascending - handle both int timestamps and string dates
+        def get_sort_key(x):
+            ts = x.get('timestamp', x.get('date', 0))
+            if isinstance(ts, str):
+                try:
+                    return datetime.fromisoformat(ts.replace('Z', '+00:00')).timestamp()
+                except:
+                    return 0
+            return ts if ts else 0
+        
+        data = sorted(ohlcv_data, key=get_sort_key)
         
         features = []
         
@@ -197,10 +206,10 @@ class RegimePredictionEngine:
             window = data[i-30:i]
             current = data[i]
             
-            closes = [d['close'] for d in window]
-            volumes = [d.get('volume_to', d.get('volume', 0)) for d in window]
-            highs = [d['high'] for d in window]
-            lows = [d['low'] for d in window]
+            closes = [float(d.get('close', 0)) for d in window]
+            volumes = [float(d.get('volume_to', d.get('volume', 0)) or 0) for d in window]
+            highs = [float(d.get('high', 0)) for d in window]
+            lows = [float(d.get('low', 0)) for d in window]
             
             # Price changes
             price_1d = (closes[-1] - closes[-2]) / closes[-2] * 100 if closes[-2] else 0
