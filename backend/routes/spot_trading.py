@@ -148,12 +148,10 @@ async def get_trading_pairs():
     pairs_with_prices = []
     
     for symbol, info in TRADING_PAIRS.items():
-        # Find ticker data - Kraken returns with slightly different keys
-        ticker = None
-        for key in tickers:
-            if info['pair'] in key or key.startswith(info['pair'][:4]):
-                ticker = tickers[key]
-                break
+        pair_name = info['pair']
+        
+        # Kraken returns exact pair names
+        ticker = tickers.get(pair_name)
         
         if ticker:
             last_price = float(ticker.get("c", [0])[0]) if ticker.get("c") else 0
@@ -166,7 +164,7 @@ async def get_trading_pairs():
             
             pairs_with_prices.append({
                 "symbol": symbol,
-                "pair": info['pair'],
+                "pair": pair_name,
                 "name": info['name'],
                 "price": last_price,
                 "change_24h": round(change_24h, 2),
@@ -179,7 +177,7 @@ async def get_trading_pairs():
         else:
             pairs_with_prices.append({
                 "symbol": symbol,
-                "pair": info['pair'],
+                "pair": pair_name,
                 "name": info['name'],
                 "price": 0,
                 "error": "Price unavailable",
