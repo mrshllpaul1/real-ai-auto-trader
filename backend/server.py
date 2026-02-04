@@ -311,6 +311,10 @@ async def initialize_services():
         )
         auto_trade.set_dependencies(db, automated_trader, alert_service, sentiment_analyzer)
         
+        # Kraken Routes
+        kraken_routes.set_dependencies(db, kraken_service, isolated_portfolio_mgr, automated_trader)
+        logger.info("✅ Kraken Routes initialized")
+        
         # Growth Engine
         growth_engine = AggressiveGrowthEngine(
             db=db, kraken_service=kraken_service, gem_finder=gem_finder,
