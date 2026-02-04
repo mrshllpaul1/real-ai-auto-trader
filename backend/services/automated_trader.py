@@ -87,15 +87,66 @@ class AutomatedWeeklyTrader:
             'celestia': 'TIAUSD',
         }
     
-    async def get_portfolio_balance(self) -> float:
-        """Get available trading balance from Kraken"""
+    async def get_portfolio_balance(self, use_isolated: bool = True) -> Dict[str, Any]:
+        """
+        Get available trading balance.
+        
+        BUDGET ISOLATION: By default, returns ONLY the isolated AI trading budget.
+        The AI trader never has direct access to the main Kraken portfolio.
+        
+        Args:
+            use_isolated: If True (default), use isolated budget. If False, use Kraken directly (paper trade only).
+            
+        Returns:
+            Dict with balance info and isolation status
+        """
+        if use_isolated and self.isolated_portfolio:
+            try:
+                budget_status = await self.isolated_portfolio.get_budget_status()
+                
+                if not budget_status.get('allocated'):
+                    logger.warning("⚠️ No budget allocated for AI trading. AI trading is disabled.")
+                    return {
+                        'balance': 0,
+                        'isolated': True,
+                        'allocated': False,
+                        'real_trading_enabled': False,
+                        'message': 'No budget allocated. Please set a trading budget first.'
+                    }
+                
+                return {
+                    'balance': budget_status.get('cash_available', 0),
+                    'isolated': True,
+                    'allocated': True,
+                    'real_trading_enabled': budget_status.get('real_trading_enabled', False),
+                    'total_value': budget_status.get('current_value', 0),
+                    'positions_value': budget_status.get('positions_value', 0),
+                    'initial_budget': budget_status.get('initial_budget', 0),
+                    'total_pnl': budget_status.get('total_pnl', 0)
+                }
+            except Exception as e:
+                logger.error(f"Error getting isolated budget: {e}")
+                return {
+                    'balance': 0,
+                    'isolated': True,
+                    'allocated': False,
+                    'error': str(e)
+                }
+        
+        # Fallback to Kraken balance (paper trade only)
         try:
             balance = await self.kraken.get_balance()
             usd_balance = float(balance.get('ZUSD', 0))
-            return usd_balance
+            return {
+                'balance': usd_balance,
+                'isolated': False,
+                'allocated': True,
+                'real_trading_enabled': False,  # Direct Kraken access is paper-only
+                'message': 'Using Kraken balance directly (paper trade only)'
+            }
         except Exception as e:
-            print(f"Error getting balance: {e}")
-            return 0
+            logger.error(f"Error getting Kraken balance: {e}")
+            return {'balance': 0, 'isolated': False, 'error': str(e)}
     
     async def get_adaptive_params(self) -> Dict[str, Any]:
         """
