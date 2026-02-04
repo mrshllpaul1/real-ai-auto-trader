@@ -141,6 +141,7 @@ api_router.include_router(bg_tasks.router, tags=["Background Tasks"])
 api_router.include_router(kraken_routes.router, tags=["Kraken Trading"])
 api_router.include_router(enhanced_ai_routes.router, tags=["Enhanced AI"])
 api_router.include_router(paper_trading_routes.router, tags=["Paper Trading"])
+api_router.include_router(prediction_enhancements.router, tags=["Prediction Enhancements"])
 
 # Include the router
 app.include_router(api_router)
