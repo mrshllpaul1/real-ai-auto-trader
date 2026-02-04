@@ -124,6 +124,7 @@ api_router.include_router(kraken_universe.router, tags=["Kraken Universe"])
 api_router.include_router(coindesk_universe.router, tags=["CoinDesk Universe"])
 api_router.include_router(adaptive_strategy.router, tags=["Adaptive Strategy"])
 api_router.include_router(performance.router, tags=["Performance & Prediction"])
+api_router.include_router(social_sentiment.router, tags=["Social Sentiment"])
 
 # Include the router
 app.include_router(api_router)
