@@ -26,6 +26,49 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ---
 
+## 🎯 Session 18 - Budget Isolation Feature (Feb 4, 2026)
+
+### ✅ Budget Isolation for AI Trader (COMPLETE)
+
+**Critical Safety Feature:** The AI trader now operates ONLY within an isolated budget, ensuring your main Kraken portfolio is NEVER touched.
+
+**Key Components:**
+- **IsolatedPortfolioManager** (`/app/backend/services/isolated_portfolio.py`):
+  - `set_trading_budget()` - Allocate funds for AI trading
+  - `get_budget_status()` - Check current budget and positions
+  - `can_trade()` - Verify if trade is within budget constraints
+  - `open_position()` - Open AI-managed position
+  - `close_position()` - Close position and return funds to budget
+  - `swap_position()` - Swap between AI positions
+  - `verify_isolation()` - Confirm isolation is active
+
+- **AutomatedWeeklyTrader** - Now integrated with budget isolation:
+  - All real trades require budget allocation
+  - Trades exceeding budget are rejected with clear reason
+  - Paper trades work even without budget
+
+**API Endpoints:**
+- `POST /api/isolated-portfolio/set-budget` - Set AI trading budget
+- `GET /api/isolated-portfolio/status` - Budget status
+- `GET /api/isolated-portfolio/verify-isolation` - Confirm isolation
+- `GET /api/isolated-portfolio/can-trade?amount_usd=X` - Check trade allowance
+- `GET /api/isolated-portfolio/positions` - AI-managed positions
+- `POST /api/isolated-portfolio/close-position` - Close position
+- `POST /api/isolated-portfolio/swap` - Swap positions
+- `GET /api/isolated-portfolio/transactions` - Transaction history
+
+**Test Results:** 13/13 tests passed (100%)
+
+**Current Budget:**
+- Initial Allocation: $500
+- Cash Available: $500
+- Positions Value: $0
+- Real Trading: ENABLED
+- Isolation: ACTIVE ✓
+
+---
+
+
 ## 🎯 Session 17 - Social Sentiment & Scheduler Integration (Feb 4, 2026)
 
 ### ✅ Social Sentiment Web Scraper (COMPLETE)
