@@ -47,6 +47,8 @@ class AutomatedWeeklyTrader:
         self.enhanced_ai = enhanced_ai  # Enhanced AI engine
         self.gem_ml_dl = gem_ml_dl_predictor  # Advanced ML/DL gem predictor (P1)
         self.task_manager = background_task_manager  # Background task manager (P2)
+        self.custom_strategies = []  # Active custom strategies
+        self.notification_service = None  # Push notifications
         
         # Base position sizing (can be overridden by adaptive strategy)
         self.config = {
