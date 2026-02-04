@@ -22,6 +22,7 @@ import DeepLearningAI from "./pages/DeepLearningAI";
 import AIChat from "./pages/AIChat";
 import EnsembleAI from "./pages/EnsembleAI";
 import EventTriggers from "./pages/EventTriggers";
+import GemBacktester from "./pages/GemBacktester";
 import Sidebar from "./components/Sidebar";
 import FloatingAIChat from "./components/FloatingAIChat";
 import { Toaster } from "./components/ui/sonner";
