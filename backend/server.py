@@ -67,6 +67,73 @@ async def root():
         "features": ["AI-powered trading", "Paper & Real trading", "Growth Engine"]
     }
 
+
+# WebSocket Connection Manager for real-time updates
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+    
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+        logger.info(f"WebSocket connected. Active connections: {len(self.active_connections)}")
+    
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+        logger.info(f"WebSocket disconnected. Active connections: {len(self.active_connections)}")
+    
+    async def broadcast(self, message: dict):
+        """Broadcast message to all connected clients"""
+        disconnected = []
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except Exception:
+                disconnected.append(connection)
+        
+        # Clean up disconnected clients
+        for conn in disconnected:
+            self.disconnect(conn)
+
+ws_manager = ConnectionManager()
+
+
+@app.websocket("/ws/training")
+async def websocket_training_updates(websocket: WebSocket):
+    """
+    WebSocket endpoint for real-time training status updates.
+    Sends updates every 3 seconds for active training tasks.
+    """
+    await ws_manager.connect(websocket)
+    try:
+        while True:
+            # Get active tasks from task manager
+            try:
+                from services.background_tasks import get_task_manager
+                task_manager = get_task_manager()
+                
+                if task_manager:
+                    active_tasks = await task_manager.get_active_tasks()
+                    
+                    # Send update to this client
+                    await websocket.send_json({
+                        "type": "training_update",
+                        "timestamp": asyncio.get_event_loop().time(),
+                        "tasks": active_tasks
+                    })
+            except Exception as e:
+                logger.debug(f"WebSocket training update error: {e}")
+            
+            await asyncio.sleep(3)
+            
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket)
+    except Exception as e:
+        logger.debug(f"WebSocket error: {e}")
+        ws_manager.disconnect(websocket)
+
+
 # Import routes
 from routes import auth, trading, strategies, market, risk, learning, news, training
 from routes import auto_trading, allocation, scanner, auto_execute, backtest, rebalance
