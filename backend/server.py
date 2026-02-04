@@ -79,6 +79,7 @@ from routes import adaptive_strategy, performance, social_sentiment, isolated_po
 from routes import stop_loss_automation as stop_loss_routes
 from routes import gem_ml_dl
 from routes import portfolio_visualization
+from routes import background_tasks as bg_tasks
 
 # Include routers
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
@@ -132,6 +133,7 @@ api_router.include_router(isolated_portfolio.router, tags=["Isolated Portfolio"]
 api_router.include_router(stop_loss_routes.router, tags=["Stop-Loss Automation"])
 api_router.include_router(gem_ml_dl.router, tags=["Gem ML/DL Prediction"])
 api_router.include_router(portfolio_visualization.router, tags=["Portfolio Visualization"])
+api_router.include_router(bg_tasks.router, tags=["Background Tasks"])
 
 # Include the router
 app.include_router(api_router)
@@ -433,6 +435,12 @@ async def initialize_services():
         # Portfolio Visualization
         portfolio_visualization.set_dependencies(db, isolated_portfolio_mgr)
         logger.info("✅ Portfolio Visualization initialized")
+        
+        # Background Task Manager
+        from services.background_tasks import get_task_manager
+        task_manager = get_task_manager(db)
+        bg_tasks.set_dependencies(db, task_manager)
+        logger.info("✅ Background Task Manager initialized")
         
         # Start scheduler
         await scheduler_service.start()
