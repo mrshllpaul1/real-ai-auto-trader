@@ -512,7 +512,7 @@ async def initialize_services():
         
         # Initialize Custom Strategy Builder with AI Chat integration
         from services.custom_strategy_builder import get_strategy_builder
-        strategy_builder = get_strategy_builder(db, ai_chat)
+        strategy_builder = get_strategy_builder(db, chat_service)  # Use chat_service instance
         strategy_builder_routes.set_dependencies(db, strategy_builder)
         logger.info("✅ Custom Strategy Builder initialized (AI-assisted)")
         
