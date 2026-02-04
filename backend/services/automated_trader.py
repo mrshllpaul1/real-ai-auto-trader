@@ -94,37 +94,69 @@ class AutomatedWeeklyTrader:
     async def get_adaptive_params(self) -> Dict[str, Any]:
         """
         Get current adaptive strategy parameters.
-        Falls back to base config if adaptive strategy not available.
+        Uses ML/DL regime prediction if available, falls back to adaptive strategy.
         """
+        regime = 'unknown'
+        ml_prediction = None
+        
+        # Try ML/DL regime prediction first (more accurate)
+        if self.regime_predictor:
+            try:
+                ml_prediction = await self.regime_predictor.predict_regime('BTC')
+                if ml_prediction and 'predicted_regime' in ml_prediction:
+                    regime = ml_prediction['predicted_regime']
+                    print(f"  🤖 ML Regime Prediction: {regime} ({ml_prediction.get('confidence', 0):.1f}% confidence)")
+                    print(f"     Model: {ml_prediction.get('model_used')} ({ml_prediction.get('model_accuracy', 0):.1f}% accuracy)")
+            except Exception as e:
+                print(f"  ⚠️ ML prediction error: {e}")
+        
+        # Use adaptive strategy with ML-detected regime
         if self.adaptive_strategy:
             try:
-                # Detect current regime and adapt
-                await self.adaptive_strategy.detect_market_regime()
+                # If ML prediction available, use it to inform adaptive strategy
+                if regime != 'unknown':
+                    # Map regime to adaptive strategy format
+                    from services.adaptive_strategy import MarketRegime
+                    regime_map = {
+                        'strong_bull': MarketRegime.STRONG_BULL,
+                        'bull': MarketRegime.BULL,
+                        'sideways': MarketRegime.SIDEWAYS,
+                        'bear': MarketRegime.BEAR,
+                        'strong_bear': MarketRegime.STRONG_BEAR,
+                        'high_volatility': MarketRegime.HIGH_VOLATILITY,
+                        'accumulation': MarketRegime.ACCUMULATION
+                    }
+                    detected_regime = regime_map.get(regime)
+                    if detected_regime:
+                        self.adaptive_strategy.current_regime = detected_regime
+                
                 result = await self.adaptive_strategy.adapt_strategy()
                 
                 return {
-                    'regime': result.get('regime', 'sideways'),
+                    'regime': regime if regime != 'unknown' else result.get('regime', 'sideways'),
                     'max_position_pct': result['adapted_params'].get('max_position_pct', self.config['main_position_pct']),
                     'stop_loss': result['adapted_params'].get('stop_loss_pct', self.config['stop_loss_main']),
                     'take_profit': result['adapted_params'].get('take_profit_pct', self.config['take_profit_main']),
                     'min_confidence': result['adapted_params'].get('min_confidence', 60),
                     'max_exposure': result['adapted_params'].get('max_total_exposure', 90),
                     'preferred_assets': result.get('preferred_assets', []),
-                    'is_adaptive': True
+                    'is_adaptive': True,
+                    'ml_prediction': ml_prediction
                 }
             except Exception as e:
                 print(f"  ⚠️ Adaptive strategy error: {e}, using base config")
         
         # Fallback to base config
         return {
-            'regime': 'unknown',
+            'regime': regime if regime != 'unknown' else 'sideways',
             'max_position_pct': self.config['main_position_pct'],
             'stop_loss': self.config['stop_loss_main'],
             'take_profit': self.config['take_profit_main'],
             'min_confidence': 60,
             'max_exposure': 90,
             'preferred_assets': [],
-            'is_adaptive': False
+            'is_adaptive': False,
+            'ml_prediction': ml_prediction
         }
     
     async def execute_weekly_rebalance(self, paper_trade: bool = True) -> Dict[str, Any]:
