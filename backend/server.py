@@ -357,6 +357,12 @@ async def initialize_services():
         event_triggers.set_dependencies(db, trigger_service)
         logger.info("✅ Event Trigger Service initialized")
         
+        # Kraken Universe Service
+        from services.kraken_universe import get_kraken_universe
+        kraken_universe_service = get_kraken_universe(db)
+        kraken_universe.set_dependencies(kraken_universe_service)
+        logger.info("✅ Kraken Universe Service initialized")
+        
         # Start scheduler
         await scheduler_service.start()
         
