@@ -88,6 +88,7 @@ function App() {
                 <Route path="/scanner" element={<GemScanner />} />
                 <Route path="/auto-exec" element={<AutoExecution />} />
                 <Route path="/advanced" element={<AdvancedFeatures />} />
+                <Route path="/budget" element={<TradingBudget />} />
                 <Route path="/guide" element={<Guide />} />
                 <Route path="/setup" element={<Setup />} />
                 <Route path="/settings" element={<Settings />} />
