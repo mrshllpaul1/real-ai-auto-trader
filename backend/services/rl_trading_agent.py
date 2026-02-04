@@ -325,6 +325,7 @@ class RLTradingAgent:
     - Provides trading signals
     - Tracks performance
     - Supports background task execution for long-running training
+    - Supports model persistence (save/load to disk)
     """
     
     def __init__(self, db: AsyncIOMotorDatabase):
@@ -336,6 +337,46 @@ class RLTradingAgent:
         self.task_manager = None  # Set via set_task_manager()
         self.current_training_task_id = None
         self.history_service = None  # Training history tracking
+        
+        # Try to load saved model on initialization
+        self._load_saved_model()
+    
+    def _load_saved_model(self):
+        """Attempt to load a previously saved model"""
+        try:
+            from services.model_persistence import get_rl_persistence
+            persistence = get_rl_persistence()
+            
+            if persistence.model_exists():
+                model = persistence.load_keras_model()
+                if model is not None:
+                    self.agent.model = model
+                    self.agent.target_model = model
+                    self.is_trained = True
+                    meta = persistence.get_metadata() or {}
+                    logger.info(f"✅ RL Agent loaded saved model (trained: {meta.get('saved_at', 'unknown')})")
+        except Exception as e:
+            logger.warning(f"Could not load saved RL model: {e}")
+    
+    def save_model(self) -> bool:
+        """Save the current model to disk"""
+        try:
+            from services.model_persistence import get_rl_persistence
+            persistence = get_rl_persistence()
+            
+            if self.agent.model is not None:
+                return persistence.save_keras_model(
+                    self.agent.model,
+                    metadata={
+                        "is_trained": self.is_trained,
+                        "epsilon": self.agent.epsilon,
+                        "memory_size": len(self.agent.memory)
+                    }
+                )
+            return False
+        except Exception as e:
+            logger.error(f"Failed to save RL model: {e}")
+            return False
     
     def set_task_manager(self, task_manager):
         """Set background task manager for async training"""
