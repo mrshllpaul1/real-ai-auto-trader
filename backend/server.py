@@ -74,6 +74,7 @@ from routes import ai_universe, ai_discovery, sentiment, cryptopanic, deep_learn
 from routes import ai_universe_expand, gem_predictor, simulation, ensemble, coindesk
 from routes import gem_predictor as gem_predictor_routes
 from routes import historical_data, ai_learning_loop, events, event_triggers
+from routes import kraken_universe
 
 # Include routers
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
