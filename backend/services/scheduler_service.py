@@ -1076,6 +1076,58 @@ class SchedulerService:
             
             return {'error': str(e)}
     
+    async def _run_stop_loss_check(self) -> Dict[str, Any]:
+        """Execute stop-loss and take-profit check on all positions"""
+        timestamp = datetime.utcnow()
+        logger.info(f"🛡️ [{timestamp.strftime('%H:%M')}] Running stop-loss automation check...")
+        
+        try:
+            if not self.stop_loss_automation:
+                logger.warning("  ⚠️ Stop-loss automation not configured")
+                return {'success': False, 'error': 'Stop-loss automation not initialized'}
+            
+            result = await self.stop_loss_automation.check_all_positions()
+            
+            # Record execution
+            execution = {
+                'job_id': 'stop_loss_check',
+                'timestamp': timestamp.isoformat(),
+                'success': True,
+                'positions_checked': result.get('positions_checked', 0),
+                'stop_loss_triggered': len(result.get('stop_loss_triggered', [])),
+                'take_profit_triggered': len(result.get('take_profit_triggered', [])),
+                'errors': len(result.get('errors', []))
+            }
+            await self.db.scheduler_executions.insert_one(execution)
+            
+            # Send alerts for significant events
+            sl_count = len(result.get('stop_loss_triggered', []))
+            tp_count = len(result.get('take_profit_triggered', []))
+            
+            if (sl_count > 0 or tp_count > 0) and self.alert_service:
+                total_pnl = sum(p.get('pnl_usd', 0) for p in result.get('stop_loss_triggered', []))
+                total_pnl += sum(p.get('pnl_usd', 0) for p in result.get('take_profit_triggered', []))
+                
+                await self.alert_service.send_alert(
+                    title="🛡️ Position Auto-Closed",
+                    message=f"Stop-Loss: {sl_count} | Take-Profit: {tp_count}\nTotal P&L: ${total_pnl:+.2f}",
+                    alert_type="stop_loss_automation",
+                    priority="high" if sl_count > 0 else "normal"
+                )
+            
+            logger.info(f"  ✅ Check complete: {result.get('positions_checked', 0)} checked, SL:{sl_count}, TP:{tp_count}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"  ❌ Stop-loss check error: {e}")
+            await self.db.scheduler_executions.insert_one({
+                'job_id': 'stop_loss_check',
+                'timestamp': timestamp.isoformat(),
+                'success': False,
+                'error': str(e)
+            })
+            return {'error': str(e)}
+    
     def get_scheduled_jobs(self) -> Dict[str, Any]:
         """Get all scheduled jobs from APScheduler"""
         jobs = {}
