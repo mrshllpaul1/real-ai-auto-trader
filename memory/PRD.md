@@ -144,4 +144,17 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 - **Real Trading:** Enabled
 - **Active Schedules:** 1 (daily RL at 2 AM)
 - **Models Saved:** Transformer (survives restart)
+- **Spot Trading:** 19 pairs, live prices from Kraken
+- **AI Learning:** Panel on Training Dashboard, 4 recommendations active
 - **All Services:** Operational
+
+---
+
+## Backlog/Future Tasks
+- **P1:** Complete server.py modularization (600+ lines)
+- **P2:** Train and persist all models (RL Agent, Regime)
+- **P2:** Verify and utilize social sentiment data
+- **P3:** Enhanced Training History with analytics
+- **P3:** Model versioning with rollbacks
+- **P3:** Push notifications (Web Push API)
+- **P3:** Comprehensive backtesting feature
