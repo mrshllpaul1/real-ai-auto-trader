@@ -186,6 +186,7 @@ const Sidebar = () => {
     { path: '/triggers', icon: Target, label: 'Event Triggers', highlight: true },
     { path: '/trigger-performance', icon: Award, label: 'Trigger Stats', highlight: true },
     { path: '/adaptive', icon: Gauge, label: 'Adaptive AI', highlight: true },
+    { path: '/enhanced-ai', icon: Brain, label: 'AI Brain', highlight: true },
     { path: '/event-timeline', icon: Calendar, label: 'Event Timeline', highlight: true },
     { path: '/journal', icon: BookOpen, label: 'Journal' },
     { path: '/scanner', icon: Radar, label: 'Gem Scanner', highlight: true },
