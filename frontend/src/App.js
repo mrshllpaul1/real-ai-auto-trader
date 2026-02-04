@@ -31,6 +31,7 @@ import PositionManagement from "./pages/PositionManagement";
 import GemMLDLComparison from "./pages/GemMLDLComparison";
 import PortfolioDashboard from "./pages/PortfolioDashboard";
 import EnhancedAIDashboard from "./pages/EnhancedAIDashboard";
+import StrategyBuilder from "./pages/StrategyBuilder";
 import Sidebar from "./components/Sidebar";
 import FloatingAIChat from "./components/FloatingAIChat";
 import { Toaster } from "./components/ui/sonner";
