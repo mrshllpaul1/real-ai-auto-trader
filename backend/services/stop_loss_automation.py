@@ -137,11 +137,11 @@ class StopLossAutomation:
                 logger.error(f"Error checking position {position.get('coin_id')}: {e}")
         
         # Log summary
-        actions_taken = len(results['stop_loss_triggered']) + len(results['take_profit_triggered'])
+        actions_taken = len(results['stop_loss_triggered']) + len(results['take_profit_triggered']) + len(results['trailing_stop_triggered'])
         results['actions_taken'] = actions_taken
         
-        if actions_taken > 0:
-            logger.info(f"🎯 Actions taken: {len(results['stop_loss_triggered'])} stop-loss, {len(results['take_profit_triggered'])} take-profit")
+        if actions_taken > 0 or len(results['trailing_stops_updated']) > 0:
+            logger.info(f"🎯 Actions: SL:{len(results['stop_loss_triggered'])} TP:{len(results['take_profit_triggered'])} Trailing:{len(results['trailing_stop_triggered'])} Updated:{len(results['trailing_stops_updated'])}")
             
             # Store execution record
             await self._store_execution_record(results)
@@ -155,12 +155,14 @@ class StopLossAutomation:
         return results
     
     async def _check_position(self, position: Dict) -> Dict[str, Any]:
-        """Check a single position against its stop-loss and take-profit"""
+        """Check a single position against its stop-loss, take-profit, and trailing stop"""
         coin_id = position.get('coin_id')
         symbol = position.get('symbol')
         entry_price = position.get('entry_price', 0)
         stop_loss_price = position.get('stop_loss_price', 0)
         take_profit_price = position.get('take_profit_price', float('inf'))
+        highest_price = position.get('highest_price', entry_price)  # Track highest for trailing
+        trailing_stop_price = position.get('trailing_stop_price', 0)  # Current trailing stop level
         
         # Get current price
         current_price = await self._get_current_price(symbol)
@@ -172,7 +174,56 @@ class StopLossAutomation:
         pnl_pct = ((current_price - entry_price) / entry_price * 100) if entry_price > 0 else 0
         pnl_usd = position.get('amount_usd', 0) * (pnl_pct / 100)
         
-        # Check stop-loss
+        # TRAILING STOP-LOSS LOGIC
+        if self.config['trailing_stop_enabled'] and entry_price > 0:
+            trailing_result = await self._update_trailing_stop(
+                position=position,
+                current_price=current_price,
+                entry_price=entry_price,
+                highest_price=highest_price,
+                trailing_stop_price=trailing_stop_price,
+                pnl_pct=pnl_pct,
+                pnl_usd=pnl_usd
+            )
+            
+            if trailing_result.get('action') == 'trailing_stop':
+                return trailing_result
+            elif trailing_result.get('updated'):
+                # Trailing stop was updated but not triggered
+                pass  # Continue with other checks
+        
+        # Check regular stop-loss (only if not using trailing or trailing not yet active)
+        effective_stop = trailing_stop_price if trailing_stop_price > 0 else stop_loss_price
+        
+        if effective_stop > 0 and current_price <= effective_stop:
+            is_trailing = trailing_stop_price > 0 and trailing_stop_price >= stop_loss_price
+            action_type = 'trailing_stop' if is_trailing else 'stop_loss'
+            
+            logger.warning(f"🔴 {action_type.upper()} triggered for {coin_id}: ${current_price:.4f} <= ${effective_stop:.4f}")
+            
+            close_result = await self._close_position(
+                position=position,
+                exit_price=current_price,
+                reason=f'{action_type}_auto',
+                pnl_pct=pnl_pct,
+                pnl_usd=pnl_usd
+            )
+            
+            return {
+                'action': action_type,
+                'coin_id': coin_id,
+                'symbol': symbol,
+                'entry_price': entry_price,
+                'exit_price': current_price,
+                'stop_price': effective_stop,
+                'highest_price': highest_price,
+                'pnl_pct': round(pnl_pct, 2),
+                'pnl_usd': round(pnl_usd, 2),
+                'close_result': close_result,
+                'timestamp': datetime.now(timezone.utc).isoformat()
+            }
+        
+        # Check stop-loss (legacy - for positions without trailing)
         if stop_loss_price > 0 and current_price <= stop_loss_price:
             logger.warning(f"🔴 STOP-LOSS triggered for {coin_id}: ${current_price:.4f} <= ${stop_loss_price:.4f}")
             
