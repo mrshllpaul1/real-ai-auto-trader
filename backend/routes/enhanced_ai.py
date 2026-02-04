@@ -117,7 +117,7 @@ async def get_technical_features(symbol: str):
     """
     Get all 25+ calculated technical features for a symbol.
     """
-    if not _enhanced_ai or not _db:
+    if _enhanced_ai is None or _db is None:
         raise HTTPException(status_code=503, detail="Services not initialized")
     
     # Get OHLCV data
@@ -173,7 +173,7 @@ async def scan_top_coins(limit: int = Query(10, ge=1, le=50)):
     """
     Scan top coins with enhanced AI analysis.
     """
-    if not _enhanced_ai:
+    if _enhanced_ai is None:
         raise HTTPException(status_code=503, detail="Enhanced AI not initialized")
     
     coins = ['BTC', 'ETH', 'SOL', 'DOT', 'ADA', 'XRP', 'AVAX', 'LINK', 'MATIC', 'ATOM',
