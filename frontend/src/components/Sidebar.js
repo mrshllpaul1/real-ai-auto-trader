@@ -4,7 +4,7 @@ import {
   LayoutDashboard, TrendingUp, BarChart3, Settings, Sparkles,
   Brain, Newspaper, Zap, Radar, Bot, FlaskConical, BookOpen,
   Menu, X, ChevronLeft, Key, Wallet, TestTube, Cpu, MessageCircle, Layers,
-  Target, Gem, Calendar, Shield, Award, Gauge, Briefcase, PieChart, Wand2
+  Target, Gem, Calendar, Shield, Award, Gauge, Briefcase, PieChart, Wand2, GraduationCap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NotificationCenter from './NotificationCenter';
@@ -188,6 +188,7 @@ const Sidebar = () => {
     { path: '/trigger-performance', icon: Award, label: 'Trigger Stats', highlight: true },
     { path: '/adaptive', icon: Gauge, label: 'Adaptive AI', highlight: true },
     { path: '/enhanced-ai', icon: Brain, label: 'AI Brain', highlight: true },
+    { path: '/training', icon: GraduationCap, label: 'AI Training', highlight: true },
     { path: '/event-timeline', icon: Calendar, label: 'Event Timeline', highlight: true },
     { path: '/journal', icon: BookOpen, label: 'Journal' },
     { path: '/scanner', icon: Radar, label: 'Gem Scanner', highlight: true },
