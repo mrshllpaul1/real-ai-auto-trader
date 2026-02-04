@@ -478,6 +478,36 @@ async def initialize_services():
         automated_trader.task_manager = task_manager
         logger.info("✅ Automated Trader updated with ML/DL Gem Predictor & Background Task Manager")
         
+        # Initialize Prediction Enhancement Services (All 8 enhancements)
+        from services.order_book_analyzer import get_order_book_analyzer
+        from services.on_chain_analytics import get_on_chain_analytics
+        from services.social_sentiment_pipeline import get_social_sentiment
+        from services.transformer_predictor import get_transformer_predictor
+        from services.rl_trading_agent import get_rl_agent
+        from services.cross_asset_correlation import get_cross_asset_correlation
+        from services.advanced_technical_analysis import get_advanced_ta
+        
+        order_book_analyzer = get_order_book_analyzer(db)
+        on_chain_analytics = get_on_chain_analytics(db)
+        social_sentiment_service = get_social_sentiment(db)
+        transformer_predictor = get_transformer_predictor(db)
+        rl_trading_agent = get_rl_agent(db)
+        cross_asset_correlation = get_cross_asset_correlation(db)
+        advanced_ta = get_advanced_ta(db)
+        
+        # Set dependencies for prediction enhancements route
+        prediction_enhancements.set_dependencies(
+            db=db,
+            order_book=order_book_analyzer,
+            on_chain=on_chain_analytics,
+            social_sentiment=social_sentiment_service,
+            transformer=transformer_predictor,
+            rl_agent=rl_trading_agent,
+            cross_asset=cross_asset_correlation,
+            advanced_ta=advanced_ta
+        )
+        logger.info("✅ Prediction Enhancements initialized (8 services)")
+        
         # Start scheduler
         await scheduler_service.start()
         
