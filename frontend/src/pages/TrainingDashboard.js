@@ -194,6 +194,11 @@ const TrainingDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [wsConnected, setWsConnected] = useState(false);
+  // Learning state
+  const [learningStatus, setLearningStatus] = useState(null);
+  const [learningRecommendations, setLearningRecommendations] = useState([]);
+  const [learningCycleRunning, setLearningCycleRunning] = useState(false);
+  const [showLearning, setShowLearning] = useState(true);
 
   // WebSocket connection for real-time updates (optional, with fallback to polling)
   useEffect(() => {
