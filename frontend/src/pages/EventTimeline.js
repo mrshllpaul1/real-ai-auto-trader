@@ -3,12 +3,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Calendar, TrendingUp, TrendingDown, AlertTriangle, Clock,
   Search, Filter, RefreshCw, ExternalLink, Newspaper,
-  DollarSign, Building2, Shield, Users, Zap, Globe
+  DollarSign, Building2, Shield, Users, Zap, Globe, Target,
+  Activity, Eye, Bell, ChevronRight
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../services/api';
@@ -17,6 +19,8 @@ import { toast } from 'sonner';
 const EventTimeline = () => {
   const [events, setEvents] = useState([]);
   const [correlatedEvents, setCorrelatedEvents] = useState([]);
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [patterns, setPatterns] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('timeline');
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,13 +30,17 @@ const EventTimeline = () => {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [eventsRes, correlatedRes] = await Promise.all([
-        api.get(`/events/database/list?limit=50`).catch(() => ({ data: { events: [] } })),
-        api.get(`/events/database/search?keyword=price&limit=30`).catch(() => ({ data: { events: [] } }))
+      const [eventsRes, correlatedRes, upcomingRes, patternsRes] = await Promise.all([
+        api.get(`/events/database/list?limit=100`).catch(() => ({ data: { events: [] } })),
+        api.get(`/events/database/search?keyword=price&limit=30`).catch(() => ({ data: { events: [] } })),
+        api.get(`/events/patterns/upcoming`).catch(() => ({ data: { upcoming_events: [] } })),
+        api.get(`/events/patterns/all`).catch(() => ({ data: null }))
       ]);
 
       setEvents(eventsRes.data?.events || []);
       setCorrelatedEvents(correlatedRes.data?.events || []);
+      setUpcomingEvents(upcomingRes.data?.upcoming_events || []);
+      setPatterns(patternsRes.data);
     } catch (error) {
       console.error('Error loading events:', error);
       toast.error('Failed to load events');
