@@ -200,6 +200,9 @@ class EventTriggerService:
         await self.db[self.triggers_collection].insert_one(trigger_dict)
         self._triggers_cache[trigger.trigger_id] = trigger
         
+        # Remove MongoDB _id before returning
+        trigger_dict.pop("_id", None)
+        
         return {
             "status": "created",
             "trigger": trigger_dict
