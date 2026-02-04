@@ -617,6 +617,16 @@ async def initialize_services():
         ohlcv_routes.set_dependencies(ohlcv_manager)
         logger.info("✅ OHLCV Data Manager initialized")
         
+        # Initialize Training History Service
+        from services.training_history import get_training_history_service
+        training_history = get_training_history_service(db)
+        await training_history.ensure_indexes()
+        training_history_routes.set_dependencies(training_history)
+        
+        # Inject history service into RL agent
+        rl_trading_agent.set_history_service(training_history)
+        logger.info("✅ Training History Service initialized")
+        
         # Start scheduler
         await scheduler_service.start()
         
