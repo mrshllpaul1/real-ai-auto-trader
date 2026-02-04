@@ -110,7 +110,7 @@ class AdaptiveStrategyEngine:
                 'position_multiplier': 0.7,      # Reduce positions
                 'stop_loss_adjust': -3,          # Tighter stops
                 'take_profit_adjust': -10,       # Lower targets
-                'min_confidence_adjust': +10,    # Higher threshold
+                'min_confidence_adjust': 0,      # Keep at 59% (user-configured)
                 'rebalance_multiplier': 1.5,     # Less frequent
                 'preferred_assets': ['large_cap', 'btc', 'eth'],
             },
