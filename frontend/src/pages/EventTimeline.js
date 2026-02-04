@@ -28,7 +28,7 @@ const EventTimeline = () => {
       setLoading(true);
       const [eventsRes, correlatedRes] = await Promise.all([
         api.get(`/events/database/list?limit=50`).catch(() => ({ data: { events: [] } })),
-        api.get(`/events/database/search?query=price&limit=30`).catch(() => ({ data: { events: [] } }))
+        api.get(`/events/database/search?keyword=price&limit=30`).catch(() => ({ data: { events: [] } }))
       ]);
 
       setEvents(eventsRes.data?.events || []);
@@ -49,7 +49,7 @@ const EventTimeline = () => {
     if (!searchQuery.trim()) return;
     try {
       setLoading(true);
-      const response = await api.get(`/events/database/search?query=${encodeURIComponent(searchQuery)}&limit=50`);
+      const response = await api.get(`/events/database/search?keyword=${encodeURIComponent(searchQuery)}&limit=50`);
       setEvents(response.data?.events || []);
       toast.success(`Found ${response.data?.events?.length || 0} events`);
     } catch (error) {
