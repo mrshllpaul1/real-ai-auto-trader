@@ -460,3 +460,89 @@ async def get_prediction_signals(symbol: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get signals: {str(e)}")
 
+
+# ===========================================
+# AUTO-TRADER SPOT TRADING ENDPOINTS
+# ===========================================
+
+@router.get("/auto-trader/spot/analyze/{symbol}")
+async def analyze_spot_opportunity(symbol: str):
+    """
+    Analyze a spot trading opportunity using AI signals.
+    
+    Returns AI recommendation for the symbol with action (buy/sell/hold).
+    """
+    if _automated_trader is None:
+        raise HTTPException(status_code=503, detail="Auto trader not initialized")
+    
+    try:
+        analysis = await _automated_trader.analyze_spot_opportunity(symbol.upper())
+        return analysis
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+class AutoSpotTradeRequest(BaseModel):
+    symbol: str
+    side: str  # 'buy' or 'sell'
+    amount_usd: Optional[float] = None  # For buy orders
+    amount_crypto: Optional[float] = None  # For sell orders
+    order_type: str = 'market'  # 'market' or 'limit'
+    limit_price: Optional[float] = None
+    paper_trade: bool = True
+    use_ai_validation: bool = True
+
+
+@router.post("/auto-trader/spot/trade")
+async def execute_auto_spot_trade(request: AutoSpotTradeRequest):
+    """
+    Execute a spot trade through the auto-trader with AI validation.
+    
+    The auto-trader will:
+    1. Validate the trade with AI signals
+    2. Check budget constraints
+    3. Execute the trade if conditions are favorable
+    
+    Set use_ai_validation=False to skip AI validation.
+    """
+    if _automated_trader is None:
+        raise HTTPException(status_code=503, detail="Auto trader not initialized")
+    
+    try:
+        result = await _automated_trader.execute_spot_trade(
+            symbol=request.symbol.upper(),
+            side=request.side.lower(),
+            amount_usd=request.amount_usd,
+            amount_crypto=request.amount_crypto,
+            order_type=request.order_type.lower(),
+            limit_price=request.limit_price,
+            paper_trade=request.paper_trade,
+            use_ai_validation=request.use_ai_validation
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Trade execution failed: {str(e)}")
+
+
+@router.post("/auto-trader/spot/scan")
+async def auto_spot_scan(paper_trade: bool = True):
+    """
+    Automatically scan for spot trading opportunities and execute if favorable.
+    
+    The auto-trader will:
+    1. Scan top trading pairs for opportunities
+    2. Use AI signals to identify strong buy/sell signals
+    3. Execute trades for the best opportunities
+    
+    Args:
+        paper_trade: If True, simulate trades. If False, execute real trades.
+    """
+    if _automated_trader is None:
+        raise HTTPException(status_code=503, detail="Auto trader not initialized")
+    
+    try:
+        result = await _automated_trader.auto_spot_scan(paper_trade=paper_trade)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Scan failed: {str(e)}")
+
