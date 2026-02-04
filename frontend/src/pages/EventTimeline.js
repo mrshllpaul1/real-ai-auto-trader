@@ -77,12 +77,25 @@ const EventTimeline = () => {
   };
 
   const getSentimentColor = (sentiment) => {
+    // Handle both numeric sentiment and string impact
+    if (typeof sentiment === 'string') {
+      if (sentiment === 'positive') return 'text-[#00FF94]';
+      if (sentiment === 'negative') return 'text-[#FF0055]';
+      return 'text-[#FFB800]';
+    }
     if (sentiment > 0.3) return 'text-[#00FF94]';
     if (sentiment < -0.3) return 'text-[#FF0055]';
     return 'text-[#FFB800]';
   };
 
-  const getSentimentBadge = (sentiment) => {
+  const getSentimentBadge = (sentiment, impact) => {
+    // Handle string impact from database events
+    if (impact) {
+      if (impact === 'positive') return { color: 'bg-[#00FF94]/20 text-[#00FF94]', label: 'Bullish' };
+      if (impact === 'negative') return { color: 'bg-[#FF0055]/20 text-[#FF0055]', label: 'Bearish' };
+      return { color: 'bg-[#FFB800]/20 text-[#FFB800]', label: 'Mixed' };
+    }
+    // Handle numeric sentiment
     if (sentiment > 0.3) return { color: 'bg-[#00FF94]/20 text-[#00FF94]', label: 'Bullish' };
     if (sentiment < -0.3) return { color: 'bg-[#FF0055]/20 text-[#FF0055]', label: 'Bearish' };
     return { color: 'bg-[#FFB800]/20 text-[#FFB800]', label: 'Neutral' };
