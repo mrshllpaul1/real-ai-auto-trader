@@ -36,6 +36,8 @@ class TaskType(str, Enum):
     UNIVERSE_EXPANSION = "universe_expansion"
     GEM_SCAN = "gem_scan"
     REGIME_PREDICTION = "regime_prediction"
+    RL_AGENT_TRAINING = "rl_agent_training"
+    TRANSFORMER_TRAINING = "transformer_training"
     CUSTOM = "custom"
 
 
@@ -47,6 +49,8 @@ DEFAULT_TIMEOUTS = {
     TaskType.UNIVERSE_EXPANSION: 300,   # 5 minutes
     TaskType.GEM_SCAN: 120,             # 2 minutes
     TaskType.REGIME_PREDICTION: 300,    # 5 minutes
+    TaskType.RL_AGENT_TRAINING: 900,    # 15 minutes (RL takes longer)
+    TaskType.TRANSFORMER_TRAINING: 600, # 10 minutes
     TaskType.CUSTOM: 120                # 2 minutes
 }
 

@@ -319,6 +319,7 @@ class RLTradingAgent:
     - Manages training and inference
     - Provides trading signals
     - Tracks performance
+    - Supports background task execution for long-running training
     """
     
     def __init__(self, db: AsyncIOMotorDatabase):
@@ -327,6 +328,12 @@ class RLTradingAgent:
         self.agent = DQNAgent()
         self.is_trained = False
         self.training_history = []
+        self.task_manager = None  # Set via set_task_manager()
+        self.current_training_task_id = None
+    
+    def set_task_manager(self, task_manager):
+        """Set background task manager for async training"""
+        self.task_manager = task_manager
         
     async def train(self, episodes: int = 100, symbols: List[str] = None) -> Dict[str, Any]:
         """Train RL agent on historical data"""
