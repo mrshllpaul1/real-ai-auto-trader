@@ -4,7 +4,7 @@ import {
   LayoutDashboard, TrendingUp, BarChart3, Settings, Sparkles,
   Brain, Newspaper, Zap, Radar, Bot, FlaskConical, BookOpen,
   Menu, X, ChevronLeft, Key, Wallet, TestTube, Cpu, MessageCircle, Layers,
-  Target, Gem, Calendar, Shield, Award, Gauge, Briefcase, PieChart
+  Target, Gem, Calendar, Shield, Award, Gauge, Briefcase, PieChart, Wand2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NotificationCenter from './NotificationCenter';
