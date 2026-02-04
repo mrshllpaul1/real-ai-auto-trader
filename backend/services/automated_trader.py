@@ -240,14 +240,16 @@ class AutomatedWeeklyTrader:
                     coin_id=gem['coin_id'],
                     symbol=kraken_symbol,
                     amount_usd=gem_position_size,
-                    stop_loss_pct=self.config['stop_loss_gem'],
-                    take_profit_pct=self.config['take_profit_gem'],
+                    stop_loss_pct=gem_stop_loss,  # Adaptive gem stop loss
+                    take_profit_pct=gem_take_profit,  # Adaptive gem take profit
                     paper_trade=paper_trade,
                     is_gem=True,
                     ai_score=gem['total_score']
                 )
                 
                 if gem_trade:
+                    gem_trade['regime'] = regime
+                    gem_trade['adaptive_params'] = adaptive_params
                     trades.append(gem_trade)
         
         # Store execution record
@@ -255,6 +257,8 @@ class AutomatedWeeklyTrader:
             'timestamp': datetime.now().isoformat(),
             'paper_trade': paper_trade,
             'balance': balance,
+            'regime': regime,
+            'adaptive_params': adaptive_params,
             'trades': trades,
             'total_trades': len(trades),
             'main_coins': len([t for t in trades if not t.get('is_gem')]),
