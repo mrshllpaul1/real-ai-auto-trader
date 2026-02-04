@@ -1,17 +1,16 @@
 """
-WebSocket Configuration and Manager
-Handles real-time updates for training status
+WebSocket Configuration
+Connection manager for real-time updates
 """
 
-import asyncio
+from fastapi import WebSocket
 import logging
-from fastapi import WebSocket, WebSocketDisconnect
 
 logger = logging.getLogger(__name__)
 
 
 class ConnectionManager:
-    """WebSocket connection manager for real-time updates"""
+    """Manages WebSocket connections for real-time updates"""
     
     def __init__(self):
         self.active_connections: list[WebSocket] = []
@@ -38,19 +37,3 @@ class ConnectionManager:
         # Clean up disconnected clients
         for conn in disconnected:
             self.disconnect(conn)
-    
-    async def send_personal(self, websocket: WebSocket, message: dict):
-        """Send message to specific client"""
-        try:
-            await websocket.send_json(message)
-        except Exception:
-            self.disconnect(websocket)
-
-
-# Global instance
-ws_manager = ConnectionManager()
-
-
-def get_ws_manager() -> ConnectionManager:
-    """Get WebSocket manager instance"""
-    return ws_manager
