@@ -136,9 +136,8 @@ async def get_trading_pairs():
     if _kraken_service is None:
         raise HTTPException(status_code=503, detail="Kraken service not initialized")
     
-    pairs_with_prices = []
-    
-    for symbol, info in TRADING_PAIRS.items():
+    async def fetch_ticker(symbol, info):
+        """Fetch ticker for a single pair"""
         try:
             ticker = await _kraken_service.get_ticker(info['pair'])
             
@@ -151,7 +150,7 @@ async def get_trading_pairs():
                 
                 change_24h = ((last_price - open_24h) / open_24h * 100) if open_24h else 0
                 
-                pairs_with_prices.append({
+                return {
                     "symbol": symbol,
                     "pair": info['pair'],
                     "name": info['name'],
@@ -162,21 +161,26 @@ async def get_trading_pairs():
                     "high_24h": high_24h,
                     "min_order": info['min_order'],
                     "decimals": info['decimals']
-                })
+                }
         except Exception as e:
             logger.warning(f"Failed to get ticker for {symbol}: {e}")
-            pairs_with_prices.append({
-                "symbol": symbol,
-                "pair": info['pair'],
-                "name": info['name'],
-                "price": 0,
-                "error": "Price unavailable",
-                "min_order": info['min_order'],
-                "decimals": info['decimals']
-            })
+        
+        return {
+            "symbol": symbol,
+            "pair": info['pair'],
+            "name": info['name'],
+            "price": 0,
+            "error": "Price unavailable",
+            "min_order": info['min_order'],
+            "decimals": info['decimals']
+        }
+    
+    # Fetch all tickers in parallel
+    tasks = [fetch_ticker(symbol, info) for symbol, info in TRADING_PAIRS.items()]
+    pairs_with_prices = await asyncio.gather(*tasks)
     
     # Sort by 24h volume
-    pairs_with_prices.sort(key=lambda x: x.get('volume_24h', 0) or 0, reverse=True)
+    pairs_with_prices = sorted(pairs_with_prices, key=lambda x: x.get('volume_24h', 0) or 0, reverse=True)
     
     return {
         "pairs": pairs_with_prices,
