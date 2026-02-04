@@ -26,6 +26,58 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ---
 
+## 🎯 Session 15 - Adaptive Strategy Engine (Feb 4, 2026)
+
+### ✅ Real-Time Adaptive Trading Strategy (COMPLETE)
+
+**Core Capability:** The AI trader now dynamically adapts its strategy based on real-time market conditions, performance feedback, and risk tolerance.
+
+**Market Regime Detection:**
+| Regime | Condition | Position Adjustment | Preferred Assets |
+|--------|-----------|--------------------| ----------------|
+| **Strong Bull** | >20% monthly | +30% position | Momentum, gems |
+| **Bull** | 5-20% monthly | +10% position | Large cap, momentum |
+| **Sideways** | -5% to +5% | Base position | Yield, stable |
+| **Bear** | -5% to -20% | -30% position | BTC, ETH only |
+| **Strong Bear** | <-20% | -60% position, 50% max | BTC, stables |
+| **High Volatility** | >30% swings | -40%, wider stops | Large cap only |
+| **Accumulation** | Low vol, range | +20% position | Oversold gems |
+
+**Adaptive Parameters:**
+- `max_position_pct`: 3-20% (dynamically adjusted)
+- `stop_loss_pct`: 5-20% (tighter in bear, wider in bull)
+- `take_profit_pct`: 15-50% (higher in bull)
+- `min_confidence`: 30-90% (stricter in bear)
+- `max_total_exposure`: 30-90% (reduced in bear/crash)
+- `rebalance_hours`: 84-336 (more frequent monitoring in volatility)
+
+**Emergency Adaptations:**
+- `flash_crash`: Immediate defensive mode, 50% exposure reduction
+- `major_news`: Raised confidence threshold, close monitoring
+- `exchange_issue`: Reduced position sizes
+- `performance_drop`: Conservative mode, wait for better signals
+- `opportunity`: Increased exposure capacity
+
+**API Endpoints:**
+- `GET /api/strategy/status` - Current adaptive state
+- `POST /api/strategy/detect-regime` - Detect market regime
+- `POST /api/strategy/adapt` - Adapt to current conditions
+- `POST /api/strategy/emergency-adapt` - Trigger emergency adaptation
+- `POST /api/strategy/entry-signal` - Get adaptive entry signal
+- `POST /api/strategy/check-exit` - Check exit conditions
+- `POST /api/strategy/position-size` - Calculate dynamic position
+- `PUT /api/strategy/params/{name}` - Manual parameter override
+- `POST /api/strategy/reset` - Reset to base parameters
+
+**Integration with Automated Trader:**
+- Weekly rebalance now uses adaptive parameters
+- Positions sized based on regime + AI confidence
+- Stop-loss/take-profit adjusted per regime
+- Coins filtered by adaptive min_confidence threshold
+- All trades tagged with regime and adaptive params
+
+---
+
 ## 🎯 Session 14 - Trigger Fine-Tuning & Gem Watchlist (Feb 4, 2026)
 
 ### ✅ Trigger Keyword Sensitivity Fine-Tuning (COMPLETE)
