@@ -556,6 +556,48 @@ class AutomatedWeeklyTrader:
         if not portfolio.get('main_coins'):
             return {'success': False, 'error': 'AI selection failed'}
         
+        # ENHANCEMENT: Use prediction signals to boost/reduce coin scores
+        if self.prediction_services:
+            logger.info(f"\n🔮 Enhancing coin scores with prediction signals...")
+            enhanced_coins = []
+            
+            for coin in portfolio['main_coins']:
+                coin_id = coin['coin_id']
+                symbol = coin_id.upper()
+                
+                try:
+                    # Get prediction signals for this coin
+                    signals = await self.get_prediction_signals(symbol)
+                    composite = signals.get('composite', {})
+                    
+                    # Adjust score based on prediction signals
+                    original_score = coin.get('total_score', 50)
+                    prediction_score = composite.get('score', 50)
+                    
+                    # Weighted combination: 60% AI trainer + 40% prediction enhancements
+                    enhanced_score = (original_score * 0.6) + (prediction_score * 0.4)
+                    
+                    coin['original_ai_score'] = original_score
+                    coin['prediction_score'] = prediction_score
+                    coin['total_score'] = round(enhanced_score, 2)
+                    coin['prediction_signal'] = composite.get('signal', 'hold')
+                    coin['models_used'] = composite.get('models_used', 0)
+                    
+                    logger.info(f"   {symbol}: AI={original_score:.0f} + Pred={prediction_score:.0f} → {enhanced_score:.0f} ({composite.get('signal', 'hold')})")
+                    
+                    enhanced_coins.append(coin)
+                    
+                except Exception as e:
+                    logger.warning(f"   {symbol}: Failed to get prediction signals: {e}")
+                    enhanced_coins.append(coin)  # Keep original score
+            
+            # Re-sort by enhanced score and filter strong sell signals
+            portfolio['main_coins'] = [
+                c for c in sorted(enhanced_coins, key=lambda x: x['total_score'], reverse=True)
+                if c.get('prediction_signal') not in ['strong_sell']  # Exclude strong sells
+            ]
+            logger.info(f"   After prediction filtering: {len(portfolio['main_coins'])} coins")
+        
         # Filter coins by minimum confidence if adaptive
         if is_adaptive:
             min_conf = adaptive_params['min_confidence']
