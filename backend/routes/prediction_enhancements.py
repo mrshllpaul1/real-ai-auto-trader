@@ -167,16 +167,18 @@ async def transformer_status():
 @router.post("/rl-agent/train")
 async def train_rl_agent(request: TrainRequest):
     """
-    Enhancement #5: Train Reinforcement Learning Agent
+    Enhancement #5: Train Reinforcement Learning Agent (Background)
     - DQN-based trading agent
     - Learns optimal entry/exit timing
     - Maximizes portfolio returns
+    - Runs in background to prevent API timeout
     """
     if not _rl_agent:
         raise HTTPException(status_code=503, detail="RL agent not initialized")
     
     episodes = request.episodes or 100
-    return await _rl_agent.train(episodes=episodes, symbols=request.symbols)
+    # Use background training to prevent timeout
+    return await _rl_agent.train_background(episodes=episodes, symbols=request.symbols)
 
 
 @router.get("/rl-agent/signal/{symbol}")
@@ -199,6 +201,24 @@ async def rl_agent_status():
         "initialized": True,
         **summary
     }
+
+
+@router.get("/rl-agent/training-status/{task_id}")
+async def rl_agent_training_status(task_id: str):
+    """Get status of background training task"""
+    if not _rl_agent:
+        raise HTTPException(status_code=503, detail="RL agent not initialized")
+    
+    return await _rl_agent.get_training_status(task_id)
+
+
+@router.get("/rl-agent/training-status")
+async def rl_agent_current_training_status():
+    """Get status of current background training task"""
+    if not _rl_agent:
+        raise HTTPException(status_code=503, detail="RL agent not initialized")
+    
+    return await _rl_agent.get_training_status()
 
 
 # ============ Enhancement #6: Cross-Asset Correlation ============
