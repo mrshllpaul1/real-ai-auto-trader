@@ -470,6 +470,10 @@ async def initialize_services():
         await scheduler_service.add_portfolio_snapshot_job(interval_hours=6)
         logger.info("✅ Automatic Portfolio Snapshots enabled (every 6 hours)")
         
+        # Add auto-retrain job (daily at 2 AM UTC)
+        await scheduler_service.add_auto_retrain_job(hour=2)
+        logger.info("✅ Auto-Retrain Models enabled (daily at 2:00 UTC)")
+        
         _services_initialized = True
         logger.info("✅ All services initialized successfully")
         
