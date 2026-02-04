@@ -309,6 +309,15 @@ const TrainingDashboard = () => {
         const presetsData = await presetsRes.json();
         setPresets(presetsData.presets || []);
       }
+      if (learningRes.ok) {
+        const learningData = await learningRes.json();
+        setLearningStatus(learningData);
+        setLearningCycleRunning(learningData.learning_active || false);
+      }
+      if (recsRes.ok) {
+        const recsData = await recsRes.json();
+        setLearningRecommendations(recsData.recommendations || []);
+      }
 
       setLoading(false);
     } catch (err) {
