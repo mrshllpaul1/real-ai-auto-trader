@@ -222,41 +222,72 @@ class AutomatedWeeklyTrader:
         NOW WITH ADAPTIVE STRATEGY: Automatically adjusts position sizes,
         stop-losses, and take-profits based on current market regime.
         
+        BUDGET ISOLATION: All trades use ONLY the isolated AI trading budget.
+        Your main Kraken portfolio is NEVER touched.
+        
         Args:
             paper_trade: If True, simulate trades. If False, execute real trades.
             
         Returns:
             Execution results
         """
-        print(f"\n{'='*60}")
-        print(f"🤖 AUTOMATED WEEKLY REBALANCE - {'PAPER' if paper_trade else 'REAL'}")
-        print(f"{'='*60}")
-        print(f"Time: {datetime.now().isoformat()}")
+        logger.info(f"\n{'='*60}")
+        logger.info(f"🤖 AUTOMATED WEEKLY REBALANCE - {'PAPER' if paper_trade else 'REAL'}")
+        logger.info(f"{'='*60}")
+        logger.info(f"Time: {datetime.now().isoformat()}")
         
         # Get adaptive strategy parameters
         adaptive_params = await self.get_adaptive_params()
         regime = adaptive_params['regime']
         is_adaptive = adaptive_params['is_adaptive']
         
-        print(f"📊 Market Regime: {regime.upper()}" + (" (Adaptive)" if is_adaptive else " (Base)"))
-        print(f"   Position Size: {adaptive_params['max_position_pct']:.1f}%")
-        print(f"   Stop Loss: {adaptive_params['stop_loss']:.1f}%")
-        print(f"   Take Profit: {adaptive_params['take_profit']:.1f}%")
-        print(f"   Min Confidence: {adaptive_params['min_confidence']:.0f}%")
+        logger.info(f"📊 Market Regime: {regime.upper()}" + (" (Adaptive)" if is_adaptive else " (Base)"))
+        logger.info(f"   Position Size: {adaptive_params['max_position_pct']:.1f}%")
+        logger.info(f"   Stop Loss: {adaptive_params['stop_loss']:.1f}%")
+        logger.info(f"   Take Profit: {adaptive_params['take_profit']:.1f}%")
+        logger.info(f"   Min Confidence: {adaptive_params['min_confidence']:.0f}%")
         
-        # Get available balance
+        # Get available balance from ISOLATED PORTFOLIO
+        balance_info = await self.get_portfolio_balance(use_isolated=True)
+        
+        # Check if budget is allocated
+        if not balance_info.get('allocated'):
+            return {
+                'success': False, 
+                'error': 'No trading budget allocated. Please set a budget using /api/isolated-portfolio/set-budget',
+                'isolation_status': 'NO_BUDGET'
+            }
+        
+        # For real trading, verify budget isolation is enabled
         if not paper_trade:
-            balance = await self.get_portfolio_balance()
+            if not balance_info.get('real_trading_enabled'):
+                return {
+                    'success': False,
+                    'error': 'Real trading is disabled. Enable it when setting budget.',
+                    'isolation_status': 'REAL_TRADING_DISABLED'
+                }
+            
+            balance = balance_info['balance']
             if balance < 100:
-                return {'success': False, 'error': 'Insufficient balance', 'balance': balance}
+                return {
+                    'success': False, 
+                    'error': f'Insufficient isolated budget: ${balance:.2f}. Need at least $100.',
+                    'balance': balance,
+                    'isolation_status': 'INSUFFICIENT_BUDGET'
+                }
         else:
-            balance = 10000  # Paper trade with $10k
+            # Paper trade uses either isolated budget or simulated $10k
+            balance = balance_info['balance'] if balance_info.get('allocated') else 10000
         
-        print(f"\nAvailable Balance: ${balance:,.2f}")
+        logger.info(f"\n💰 Budget Status (ISOLATED):")
+        logger.info(f"   Available Balance: ${balance:,.2f}")
+        logger.info(f"   Real Trading: {balance_info.get('real_trading_enabled', False)}")
+        if balance_info.get('total_pnl') is not None:
+            logger.info(f"   Total P&L: ${balance_info.get('total_pnl', 0):,.2f}")
         
         # Apply max exposure limit from adaptive strategy
         max_deployable = balance * (adaptive_params['max_exposure'] / 100)
-        print(f"Max Deployable ({adaptive_params['max_exposure']:.0f}%): ${max_deployable:,.2f}")
+        logger.info(f"   Max Deployable ({adaptive_params['max_exposure']:.0f}%): ${max_deployable:,.2f}")
         
         # Get AI selections
         portfolio = await self.ai_trainer.select_portfolio(datetime.now())
@@ -273,13 +304,13 @@ class AutomatedWeeklyTrader:
                 if c.get('total_score', 0) >= min_conf
             ]
             if len(portfolio['main_coins']) < original_count:
-                print(f"   Filtered out {original_count - len(portfolio['main_coins'])} coins below {min_conf}% confidence")
+                logger.info(f"   Filtered out {original_count - len(portfolio['main_coins'])} coins below {min_conf}% confidence")
         
         # Get gem
         gems = await self.gem_finder.find_gems(datetime.now(), max_gems=1)
         gem = gems[0] if gems else None
         
-        print(f"\nSelected {len(portfolio['main_coins'])} main coins + {1 if gem else 0} gem")
+        logger.info(f"\nSelected {len(portfolio['main_coins'])} main coins + {1 if gem else 0} gem")
         
         # Calculate position sizes using adaptive parameters
         # Distribute evenly across selected coins, respecting max exposure
@@ -289,7 +320,7 @@ class AutomatedWeeklyTrader:
         main_position_size = balance * (position_pct / 100)
         gem_position_size = balance * (min(adaptive_params['max_position_pct'] * 1.1, 15) / 100)  # Gem gets slightly more
         
-        print(f"Position Size per Coin: ${main_position_size:.2f} ({position_pct:.1f}%)")
+        logger.info(f"Position Size per Coin: ${main_position_size:.2f} ({position_pct:.1f}%)")
         
         trades = []
         
@@ -305,10 +336,10 @@ class AutomatedWeeklyTrader:
             kraken_symbol = self.kraken_symbols.get(coin_id)
             
             if not kraken_symbol:
-                print(f"  ⚠️ {coin_id}: No Kraken symbol")
+                logger.warning(f"  ⚠️ {coin_id}: No Kraken symbol")
                 continue
             
-            trade_result = await self._execute_trade(
+            trade_result = await self._execute_isolated_trade(
                 coin_id=coin_id,
                 symbol=kraken_symbol,
                 amount_usd=main_position_size,
@@ -329,7 +360,7 @@ class AutomatedWeeklyTrader:
             kraken_symbol = self.kraken_symbols.get(gem['coin_id'])
             
             if kraken_symbol:
-                gem_trade = await self._execute_trade(
+                gem_trade = await self._execute_isolated_trade(
                     coin_id=gem['coin_id'],
                     symbol=kraken_symbol,
                     amount_usd=gem_position_size,
@@ -356,7 +387,9 @@ class AutomatedWeeklyTrader:
             'total_trades': len(trades),
             'main_coins': len([t for t in trades if not t.get('is_gem')]),
             'gems': len([t for t in trades if t.get('is_gem')]),
-            'total_invested': sum(t.get('amount_usd', 0) for t in trades)
+            'total_invested': sum(t.get('amount_usd', 0) for t in trades),
+            'budget_isolated': True,
+            'initial_budget': balance_info.get('initial_budget', 0)
         }
         
         # Store execution record (exclude _id from response)
@@ -370,14 +403,16 @@ class AutomatedWeeklyTrader:
         if self.alert_service and not paper_trade:
             await self._send_execution_alert(execution)
         
-        print(f"\n{'='*60}")
-        print(f"✅ Executed {len(trades)} trades")
-        print(f"Total Invested: ${execution['total_invested']:,.2f}")
-        print(f"{'='*60}\n")
+        logger.info(f"\n{'='*60}")
+        logger.info(f"✅ Executed {len(trades)} trades")
+        logger.info(f"Total Invested: ${execution['total_invested']:,.2f}")
+        logger.info(f"Budget Isolation: ACTIVE ✓")
+        logger.info(f"{'='*60}\n")
         
         return {
             'success': True,
-            'execution': execution
+            'execution': execution,
+            'isolation_status': 'ACTIVE'
         }
     
     async def _execute_trade(
