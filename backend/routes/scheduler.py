@@ -60,6 +60,10 @@ class OHLCVExpansionSchedule(BaseModel):
     batch_size: Optional[int] = 50
 
 
+class EventTriggerCheckSchedule(BaseModel):
+    interval_minutes: Optional[int] = 15
+
+
 @router.get("/status")
 async def get_scheduler_status():
     """Get current scheduler status and active jobs"""
