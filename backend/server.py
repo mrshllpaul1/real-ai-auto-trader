@@ -396,6 +396,12 @@ async def initialize_services():
         social_sentiment.set_dependencies(db, sentiment_scraper)
         logger.info("✅ Social Sentiment Scraper initialized")
         
+        # Isolated Portfolio Manager
+        from services.isolated_portfolio import get_isolated_portfolio
+        isolated_portfolio_mgr = get_isolated_portfolio(db, kraken_service)
+        isolated_portfolio.set_dependencies(db, isolated_portfolio_mgr)
+        logger.info("✅ Isolated Portfolio Manager initialized")
+        
         # Start scheduler
         await scheduler_service.start()
         
