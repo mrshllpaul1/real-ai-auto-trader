@@ -896,23 +896,25 @@ class SchedulerService:
             'coins': 'all stored' if not coins else coins
         }
     
-    async def _run_daily_ohlcv_update(self, coins: list = None) -> Dict[str, Any]:
+    async def _run_daily_ohlcv_update(self, coins: list = None, batch_size: int = 100) -> Dict[str, Any]:
         """
-        Execute daily OHLCV data update.
-        Downloads latest data for all coins in the database.
+        Execute daily OHLCV data update for ALL coins in database.
+        Processes coins in batches to handle the full 500+ coin universe.
+        
+        Args:
+            coins: Optional list of specific coins to update
+            batch_size: Number of coins to process per batch (default 100)
         """
         timestamp = datetime.utcnow()
         logger.info(f"📊 [{timestamp.strftime('%H:%M')}] Running daily OHLCV update...")
         
         try:
-            from services.historical_data_downloader import get_historical_downloader
             from services.coindesk_service import get_cryptocompare_service
             
-            downloader = get_historical_downloader(self.db)
             crypto_service = get_cryptocompare_service()
             
-            if not downloader or not crypto_service:
-                logger.warning("  ⚠️ Historical data services not available")
+            if not crypto_service:
+                logger.warning("  ⚠️ CryptoCompare service not available")
                 return {'error': 'Services not initialized'}
             
             # Get coins to update (from DB or specified)
@@ -927,70 +929,94 @@ class SchedulerService:
                 logger.info("  ℹ️ No coins to update")
                 return {'message': 'No coins to update'}
             
-            logger.info(f"  📊 Updating {len(coins_to_update)} coins...")
+            total_coins = len(coins_to_update)
+            logger.info(f"  📊 Updating {total_coins} coins in batches of {batch_size}...")
             
             results = {
+                'total_coins': total_coins,
                 'coins_updated': 0,
                 'coins_failed': 0,
                 'new_records': 0,
+                'batches_completed': 0,
                 'errors': []
             }
             
-            for coin in coins_to_update[:50]:  # Limit to 50 to avoid timeouts
-                try:
-                    # Get latest 30 days to update recent data
-                    data = await crypto_service.get_historical_daily(coin, limit=30)
-                    
-                    if "error" not in data and data.get("data"):
-                        # Update/insert new records
-                        for candle in data["data"]:
-                            await self.db.historical_ohlcv.update_one(
-                                {"symbol": coin.upper(), "timestamp": candle["timestamp"]},
-                                {"$set": {
-                                    "symbol": coin.upper(),
-                                    "timestamp": candle["timestamp"],
-                                    "date": candle["date"],
-                                    "open": candle["open"],
-                                    "high": candle["high"],
-                                    "low": candle["low"],
-                                    "close": candle["close"],
-                                    "volume_from": candle["volume_from"],
-                                    "volume_to": candle["volume_to"],
-                                    "source": "cryptocompare",
-                                    "updated_at": datetime.utcnow()
-                                }},
-                                upsert=True
-                            )
-                        results['coins_updated'] += 1
-                        results['new_records'] += len(data["data"])
-                    else:
+            # Process ALL coins in batches
+            for batch_start in range(0, total_coins, batch_size):
+                batch_end = min(batch_start + batch_size, total_coins)
+                batch = coins_to_update[batch_start:batch_end]
+                batch_num = (batch_start // batch_size) + 1
+                total_batches = (total_coins + batch_size - 1) // batch_size
+                
+                logger.info(f"  📦 Processing batch {batch_num}/{total_batches} ({len(batch)} coins)...")
+                
+                for coin in batch:
+                    try:
+                        # Get latest 7 days to update recent data (reduced from 30 to speed up)
+                        data = await crypto_service.get_historical_daily(coin, limit=7)
+                        
+                        if "error" not in data and data.get("data"):
+                            # Update/insert new records
+                            for candle in data["data"]:
+                                await self.db.historical_ohlcv.update_one(
+                                    {"symbol": coin.upper(), "date": candle["date"]},
+                                    {"$set": {
+                                        "symbol": coin.upper(),
+                                        "timestamp": candle["timestamp"],
+                                        "date": candle["date"],
+                                        "open": candle["open"],
+                                        "high": candle["high"],
+                                        "low": candle["low"],
+                                        "close": candle["close"],
+                                        "volume_from": candle["volume_from"],
+                                        "volume_to": candle["volume_to"],
+                                        "source": "cryptocompare",
+                                        "updated_at": datetime.utcnow()
+                                    }},
+                                    upsert=True
+                                )
+                            results['coins_updated'] += 1
+                            results['new_records'] += len(data["data"])
+                        else:
+                            results['coins_failed'] += 1
+                            if len(results['errors']) < 20:  # Limit error list size
+                                results['errors'].append({'coin': coin, 'error': data.get('error', 'No data')})
+                        
+                        # Brief delay to respect rate limits
+                        await asyncio.sleep(0.2)
+                        
+                    except Exception as e:
                         results['coins_failed'] += 1
-                        results['errors'].append({'coin': coin, 'error': data.get('error', 'No data')})
-                    
-                    # Brief delay to respect rate limits
-                    await asyncio.sleep(0.3)
-                    
-                except Exception as e:
-                    results['coins_failed'] += 1
-                    results['errors'].append({'coin': coin, 'error': str(e)})
+                        if len(results['errors']) < 20:
+                            results['errors'].append({'coin': coin, 'error': str(e)})
+                
+                results['batches_completed'] += 1
+                logger.info(f"    ✓ Batch {batch_num} complete: {results['coins_updated']} updated so far")
+                
+                # Small pause between batches
+                await asyncio.sleep(1)
             
             # Store execution record
             execution = {
                 'job_id': 'daily_ohlcv_update',
                 'timestamp': timestamp.isoformat(),
                 'success': True,
+                'total_coins': total_coins,
                 'coins_updated': results['coins_updated'],
-                'new_records': results['new_records']
+                'coins_failed': results['coins_failed'],
+                'new_records': results['new_records'],
+                'batches_completed': results['batches_completed']
             }
             await self.db.scheduler_executions.insert_one(execution)
             
-            logger.info(f"  ✅ OHLCV update complete: {results['coins_updated']} coins, {results['new_records']} records")
+            success_rate = (results['coins_updated'] / total_coins * 100) if total_coins > 0 else 0
+            logger.info(f"  ✅ OHLCV update complete: {results['coins_updated']}/{total_coins} coins ({success_rate:.1f}%), {results['new_records']} records")
             
             # Send alert
             if self.alert_service and results['coins_updated'] > 0:
                 await self.alert_service.send_alert(
                     title="📊 Daily OHLCV Update Complete",
-                    message=f"Updated {results['coins_updated']} coins\n{results['new_records']} new records added",
+                    message=f"Updated {results['coins_updated']}/{total_coins} coins ({success_rate:.1f}%)\n{results['new_records']} records added",
                     alert_type="ohlcv_update",
                     priority="low"
                 )
