@@ -196,11 +196,11 @@ const AdaptiveStrategy = () => {
               <span className="text-sm text-[#A1A1AA]">Stop Loss</span>
             </div>
             <div className="text-3xl font-data font-bold text-[#FF0055]">
-              {params.stop_loss || baseParams.stop_loss || 15}%
+              {params.stop_loss_pct || baseParams.stop_loss_pct || 15}%
             </div>
             <div className="flex items-center gap-2 mt-2">
               <span className="text-xs text-[#A1A1AA]">Base:</span>
-              <span className="text-xs text-[#666]">{baseParams.stop_loss || 15}%</span>
+              <span className="text-xs text-[#666]">{baseParams.stop_loss_pct || 15}%</span>
             </div>
           </CardContent>
         </Card>
@@ -213,11 +213,11 @@ const AdaptiveStrategy = () => {
               <span className="text-sm text-[#A1A1AA]">Take Profit</span>
             </div>
             <div className="text-3xl font-data font-bold text-[#00FF94]">
-              {params.take_profit || baseParams.take_profit || 30}%
+              {params.take_profit_pct || baseParams.take_profit_pct || 30}%
             </div>
             <div className="flex items-center gap-2 mt-2">
               <span className="text-xs text-[#A1A1AA]">Base:</span>
-              <span className="text-xs text-[#666]">{baseParams.take_profit || 30}%</span>
+              <span className="text-xs text-[#666]">{baseParams.take_profit_pct || 30}%</span>
             </div>
           </CardContent>
         </Card>
@@ -230,11 +230,11 @@ const AdaptiveStrategy = () => {
               <span className="text-sm text-[#A1A1AA]">Max Exposure</span>
             </div>
             <div className="text-3xl font-data font-bold text-[#FFB800]">
-              {params.max_exposure || baseParams.max_exposure || 80}%
+              {params.max_total_exposure || baseParams.max_total_exposure || 80}%
             </div>
             <div className="flex items-center gap-2 mt-2">
               <span className="text-xs text-[#A1A1AA]">Base:</span>
-              <span className="text-xs text-[#666]">{baseParams.max_exposure || 80}%</span>
+              <span className="text-xs text-[#666]">{baseParams.max_total_exposure || 80}%</span>
             </div>
           </CardContent>
         </Card>
