@@ -47,7 +47,14 @@ class StopLossAutomation:
             'trailing_stop_enabled': True,  # ENABLED - Trailing stop-loss
             'trailing_stop_pct': 10.0,  # Trail 10% below highest price
             'trailing_stop_activation_pct': 5.0,  # Activate trailing after 5% profit
-            'partial_take_profit_enabled': False,  # Future feature
+            'partial_take_profit_enabled': True,  # ENABLED - Partial take profit
+            'partial_tp_pct': 50.0,  # Close 50% of position at first TP
+            'partial_tp_levels': [  # Multiple take-profit levels
+                {'pct_of_position': 50, 'at_profit_pct': 30},   # Close 50% at 30% profit
+                {'pct_of_position': 25, 'at_profit_pct': 50},   # Close 25% at 50% profit
+                {'pct_of_position': 25, 'at_profit_pct': 100},  # Close remaining 25% at 100% profit
+            ],
+            'move_stop_to_breakeven': True,  # After first partial TP, move stop to entry
             'min_profit_to_notify': 10.0,  # USD
             'max_loss_to_notify': 5.0,  # USD
         }
@@ -58,6 +65,7 @@ class StopLossAutomation:
             'positions_closed_stop_loss': 0,
             'positions_closed_take_profit': 0,
             'positions_closed_trailing_stop': 0,
+            'partial_take_profits': 0,
             'trailing_stops_updated': 0,
             'total_pnl_from_automation': 0,
             'last_check': None
@@ -65,7 +73,7 @@ class StopLossAutomation:
     
     async def check_all_positions(self) -> Dict[str, Any]:
         """
-        Check all open positions against their stop-loss and take-profit levels.
+        Check all open positions against their stop-loss, take-profit, and partial TP levels.
         This is the main method called by the scheduler.
         """
         logger.info("🔍 Running stop-loss automation check...")
