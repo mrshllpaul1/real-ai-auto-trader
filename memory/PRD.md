@@ -26,6 +26,38 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ---
 
+## 🎯 Session 21 - Partial Take-Profit (Feb 4, 2026)
+
+### ✅ Partial Take-Profit Enhancement (COMPLETE)
+
+**Smart Profit Maximization:** Instead of closing the entire position at one take-profit level, close portions at multiple profit levels to lock in gains while letting the rest ride for bigger moves.
+
+**Default Levels:**
+| Level | At Profit | Close | Result |
+|-------|-----------|-------|--------|
+| 1 | 30% | 50% | Lock half the gains early |
+| 2 | 50% | 25% | Lock more on continued move |
+| 3 | 100% | 25% | Final portion on big move |
+
+**Example with $1,000 Position at $100 Entry:**
+- Price hits $130 (30% profit): Close $500 → Lock $150 profit, $500 remains
+- Price hits $150 (50% profit): Close $250 → Lock $125 more, $250 remains
+- Price hits $200 (100% profit): Close $250 → Lock $250 final
+- **Total: $525 profit** vs $300 if closed all at 30%
+
+**Bonus: Zero-Risk Remaining Position**
+After first partial TP, stop-loss automatically moves to breakeven (entry price).
+Remaining position rides with zero downside risk!
+
+**API Endpoints:**
+- `GET /api/automation/partial-tp/config` - Get configuration with example
+- `POST /api/automation/partial-tp/config` - Update levels and settings
+- `GET /api/automation/partial-tp/positions` - View positions with partial TP status
+
+**Test Results:** 17/17 backend tests passed (100%)
+
+---
+
 ## 🎯 Session 20 - Trailing Stop-Loss & ML/DL Comparison (Feb 4, 2026)
 
 ### ✅ Trailing Stop-Loss Enhancement (COMPLETE)
