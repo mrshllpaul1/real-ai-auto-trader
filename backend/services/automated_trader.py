@@ -1522,3 +1522,368 @@ Exit: ${exit_price:.4f}
             except Exception as e:
                 logger.warning(f"Failed to send strategy notification: {e}")
 
+    # ===========================================
+    # SPOT TRADING INTEGRATION
+    # ===========================================
+    
+    async def analyze_spot_opportunity(self, symbol: str) -> Dict[str, Any]:
+        """
+        Analyze a spot trading opportunity using AI signals.
+        
+        Args:
+            symbol: Trading pair symbol (e.g., 'BTC', 'ETH')
+            
+        Returns:
+            Analysis result with recommendation
+        """
+        try:
+            # Get prediction signals
+            signals = await self.get_prediction_signals(symbol)
+            composite = signals.get('composite', {})
+            
+            score = composite.get('score', 50)
+            confidence = composite.get('confidence', 0)
+            signal_type = composite.get('signal', 'hold')
+            
+            # Get current price
+            kraken_symbol = self.kraken_symbols.get(symbol.lower())
+            if not kraken_symbol:
+                # Try direct mapping
+                from routes.spot_trading import TRADING_PAIRS
+                pair_info = TRADING_PAIRS.get(symbol.upper(), {})
+                kraken_symbol = pair_info.get('pair')
+            
+            current_price = 0
+            if kraken_symbol:
+                ticker = await self.kraken.get_ticker(kraken_symbol)
+                if ticker:
+                    current_price = float(ticker.get('c', [0])[0])
+            
+            # Determine action
+            action = 'hold'
+            reason = ''
+            
+            if score >= 65 and confidence >= 50:
+                action = 'buy'
+                reason = f"Strong bullish signal (score: {score}, confidence: {confidence}%)"
+            elif score >= 55 and confidence >= 40:
+                action = 'consider_buy'
+                reason = f"Moderate bullish signal (score: {score}, confidence: {confidence}%)"
+            elif score <= 35 and confidence >= 50:
+                action = 'sell'
+                reason = f"Strong bearish signal (score: {score}, confidence: {confidence}%)"
+            elif score <= 45 and confidence >= 40:
+                action = 'consider_sell'
+                reason = f"Moderate bearish signal (score: {score}, confidence: {confidence}%)"
+            else:
+                action = 'hold'
+                reason = f"Neutral signal (score: {score}, confidence: {confidence}%)"
+            
+            return {
+                'symbol': symbol,
+                'current_price': current_price,
+                'signal': signal_type,
+                'score': score,
+                'confidence': confidence,
+                'action': action,
+                'reason': reason,
+                'components': signals.get('components', {}),
+                'timestamp': datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Spot opportunity analysis error for {symbol}: {e}")
+            return {
+                'symbol': symbol,
+                'action': 'error',
+                'error': str(e)
+            }
+    
+    async def execute_spot_trade(
+        self, 
+        symbol: str, 
+        side: str,
+        amount_usd: float = None,
+        amount_crypto: float = None,
+        order_type: str = 'market',
+        limit_price: float = None,
+        paper_trade: bool = True,
+        use_ai_validation: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Execute a spot trade with AI validation.
+        
+        Args:
+            symbol: Trading symbol (e.g., 'BTC', 'ETH')
+            side: 'buy' or 'sell'
+            amount_usd: USD amount to trade (for buys)
+            amount_crypto: Crypto amount to trade (for sells)
+            order_type: 'market' or 'limit'
+            limit_price: Price for limit orders
+            paper_trade: If True, simulate trade
+            use_ai_validation: If True, validate with AI signals first
+            
+        Returns:
+            Trade execution result
+        """
+        logger.info(f"\n🔄 SPOT TRADE: {side.upper()} {symbol}")
+        
+        # Get Kraken symbol
+        from routes.spot_trading import TRADING_PAIRS
+        pair_info = TRADING_PAIRS.get(symbol.upper())
+        
+        if not pair_info:
+            # Try via kraken_symbols mapping
+            kraken_symbol = self.kraken_symbols.get(symbol.lower())
+            if not kraken_symbol:
+                return {
+                    'success': False,
+                    'error': f'Symbol {symbol} not supported'
+                }
+        else:
+            kraken_symbol = pair_info['pair']
+        
+        # Get current price
+        ticker = await self.kraken.get_ticker(kraken_symbol)
+        if not ticker:
+            return {
+                'success': False,
+                'error': f'Cannot get price for {symbol}'
+            }
+        
+        current_price = float(ticker.get('c', [0])[0])
+        
+        # AI Validation
+        ai_analysis = None
+        if use_ai_validation:
+            ai_analysis = await self.analyze_spot_opportunity(symbol)
+            
+            # Check if AI recommends against trade
+            ai_action = ai_analysis.get('action', 'hold')
+            
+            if side == 'buy' and ai_action in ['sell', 'consider_sell']:
+                logger.warning(f"⚠️ AI recommends AGAINST buying {symbol}: {ai_analysis.get('reason')}")
+                return {
+                    'success': False,
+                    'blocked_by_ai': True,
+                    'ai_action': ai_action,
+                    'ai_reason': ai_analysis.get('reason'),
+                    'ai_score': ai_analysis.get('score'),
+                    'message': f'AI recommends selling, not buying {symbol}'
+                }
+            
+            elif side == 'sell' and ai_action in ['buy', 'consider_buy']:
+                logger.warning(f"⚠️ AI recommends AGAINST selling {symbol}: {ai_analysis.get('reason')}")
+                return {
+                    'success': False,
+                    'blocked_by_ai': True,
+                    'ai_action': ai_action,
+                    'ai_reason': ai_analysis.get('reason'),
+                    'ai_score': ai_analysis.get('score'),
+                    'message': f'AI recommends buying, not selling {symbol}'
+                }
+        
+        # Calculate volume
+        if side == 'buy':
+            if not amount_usd:
+                return {'success': False, 'error': 'amount_usd required for buy orders'}
+            volume = amount_usd / current_price
+            trade_value_usd = amount_usd
+        else:
+            if not amount_crypto:
+                return {'success': False, 'error': 'amount_crypto required for sell orders'}
+            volume = amount_crypto
+            trade_value_usd = amount_crypto * current_price
+        
+        # Check budget constraints
+        if not paper_trade and self.isolated_portfolio:
+            if side == 'buy':
+                can_trade = await self.isolated_portfolio.can_trade(trade_value_usd)
+                if not can_trade.get('allowed'):
+                    return {
+                        'success': False,
+                        'error': f"Budget constraint: {can_trade.get('reason')}",
+                        'available': can_trade.get('available')
+                    }
+        
+        # Execute trade
+        trade_result = {
+            'symbol': symbol,
+            'kraken_symbol': kraken_symbol,
+            'side': side,
+            'order_type': order_type,
+            'volume': volume,
+            'price': limit_price if order_type == 'limit' else current_price,
+            'trade_value_usd': round(trade_value_usd, 2),
+            'paper_trade': paper_trade,
+            'ai_validation': ai_analysis,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        if paper_trade:
+            trade_result['status'] = 'PAPER'
+            trade_result['success'] = True
+            logger.info(f"📝 Paper Trade: {side.upper()} {volume:.8f} {symbol} @ ${current_price:.2f}")
+        else:
+            try:
+                order = await self.kraken.place_order(
+                    pair=kraken_symbol,
+                    side=side,
+                    ordertype=order_type,
+                    volume=str(volume),
+                    price=str(limit_price) if limit_price else "0"
+                )
+                
+                if order:
+                    trade_result['order'] = order
+                    trade_result['status'] = 'FILLED' if order_type == 'market' else 'PENDING'
+                    trade_result['success'] = True
+                    
+                    # Record in isolated portfolio for buys
+                    if side == 'buy' and self.isolated_portfolio:
+                        await self.isolated_portfolio.open_position(
+                            coin_id=symbol.lower(),
+                            symbol=kraken_symbol,
+                            amount_usd=trade_value_usd,
+                            entry_price=current_price,
+                            quantity=volume,
+                            position_type='spot'
+                        )
+                    
+                    logger.info(f"✅ REAL Trade: {side.upper()} {volume:.8f} {symbol} @ ${current_price:.2f}")
+                else:
+                    trade_result['status'] = 'FAILED'
+                    trade_result['success'] = False
+                    
+            except Exception as e:
+                trade_result['status'] = 'ERROR'
+                trade_result['success'] = False
+                trade_result['error'] = str(e)
+                logger.error(f"❌ Trade execution error: {e}")
+        
+        # Store trade record
+        trade_doc = dict(trade_result)
+        await self.db.spot_trades.insert_one(trade_doc)
+        trade_result.pop('_id', None)
+        
+        # Send notification
+        if self.notification_service and not paper_trade:
+            await self._send_spot_trade_notification(trade_result)
+        
+        return trade_result
+    
+    async def auto_spot_scan(self, paper_trade: bool = True) -> Dict[str, Any]:
+        """
+        Automatically scan for spot trading opportunities and execute if favorable.
+        
+        This method:
+        1. Scans top coins for trading opportunities
+        2. Uses AI signals to find strong buy/sell signals
+        3. Executes trades for opportunities above threshold
+        
+        Args:
+            paper_trade: If True, simulate trades
+            
+        Returns:
+            Scan results and executed trades
+        """
+        logger.info(f"\n{'='*60}")
+        logger.info(f"🔍 AUTO SPOT SCAN - {'PAPER' if paper_trade else 'REAL'}")
+        logger.info(f"{'='*60}")
+        
+        from routes.spot_trading import TRADING_PAIRS
+        
+        # Check budget
+        if not paper_trade and self.isolated_portfolio:
+            budget = await self.isolated_portfolio.get_budget_status()
+            if not budget.get('real_trading_enabled'):
+                return {
+                    'success': False,
+                    'error': 'Real trading not enabled'
+                }
+            available_cash = budget.get('available_cash', 0)
+        else:
+            available_cash = 1000  # Paper trading budget
+        
+        # Scan top pairs
+        scan_results = []
+        buy_opportunities = []
+        sell_opportunities = []
+        
+        top_symbols = ['BTC', 'ETH', 'SOL', 'XRP', 'ADA', 'DOGE', 'LINK', 'AVAX', 'DOT', 'ATOM']
+        
+        for symbol in top_symbols:
+            if symbol not in TRADING_PAIRS:
+                continue
+                
+            try:
+                analysis = await self.analyze_spot_opportunity(symbol)
+                scan_results.append(analysis)
+                
+                if analysis.get('action') == 'buy':
+                    buy_opportunities.append(analysis)
+                elif analysis.get('action') == 'sell':
+                    sell_opportunities.append(analysis)
+                    
+            except Exception as e:
+                logger.warning(f"Scan error for {symbol}: {e}")
+        
+        # Sort by score
+        buy_opportunities.sort(key=lambda x: x.get('score', 0), reverse=True)
+        sell_opportunities.sort(key=lambda x: x.get('score', 0))
+        
+        executed_trades = []
+        
+        # Execute best buy opportunities (max 3)
+        position_size = min(available_cash * 0.15, 100)  # 15% of budget per trade, max $100
+        
+        for opp in buy_opportunities[:3]:
+            if position_size < 10:
+                break
+                
+            trade = await self.execute_spot_trade(
+                symbol=opp['symbol'],
+                side='buy',
+                amount_usd=position_size,
+                paper_trade=paper_trade,
+                use_ai_validation=False  # Already validated
+            )
+            
+            if trade.get('success'):
+                executed_trades.append(trade)
+                available_cash -= position_size
+        
+        result = {
+            'timestamp': datetime.now().isoformat(),
+            'paper_trade': paper_trade,
+            'scanned_symbols': len(scan_results),
+            'buy_opportunities': len(buy_opportunities),
+            'sell_opportunities': len(sell_opportunities),
+            'executed_trades': len(executed_trades),
+            'trades': executed_trades,
+            'scan_results': scan_results,
+            'best_buys': buy_opportunities[:5],
+            'best_sells': sell_opportunities[:5]
+        }
+        
+        logger.info(f"\n✅ Scan Complete: {len(buy_opportunities)} buys, {len(sell_opportunities)} sells")
+        logger.info(f"   Executed {len(executed_trades)} trades")
+        
+        return result
+    
+    async def _send_spot_trade_notification(self, trade: Dict[str, Any]):
+        """Send notification for spot trade execution"""
+        if self.notification_service:
+            try:
+                await self.notification_service.send_trade_alert(
+                    trade_type='spot',
+                    symbol=trade.get('symbol'),
+                    side=trade.get('side'),
+                    amount=trade.get('trade_value_usd'),
+                    price=trade.get('price'),
+                    status=trade.get('status')
+                )
+            except Exception as e:
+                logger.warning(f"Failed to send spot trade notification: {e}")
+
+
