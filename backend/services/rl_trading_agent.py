@@ -444,6 +444,7 @@ class RLTradingAgent:
         """
         Train RL agent in background using BackgroundTaskManager.
         This prevents API timeouts for long-running training.
+        Uses thread pool to prevent blocking the event loop.
         
         Args:
             episodes: Number of training episodes (default 100)
@@ -469,108 +470,132 @@ class RLTradingAgent:
         
         from services.background_tasks import TaskType
         
-        # Define the training task with progress callback
-        async def rl_training_task(progress_callback=None, **kwargs):
+        # Pre-fetch data before starting background task
+        train_symbols = symbols or ['BTC', 'ETH']
+        all_prices = []
+        
+        for symbol in train_symbols:
+            ohlcv = await self.db.ohlcv_data.find(
+                {'symbol': {'$regex': symbol, '$options': 'i'}}
+            ).sort('timestamp', 1).limit(500).to_list(length=500)
+            
+            prices = [float(d['close']) for d in ohlcv if 'close' in d]
+            if prices:
+                all_prices.extend(prices)
+        
+        if len(all_prices) < 100:
+            return {'error': 'Insufficient price data', 'data_points': len(all_prices)}
+        
+        # Normalize prices for training
+        base_price = np.mean(all_prices[:50])
+        normalized_prices = [p / base_price * 100 for p in all_prices]
+        
+        logger.info(f"📊 Loaded {len(normalized_prices)} price points for RL training")
+        
+        # Define the sync training function to run in thread pool
+        def sync_training_loop(train_episodes: int, prices: list) -> Dict[str, Any]:
+            """Synchronous training loop to run in thread pool"""
             if not TF_AVAILABLE:
                 return {'error': 'TensorFlow not available'}
             
-            train_symbols = kwargs.get('symbols', ['BTC', 'ETH'])
+            try:
+                logger.info(f"🤖 Starting RL training: {train_episodes} episodes in thread")
+                
+                episode_rewards = []
+                episode_returns = []
+                
+                for episode in range(train_episodes):
+                    # Random starting point
+                    start_idx = random.randint(0, len(prices) - 200)
+                    episode_prices = prices[start_idx:start_idx + 200]
+                    
+                    state = self.env.reset(episode_prices[0])
+                    total_reward = 0
+                    
+                    for i in range(1, len(episode_prices)):
+                        # Generate market features
+                        market_features = self._generate_market_features(episode_prices, i)
+                        
+                        # Choose action
+                        action = self.agent.act(state)
+                        
+                        # Step environment
+                        next_state, reward, done, info = self.env.step(
+                            action, episode_prices[i], market_features
+                        )
+                        
+                        # Store experience
+                        self.agent.remember(state, action, reward, next_state, done)
+                        
+                        # Train
+                        if len(self.agent.memory) >= self.agent.batch_size:
+                            self.agent.replay()
+                        
+                        state = next_state
+                        total_reward += reward
+                        
+                        if done:
+                            break
+                    
+                    # Update target network periodically
+                    if episode % 10 == 0:
+                        self.agent.update_target_model()
+                    
+                    episode_rewards.append(total_reward)
+                    final_return = (self.env.get_portfolio_value() - 10000) / 10000
+                    episode_returns.append(final_return)
+                    
+                    if episode % 20 == 0:
+                        avg_reward = np.mean(episode_rewards[-20:]) if len(episode_rewards) >= 20 else np.mean(episode_rewards)
+                        avg_return = np.mean(episode_returns[-20:]) * 100 if len(episode_returns) >= 20 else np.mean(episode_returns) * 100
+                        logger.info(f"  Episode {episode}/{train_episodes}: Avg Reward={avg_reward:.2f}, Avg Return={avg_return:.1f}%")
+                
+                self.is_trained = True
+                self.training_history = {
+                    'rewards': episode_rewards,
+                    'returns': episode_returns
+                }
+                
+                final_avg_return = np.mean(episode_returns[-20:]) * 100 if len(episode_returns) >= 20 else np.mean(episode_returns) * 100
+                logger.info(f"✅ RL Agent trained: Final avg return = {final_avg_return:.1f}%")
+                
+                return {
+                    'status': 'success',
+                    'episodes': train_episodes,
+                    'final_epsilon': round(self.agent.epsilon, 4),
+                    'avg_reward_last_20': round(np.mean(episode_rewards[-20:]) if len(episode_rewards) >= 20 else np.mean(episode_rewards), 2),
+                    'avg_return_last_20_pct': round(final_avg_return, 2),
+                    'total_experiences': len(self.agent.memory)
+                }
+                
+            except Exception as e:
+                logger.error(f"RL training failed in thread: {e}")
+                return {'error': str(e)}
+        
+        # Define the async wrapper that runs training in thread pool
+        async def rl_training_task(progress_callback=None, **kwargs):
             train_episodes = kwargs.get('episodes', 100)
+            prices = kwargs.get('prices', [])
             
             if progress_callback:
                 progress_callback(5, f"Starting RL training: {train_episodes} episodes")
             
-            # Collect price data
-            all_prices = []
-            for symbol in train_symbols:
-                ohlcv = await self.db.ohlcv_data.find(
-                    {'symbol': {'$regex': symbol, '$options': 'i'}}
-                ).sort('timestamp', 1).limit(500).to_list(length=500)
-                
-                prices = [float(d['close']) for d in ohlcv if 'close' in d]
-                if prices:
-                    all_prices.extend(prices)
-            
-            if len(all_prices) < 100:
-                return {'error': 'Insufficient price data', 'data_points': len(all_prices)}
-            
             if progress_callback:
-                progress_callback(10, f"Loaded {len(all_prices)} price points")
+                progress_callback(10, f"Running training in background thread...")
             
-            # Normalize prices for training
-            base_price = np.mean(all_prices[:50])
-            normalized_prices = [p / base_price * 100 for p in all_prices]
-            
-            episode_rewards = []
-            episode_returns = []
-            
-            for episode in range(train_episodes):
-                # Random starting point
-                start_idx = random.randint(0, len(normalized_prices) - 200)
-                episode_prices = normalized_prices[start_idx:start_idx + 200]
-                
-                state = self.env.reset(episode_prices[0])
-                total_reward = 0
-                
-                for i in range(1, len(episode_prices)):
-                    # Generate market features
-                    market_features = self._generate_market_features(episode_prices, i)
-                    
-                    # Choose action
-                    action = self.agent.act(state)
-                    
-                    # Step environment
-                    next_state, reward, done, info = self.env.step(
-                        action, episode_prices[i], market_features
-                    )
-                    
-                    # Store experience
-                    self.agent.remember(state, action, reward, next_state, done)
-                    
-                    # Train
-                    if len(self.agent.memory) >= self.agent.batch_size:
-                        self.agent.replay()
-                    
-                    state = next_state
-                    total_reward += reward
-                    
-                    if done:
-                        break
-                
-                # Update target network periodically
-                if episode % 10 == 0:
-                    self.agent.update_target_model()
-                
-                episode_rewards.append(total_reward)
-                final_return = (self.env.get_portfolio_value() - 10000) / 10000
-                episode_returns.append(final_return)
-                
-                # Update progress every 10 episodes
-                if episode % 10 == 0 and progress_callback:
-                    progress = 10 + int((episode / train_episodes) * 85)
-                    avg_reward = np.mean(episode_rewards[-10:]) if len(episode_rewards) >= 10 else total_reward
-                    progress_callback(progress, f"Episode {episode}/{train_episodes}, Avg Reward: {avg_reward:.2f}")
-            
-            self.is_trained = True
-            self.training_history = {
-                'rewards': episode_rewards,
-                'returns': episode_returns
-            }
-            
-            final_avg_return = np.mean(episode_returns[-20:]) * 100
-            logger.info(f"✅ RL Agent trained: Final avg return = {final_avg_return:.1f}%")
+            # Run the CPU-bound training in a thread pool
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(
+                _training_executor,
+                sync_training_loop,
+                train_episodes,
+                prices
+            )
             
             if progress_callback:
                 progress_callback(100, "Training complete")
             
-            return {
-                'status': 'success',
-                'episodes': train_episodes,
-                'final_epsilon': round(self.agent.epsilon, 4),
-                'avg_reward_last_20': round(np.mean(episode_rewards[-20:]), 2),
-                'avg_return_last_20_pct': round(final_avg_return, 2),
-                'total_experiences': len(self.agent.memory)
-            }
+            return result
         
         # Submit to background task manager
         task_id = await self.task_manager.submit_task(
@@ -579,7 +604,7 @@ class RLTradingAgent:
             task_name=f"rl_agent_training_{episodes}_episodes",
             timeout=900,  # 15 minutes
             episodes=episodes,
-            symbols=symbols or ['BTC', 'ETH']
+            prices=normalized_prices
         )
         
         self.current_training_task_id = task_id
