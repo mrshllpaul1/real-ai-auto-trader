@@ -241,6 +241,110 @@ class RegimePredictionEngine:
         
         return model
     
+    def _build_bilstm_model(self, input_shape: Tuple = None) -> Sequential:
+        """Build Bidirectional LSTM neural network - learns patterns in both directions"""
+        if input_shape is None:
+            input_shape = (self.sequence_length, 10)
+        
+        model = Sequential([
+            Bidirectional(LSTM(64, return_sequences=True), input_shape=input_shape),
+            Dropout(0.2),
+            BatchNormalization(),
+            Bidirectional(LSTM(32, return_sequences=False)),
+            Dropout(0.2),
+            Dense(32, activation='relu'),
+            Dropout(0.1),
+            Dense(len(RegimeLabel), activation='softmax')
+        ])
+        
+        model.compile(
+            optimizer=Adam(learning_rate=0.001),
+            loss='sparse_categorical_crossentropy',
+            metrics=['accuracy']
+        )
+        
+        return model
+    
+    def _build_cnn_lstm_model(self, input_shape: Tuple = None) -> Sequential:
+        """
+        Build CNN-LSTM Hybrid model.
+        CNN extracts local patterns, LSTM captures temporal dependencies.
+        """
+        if input_shape is None:
+            input_shape = (self.sequence_length, 10)
+        
+        model = Sequential([
+            # CNN layers for pattern extraction
+            Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=input_shape),
+            BatchNormalization(),
+            Conv1D(filters=32, kernel_size=3, activation='relu'),
+            MaxPooling1D(pool_size=2),
+            Dropout(0.2),
+            
+            # LSTM for sequence learning
+            LSTM(50, return_sequences=False),
+            Dropout(0.2),
+            
+            # Output layers
+            Dense(32, activation='relu'),
+            Dropout(0.1),
+            Dense(len(RegimeLabel), activation='softmax')
+        ])
+        
+        model.compile(
+            optimizer=Adam(learning_rate=0.001),
+            loss='sparse_categorical_crossentropy',
+            metrics=['accuracy']
+        )
+        
+        return model
+    
+    def _build_attention_model(self, input_shape: Tuple = None) -> Model:
+        """
+        Build Transformer-style attention model.
+        Uses multi-head attention to focus on important time steps.
+        """
+        if input_shape is None:
+            input_shape = (self.sequence_length, 10)
+        
+        inputs = Input(shape=input_shape)
+        
+        # Initial projection
+        x = Dense(64, activation='relu')(inputs)
+        x = LayerNormalization()(x)
+        
+        # Multi-head attention
+        attention_output = MultiHeadAttention(
+            num_heads=4,
+            key_dim=16,
+            dropout=0.1
+        )(x, x)
+        
+        # Add & Normalize
+        x = LayerNormalization()(x + attention_output)
+        
+        # Feed-forward network
+        ff = Dense(128, activation='relu')(x)
+        ff = Dropout(0.2)(ff)
+        ff = Dense(64)(ff)
+        x = LayerNormalization()(x + ff)
+        
+        # Global pooling and output
+        x = GlobalAveragePooling1D()(x)
+        x = Dense(32, activation='relu')(x)
+        x = Dropout(0.1)(x)
+        outputs = Dense(len(RegimeLabel), activation='softmax')(x)
+        
+        model = Model(inputs=inputs, outputs=outputs)
+        
+        model.compile(
+            optimizer=Adam(learning_rate=0.001),
+            loss='sparse_categorical_crossentropy',
+            metrics=['accuracy']
+        )
+        
+        return model
+    
     async def _prepare_features(self, ohlcv_data: List[Dict]) -> np.ndarray:
         """
         Prepare feature matrix from OHLCV data.
