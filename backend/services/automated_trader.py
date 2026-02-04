@@ -876,3 +876,110 @@ Exit: ${exit_price:.4f}
             'best_trade': max(closed, key=lambda x: x.get('pnl_pct', 0)),
             'worst_trade': min(closed, key=lambda x: x.get('pnl_pct', 0))
         }
+
+    # P2: Background Task Integration Methods
+    
+    async def train_models_background(self) -> Dict[str, Any]:
+        """
+        Train AI models in background (non-blocking).
+        Uses BackgroundTaskManager if available.
+        
+        Returns:
+            task_id for tracking or direct result if no task manager
+        """
+        if self.task_manager:
+            from services.background_tasks import TaskType
+            
+            async def train_all_models(progress_callback=None, **kwargs):
+                results = {}
+                
+                # Train regime predictor
+                if self.regime_predictor:
+                    if progress_callback:
+                        progress_callback(10, "Training regime prediction models...")
+                    results['regime'] = await self.regime_predictor.train_all_models()
+                
+                # Train gem ML/DL models
+                if self.gem_ml_dl:
+                    if progress_callback:
+                        progress_callback(50, "Training gem ML/DL models...")
+                    results['gem_ml_dl'] = await self.gem_ml_dl.train_models()
+                
+                if progress_callback:
+                    progress_callback(100, "All models trained")
+                
+                return results
+            
+            task_id = await self.task_manager.submit_task(
+                task_type=TaskType.MODEL_TRAINING,
+                task_func=train_all_models,
+                task_name="train_all_ai_models",
+                timeout=900  # 15 minutes
+            )
+            
+            return {'task_id': task_id, 'status': 'submitted', 'message': 'Model training started in background'}
+        
+        # Fallback to synchronous training
+        results = {}
+        if self.regime_predictor:
+            results['regime'] = await self.regime_predictor.train_all_models()
+        if self.gem_ml_dl:
+            results['gem_ml_dl'] = await self.gem_ml_dl.train_models()
+        
+        return {'status': 'completed', 'results': results}
+    
+    async def scan_gems_background(self, coins: List[str] = None) -> Dict[str, Any]:
+        """
+        Scan for gems in background (non-blocking).
+        
+        Args:
+            coins: List of coins to scan (uses default if None)
+            
+        Returns:
+            task_id for tracking or direct result if no task manager
+        """
+        if self.task_manager and self.gem_ml_dl:
+            from services.background_tasks import TaskType
+            
+            async def scan_wrapper(progress_callback=None, **kwargs):
+                if progress_callback:
+                    progress_callback(20, "Scanning coins for gems...")
+                
+                results = await self.gem_ml_dl.scan_for_gems(coins)
+                
+                if progress_callback:
+                    progress_callback(100, f"Scanned {len(results)} coins")
+                
+                return results
+            
+            task_id = await self.task_manager.submit_task(
+                task_type=TaskType.GEM_SCAN,
+                task_func=scan_wrapper,
+                task_name="gem_scan",
+                timeout=120
+            )
+            
+            return {'task_id': task_id, 'status': 'submitted', 'message': 'Gem scan started in background'}
+        
+        # Fallback to synchronous scan
+        if self.gem_ml_dl:
+            results = await self.gem_ml_dl.scan_for_gems(coins)
+            return {'status': 'completed', 'gems': results}
+        
+        return {'error': 'Gem ML/DL predictor not available'}
+    
+    def get_service_status(self) -> Dict[str, Any]:
+        """Get status of all integrated services"""
+        return {
+            'ai_trainer': self.ai_trainer is not None,
+            'gem_finder_legacy': self.gem_finder is not None,
+            'gem_ml_dl': self.gem_ml_dl is not None and self.gem_ml_dl.is_trained,
+            'adaptive_strategy': self.adaptive_strategy is not None,
+            'regime_predictor': self.regime_predictor is not None,
+            'performance_tracker': self.performance_tracker is not None,
+            'isolated_portfolio': self.isolated_portfolio is not None,
+            'enhanced_ai': self.enhanced_ai is not None,
+            'background_task_manager': self.task_manager is not None,
+            'kraken_connected': self.kraken is not None
+        }
+
