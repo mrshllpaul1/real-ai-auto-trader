@@ -2,7 +2,7 @@
 Automated Weekly Trading Executor
 Connects AI coin selection + gem finder to live Kraken trading.
 Executes trades automatically based on AI recommendations.
-Now integrated with Adaptive Strategy Engine and ML Regime Prediction.
+Now integrated with Adaptive Strategy Engine, ML Regime Prediction, and Budget Isolation.
 """
 
 import asyncio
@@ -10,23 +10,28 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 
 class AutomatedWeeklyTrader:
     """
     Automated trading system that:
     1. Uses trained AI to select 10 coins + 1 gem weekly
-    2. Executes trades on Kraken
+    2. Executes trades on Kraken ONLY within isolated budget
     3. Manages positions with stop-loss/take-profit
     4. Sends alerts on significant events
     5. Adapts strategy based on market regime (via Adaptive Strategy Engine)
     6. Uses ML/DL models to predict market regimes
+    7. BUDGET ISOLATION: Only trades with allocated funds, never touches main portfolio
     """
     
     def __init__(self, db, kraken_service, ai_trainer, gem_finder, alert_service=None, 
-                 adaptive_strategy=None, regime_predictor=None, performance_tracker=None):
+                 adaptive_strategy=None, regime_predictor=None, performance_tracker=None,
+                 isolated_portfolio=None):
         self.db = db
         self.kraken = kraken_service
         self.ai_trainer = ai_trainer
@@ -35,6 +40,7 @@ class AutomatedWeeklyTrader:
         self.adaptive_strategy = adaptive_strategy
         self.regime_predictor = regime_predictor  # ML/DL regime prediction
         self.performance_tracker = performance_tracker  # Performance tracking
+        self.isolated_portfolio = isolated_portfolio  # Budget isolation manager
         
         # Base position sizing (can be overridden by adaptive strategy)
         self.config = {
