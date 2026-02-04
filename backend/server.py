@@ -510,6 +510,17 @@ async def initialize_services():
         )
         logger.info("✅ Prediction Enhancements initialized (8 services)")
         
+        # Initialize Custom Strategy Builder with AI Chat integration
+        from services.custom_strategy_builder import get_strategy_builder
+        strategy_builder = get_strategy_builder(db, ai_chat)
+        strategy_builder_routes.set_dependencies(db, strategy_builder)
+        logger.info("✅ Custom Strategy Builder initialized (AI-assisted)")
+        
+        # Initialize Push Notification Service
+        from services.push_notification_service import get_notification_service
+        push_notification = get_notification_service(db)
+        logger.info("✅ Push Notification Service initialized")
+        
         # Start scheduler
         await scheduler_service.start()
         
