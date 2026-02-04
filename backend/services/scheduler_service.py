@@ -1587,3 +1587,90 @@ class SchedulerService:
         ).sort('timestamp', -1).limit(limit).to_list(limit)
         
         return snapshots
+
+
+    # Auto-Retraining Jobs
+    
+    async def add_auto_retrain_job(self, hour: int = 2) -> Dict[str, Any]:
+        """
+        Add daily auto-retraining job for ML/DL models.
+        Runs at specified hour (default 2 AM UTC).
+        """
+        job_id = 'auto_retrain_models'
+        
+        if self.scheduler.get_job(job_id):
+            self.scheduler.remove_job(job_id)
+        
+        self.scheduler.add_job(
+            self._run_auto_retrain,
+            trigger=CronTrigger(hour=hour),
+            id=job_id,
+            name='Daily Model Auto-Retrain',
+            replace_existing=True
+        )
+        
+        self.active_jobs[job_id] = {
+            'type': 'auto_retrain',
+            'hour': hour,
+            'created_at': datetime.utcnow().isoformat()
+        }
+        
+        logger.info(f"🔄 Auto-retrain job added (daily at {hour}:00 UTC)")
+        return {'success': True, 'job_id': job_id, 'schedule': f'daily at {hour}:00 UTC'}
+    
+    async def _run_auto_retrain(self) -> Dict[str, Any]:
+        """Execute automatic model retraining"""
+        timestamp = datetime.utcnow()
+        logger.info(f"🔄 [{timestamp.strftime('%H:%M')}] Running auto-retrain...")
+        
+        results = {
+            'timestamp': timestamp.isoformat(),
+            'regime_models': None,
+            'gem_models': None
+        }
+        
+        try:
+            # Retrain regime prediction models
+            from services.regime_predictor import get_regime_predictor
+            regime_pred = get_regime_predictor(self.db)
+            
+            if regime_pred:
+                logger.info("  📊 Retraining regime prediction models...")
+                regime_result = await regime_pred.train_models()
+                results['regime_models'] = {
+                    'success': 'error' not in regime_result,
+                    'best_model': regime_result.get('best_model', {}).get('name'),
+                    'accuracy': regime_result.get('best_model', {}).get('accuracy')
+                }
+                logger.info(f"  ✅ Regime models retrained: {results['regime_models'].get('best_model')}")
+        except Exception as e:
+            logger.error(f"  ❌ Regime retrain error: {e}")
+            results['regime_models'] = {'success': False, 'error': str(e)}
+        
+        try:
+            # Retrain gem prediction models
+            from services.gem_ml_dl_predictor import get_gem_prediction_engine
+            gem_engine = get_gem_prediction_engine(self.db)
+            
+            if gem_engine:
+                logger.info("  💎 Retraining gem prediction models...")
+                gem_result = await gem_engine.train_models()
+                results['gem_models'] = {
+                    'success': 'error' not in gem_result,
+                    'best_model': gem_result.get('best_overall', {}).get('name'),
+                    'accuracy': gem_result.get('best_overall', {}).get('accuracy')
+                }
+                logger.info(f"  ✅ Gem models retrained: {results['gem_models'].get('best_model')}")
+        except Exception as e:
+            logger.error(f"  ❌ Gem retrain error: {e}")
+            results['gem_models'] = {'success': False, 'error': str(e)}
+        
+        # Save execution record
+        await self.db.scheduler_executions.insert_one({
+            'job_id': 'auto_retrain_models',
+            'timestamp': timestamp.isoformat(),
+            'success': results['regime_models'].get('success', False) or results['gem_models'].get('success', False),
+            'results': results
+        })
+        
+        return results
