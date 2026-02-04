@@ -87,6 +87,42 @@ class AutomatedWeeklyTrader:
             print(f"Error getting balance: {e}")
             return 0
     
+    async def get_adaptive_params(self) -> Dict[str, Any]:
+        """
+        Get current adaptive strategy parameters.
+        Falls back to base config if adaptive strategy not available.
+        """
+        if self.adaptive_strategy:
+            try:
+                # Detect current regime and adapt
+                await self.adaptive_strategy.detect_market_regime()
+                result = await self.adaptive_strategy.adapt_strategy()
+                
+                return {
+                    'regime': result.get('regime', 'sideways'),
+                    'max_position_pct': result['adapted_params'].get('max_position_pct', self.config['main_position_pct']),
+                    'stop_loss': result['adapted_params'].get('stop_loss_pct', self.config['stop_loss_main']),
+                    'take_profit': result['adapted_params'].get('take_profit_pct', self.config['take_profit_main']),
+                    'min_confidence': result['adapted_params'].get('min_confidence', 60),
+                    'max_exposure': result['adapted_params'].get('max_total_exposure', 90),
+                    'preferred_assets': result.get('preferred_assets', []),
+                    'is_adaptive': True
+                }
+            except Exception as e:
+                print(f"  ⚠️ Adaptive strategy error: {e}, using base config")
+        
+        # Fallback to base config
+        return {
+            'regime': 'unknown',
+            'max_position_pct': self.config['main_position_pct'],
+            'stop_loss': self.config['stop_loss_main'],
+            'take_profit': self.config['take_profit_main'],
+            'min_confidence': 60,
+            'max_exposure': 90,
+            'preferred_assets': [],
+            'is_adaptive': False
+        }
+    
     async def execute_weekly_rebalance(self, paper_trade: bool = True) -> Dict[str, Any]:
         """
         Execute weekly portfolio rebalance based on AI selection.
