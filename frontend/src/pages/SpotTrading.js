@@ -333,14 +333,34 @@ const AISignalCard = ({ signal }) => {
         <div className="mt-4 pt-4 border-t border-[#222]">
           <div className="text-xs text-[#888] mb-2">Signal Components</div>
           <div className="grid grid-cols-2 gap-2">
-            {Object.entries(signal.components).map(([key, value]) => (
-              <div key={key} className="flex justify-between text-xs">
-                <span className="text-[#666]">{key.replace('_', ' ')}</span>
-                <span className={value > 0 ? 'text-[#00FF94]' : value < 0 ? 'text-[#FF4444]' : 'text-[#888]'}>
-                  {typeof value === 'number' ? value.toFixed(2) : String(value)}
-                </span>
-              </div>
-            ))}
+            {Object.entries(signal.components).map(([key, value]) => {
+              // Format value based on type
+              let displayValue;
+              let colorClass = 'text-[#888]';
+              
+              if (typeof value === 'number') {
+                displayValue = value.toFixed(2);
+                colorClass = value > 0 ? 'text-[#00FF94]' : value < 0 ? 'text-[#FF4444]' : 'text-[#888]';
+              } else if (typeof value === 'object' && value !== null) {
+                // Extract score or signal from nested objects
+                const score = value.score ?? value.signal ?? value.value;
+                if (typeof score === 'number') {
+                  displayValue = score.toFixed(2);
+                  colorClass = score > 0 ? 'text-[#00FF94]' : score < 0 ? 'text-[#FF4444]' : 'text-[#888]';
+                } else {
+                  displayValue = score ? String(score) : '-';
+                }
+              } else {
+                displayValue = value ? String(value) : '-';
+              }
+              
+              return (
+                <div key={key} className="flex justify-between text-xs">
+                  <span className="text-[#666] capitalize">{key.replace(/_/g, ' ')}</span>
+                  <span className={colorClass}>{displayValue}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
