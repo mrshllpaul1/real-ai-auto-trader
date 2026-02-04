@@ -327,7 +327,7 @@ async def get_auto_trader_status():
             "adaptive_params": params,
             "config": config,
             "kraken_connected": _kraken_service is not None,
-            "services": {
+            "services": _automated_trader.get_service_status() if hasattr(_automated_trader, 'get_service_status') else {
                 "ai_trainer": _automated_trader.ai_trainer is not None,
                 "gem_finder": _automated_trader.gem_finder is not None,
                 "adaptive_strategy": _automated_trader.adaptive_strategy is not None,
