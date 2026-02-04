@@ -136,51 +136,59 @@ async def get_trading_pairs():
     if _kraken_service is None:
         raise HTTPException(status_code=503, detail="Kraken service not initialized")
     
-    async def fetch_ticker(symbol, info):
-        """Fetch ticker for a single pair"""
-        try:
-            ticker = await _kraken_service.get_ticker(info['pair'])
-            
-            if ticker:
-                last_price = float(ticker.get("c", [0])[0]) if ticker.get("c") else 0
-                volume_24h = float(ticker.get("v", [0, 0])[1]) if ticker.get("v") else 0
-                low_24h = float(ticker.get("l", [0, 0])[1]) if ticker.get("l") else 0
-                high_24h = float(ticker.get("h", [0, 0])[1]) if ticker.get("h") else 0
-                open_24h = float(ticker.get("o", 0)) if ticker.get("o") else last_price
-                
-                change_24h = ((last_price - open_24h) / open_24h * 100) if open_24h else 0
-                
-                return {
-                    "symbol": symbol,
-                    "pair": info['pair'],
-                    "name": info['name'],
-                    "price": last_price,
-                    "change_24h": round(change_24h, 2),
-                    "volume_24h": volume_24h,
-                    "low_24h": low_24h,
-                    "high_24h": high_24h,
-                    "min_order": info['min_order'],
-                    "decimals": info['decimals']
-                }
-        except Exception as e:
-            logger.warning(f"Failed to get ticker for {symbol}: {e}")
-        
-        return {
-            "symbol": symbol,
-            "pair": info['pair'],
-            "name": info['name'],
-            "price": 0,
-            "error": "Price unavailable",
-            "min_order": info['min_order'],
-            "decimals": info['decimals']
-        }
+    # Fetch all tickers in a single batch request
+    all_pairs = [info['pair'] for info in TRADING_PAIRS.values()]
     
-    # Fetch all tickers in parallel
-    tasks = [fetch_ticker(symbol, info) for symbol, info in TRADING_PAIRS.items()]
-    pairs_with_prices = await asyncio.gather(*tasks)
+    try:
+        tickers = await _kraken_service.get_tickers_batch(all_pairs)
+    except Exception as e:
+        logger.error(f"Batch ticker fetch error: {e}")
+        tickers = {}
+    
+    pairs_with_prices = []
+    
+    for symbol, info in TRADING_PAIRS.items():
+        # Find ticker data - Kraken returns with slightly different keys
+        ticker = None
+        for key in tickers:
+            if info['pair'] in key or key.startswith(info['pair'][:4]):
+                ticker = tickers[key]
+                break
+        
+        if ticker:
+            last_price = float(ticker.get("c", [0])[0]) if ticker.get("c") else 0
+            volume_24h = float(ticker.get("v", [0, 0])[1]) if ticker.get("v") else 0
+            low_24h = float(ticker.get("l", [0, 0])[1]) if ticker.get("l") else 0
+            high_24h = float(ticker.get("h", [0, 0])[1]) if ticker.get("h") else 0
+            open_24h = float(ticker.get("o", 0)) if ticker.get("o") else last_price
+            
+            change_24h = ((last_price - open_24h) / open_24h * 100) if open_24h else 0
+            
+            pairs_with_prices.append({
+                "symbol": symbol,
+                "pair": info['pair'],
+                "name": info['name'],
+                "price": last_price,
+                "change_24h": round(change_24h, 2),
+                "volume_24h": volume_24h,
+                "low_24h": low_24h,
+                "high_24h": high_24h,
+                "min_order": info['min_order'],
+                "decimals": info['decimals']
+            })
+        else:
+            pairs_with_prices.append({
+                "symbol": symbol,
+                "pair": info['pair'],
+                "name": info['name'],
+                "price": 0,
+                "error": "Price unavailable",
+                "min_order": info['min_order'],
+                "decimals": info['decimals']
+            })
     
     # Sort by 24h volume
-    pairs_with_prices = sorted(pairs_with_prices, key=lambda x: x.get('volume_24h', 0) or 0, reverse=True)
+    pairs_with_prices.sort(key=lambda x: x.get('volume_24h', 0) or 0, reverse=True)
     
     return {
         "pairs": pairs_with_prices,
