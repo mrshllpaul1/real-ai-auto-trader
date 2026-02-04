@@ -148,14 +148,32 @@ class GemBacktester:
         self,
         coins: List[str],
         weights: Dict[str, float],
-        iteration_num: int
+        iteration_num: int,
+        gem_threshold: float = 0.70
     ) -> Dict[str, Any]:
         """Run a single backtest iteration"""
         total_predictions = 0
         correct_predictions = 0
         predictions_detail = []
         
+        # Get BTC data for relative strength calculation
+        btc_data = await self.db.historical_ohlcv.find(
+            {"symbol": "BTC"},
+            {"_id": 0}
+        ).sort("timestamp", 1).to_list(length=10000)
+        
+        btc_prices_by_date = {}
+        for d in btc_data:
+            date_key = d.get("timestamp", d.get("date", ""))
+            if isinstance(date_key, str):
+                btc_prices_by_date[date_key[:10]] = d["close"]
+            else:
+                btc_prices_by_date[str(date_key)[:10]] = d["close"]
+        
         for coin in coins:
+            if coin == "BTC":  # Skip BTC for gem detection
+                continue
+                
             try:
                 # Get historical OHLCV data
                 data = await self.db.historical_ohlcv.find(
@@ -182,11 +200,11 @@ class GemBacktester:
                     future_data = data[test_idx:test_idx + 30]  # 30 days ahead
                     
                     # Calculate gem score at test point
-                    gem_score = self._calculate_gem_score(historical_data, weights)
+                    gem_score = self._calculate_gem_score(historical_data, weights, btc_prices_by_date)
                     
-                    # Check if prediction was correct
-                    was_gem = self._check_if_gem(future_data)
-                    predicted_gem = gem_score >= 0.6
+                    # Check if prediction was correct (using stricter criteria)
+                    was_gem = self._check_if_gem(future_data, btc_prices_by_date)
+                    predicted_gem = gem_score >= gem_threshold
                     
                     total_predictions += 1
                     if predicted_gem == was_gem:
@@ -194,7 +212,7 @@ class GemBacktester:
                     
                     predictions_detail.append({
                         "coin": coin,
-                        "test_date": historical_data[-1]["date"],
+                        "test_date": str(historical_data[-1].get("timestamp", historical_data[-1].get("date", "")))[:19],
                         "gem_score": float(gem_score),
                         "predicted_gem": bool(predicted_gem),
                         "actual_gem": bool(was_gem),
@@ -214,6 +232,7 @@ class GemBacktester:
             "total_predictions": total_predictions,
             "correct_predictions": correct_predictions,
             "accuracy": round(accuracy, 2),
+            "gem_threshold": gem_threshold,
             "weights_used": weights.copy(),
             "factor_analysis": factor_analysis,
             "sample_predictions": predictions_detail[:10]
