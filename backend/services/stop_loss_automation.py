@@ -1,6 +1,7 @@
 """
 Position Stop-Loss Automation Service
 Monitors all open AI positions and automatically closes them when they hit stop-loss or take-profit.
+Now includes TRAILING STOP-LOSS for locking in profits as price moves up.
 Runs every 5 minutes to ensure timely exits.
 """
 
@@ -14,15 +15,24 @@ logger = logging.getLogger(__name__)
 
 class StopLossAutomation:
     """
-    Automated stop-loss and take-profit monitoring.
+    Automated stop-loss and take-profit monitoring with TRAILING STOP-LOSS.
     
     Features:
     - Monitors all open AI-managed positions every 5 minutes
     - Automatically closes positions hitting stop-loss
     - Automatically closes positions hitting take-profit
+    - TRAILING STOP-LOSS: Automatically raises stop-loss as price increases
     - Logs all automated actions with P&L
     - Sends alerts for significant events
     - Respects emergency stop status
+    
+    Trailing Stop-Loss Logic:
+    - When price rises above entry, trailing stop follows at configured % below
+    - Stop only moves UP, never down (locks in profits)
+    - Example: 10% trailing stop on $100 entry
+      - Price rises to $120 → stop moves to $108 (10% below $120)
+      - Price drops to $115 → stop stays at $108 (doesn't move down)
+      - Price rises to $130 → stop moves to $117 (10% below $130)
     """
     
     def __init__(self, db, kraken_service, isolated_portfolio, alert_service=None):
@@ -34,7 +44,9 @@ class StopLossAutomation:
         # Configuration
         self.config = {
             'check_interval_minutes': 5,
-            'trailing_stop_enabled': False,  # Future feature
+            'trailing_stop_enabled': True,  # ENABLED - Trailing stop-loss
+            'trailing_stop_pct': 10.0,  # Trail 10% below highest price
+            'trailing_stop_activation_pct': 5.0,  # Activate trailing after 5% profit
             'partial_take_profit_enabled': False,  # Future feature
             'min_profit_to_notify': 10.0,  # USD
             'max_loss_to_notify': 5.0,  # USD
@@ -45,6 +57,8 @@ class StopLossAutomation:
             'total_checks': 0,
             'positions_closed_stop_loss': 0,
             'positions_closed_take_profit': 0,
+            'positions_closed_trailing_stop': 0,
+            'trailing_stops_updated': 0,
             'total_pnl_from_automation': 0,
             'last_check': None
         }
