@@ -632,6 +632,148 @@ const TrainingDashboard = () => {
         </motion.div>
       )}
 
+      {/* Training Scheduler Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45 }}
+        className="bg-[#111] border border-[#222] rounded-2xl overflow-hidden mb-8"
+      >
+        <button
+          onClick={() => setShowScheduler(!showScheduler)}
+          className="w-full p-6 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors"
+          data-testid="toggle-scheduler-btn"
+        >
+          <div className="flex items-center gap-3">
+            <Calendar size={20} className="text-[#00FF94]" />
+            <h2 className="text-lg font-bold text-white">Training Scheduler</h2>
+            {schedules.length > 0 && (
+              <span className="text-xs text-[#888] bg-[#222] px-2 py-1 rounded-full">
+                {schedules.filter(s => s.enabled).length} active
+              </span>
+            )}
+          </div>
+          {showScheduler ? <ChevronUp size={20} className="text-[#888]" /> : <ChevronDown size={20} className="text-[#888]" />}
+        </button>
+        
+        <AnimatePresence>
+          {showScheduler && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="border-t border-[#222]"
+            >
+              {/* Add Schedule Button */}
+              <div className="p-4 border-b border-[#222] flex justify-between items-center">
+                <span className="text-sm text-[#888]">
+                  Automatically train models at scheduled times
+                </span>
+                <button
+                  onClick={() => setShowAddSchedule(!showAddSchedule)}
+                  className="px-3 py-2 bg-[#00FF94]/20 text-[#00FF94] rounded-lg text-sm font-medium hover:bg-[#00FF94]/30 transition-colors flex items-center gap-1"
+                  data-testid="add-schedule-btn"
+                >
+                  <Plus size={14} />
+                  Add Schedule
+                </button>
+              </div>
+              
+              {/* Add Schedule Panel */}
+              <AnimatePresence>
+                {showAddSchedule && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="p-4 bg-[#0a0a0a] border-b border-[#222]"
+                  >
+                    <h3 className="text-sm font-bold text-white mb-3">Choose a Preset</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {presets.map((preset, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => addScheduleFromPreset(preset)}
+                          className="p-3 bg-[#1a1a1a] rounded-lg text-left hover:bg-[#222] transition-colors border border-[#333]"
+                        >
+                          <div className="text-white text-sm font-medium">{preset.name}</div>
+                          <div className="text-xs text-[#666] mt-1">{preset.description}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
+              {/* Existing Schedules */}
+              <div className="p-4">
+                {schedules.length > 0 ? (
+                  <div className="space-y-2">
+                    {schedules.map((schedule, idx) => (
+                      <div 
+                        key={schedule.schedule_id || idx}
+                        className="flex items-center justify-between p-3 bg-[#1a1a1a] rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => toggleSchedule(schedule.schedule_id, !schedule.enabled)}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                              schedule.enabled 
+                                ? 'bg-[#00FF94]/20 text-[#00FF94]' 
+                                : 'bg-[#333] text-[#666]'
+                            }`}
+                          >
+                            <Power size={14} />
+                          </button>
+                          <div>
+                            <span className="text-white text-sm capitalize">
+                              {schedule.model_type?.replace('_', ' ')}
+                            </span>
+                            <div className="text-xs text-[#666]">
+                              {schedule.schedule_type === 'cron' 
+                                ? `Cron: ${schedule.cron_expression}` 
+                                : `Every ${schedule.interval_hours}h`}
+                              {schedule.config?.episodes && ` • ${schedule.config.episodes} eps`}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {schedule.next_run && (
+                            <span className="text-xs text-[#888]">
+                              Next: {new Date(schedule.next_run).toLocaleString()}
+                            </span>
+                          )}
+                          <button
+                            onClick={() => runScheduleNow(schedule.schedule_id)}
+                            className="p-2 text-[#FFB800] hover:bg-[#FFB800]/20 rounded-lg transition-colors"
+                            title="Run Now"
+                          >
+                            <Play size={14} />
+                          </button>
+                          <button
+                            onClick={() => deleteSchedule(schedule.schedule_id)}
+                            className="p-2 text-[#FF4444] hover:bg-[#FF4444]/20 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-[#666]">
+                    <Calendar size={32} className="mx-auto mb-2 opacity-50" />
+                    <p>No schedules configured</p>
+                    <p className="text-xs">Add a schedule to automatically train models</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
       {/* Training History Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
