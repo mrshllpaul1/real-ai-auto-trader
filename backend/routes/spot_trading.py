@@ -42,7 +42,7 @@ TRADING_PAIRS = {
     'DOT': {'pair': 'DOTUSD', 'name': 'Polkadot', 'decimals': 8, 'min_order': 0.1},
     'LINK': {'pair': 'LINKUSD', 'name': 'Chainlink', 'decimals': 8, 'min_order': 0.1},
     'AVAX': {'pair': 'AVAXUSD', 'name': 'Avalanche', 'decimals': 8, 'min_order': 0.01},
-    'MATIC': {'pair': 'MATICUSD', 'name': 'Polygon', 'decimals': 8, 'min_order': 1},
+    'MATIC': {'pair': 'POLUSD', 'name': 'Polygon', 'decimals': 8, 'min_order': 1},
     'ATOM': {'pair': 'ATOMUSD', 'name': 'Cosmos', 'decimals': 8, 'min_order': 0.1},
     'UNI': {'pair': 'UNIUSD', 'name': 'Uniswap', 'decimals': 8, 'min_order': 0.1},
     'SHIB': {'pair': 'SHIBUSD', 'name': 'Shiba Inu', 'decimals': 8, 'min_order': 100000},
