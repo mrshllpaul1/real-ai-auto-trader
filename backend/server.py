@@ -434,6 +434,7 @@ async def initialize_services():
         
         # Portfolio Visualization
         portfolio_visualization.set_dependencies(db, isolated_portfolio_mgr)
+        portfolio_visualization.set_scheduler(scheduler_service)
         logger.info("✅ Portfolio Visualization initialized")
         
         # Background Task Manager
@@ -444,6 +445,10 @@ async def initialize_services():
         
         # Start scheduler
         await scheduler_service.start()
+        
+        # Add automatic portfolio snapshot job (every 6 hours)
+        await scheduler_service.add_portfolio_snapshot_job(interval_hours=6)
+        logger.info("✅ Automatic Portfolio Snapshots enabled (every 6 hours)")
         
         _services_initialized = True
         logger.info("✅ All services initialized successfully")
