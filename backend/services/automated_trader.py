@@ -27,11 +27,12 @@ class AutomatedWeeklyTrader:
     5. Adapts strategy based on market regime (via Adaptive Strategy Engine)
     6. Uses ML/DL models to predict market regimes
     7. BUDGET ISOLATION: Only trades with allocated funds, never touches main portfolio
+    8. ENHANCED AI: Uses ensemble voting, multi-timeframe, sentiment, and dynamic risk
     """
     
     def __init__(self, db, kraken_service, ai_trainer, gem_finder, alert_service=None, 
                  adaptive_strategy=None, regime_predictor=None, performance_tracker=None,
-                 isolated_portfolio=None):
+                 isolated_portfolio=None, enhanced_ai=None):
         self.db = db
         self.kraken = kraken_service
         self.ai_trainer = ai_trainer
@@ -41,6 +42,7 @@ class AutomatedWeeklyTrader:
         self.regime_predictor = regime_predictor  # ML/DL regime prediction
         self.performance_tracker = performance_tracker  # Performance tracking
         self.isolated_portfolio = isolated_portfolio  # Budget isolation manager
+        self.enhanced_ai = enhanced_ai  # Enhanced AI engine
         
         # Base position sizing (can be overridden by adaptive strategy)
         self.config = {
