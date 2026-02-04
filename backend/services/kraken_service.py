@@ -223,10 +223,13 @@ class KrakenTradeService:
                 headers={"User-Agent": "CryptoTradingBot/1.0"}
             )
             data = response.json()
-            if data.get("error"):
+            # Kraken returns partial results even with errors for some pairs
+            # Only fail completely if no results at all
+            result = data.get("result", {})
+            if data.get("error") and not result:
                 print(f"Kraken batch ticker error: {data['error']}")
                 return {}
-            return data.get("result", {})
+            return result
 
 class KrakenMarketService:
     def __init__(self):
