@@ -121,7 +121,7 @@ async def get_performance_history(
     
     Returns daily portfolio values over time.
     """
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=503, detail="Database not initialized")
     
     # Determine date range
