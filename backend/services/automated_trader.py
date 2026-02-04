@@ -228,6 +228,192 @@ class AutomatedWeeklyTrader:
             'ml_prediction': ml_prediction
         }
     
+    async def get_prediction_signals(self, symbol: str) -> Dict[str, Any]:
+        """
+        Get comprehensive prediction signals from all 8 enhancement services.
+        
+        This aggregates signals from:
+        - Order Book Analysis (#1)
+        - On-Chain Analytics (#2)
+        - Social Sentiment (#3)
+        - Transformer Predictor (#4)
+        - RL Trading Agent (#5)
+        - Cross-Asset Correlation (#6)
+        - Advanced Technical Analysis (#7 & #8)
+        
+        Returns:
+            Composite signal with individual component scores
+        """
+        signals = {
+            'symbol': symbol,
+            'timestamp': datetime.now().isoformat(),
+            'components': {},
+            'scores': [],
+            'weights': {
+                'order_book': 0.10,
+                'on_chain': 0.15,
+                'social': 0.10,
+                'transformer': 0.20,
+                'rl_agent': 0.15,
+                'cross_asset': 0.15,
+                'advanced_ta': 0.15
+            }
+        }
+        
+        ps = self.prediction_services
+        
+        # #1: Order Book Analysis
+        if ps.get('order_book'):
+            try:
+                result = await ps['order_book'].analyze_order_book(symbol)
+                score = result.get('signal', {}).get('score', 50)
+                signals['components']['order_book'] = {
+                    'score': score,
+                    'imbalance': result.get('imbalance'),
+                    'spread': result.get('spread_percent')
+                }
+                signals['scores'].append(('order_book', score))
+            except Exception as e:
+                logger.debug(f"Order book analysis failed for {symbol}: {e}")
+        
+        # #2: On-Chain Analytics
+        if ps.get('on_chain'):
+            try:
+                result = await ps['on_chain'].get_on_chain_metrics(symbol)
+                score = result.get('signal', {}).get('score', 50)
+                signals['components']['on_chain'] = {
+                    'score': score,
+                    'nvt_ratio': result.get('nvt_ratio'),
+                    'exchange_flow': result.get('exchange_flow')
+                }
+                signals['scores'].append(('on_chain', score))
+            except Exception as e:
+                logger.debug(f"On-chain analysis failed for {symbol}: {e}")
+        
+        # #3: Social Sentiment
+        if ps.get('social'):
+            try:
+                result = await ps['social'].analyze_social_sentiment(symbol)
+                score = result.get('signal', {}).get('score', 50)
+                signals['components']['social'] = {
+                    'score': score,
+                    'sentiment': result.get('overall_sentiment'),
+                    'hype_level': result.get('hype_level')
+                }
+                signals['scores'].append(('social', score))
+            except Exception as e:
+                logger.debug(f"Social sentiment failed for {symbol}: {e}")
+        
+        # #4: Transformer Predictor
+        if ps.get('transformer') and ps['transformer'].is_trained:
+            try:
+                result = await ps['transformer'].predict(symbol)
+                # Convert prediction to score (0-100)
+                if result.get('prediction') == 'up':
+                    score = 50 + result.get('confidence', 0) / 2
+                elif result.get('prediction') == 'down':
+                    score = 50 - result.get('confidence', 0) / 2
+                else:
+                    score = 50
+                signals['components']['transformer'] = {
+                    'score': score,
+                    'prediction': result.get('prediction'),
+                    'confidence': result.get('confidence')
+                }
+                signals['scores'].append(('transformer', score))
+            except Exception as e:
+                logger.debug(f"Transformer prediction failed for {symbol}: {e}")
+        
+        # #5: RL Trading Agent
+        if ps.get('rl_agent') and ps['rl_agent'].is_trained:
+            try:
+                result = await ps['rl_agent'].get_signal(symbol)
+                # Convert signal to score
+                if result.get('signal') == 'buy':
+                    score = 50 + result.get('confidence', 0) / 2
+                elif result.get('signal') == 'sell':
+                    score = 50 - result.get('confidence', 0) / 2
+                else:
+                    score = 50
+                signals['components']['rl_agent'] = {
+                    'score': score,
+                    'signal': result.get('signal'),
+                    'confidence': result.get('confidence'),
+                    'q_values': result.get('q_values')
+                }
+                signals['scores'].append(('rl_agent', score))
+            except Exception as e:
+                logger.debug(f"RL agent signal failed for {symbol}: {e}")
+        
+        # #6: Cross-Asset Correlation
+        if ps.get('cross_asset'):
+            try:
+                result = await ps['cross_asset'].analyze_correlations(symbol)
+                score = result.get('signal', {}).get('score', 50)
+                signals['components']['cross_asset'] = {
+                    'score': score,
+                    'btc_correlation': result.get('btc_correlation'),
+                    'risk_regime': result.get('risk_regime')
+                }
+                signals['scores'].append(('cross_asset', score))
+            except Exception as e:
+                logger.debug(f"Cross-asset analysis failed for {symbol}: {e}")
+        
+        # #7 & #8: Advanced Technical Analysis
+        if ps.get('advanced_ta'):
+            try:
+                result = await ps['advanced_ta'].analyze(symbol)
+                score = result.get('signal', {}).get('score', 50)
+                signals['components']['advanced_ta'] = {
+                    'score': score,
+                    'volatility_regime': result.get('volatility_regime'),
+                    'divergence': result.get('divergence')
+                }
+                signals['scores'].append(('advanced_ta', score))
+            except Exception as e:
+                logger.debug(f"Advanced TA failed for {symbol}: {e}")
+        
+        # Calculate composite score
+        if signals['scores']:
+            weighted_sum = 0
+            total_weight = 0
+            
+            for name, score in signals['scores']:
+                weight = signals['weights'].get(name, 0.1)
+                weighted_sum += score * weight
+                total_weight += weight
+            
+            composite_score = weighted_sum / total_weight if total_weight > 0 else 50
+            
+            # Determine overall signal
+            if composite_score >= 70:
+                overall_signal = 'strong_buy'
+            elif composite_score >= 60:
+                overall_signal = 'buy'
+            elif composite_score <= 30:
+                overall_signal = 'strong_sell'
+            elif composite_score <= 40:
+                overall_signal = 'sell'
+            else:
+                overall_signal = 'hold'
+            
+            signals['composite'] = {
+                'score': round(composite_score, 2),
+                'signal': overall_signal,
+                'confidence': round(abs(composite_score - 50) * 2, 1),
+                'models_used': len(signals['scores'])
+            }
+        else:
+            signals['composite'] = {
+                'score': 50,
+                'signal': 'hold',
+                'confidence': 0,
+                'models_used': 0,
+                'error': 'No prediction models available'
+            }
+        
+        return signals
+    
     async def _find_best_gem(self, paper_trade: bool = True) -> Optional[Dict]:
         """
         Find the best gem using ML/DL predictor (P1 integration).
