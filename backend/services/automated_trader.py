@@ -126,6 +126,8 @@ class AutomatedWeeklyTrader:
     async def execute_weekly_rebalance(self, paper_trade: bool = True) -> Dict[str, Any]:
         """
         Execute weekly portfolio rebalance based on AI selection.
+        NOW WITH ADAPTIVE STRATEGY: Automatically adjusts position sizes,
+        stop-losses, and take-profits based on current market regime.
         
         Args:
             paper_trade: If True, simulate trades. If False, execute real trades.
@@ -138,6 +140,17 @@ class AutomatedWeeklyTrader:
         print(f"{'='*60}")
         print(f"Time: {datetime.now().isoformat()}")
         
+        # Get adaptive strategy parameters
+        adaptive_params = await self.get_adaptive_params()
+        regime = adaptive_params['regime']
+        is_adaptive = adaptive_params['is_adaptive']
+        
+        print(f"📊 Market Regime: {regime.upper()}" + (" (Adaptive)" if is_adaptive else " (Base)"))
+        print(f"   Position Size: {adaptive_params['max_position_pct']:.1f}%")
+        print(f"   Stop Loss: {adaptive_params['stop_loss']:.1f}%")
+        print(f"   Take Profit: {adaptive_params['take_profit']:.1f}%")
+        print(f"   Min Confidence: {adaptive_params['min_confidence']:.0f}%")
+        
         # Get available balance
         if not paper_trade:
             balance = await self.get_portfolio_balance()
@@ -146,7 +159,11 @@ class AutomatedWeeklyTrader:
         else:
             balance = 10000  # Paper trade with $10k
         
-        print(f"Available Balance: ${balance:,.2f}")
+        print(f"\nAvailable Balance: ${balance:,.2f}")
+        
+        # Apply max exposure limit from adaptive strategy
+        max_deployable = balance * (adaptive_params['max_exposure'] / 100)
+        print(f"Max Deployable ({adaptive_params['max_exposure']:.0f}%): ${max_deployable:,.2f}")
         
         # Get AI selections
         portfolio = await self.ai_trainer.select_portfolio(datetime.now())
@@ -154,17 +171,40 @@ class AutomatedWeeklyTrader:
         if not portfolio.get('main_coins'):
             return {'success': False, 'error': 'AI selection failed'}
         
+        # Filter coins by minimum confidence if adaptive
+        if is_adaptive:
+            min_conf = adaptive_params['min_confidence']
+            original_count = len(portfolio['main_coins'])
+            portfolio['main_coins'] = [
+                c for c in portfolio['main_coins'] 
+                if c.get('total_score', 0) >= min_conf
+            ]
+            if len(portfolio['main_coins']) < original_count:
+                print(f"   Filtered out {original_count - len(portfolio['main_coins'])} coins below {min_conf}% confidence")
+        
         # Get gem
         gems = await self.gem_finder.find_gems(datetime.now(), max_gems=1)
         gem = gems[0] if gems else None
         
         print(f"\nSelected {len(portfolio['main_coins'])} main coins + {1 if gem else 0} gem")
         
-        # Calculate position sizes
-        main_position_size = balance * (self.config['main_position_pct'] / 100)
-        gem_position_size = balance * (self.config['gem_position_pct'] / 100)
+        # Calculate position sizes using adaptive parameters
+        # Distribute evenly across selected coins, respecting max exposure
+        num_positions = len(portfolio['main_coins']) + (1 if gem else 0)
+        position_pct = min(adaptive_params['max_position_pct'], adaptive_params['max_exposure'] / num_positions) if num_positions > 0 else 0
+        
+        main_position_size = balance * (position_pct / 100)
+        gem_position_size = balance * (min(adaptive_params['max_position_pct'] * 1.1, 15) / 100)  # Gem gets slightly more
+        
+        print(f"Position Size per Coin: ${main_position_size:.2f} ({position_pct:.1f}%)")
         
         trades = []
+        
+        # Use adaptive stop-loss and take-profit
+        stop_loss = adaptive_params['stop_loss']
+        take_profit = adaptive_params['take_profit']
+        gem_stop_loss = min(stop_loss * 1.5, 25)  # Gems get wider stops
+        gem_take_profit = max(take_profit * 2, 100)  # Gems target higher returns
         
         # Execute main coin trades
         for coin_data in portfolio['main_coins']:
@@ -179,14 +219,16 @@ class AutomatedWeeklyTrader:
                 coin_id=coin_id,
                 symbol=kraken_symbol,
                 amount_usd=main_position_size,
-                stop_loss_pct=self.config['stop_loss_main'],
-                take_profit_pct=self.config['take_profit_main'],
+                stop_loss_pct=stop_loss,  # Adaptive stop loss
+                take_profit_pct=take_profit,  # Adaptive take profit
                 paper_trade=paper_trade,
                 is_gem=False,
                 ai_score=coin_data['total_score']
             )
             
             if trade_result:
+                trade_result['regime'] = regime
+                trade_result['adaptive_params'] = adaptive_params
                 trades.append(trade_result)
         
         # Execute gem trade
