@@ -41,6 +41,7 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 - **Allocation Bars:** Visual breakdown of Invested vs Cash
 - **Quick Stats:** Trades Executed, Avg Position Size, Real Trading status
 - **Snapshot Button:** Create manual portfolio snapshots
+- **Automatic Snapshots:** Scheduled every 6 hours to build history
 
 **API Endpoints:**
 - `GET /api/portfolio/visualization/summary` - Portfolio metrics
@@ -49,10 +50,15 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 - `GET /api/portfolio/visualization/top-performers` - Best positions
 - `GET /api/portfolio/visualization/worst-performers` - Worst positions
 - `POST /api/portfolio/visualization/snapshot` - Create snapshot
+- `POST /api/portfolio/visualization/snapshot/schedule` - Setup auto snapshots
+- `GET /api/portfolio/visualization/snapshot/schedule` - Get schedule status
+- `DELETE /api/portfolio/visualization/snapshot/schedule` - Remove schedule
+- `GET /api/portfolio/visualization/snapshot/history` - Get all snapshots
 
 **Files:**
 - `/app/frontend/src/pages/PortfolioDashboard.js` - Dashboard UI with Recharts
 - `/app/backend/routes/portfolio_visualization.py` - API endpoints
+- `/app/backend/services/scheduler_service.py` - Snapshot scheduling
 
 ### ✅ Background Task Manager & API Timeout Audit (COMPLETE)
 
