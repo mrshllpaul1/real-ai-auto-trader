@@ -428,3 +428,76 @@ async def ai_event_query(query: str):
     }
     
     return result
+
+
+
+# ================== Predictable Patterns ==================
+
+@router.get("/patterns/all")
+async def get_all_predictable_patterns():
+    """
+    Get all known predictable event patterns.
+    These are events with known timing or warning signs that can be anticipated.
+    """
+    if not _events_db:
+        raise HTTPException(status_code=503, detail="Events database not initialized")
+    
+    patterns = _events_db.get_predictable_patterns()
+    
+    # Group by predictability
+    high = [p for p in patterns if p["predictability"] == "HIGH"]
+    medium = [p for p in patterns if p["predictability"] == "MEDIUM"]
+    low = [p for p in patterns if p["predictability"] == "LOW"]
+    
+    return {
+        "total_patterns": len(patterns),
+        "high_predictability": high,
+        "medium_predictability": medium,
+        "low_predictability": low,
+        "summary": {
+            "highly_predictable": len(high),
+            "moderately_predictable": len(medium),
+            "difficult_to_predict": len(low)
+        }
+    }
+
+
+@router.get("/patterns/upcoming")
+async def get_upcoming_predictable_events():
+    """
+    Get upcoming events that can be predicted based on known patterns.
+    Includes FOMC meetings, options expiries, known upgrades, etc.
+    """
+    if not _events_db:
+        raise HTTPException(status_code=503, detail="Events database not initialized")
+    
+    return {
+        "upcoming_events": await _events_db.get_upcoming_predictable_events(),
+        "generated_at": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@router.get("/patterns/analysis")
+async def analyze_pattern_accuracy():
+    """
+    Analyze how accurate each pattern type has been historically.
+    Uses actual historical event data to validate pattern predictions.
+    """
+    if not _events_db:
+        raise HTTPException(status_code=503, detail="Events database not initialized")
+    
+    return await _events_db.analyze_pattern_accuracy()
+
+
+@router.post("/database/reseed")
+async def reseed_events_database():
+    """
+    Reseed the events database with latest curated events.
+    This adds new events from 2025-2026.
+    """
+    if not _events_db:
+        raise HTTPException(status_code=503, detail="Events database not initialized")
+    
+    result = await _events_db.seed_major_events()
+    return result
+
