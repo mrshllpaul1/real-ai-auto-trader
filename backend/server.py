@@ -218,6 +218,7 @@ api_router.include_router(prediction_enhancements.router, tags=["Prediction Enha
 api_router.include_router(strategy_builder_routes.router, tags=["Custom Strategy Builder"])
 api_router.include_router(ohlcv_routes.router, tags=["OHLCV Data"])
 api_router.include_router(training_history_routes.router, tags=["Training History"])
+api_router.include_router(training_scheduler_routes.router, tags=["Training Scheduler"])
 
 # Include the router
 app.include_router(api_router)
