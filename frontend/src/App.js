@@ -77,6 +77,7 @@ function App() {
                 <Route path="/deep-learning" element={<DeepLearningAI />} />
                 <Route path="/ensemble" element={<EnsembleAI />} />
                 <Route path="/triggers" element={<EventTriggers />} />
+                <Route path="/gem-backtest" element={<GemBacktester />} />
                 <Route path="/ai-chat" element={<AIChat />} />
                 <Route path="/news" element={<NewsAndIntelligence />} />
                 <Route path="/news-filters" element={<NewsFilters />} />
