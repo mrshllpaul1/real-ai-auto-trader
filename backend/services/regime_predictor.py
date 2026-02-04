@@ -86,6 +86,7 @@ class RegimePredictionEngine:
     - Transformer-style Attention
     
     The system tracks accuracy of each model and automatically selects the best.
+    Supports model persistence (save/load to disk).
     """
     
     def __init__(self, db: AsyncIOMotorDatabase):
@@ -97,7 +98,7 @@ class RegimePredictionEngine:
         self.best_model = None
         self.is_trained = False
         self.sequence_length = 14  # Days of history for DL models
-        self.model_path = "/app/backend/models"
+        self.model_path = "/app/backend/models/regime"
         
         # Ensure model directory exists
         os.makedirs(self.model_path, exist_ok=True)
@@ -108,6 +109,67 @@ class RegimePredictionEngine:
         # Initialize DL models if TensorFlow available
         if TF_AVAILABLE:
             self._init_dl_models()
+        
+        # Try to load saved models
+        self._load_saved_models()
+    
+    def _load_saved_models(self):
+        """Attempt to load previously saved models"""
+        try:
+            # Load ML models
+            ml_path = os.path.join(self.model_path, "ml_models.pkl")
+            if os.path.exists(ml_path):
+                with open(ml_path, 'rb') as f:
+                    saved_data = pickle.load(f)
+                    self.models.update(saved_data.get('models', {}))
+                    self.model_accuracy = saved_data.get('accuracy', {})
+                    self.best_model = saved_data.get('best_model')
+                    self.scaler = saved_data.get('scaler', self.scaler)
+                    self.is_trained = saved_data.get('is_trained', False)
+                logger.info(f"✅ Regime predictor loaded ML models from disk (best: {self.best_model})")
+            
+            # Load DL models
+            if TF_AVAILABLE:
+                for model_name in ['lstm', 'gru', 'bidirectional_lstm', 'cnn_lstm', 'attention']:
+                    model_file = os.path.join(self.model_path, f"{model_name}.keras")
+                    if os.path.exists(model_file):
+                        self.models[model_name] = load_model(model_file)
+                        logger.info(f"  Loaded DL model: {model_name}")
+                        
+        except Exception as e:
+            logger.warning(f"Could not load saved regime models: {e}")
+    
+    def save_models(self) -> bool:
+        """Save trained models to disk"""
+        try:
+            # Save ML models and metadata
+            ml_data = {
+                'models': {k: v for k, v in self.models.items() 
+                          if k in ['random_forest', 'gradient_boosting', 'svm']},
+                'accuracy': self.model_accuracy,
+                'best_model': self.best_model,
+                'scaler': self.scaler,
+                'is_trained': self.is_trained,
+                'saved_at': datetime.now(timezone.utc).isoformat()
+            }
+            
+            ml_path = os.path.join(self.model_path, "ml_models.pkl")
+            with open(ml_path, 'wb') as f:
+                pickle.dump(ml_data, f)
+            
+            # Save DL models
+            if TF_AVAILABLE:
+                for model_name in ['lstm', 'gru', 'bidirectional_lstm', 'cnn_lstm', 'attention']:
+                    if model_name in self.models and hasattr(self.models[model_name], 'save'):
+                        model_file = os.path.join(self.model_path, f"{model_name}.keras")
+                        self.models[model_name].save(model_file)
+            
+            logger.info(f"✅ Regime predictor saved models to {self.model_path}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to save regime models: {e}")
+            return False
     
     def _init_ml_models(self):
         """Initialize machine learning models"""
