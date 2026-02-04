@@ -76,6 +76,7 @@ from routes import gem_predictor as gem_predictor_routes
 from routes import historical_data, ai_learning_loop, events, event_triggers
 from routes import kraken_universe, coindesk_universe
 from routes import adaptive_strategy, performance, social_sentiment, isolated_portfolio
+from routes import stop_loss_automation as stop_loss_routes
 
 # Include routers
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
