@@ -459,55 +459,86 @@ class GemBacktester:
     def _improve_weights(
         self,
         current_weights: Dict[str, float],
-        iter_result: Dict[str, Any]
+        iter_result: Dict[str, Any],
+        current_threshold: float = 0.70
     ) -> Dict[str, Any]:
-        """Improve weights based on backtest results"""
+        """Improve weights and threshold based on backtest results"""
         new_weights = current_weights.copy()
+        new_threshold = current_threshold
         analysis = iter_result.get("factor_analysis", {})
         
         changes = []
         reason = ""
         
-        # If too many false positives, increase threshold strictness
+        # Get false positive and negative counts
         false_positives = analysis.get("false_positive_count", 0)
         false_negatives = analysis.get("false_negative_count", 0)
+        accuracy = iter_result.get("accuracy", 0)
         
-        if false_positives > false_negatives * 1.5:
-            # Too many false positives - reduce volume and momentum weight
-            new_weights["volume_surge"] = max(0.1, new_weights["volume_surge"] - 0.02)
-            new_weights["price_momentum"] = max(0.1, new_weights["price_momentum"] - 0.02)
-            new_weights["technical_setup"] = min(0.25, new_weights["technical_setup"] + 0.02)
-            changes.append("Reduced volume_surge and momentum weights")
-            reason = "High false positive rate"
-        elif false_negatives > false_positives * 1.5:
-            # Too many false negatives - increase sensitivity
-            new_weights["volume_surge"] = min(0.35, new_weights["volume_surge"] + 0.02)
-            new_weights["price_momentum"] = min(0.30, new_weights["price_momentum"] + 0.02)
-            changes.append("Increased volume_surge and momentum weights")
-            reason = "High false negative rate"
-        else:
-            # Balanced - fine tune based on accuracy
-            accuracy = iter_result.get("accuracy", 0)
-            if accuracy < 60:
-                # Need more balanced approach
-                new_weights["volatility_score"] = min(0.20, new_weights["volatility_score"] + 0.01)
-                new_weights["market_cap_potential"] = min(0.20, new_weights["market_cap_potential"] + 0.01)
-                changes.append("Increased volatility and market_cap weights")
-                reason = "Low overall accuracy - balancing factors"
+        # Strategy based on error type
+        if false_positives > false_negatives * 2:
+            # Too many false positives - be more selective
+            new_threshold = min(0.85, current_threshold + 0.03)
+            new_weights["relative_strength"] = min(0.30, new_weights.get("relative_strength", 0.20) + 0.02)
+            new_weights["volume_surge"] = max(0.10, new_weights.get("volume_surge", 0.20) - 0.02)
+            new_weights["price_momentum"] = max(0.08, new_weights.get("price_momentum", 0.15) - 0.01)
+            changes.append(f"Increased threshold to {new_threshold:.2f}")
+            changes.append("Increased relative_strength weight")
+            reason = "High false positive rate - being more selective"
+            
+        elif false_negatives > false_positives * 2:
+            # Too many false negatives - be more lenient
+            new_threshold = max(0.55, current_threshold - 0.03)
+            new_weights["volume_surge"] = min(0.25, new_weights.get("volume_surge", 0.20) + 0.02)
+            new_weights["technical_setup"] = max(0.10, new_weights.get("technical_setup", 0.15) - 0.01)
+            changes.append(f"Decreased threshold to {new_threshold:.2f}")
+            reason = "High false negative rate - being more inclusive"
+            
+        elif accuracy < 50:
+            # Low accuracy - adjust based on score distribution
+            correct_avg = analysis.get("correct_avg_score", 0.5)
+            incorrect_avg = analysis.get("incorrect_avg_score", 0.5)
+            
+            if incorrect_avg > correct_avg:
+                # Incorrect predictions have higher scores - raise threshold
+                new_threshold = min(0.85, current_threshold + 0.02)
+                new_weights["relative_strength"] = min(0.30, new_weights.get("relative_strength", 0.20) + 0.03)
+                changes.append("Emphasizing relative strength")
+                reason = "Incorrect predictions scoring too high"
             else:
-                # Small random adjustments for exploration
-                factor = np.random.choice(list(new_weights.keys()))
-                adjustment = np.random.uniform(-0.02, 0.02)
-                new_weights[factor] = max(0.05, min(0.35, new_weights[factor] + adjustment))
-                changes.append(f"Fine-tuned {factor}")
-                reason = "Exploring weight space"
+                # Explore weight space
+                factors = list(new_weights.keys())
+                boost_factor = np.random.choice(factors)
+                reduce_factor = np.random.choice([f for f in factors if f != boost_factor])
+                
+                new_weights[boost_factor] = min(0.30, new_weights[boost_factor] + 0.02)
+                new_weights[reduce_factor] = max(0.05, new_weights[reduce_factor] - 0.02)
+                changes.append(f"Boosted {boost_factor}, reduced {reduce_factor}")
+                reason = "Exploring weight combinations"
+        else:
+            # Decent accuracy - fine tune
+            if accuracy < 65:
+                # Slight threshold adjustment
+                if false_positives > false_negatives:
+                    new_threshold = min(0.82, current_threshold + 0.01)
+                else:
+                    new_threshold = max(0.60, current_threshold - 0.01)
+            
+            # Small random exploration
+            factor = np.random.choice(list(new_weights.keys()))
+            adjustment = np.random.uniform(-0.01, 0.01)
+            new_weights[factor] = max(0.05, min(0.30, new_weights[factor] + adjustment))
+            changes.append(f"Fine-tuned {factor}")
+            reason = f"Optimization at {accuracy:.1f}% accuracy"
         
         # Normalize weights to sum to 1
         total = sum(new_weights.values())
-        new_weights = {k: v / total for k, v in new_weights.items()}
+        if total > 0:
+            new_weights = {k: v / total for k, v in new_weights.items()}
         
         return {
             "new_weights": new_weights,
+            "new_threshold": new_threshold,
             "changes": changes,
             "reason": reason
         }
