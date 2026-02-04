@@ -73,7 +73,7 @@ from routes import gems, auto_trade, growth, scheduler, budget, journal, ai_deci
 from routes import ai_universe, ai_discovery, sentiment, cryptopanic, deep_learning, ai_chat
 from routes import ai_universe_expand, gem_predictor, simulation, ensemble, coindesk
 from routes import gem_predictor as gem_predictor_routes
-from routes import historical_data, ai_learning_loop
+from routes import historical_data, ai_learning_loop, events
 
 # Include routers
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
