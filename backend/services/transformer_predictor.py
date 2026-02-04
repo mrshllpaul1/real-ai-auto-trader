@@ -28,7 +28,25 @@ except ImportError:
     logger.warning("TensorFlow not available for Transformer model")
 
 
-@tf.keras.saving.register_keras_serializable(package="CustomLayers")
+# Register custom layers for serialization
+if TF_AVAILABLE:
+    try:
+        # Try Keras 3 style first
+        from keras.saving import register_keras_serializable
+        _register_serializable = register_keras_serializable
+    except (ImportError, AttributeError):
+        try:
+            # Try TF Keras style
+            from tensorflow.keras.utils import register_keras_serializable
+            _register_serializable = register_keras_serializable
+        except (ImportError, AttributeError):
+            # Fallback - no registration
+            _register_serializable = lambda **kwargs: lambda cls: cls
+else:
+    _register_serializable = lambda **kwargs: lambda cls: cls
+
+
+@_register_serializable(package="CustomLayers")
 class PositionalEncoding(tf.keras.layers.Layer):
     """Positional encoding layer for sequence position information"""
     
