@@ -116,6 +116,7 @@ class TransformerPredictor:
     - Positional encoding for sequence order
     - Multiple Transformer blocks for deep pattern recognition
     - Supports both classification (direction) and regression (price)
+    - Supports model persistence (save/load to disk)
     """
     
     def __init__(self, db: AsyncIOMotorDatabase):
@@ -139,6 +140,46 @@ class TransformerPredictor:
         # Training history
         self.training_history = None
         self.last_trained = None
+        
+        # Try to load saved model on initialization
+        self._load_saved_model()
+    
+    def _load_saved_model(self):
+        """Attempt to load a previously saved model"""
+        try:
+            from services.model_persistence import get_transformer_persistence
+            persistence = get_transformer_persistence()
+            
+            if persistence.model_exists():
+                model = persistence.load_keras_model()
+                if model is not None:
+                    self.model = model
+                    self.is_trained = True
+                    meta = persistence.get_metadata() or {}
+                    self.last_trained = meta.get('saved_at')
+                    logger.info(f"✅ Transformer loaded saved model (trained: {self.last_trained or 'unknown'})")
+        except Exception as e:
+            logger.warning(f"Could not load saved Transformer model: {e}")
+    
+    def save_model(self) -> bool:
+        """Save the current model to disk"""
+        try:
+            from services.model_persistence import get_transformer_persistence
+            persistence = get_transformer_persistence()
+            
+            if self.model is not None:
+                return persistence.save_keras_model(
+                    self.model,
+                    metadata={
+                        "is_trained": self.is_trained,
+                        "config": self.config,
+                        "last_trained": self.last_trained
+                    }
+                )
+            return False
+        except Exception as e:
+            logger.error(f"Failed to save Transformer model: {e}")
+            return False
         
     def build_model(self) -> Model:
         """Build Transformer model architecture"""
