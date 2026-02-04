@@ -193,7 +193,7 @@ const TrainingDashboard = () => {
         fetch(`${API_URL}/api/predictions/status`),
         fetch(`${API_URL}/api/predictions/rl-agent/training-status`),
         fetch(`${API_URL}/api/predictions/transformer/status`),
-        fetch(`${API_URL}/api/background-tasks/active`).catch(() => ({ ok: false }))
+        fetch(`${API_URL}/api/tasks/active`).catch(() => ({ ok: false }))
       ]);
 
       if (servicesRes.ok) {
