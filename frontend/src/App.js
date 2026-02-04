@@ -106,6 +106,7 @@ function App() {
                 <Route path="/enhanced-ai" element={<EnhancedAIDashboard />} />
                 <Route path="/strategy-builder" element={<StrategyBuilder />} />
                 <Route path="/training" element={<TrainingDashboard />} />
+                <Route path="/spot" element={<SpotTrading />} />
                 <Route path="/guide" element={<Guide />} />
                 <Route path="/setup" element={<Setup />} />
                 <Route path="/settings" element={<Settings />} />
