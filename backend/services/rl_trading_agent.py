@@ -581,6 +581,19 @@ class RLTradingAgent:
         async def rl_training_task(progress_callback=None, **kwargs):
             train_episodes = kwargs.get('episodes', 100)
             prices = kwargs.get('prices', [])
+            history_svc = kwargs.get('history_service')
+            session_id = None
+            
+            # Start training history record
+            if history_svc:
+                try:
+                    session_id = await history_svc.start_training(
+                        model_type="rl_agent",
+                        config={"episodes": train_episodes, "data_points": len(prices)},
+                        task_id=self.current_training_task_id
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to start training history: {e}")
             
             if progress_callback:
                 progress_callback(5, f"Starting RL training: {train_episodes} episodes")
@@ -599,6 +612,27 @@ class RLTradingAgent:
             
             if progress_callback:
                 progress_callback(100, "Training complete")
+            
+            # Record training history
+            if history_svc and session_id:
+                try:
+                    if result.get('status') == 'success':
+                        await history_svc.complete_training(
+                            session_id=session_id,
+                            result=result,
+                            metrics={
+                                "final_epsilon": result.get("final_epsilon"),
+                                "avg_return_pct": result.get("avg_return_last_20_pct"),
+                                "total_experiences": result.get("total_experiences")
+                            }
+                        )
+                    else:
+                        await history_svc.fail_training(
+                            session_id=session_id,
+                            error=result.get('error', 'Unknown error')
+                        )
+                except Exception as e:
+                    logger.warning(f"Failed to record training history: {e}")
             
             return result
         
