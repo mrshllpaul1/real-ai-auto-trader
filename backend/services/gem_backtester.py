@@ -238,35 +238,67 @@ class GemBacktester:
             "sample_predictions": predictions_detail[:10]
         }
     
-    def _calculate_gem_score(self, data: List[Dict], weights: Dict[str, float]) -> float:
+    def _calculate_gem_score(self, data: List[Dict], weights: Dict[str, float], btc_prices: Dict[str, float] = None) -> float:
         """Calculate gem score based on historical data"""
         if len(data) < 90:
             return 0.0
         
         prices = [d["close"] for d in data]
-        volumes = [d["volume_to"] for d in data]
+        volumes = [d.get("volume_to", d.get("volume", 0)) for d in data]
         
         scores = {}
         
-        # Volume surge score
+        # Volume surge score - look for increasing volume trend
         avg_volume = np.mean(volumes[:-30]) if len(volumes) > 30 else np.mean(volumes)
         recent_volume = np.mean(volumes[-30:]) if len(volumes) >= 30 else np.mean(volumes)
-        volume_surge = (recent_volume / avg_volume) if avg_volume > 0 else 1
-        scores["volume_surge"] = min(1.0, volume_surge / 3)  # Normalize to 0-1
+        if avg_volume > 0:
+            volume_surge = recent_volume / avg_volume
+            # Only high scores for genuine surges (2x+), penalize declining volume
+            if volume_surge >= 2:
+                scores["volume_surge"] = min(1.0, (volume_surge - 1) / 3)
+            elif volume_surge >= 1:
+                scores["volume_surge"] = 0.3 * volume_surge
+            else:
+                scores["volume_surge"] = 0.1
+        else:
+            scores["volume_surge"] = 0.0
         
-        # Price momentum score
+        # Price momentum score - but not too much (avoid FOMO)
         if len(prices) >= 30:
             recent_price = np.mean(prices[-7:])
             older_price = np.mean(prices[-30:-7]) if len(prices) > 30 else np.mean(prices)
-            momentum = (recent_price - older_price) / older_price if older_price > 0 else 0
-            scores["price_momentum"] = min(1.0, max(0, (momentum + 0.2) / 0.5))  # Normalize
+            if older_price > 0:
+                momentum = (recent_price - older_price) / older_price
+                # Sweet spot: slight positive momentum (5-20%), not overbought
+                if 0.05 <= momentum <= 0.20:
+                    scores["price_momentum"] = 0.8 + (momentum - 0.05) * 1.3
+                elif 0 <= momentum < 0.05:
+                    scores["price_momentum"] = 0.4 + momentum * 8
+                elif momentum > 0.20:
+                    # Penalize if already pumped
+                    scores["price_momentum"] = max(0.2, 0.8 - (momentum - 0.20) * 2)
+                else:
+                    # Negative momentum might be accumulation phase
+                    scores["price_momentum"] = max(0.1, 0.4 + momentum * 2)
+            else:
+                scores["price_momentum"] = 0.3
         else:
-            scores["price_momentum"] = 0.5
+            scores["price_momentum"] = 0.3
         
-        # Market cap potential (inverse of current price relative to max)
+        # Market cap potential (distance from ATH)
         max_price = max(prices)
         current_price = prices[-1]
-        scores["market_cap_potential"] = 1 - (current_price / max_price) if max_price > 0 else 0.5
+        if max_price > 0:
+            distance_from_ath = 1 - (current_price / max_price)
+            # Gems are often 50-90% below ATH
+            if 0.50 <= distance_from_ath <= 0.90:
+                scores["market_cap_potential"] = 0.7 + (distance_from_ath - 0.5) * 0.75
+            elif distance_from_ath > 0.90:
+                scores["market_cap_potential"] = 0.5  # Too beaten down might be dead
+            else:
+                scores["market_cap_potential"] = distance_from_ath * 1.4
+        else:
+            scores["market_cap_potential"] = 0.3
         
         # Technical setup (RSI-like calculation)
         if len(prices) >= 14:
@@ -282,10 +314,17 @@ class GemBacktester:
             avg_loss = np.mean(losses) if losses else 1
             rs = avg_gain / avg_loss if avg_loss > 0 else 1
             rsi = 100 - (100 / (1 + rs))
-            # Gems often have RSI between 30-70 (not overbought/oversold)
-            scores["technical_setup"] = 1.0 if 30 <= rsi <= 70 else 0.5
+            # Gems often have RSI between 30-50 (oversold but showing life)
+            if 30 <= rsi <= 50:
+                scores["technical_setup"] = 0.9
+            elif 20 <= rsi < 30:
+                scores["technical_setup"] = 0.7
+            elif 50 < rsi <= 60:
+                scores["technical_setup"] = 0.6
+            else:
+                scores["technical_setup"] = 0.3
         else:
-            scores["technical_setup"] = 0.5
+            scores["technical_setup"] = 0.4
         
         # Volatility score (moderate volatility is good for gems)
         if len(prices) >= 30:
@@ -294,22 +333,65 @@ class GemBacktester:
                 if prices[i-1] > 0:
                     daily_returns.append((prices[i] - prices[i-1]) / prices[i-1])
             volatility = np.std(daily_returns) * 100 if daily_returns else 5
-            # Sweet spot is 3-8% daily volatility
-            if 3 <= volatility <= 8:
-                scores["volatility_score"] = 1.0
-            elif volatility < 3:
-                scores["volatility_score"] = volatility / 3
+            # Sweet spot is 4-10% daily volatility
+            if 4 <= volatility <= 10:
+                scores["volatility_score"] = 0.8
+            elif 2 <= volatility < 4:
+                scores["volatility_score"] = 0.5
+            elif volatility > 10:
+                scores["volatility_score"] = max(0.2, 0.8 - (volatility - 10) / 20)
             else:
-                scores["volatility_score"] = max(0, 1 - (volatility - 8) / 10)
+                scores["volatility_score"] = 0.3
         else:
-            scores["volatility_score"] = 0.5
+            scores["volatility_score"] = 0.4
         
-        # Sentiment score (placeholder - using volume trend as proxy)
-        volume_trend = (np.mean(volumes[-7:]) / np.mean(volumes[-30:])) if len(volumes) >= 30 else 1
-        scores["sentiment"] = min(1.0, volume_trend / 2)
+        # Sentiment score (using volume trend as proxy)
+        if len(volumes) >= 30:
+            recent_vol = np.mean(volumes[-7:])
+            older_vol = np.mean(volumes[-30:-7]) if len(volumes) > 30 else np.mean(volumes)
+            if older_vol > 0:
+                volume_trend = recent_vol / older_vol
+                if volume_trend >= 1.5:
+                    scores["sentiment"] = 0.8
+                elif volume_trend >= 1.0:
+                    scores["sentiment"] = 0.5
+                else:
+                    scores["sentiment"] = 0.3
+            else:
+                scores["sentiment"] = 0.4
+        else:
+            scores["sentiment"] = 0.4
+        
+        # Relative strength vs BTC (NEW - key for finding gems)
+        scores["relative_strength"] = 0.5  # Default
+        if btc_prices and len(prices) >= 30:
+            # Get corresponding BTC prices
+            coin_return_30d = (prices[-1] / prices[-30] - 1) if prices[-30] > 0 else 0
+            
+            # Find BTC return for same period (approximate)
+            try:
+                last_date = str(data[-1].get("timestamp", data[-1].get("date", "")))[:10]
+                first_date = str(data[-30].get("timestamp", data[-30].get("date", "")))[:10]
+                
+                btc_end = btc_prices.get(last_date, 0)
+                btc_start = btc_prices.get(first_date, 0)
+                
+                if btc_start > 0 and btc_end > 0:
+                    btc_return = (btc_end / btc_start - 1)
+                    relative_perf = coin_return_30d - btc_return
+                    
+                    # Gems outperform BTC
+                    if relative_perf > 0.10:
+                        scores["relative_strength"] = min(1.0, 0.7 + relative_perf)
+                    elif relative_perf > 0:
+                        scores["relative_strength"] = 0.5 + relative_perf * 2
+                    else:
+                        scores["relative_strength"] = max(0.1, 0.5 + relative_perf)
+            except:
+                pass
         
         # Calculate weighted total
-        total_score = sum(scores.get(k, 0.5) * v for k, v in weights.items())
+        total_score = sum(scores.get(k, 0.4) * weights.get(k, 0.1) for k in weights.keys())
         
         return min(1.0, max(0, total_score))
     
