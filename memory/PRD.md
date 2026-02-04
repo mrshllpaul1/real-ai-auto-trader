@@ -26,6 +26,48 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ---
 
+## 🎯 Session 17 - Social Sentiment & Scheduler Integration (Feb 4, 2026)
+
+### ✅ Social Sentiment Web Scraper (COMPLETE)
+
+**Data Sources:**
+- ✅ Fear & Greed Index (Alternative.me)
+- ✅ Reddit (r/cryptocurrency, r/bitcoin, r/ethereum)
+- ✅ CryptoPanic News Aggregator
+- Text sentiment analysis with keyword matching
+
+**Features:**
+- Aggregated multi-source sentiment
+- Coin-specific sentiment tracking
+- Trading recommendations based on sentiment
+- Historical sentiment storage
+
+**Current Reading:**
+- Fear & Greed: **14 (Extreme Fear)**
+- Signal: **Contrarian Buy Opportunity**
+
+**Endpoints:**
+- `GET /api/social-sentiment/aggregated` - Full analysis
+- `GET /api/social-sentiment/quick` - Just Fear & Greed
+- `GET /api/social-sentiment/reddit/{sub}` - Reddit sentiment
+- `GET /api/social-sentiment/fear-greed` - F&G Index
+- `GET /api/social-sentiment/coin/{coin}` - Coin-specific
+
+### ✅ ML Regime Prediction Integration (COMPLETE)
+
+- Automated trader now uses ML-predicted regime
+- Best model (Random Forest 100%) informs strategy
+- All 5 models' predictions compared
+
+### ✅ Scheduled Jobs Added
+
+| Job | Schedule | Description |
+|-----|----------|-------------|
+| ML Model Retrain | Sat 3 AM | Weekly model retraining |
+| Sentiment Scrape | Every 4h | Social sentiment update |
+
+---
+
 ## 🎯 Session 16 - Performance Tracking & ML/DL Regime Prediction (Feb 4, 2026)
 
 ### ✅ Performance Tracking System (COMPLETE)
