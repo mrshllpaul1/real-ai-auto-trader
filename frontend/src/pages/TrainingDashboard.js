@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Brain, Cpu, Activity, Play, Pause, RefreshCw, 
   CheckCircle2, XCircle, Clock, Zap, TrendingUp,
-  BarChart3, Target, AlertTriangle, History, ChevronDown, ChevronUp
+  BarChart3, Target, AlertTriangle, History, ChevronDown, ChevronUp,
+  Calendar, Plus, Trash2, Power
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
