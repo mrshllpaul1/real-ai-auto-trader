@@ -1,0 +1,78 @@
+{
+  "summary": "Completed testing of Auto-Spot Scan Scheduling feature and DL model fixes. All 10 tests passed. Auto-spot scan schedule working at 60-min intervals with paper_trade=true. All 8 regime models (3 ML + 5 DL) returning predictions correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_auto_spot_scan_scheduler.py",
+    "/app/test_reports/pytest/pytest_auto_spot_scan.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "✓ POST /api/training-scheduler/auto-spot-scan - Creates schedule with interval_minutes, paper_trade, enabled params",
+    "✓ GET /api/training-scheduler/auto-spot-scan/status - Returns schedule status with last_run, next_run, run_count",
+    "✓ POST /api/training-scheduler/auto-spot-scan/run-now - Manual trigger returns comprehensive AI analysis for 10 coins",
+    "✓ Auto-spot scan returns all AI components: order_book, on_chain, social, transformer, cross_asset, advanced_ta",
+    "✓ DL models (bilstm, cnn_lstm, attention) now working correctly - previous shape mismatch issue FIXED",
+    "✓ All 8 regime models trained and returning predictions: random_forest (100%), gradient_boosting (100%), svm (87.2%), lstm (65.2%), gru (71.7%), bilstm (63.0%), cnn_lstm (62.0%), attention (64.1%)",
+    "✓ RL training schedule configured (daily_rl at 2 AM UTC) but RL agent not yet trained",
+    "✓ Transformer and Regime models are trained"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_auto_spot_scan_scheduler.py"
+  ],
+  "success_rate": {
+    "backend": "100% - All 10 tests passed",
+    "frontend": "N/A - Backend only testing"
+  },
+  "seed_data_creation": "None required - using real Kraken API data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Auto-spot scan scheduling feature fully tested and working. Schedule created at 60-min intervals with paper_trade=true. All 8 regime models (bilstm, cnn_lstm, attention DL models now fixed) returning predictions. RL agent training scheduled but not yet trained (will run at 2 AM UTC daily).",
+  "features_tested": {
+    "/api/training-scheduler/auto-spot-scan POST": {
+      "status": "PASS",
+      "description": "Create auto-spot scan schedule",
+      "params": ["interval_minutes", "paper_trade", "enabled"],
+      "returns": ["status", "schedule_id", "interval_minutes", "paper_trade", "enabled"]
+    },
+    "/api/training-scheduler/auto-spot-scan/status GET": {
+      "status": "PASS",
+      "description": "Get schedule status",
+      "returns": ["enabled", "schedule_id", "interval_minutes", "paper_trade", "last_run", "next_run", "run_count", "last_result"]
+    },
+    "/api/training-scheduler/auto-spot-scan/run-now POST": {
+      "status": "PASS",
+      "description": "Manual trigger auto-spot scan",
+      "scanned_symbols": 10,
+      "returns": ["timestamp", "paper_trade", "scanned_symbols", "buy_opportunities", "sell_opportunities", "executed_trades", "trades", "scan_results", "best_buys", "best_sells"],
+      "ai_components": ["order_book", "on_chain", "social", "transformer", "cross_asset", "advanced_ta"]
+    },
+    "/api/performance/regime/models GET": {
+      "status": "PASS",
+      "total_models": 8,
+      "ml_models": ["random_forest (100%)", "gradient_boosting (100%)", "svm (87.2%)"],
+      "dl_models": ["lstm (65.2%)", "gru (71.7%)", "bilstm (63.0%)", "cnn_lstm (62.0%)", "attention (64.1%)"],
+      "best_model": "random_forest"
+    },
+    "/api/performance/regime/predict POST": {
+      "status": "PASS",
+      "description": "All 8 models return predictions",
+      "dl_models_fixed": true,
+      "note": "bilstm, cnn_lstm, attention models now working correctly (shape mismatch issue fixed)"
+    },
+    "/api/learning/status GET": {
+      "status": "PASS",
+      "transformer_trained": true,
+      "rl_agent_trained": false,
+      "regime_trained": true,
+      "note": "RL agent scheduled for daily training at 2 AM UTC"
+    }
+  }
+}
