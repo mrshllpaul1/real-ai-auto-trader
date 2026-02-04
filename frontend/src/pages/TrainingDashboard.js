@@ -187,6 +187,10 @@ const TrainingDashboard = () => {
   const [trainingHistory, setTrainingHistory] = useState([]);
   const [historyStats, setHistoryStats] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [schedules, setSchedules] = useState([]);
+  const [showScheduler, setShowScheduler] = useState(false);
+  const [showAddSchedule, setShowAddSchedule] = useState(false);
+  const [presets, setPresets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [wsConnected, setWsConnected] = useState(false);
