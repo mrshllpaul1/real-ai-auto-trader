@@ -221,3 +221,109 @@ async def get_available_model_types():
             "regime": "Market Regime Predictor - detects market conditions"
         }
     }
+
+
+# ===========================================
+# AUTO-SPOT SCAN SCHEDULING ENDPOINTS
+# ===========================================
+
+class AutoSpotScanScheduleRequest(BaseModel):
+    """Request model for creating auto-spot scan schedule"""
+    interval_minutes: int = 60  # How often to scan
+    paper_trade: bool = True    # Use paper trading
+    enabled: bool = True        # Whether schedule is active
+
+
+@router.post("/auto-spot-scan")
+async def create_auto_spot_scan_schedule(request: AutoSpotScanScheduleRequest):
+    """
+    Create a scheduled auto-spot scan that runs periodically.
+    
+    The AI will automatically:
+    1. Scan top trading pairs for opportunities
+    2. Analyze each with AI signals
+    3. Execute trades for strong buy/sell signals
+    
+    Args:
+        interval_minutes: How often to scan (default: 60)
+        paper_trade: Whether to simulate trades (default: True)
+        enabled: Whether schedule is active (default: True)
+    """
+    if not _scheduler:
+        raise HTTPException(status_code=503, detail="Training scheduler not initialized")
+    
+    result = await _scheduler.add_auto_spot_scan_schedule(
+        interval_minutes=request.interval_minutes,
+        paper_trade=request.paper_trade,
+        enabled=request.enabled
+    )
+    
+    return result
+
+
+@router.get("/auto-spot-scan/status")
+async def get_auto_spot_scan_status():
+    """
+    Get status of auto-spot scan schedule.
+    
+    Returns:
+        Schedule status including last run, next run, and results
+    """
+    if not _scheduler:
+        raise HTTPException(status_code=503, detail="Training scheduler not initialized")
+    
+    return await _scheduler.get_auto_spot_scan_status()
+
+
+@router.delete("/auto-spot-scan")
+async def remove_auto_spot_scan_schedule():
+    """Remove the auto-spot scan schedule"""
+    if not _scheduler:
+        raise HTTPException(status_code=503, detail="Training scheduler not initialized")
+    
+    # Find and remove the auto-spot scan schedule
+    status = await _scheduler.get_auto_spot_scan_status()
+    
+    if not status.get("schedule_id"):
+        return {"status": "not_found", "message": "No auto-spot scan schedule exists"}
+    
+    result = await _scheduler.remove_schedule(status["schedule_id"])
+    return result
+
+
+@router.post("/auto-spot-scan/toggle")
+async def toggle_auto_spot_scan(enabled: bool):
+    """Enable or disable the auto-spot scan schedule"""
+    if not _scheduler:
+        raise HTTPException(status_code=503, detail="Training scheduler not initialized")
+    
+    status = await _scheduler.get_auto_spot_scan_status()
+    
+    if not status.get("schedule_id"):
+        return {"error": "No auto-spot scan schedule exists. Create one first."}
+    
+    result = await _scheduler.toggle_schedule(status["schedule_id"], enabled)
+    return result
+
+
+@router.post("/auto-spot-scan/run-now")
+async def run_auto_spot_scan_now(paper_trade: bool = True):
+    """
+    Manually trigger an auto-spot scan right now.
+    
+    Args:
+        paper_trade: Whether to simulate trades (default: True)
+    """
+    if not _scheduler:
+        raise HTTPException(status_code=503, detail="Training scheduler not initialized")
+    
+    # Import and run directly
+    from routes.kraken import _automated_trader
+    
+    if _automated_trader is None:
+        raise HTTPException(status_code=503, detail="Auto trader not initialized")
+    
+    result = await _automated_trader.auto_spot_scan(paper_trade=paper_trade)
+    
+    return result
+
