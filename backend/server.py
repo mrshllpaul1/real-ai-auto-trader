@@ -364,6 +364,12 @@ async def initialize_services():
         kraken_universe.set_dependencies(kraken_universe_service)
         logger.info("✅ Kraken Universe Service initialized")
         
+        # CoinDesk Universe Service
+        from services.coindesk_universe import get_coindesk_universe
+        coindesk_universe_service = get_coindesk_universe(db)
+        coindesk_universe.set_dependencies(coindesk_universe_service)
+        logger.info("✅ CoinDesk Universe Service initialized")
+        
         # Start scheduler
         await scheduler_service.start()
         
