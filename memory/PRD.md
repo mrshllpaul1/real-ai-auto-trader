@@ -26,6 +26,61 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ---
 
+## 🎯 Session 20 - Trailing Stop-Loss & ML/DL Comparison (Feb 4, 2026)
+
+### ✅ Trailing Stop-Loss Enhancement (COMPLETE)
+
+**Smart Profit Locking:** Trailing stop automatically follows price up, locking in profits as price rises.
+
+**How It Works:**
+1. Activates after position is in profit by activation_pct (default 5%)
+2. Sets stop-loss at trail_pct (default 10%) below the highest price reached
+3. Stop only moves UP, never down - locks in profits
+4. Example: Entry $100, price rises to $130 → stop at $117 (10% below $130)
+
+**Configuration:**
+- `trailing_stop_enabled`: true (default)
+- `trailing_stop_pct`: 10% (distance below highest price)
+- `trailing_stop_activation_pct`: 5% (profit required to activate)
+
+**API Endpoints:**
+- `GET /api/automation/trailing-stop/config` - Get configuration with example
+- `POST /api/automation/trailing-stop/config` - Update configuration
+- `GET /api/automation/trailing-stop/positions` - View positions with trailing status
+
+### ✅ Deep Learning Added to ML Comparison (COMPLETE)
+
+**8 Models Now Available (3 ML + 5 DL):**
+
+**Machine Learning:**
+1. Random Forest - Ensemble of decision trees with bagging
+2. Gradient Boosting - Sequential boosting of weak learners
+3. SVM - Support Vector Machine with RBF kernel
+
+**Deep Learning:**
+1. LSTM - Long Short-Term Memory for sequence learning
+2. GRU - Gated Recurrent Unit (lighter than LSTM)
+3. BiLSTM - Bidirectional LSTM (learns forward & backward)
+4. CNN-LSTM - CNN for patterns + LSTM for sequences
+5. Attention - Multi-head attention mechanism
+
+**API Endpoints:**
+- `GET /api/performance/regime/ml-vs-dl` - Side-by-side ML vs DL comparison
+- `GET /api/performance/regime/models` - All 8 models with details
+- `POST /api/performance/regime/train` - Train all models
+
+**Enhanced `/adaptive` Page:**
+- ML vs Deep Learning Comparison section
+- Shows ML Models vs DL Models count
+- Winner indicator (ML or DL)
+- Best Model highlight
+- Accuracy comparison bars
+- Recommendation based on best performer
+
+**Test Results:** 23/23 backend tests passed, Frontend verified
+
+---
+
 ## 🎯 Session 19 - Stop-Loss Automation & Dashboards (Feb 4, 2026)
 
 ### ✅ Position-Level Stop-Loss Automation (COMPLETE)
@@ -36,6 +91,7 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 - Runs every 5 minutes via scheduler
 - Automatically closes positions hitting stop-loss
 - Automatically closes positions hitting take-profit
+- TRAILING STOP-LOSS: Locks in profits as price rises
 - Logs all automated closures with P&L
 - Sends alerts when positions are auto-closed
 - Respects emergency stop status (skips checks if emergency stopped)
