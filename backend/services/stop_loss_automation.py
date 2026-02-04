@@ -282,6 +282,106 @@ class StopLossAutomation:
             'status': 'within_bounds'
         }
     
+    async def _update_trailing_stop(
+        self,
+        position: Dict,
+        current_price: float,
+        entry_price: float,
+        highest_price: float,
+        trailing_stop_price: float,
+        pnl_pct: float,
+        pnl_usd: float
+    ) -> Dict[str, Any]:
+        """
+        Update trailing stop-loss for a position.
+        
+        Logic:
+        1. Only activate trailing stop after position is in profit by activation_pct
+        2. Track highest price reached
+        3. Set trailing stop at trailing_stop_pct below highest price
+        4. Trailing stop only moves UP, never down
+        """
+        coin_id = position.get('coin_id')
+        position_id = position.get('position_id')
+        activation_pct = self.config['trailing_stop_activation_pct']
+        trail_pct = self.config['trailing_stop_pct']
+        
+        # Check if trailing stop should be activated
+        if pnl_pct < activation_pct:
+            # Not yet in enough profit to activate trailing stop
+            return {'action': None, 'updated': False, 'reason': 'Below activation threshold'}
+        
+        # Update highest price if current is higher
+        new_highest = max(highest_price, current_price)
+        
+        # Calculate new trailing stop level
+        new_trailing_stop = new_highest * (1 - trail_pct / 100)
+        
+        # Trailing stop only moves UP
+        if new_trailing_stop > trailing_stop_price:
+            # Update position with new trailing stop and highest price
+            update_fields = {
+                'highest_price': new_highest,
+                'trailing_stop_price': new_trailing_stop,
+                'trailing_stop_updated_at': datetime.now(timezone.utc).isoformat()
+            }
+            
+            # Update in database
+            if position_id:
+                await self.db.active_positions.update_one(
+                    {'position_id': position_id},
+                    {'$set': update_fields}
+                )
+                
+                # Also update in isolated positions if exists
+                await self.db.isolated_positions.update_one(
+                    {'position_id': position_id},
+                    {'$set': update_fields}
+                )
+            
+            self.stats['trailing_stops_updated'] += 1
+            
+            logger.info(f"📈 {coin_id}: Trailing stop updated ${trailing_stop_price:.4f} → ${new_trailing_stop:.4f} (highest: ${new_highest:.4f})")
+            
+            return {
+                'action': None,
+                'updated': True,
+                'coin_id': coin_id,
+                'old_trailing_stop': trailing_stop_price,
+                'new_trailing_stop': new_trailing_stop,
+                'highest_price': new_highest,
+                'current_price': current_price,
+                'pnl_pct': round(pnl_pct, 2)
+            }
+        
+        # Check if current price hit the trailing stop
+        if trailing_stop_price > 0 and current_price <= trailing_stop_price:
+            logger.warning(f"🟡 TRAILING STOP triggered for {coin_id}: ${current_price:.4f} <= ${trailing_stop_price:.4f}")
+            
+            close_result = await self._close_position(
+                position=position,
+                exit_price=current_price,
+                reason='trailing_stop_auto',
+                pnl_pct=pnl_pct,
+                pnl_usd=pnl_usd
+            )
+            
+            return {
+                'action': 'trailing_stop',
+                'coin_id': coin_id,
+                'symbol': position.get('symbol'),
+                'entry_price': entry_price,
+                'exit_price': current_price,
+                'trailing_stop_price': trailing_stop_price,
+                'highest_price': highest_price,
+                'pnl_pct': round(pnl_pct, 2),
+                'pnl_usd': round(pnl_usd, 2),
+                'close_result': close_result,
+                'timestamp': datetime.now(timezone.utc).isoformat()
+            }
+        
+        return {'action': None, 'updated': False}
+    
     async def _close_position(
         self,
         position: Dict,
