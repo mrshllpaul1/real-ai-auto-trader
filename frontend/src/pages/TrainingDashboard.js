@@ -442,6 +442,41 @@ const TrainingDashboard = () => {
     }
   };
 
+  // Learning Functions
+  const startLearningCycle = async () => {
+    try {
+      setLearningCycleRunning(true);
+      const res = await fetch(`${API_URL}/api/learning/cycle`, {
+        method: 'POST'
+      });
+      
+      if (res.ok) {
+        fetchStatuses();
+      }
+    } catch (err) {
+      console.error('Failed to start learning cycle:', err);
+      setLearningCycleRunning(false);
+    }
+  };
+
+  const analyzeRecentTrades = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/learning/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ days: 7 })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        alert(`Analyzed ${data.trades_analyzed} trades. Win rate: ${data.win_rate}%`);
+        fetchStatuses();
+      }
+    } catch (err) {
+      console.error('Failed to analyze trades:', err);
+    }
+  };
+
   // Get service info
   const services = servicesStatus?.services || {};
   const activeServices = Object.entries(services).filter(([_, v]) => 
