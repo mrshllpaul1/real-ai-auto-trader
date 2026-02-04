@@ -209,6 +209,24 @@ class KrakenTradeService:
             print(f"Kraken closed orders error: {response['error']}")
             return {"closed": {}}
         return response.get("result", {"closed": {}})
+    
+    async def get_tickers_batch(self, pairs: list) -> Dict[str, Any]:
+        """Get ticker information for multiple trading pairs in one request (public endpoint)"""
+        if not pairs:
+            return {}
+        
+        params = {"pair": ",".join(pairs)}
+        async with AsyncClient() as client:
+            response = await client.get(
+                f"{self.api_url}/0/public/Ticker",
+                params=params,
+                headers={"User-Agent": "CryptoTradingBot/1.0"}
+            )
+            data = response.json()
+            if data.get("error"):
+                print(f"Kraken batch ticker error: {data['error']}")
+                return {}
+            return data.get("result", {})
 
 class KrakenMarketService:
     def __init__(self):
