@@ -39,25 +39,33 @@ const EventTriggers = () => {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      // Add cache-busting timestamp to prevent stale data
-      const timestamp = Date.now();
+      // Fetch fresh data without cache
       const [statusRes, triggersRes, templatesRes, historyRes] = await Promise.all([
-        api.get(`/triggers/status?_t=${timestamp}`).catch(() => ({ data: null })),
-        api.get(`/triggers/list?_t=${timestamp}`).catch(() => ({ data: { triggers: [] } })),
-        api.get(`/triggers/templates?_t=${timestamp}`).catch(() => ({ data: { templates: {} } })),
-        api.get(`/triggers/history/all?limit=50&_t=${timestamp}`).catch(() => ({ data: { history: [] } }))
+        api.get('/triggers/status', { headers: { 'Cache-Control': 'no-cache' } }).catch(() => ({ data: null })),
+        api.get('/triggers/list', { headers: { 'Cache-Control': 'no-cache' } }).catch(() => ({ data: { triggers: [] } })),
+        api.get('/triggers/templates', { headers: { 'Cache-Control': 'no-cache' } }).catch(() => ({ data: { templates: {} } })),
+        api.get('/triggers/history/all?limit=50', { headers: { 'Cache-Control': 'no-cache' } }).catch(() => ({ data: { history: [] } }))
       ]);
 
-      // Force update state with fresh data
-      if (statusRes.data) {
-        setStatus(statusRes.data);
-      }
+      // Debug logging
+      console.log('Trigger status response:', statusRes.data);
+      console.log('Triggers list response:', triggersRes.data);
+
+      // Update all states atomically
       const newTriggers = triggersRes.data?.triggers || [];
+      const newStatus = statusRes.data || {
+        total_triggers: newTriggers.length,
+        enabled_triggers: newTriggers.filter(t => t.enabled).length,
+        total_executions: 0,
+        success_rate: 0
+      };
+      
       setTriggers(newTriggers);
+      setStatus(newStatus);
       setTemplates(templatesRes.data?.templates || {});
       setHistory(historyRes.data?.history || []);
       
-      console.log(`Loaded ${newTriggers.length} triggers from API`);
+      console.log(`Loaded ${newTriggers.length} triggers, status shows ${newStatus.total_triggers}`);
     } catch (error) {
       console.error('Error loading event triggers:', error);
       toast.error('Failed to load event triggers');
