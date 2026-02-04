@@ -145,6 +145,7 @@ api_router.include_router(enhanced_ai_routes.router, tags=["Enhanced AI"])
 api_router.include_router(paper_trading_routes.router, tags=["Paper Trading"])
 api_router.include_router(prediction_enhancements.router, tags=["Prediction Enhancements"])
 api_router.include_router(strategy_builder_routes.router, tags=["Custom Strategy Builder"])
+api_router.include_router(ohlcv_routes.router, tags=["OHLCV Data"])
 
 # Include the router
 app.include_router(api_router)
