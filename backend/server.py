@@ -379,6 +379,15 @@ async def initialize_services():
         adaptive_strategy.set_dependencies(db, adaptive_strategy_engine)
         logger.info("✅ Adaptive Strategy Engine initialized")
         
+        # Performance Tracker & Regime Predictor
+        from services.performance_tracker import get_performance_tracker
+        from services.regime_predictor import get_regime_predictor
+        perf_tracker = get_performance_tracker(db)
+        regime_pred = get_regime_predictor(db)
+        performance.set_dependencies(db, perf_tracker, regime_pred)
+        logger.info("✅ Performance Tracker initialized")
+        logger.info("✅ Regime Prediction Engine initialized")
+        
         # Start scheduler
         await scheduler_service.start()
         
