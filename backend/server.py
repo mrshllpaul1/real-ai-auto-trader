@@ -419,6 +419,12 @@ async def initialize_services():
         automated_trader.performance_tracker = perf_tracker
         logger.info("✅ Automated Trader updated with adaptive strategy & ML regime prediction")
         
+        # Enhanced AI Engine
+        from services.enhanced_ai_engine import get_enhanced_ai
+        enhanced_ai = get_enhanced_ai(db)
+        enhanced_ai_routes.set_dependencies(db, enhanced_ai, regime_pred)
+        logger.info("✅ Enhanced AI Engine initialized (Ensemble + MTF + Sentiment + Whale + Risk)")
+        
         # Social Sentiment Scraper
         from services.social_sentiment import get_sentiment_scraper
         sentiment_scraper = get_sentiment_scraper(db)
