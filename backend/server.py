@@ -430,6 +430,10 @@ async def initialize_services():
         gem_ml_dl.set_dependencies(db, gem_ml_dl_engine)
         logger.info("✅ Gem ML/DL Prediction Engine initialized")
         
+        # Portfolio Visualization
+        portfolio_visualization.set_dependencies(db, isolated_portfolio_mgr)
+        logger.info("✅ Portfolio Visualization initialized")
+        
         # Start scheduler
         await scheduler_service.start()
         
