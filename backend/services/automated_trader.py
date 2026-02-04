@@ -2,7 +2,7 @@
 Automated Weekly Trading Executor
 Connects AI coin selection + gem finder to live Kraken trading.
 Executes trades automatically based on AI recommendations.
-Now integrated with Adaptive Strategy Engine for real-time adjustments.
+Now integrated with Adaptive Strategy Engine and ML Regime Prediction.
 """
 
 import asyncio
@@ -22,15 +22,19 @@ class AutomatedWeeklyTrader:
     3. Manages positions with stop-loss/take-profit
     4. Sends alerts on significant events
     5. Adapts strategy based on market regime (via Adaptive Strategy Engine)
+    6. Uses ML/DL models to predict market regimes
     """
     
-    def __init__(self, db, kraken_service, ai_trainer, gem_finder, alert_service=None, adaptive_strategy=None):
+    def __init__(self, db, kraken_service, ai_trainer, gem_finder, alert_service=None, 
+                 adaptive_strategy=None, regime_predictor=None, performance_tracker=None):
         self.db = db
         self.kraken = kraken_service
         self.ai_trainer = ai_trainer
         self.gem_finder = gem_finder
         self.alert_service = alert_service
-        self.adaptive_strategy = adaptive_strategy  # NEW: Adaptive strategy engine
+        self.adaptive_strategy = adaptive_strategy
+        self.regime_predictor = regime_predictor  # ML/DL regime prediction
+        self.performance_tracker = performance_tracker  # Performance tracking
         
         # Base position sizing (can be overridden by adaptive strategy)
         self.config = {
