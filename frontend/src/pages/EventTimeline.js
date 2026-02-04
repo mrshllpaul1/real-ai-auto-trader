@@ -284,7 +284,9 @@ const EventTimeline = () => {
               
               <div className="space-y-4">
                 {filteredEvents.map((event, index) => {
-                  const sentimentBadge = getSentimentBadge(event.sentiment || 0);
+                  const sentimentBadge = getSentimentBadge(event.sentiment || 0, event.impact);
+                  const isPositive = event.impact === 'positive' || (event.sentiment || 0) > 0.3;
+                  const isNegative = event.impact === 'negative' || (event.sentiment || 0) < -0.3;
                   return (
                     <motion.div
                       key={event.event_id || index}
@@ -295,8 +297,8 @@ const EventTimeline = () => {
                     >
                       {/* Timeline dot */}
                       <div className={`absolute left-4 w-5 h-5 rounded-full border-2 border-[#0A0A0A] flex items-center justify-center ${
-                        (event.sentiment || 0) > 0.3 ? 'bg-[#00FF94]' : 
-                        (event.sentiment || 0) < -0.3 ? 'bg-[#FF0055]' : 'bg-[#FFB800]'
+                        isPositive ? 'bg-[#00FF94]' : 
+                        isNegative ? 'bg-[#FF0055]' : 'bg-[#FFB800]'
                       }`}>
                         {getCategoryIcon(event.category || event.categories?.[0])}
                       </div>
@@ -319,16 +321,16 @@ const EventTimeline = () => {
                                 )}
                               </div>
                               <h3 className="font-bold text-white mb-2 line-clamp-2">
-                                {event.title}
+                                {event.event || event.title}
                               </h3>
                               {event.summary && (
                                 <p className="text-sm text-[#A1A1AA] line-clamp-2">
                                   {event.summary}
                                 </p>
                               )}
-                              {event.coins_affected && event.coins_affected.length > 0 && (
+                              {(event.coins || event.coins_affected) && (event.coins || event.coins_affected).length > 0 && (
                                 <div className="flex gap-1 mt-2">
-                                  {event.coins_affected.slice(0, 5).map((coin, i) => (
+                                  {(event.coins || event.coins_affected).slice(0, 5).map((coin, i) => (
                                     <Badge key={i} className="bg-[#9D00FF]/20 text-[#9D00FF] text-xs">
                                       {coin}
                                     </Badge>
