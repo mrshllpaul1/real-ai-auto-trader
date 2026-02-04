@@ -427,6 +427,12 @@ async def initialize_services():
         enhanced_ai_routes.set_dependencies(db, enhanced_ai, regime_pred)
         logger.info("✅ Enhanced AI Engine initialized (Ensemble + MTF + Sentiment + Whale + Risk)")
         
+        # Paper Trading Simulator
+        from services.paper_trading_simulator import get_paper_trader
+        paper_trader = get_paper_trader(db, enhanced_ai, regime_pred)
+        paper_trading_routes.set_dependencies(db, paper_trader)
+        logger.info("✅ Paper Trading Simulator initialized")
+        
         # Social Sentiment Scraper
         from services.social_sentiment import get_sentiment_scraper
         sentiment_scraper = get_sentiment_scraper(db)
