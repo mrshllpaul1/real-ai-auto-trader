@@ -68,16 +68,44 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ## Upcoming Tasks (Priority Order)
 
-### ✅ P1 - Integrate Gem ML/DL Predictor (COMPLETE)
-- Updated `automated_trader.py` with `gem_ml_dl_predictor.py` integration
-- Added `_find_best_gem()` method that tries ML/DL first, falls back to legacy
-- Gem predictor scans for moonshot/high_potential/likely_gem/potential labels
+### ✅ All 8 Prediction Enhancements (COMPLETE)
 
-### ✅ P2 - Integrate Background Task Manager (COMPLETE)
-- Added `background_task_manager` to `automated_trader.py`
-- New methods: `train_models_background()`, `scan_gems_background()`
-- Long-running operations can now be offloaded to background tasks
-- Added `get_service_status()` for comprehensive status reporting
+**Enhancement #1: Order Book Depth Analysis**
+- `/app/backend/services/order_book_analyzer.py`
+- Bid/Ask spread analysis, order book imbalance, support/resistance wall detection
+
+**Enhancement #2: On-Chain Analytics**
+- `/app/backend/services/on_chain_analytics.py`
+- Active addresses, NVT ratio, exchange flows, whale movements, MVRV ratio
+
+**Enhancement #3: Social Sentiment Pipeline**
+- `/app/backend/services/social_sentiment_pipeline.py`
+- Twitter/X sentiment, Reddit analysis, FOMO/Fear detection, hype cycle, influencer tracking
+
+**Enhancement #4: Transformer Architecture**
+- `/app/backend/services/transformer_predictor.py`
+- GPT-style multi-head attention, positional encoding, deep sequence modeling
+
+**Enhancement #5: Reinforcement Learning Agent**
+- `/app/backend/services/rl_trading_agent.py`
+- DQN-based agent, experience replay, epsilon-greedy exploration, optimal entry/exit
+
+**Enhancement #6: Cross-Asset Correlation**
+- `/app/backend/services/cross_asset_correlation.py`
+- BTC dominance, DXY correlation, S&P 500/Nasdaq, Gold, risk regime detection
+
+**Enhancement #7: Volatility Regime Detection**
+- `/app/backend/services/advanced_technical_analysis.py`
+- ATR percentile ranking, realized volatility, volatility clustering/breakout
+
+**Enhancement #8: Momentum Divergence Signals**
+- `/app/backend/services/advanced_technical_analysis.py`
+- RSI/Price divergence, Volume/Price divergence, MACD divergence, MTF confirmation
+
+**API Endpoints:**
+- `GET /api/predictions/comprehensive/{symbol}` - All 8 enhancements combined
+- `GET /api/predictions/status` - Service status
+- Individual endpoints for each enhancement
 
 ---
 
