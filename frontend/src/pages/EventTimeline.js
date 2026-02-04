@@ -268,6 +268,10 @@ const EventTimeline = () => {
           <TabsTrigger value="timeline" className="data-[state=active]:bg-[#007AFF]">
             Timeline ({filteredEvents.length})
           </TabsTrigger>
+          <TabsTrigger value="predictions" className="data-[state=active]:bg-[#007AFF]">
+            <Target size={14} className="mr-1" />
+            Predictions ({upcomingEvents.length})
+          </TabsTrigger>
           <TabsTrigger value="correlated" className="data-[state=active]:bg-[#007AFF]">
             Price Impact ({correlatedEvents.length})
           </TabsTrigger>
@@ -275,6 +279,171 @@ const EventTimeline = () => {
             Major Events
           </TabsTrigger>
         </TabsList>
+
+        {/* Predictions Tab - NEW */}
+        <TabsContent value="predictions" className="space-y-6">
+          {/* Upcoming Predictable Events */}
+          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
+            <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <Eye className="text-[#00FF94]" />
+                  Upcoming Predictable Events
+                </CardTitle>
+                <CardDescription>
+                  Events with HIGH probability that can be anticipated
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {upcomingEvents.length === 0 ? (
+                  <p className="text-[#A1A1AA] text-center py-8">Loading upcoming events...</p>
+                ) : (
+                  upcomingEvents.map((event, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="p-4 bg-[#121212] rounded-lg border border-[#1F1F1F] hover:border-[#00FF94]/50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge className={
+                              event.predictability === 'HIGH' 
+                                ? 'bg-[#00FF94]/20 text-[#00FF94]' 
+                                : 'bg-[#FFB800]/20 text-[#FFB800]'
+                            }>
+                              {event.predictability}
+                            </Badge>
+                            <h4 className="font-bold text-white">{event.event_type}</h4>
+                          </div>
+                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <span className="text-[#A1A1AA]">Date:</span>
+                              <span className="text-white ml-2">{event.predicted_date}</span>
+                            </div>
+                            <div>
+                              <span className="text-[#A1A1AA]">Days:</span>
+                              <span className={`ml-2 font-bold ${event.days_until < 14 ? 'text-[#FF0055]' : event.days_until < 30 ? 'text-[#FFB800]' : 'text-white'}`}>
+                                {event.days_until}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[#A1A1AA]">Impact:</span>
+                              <span className={`ml-2 ${event.expected_impact === 'positive' ? 'text-[#00FF94]' : event.expected_impact === 'negative' ? 'text-[#FF0055]' : 'text-[#FFB800]'}`}>
+                                {event.historical_avg_impact}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[#A1A1AA]">Coins:</span>
+                              <span className="text-white ml-2">{event.coins_affected?.join(', ')}</span>
+                            </div>
+                          </div>
+                          {event.preparation_signals && (
+                            <div className="mt-3 pt-3 border-t border-[#1F1F1F]">
+                              <span className="text-xs text-[#A1A1AA]">Watch for: </span>
+                              <span className="text-xs text-[#007AFF]">{event.preparation_signals.join(' • ')}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          {event.days_until < 14 && (
+                            <Badge className="bg-[#FF0055]/20 text-[#FF0055]">
+                              <Bell size={12} className="mr-1" />
+                              Soon
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Predictable Patterns */}
+          {patterns && (
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}>
+              <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3">
+                    <Activity className="text-[#9D00FF]" />
+                    Predictability Patterns
+                  </CardTitle>
+                  <CardDescription>
+                    {patterns.summary?.highly_predictable} highly predictable, {patterns.summary?.moderately_predictable} moderate, {patterns.summary?.difficult_to_predict} difficult
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* HIGH predictability */}
+                    <div>
+                      <h4 className="text-sm font-bold text-[#00FF94] mb-3 flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-[#00FF94]" />
+                        HIGH PREDICTABILITY
+                      </h4>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        {patterns.high_predictability?.map((p, i) => (
+                          <div key={i} className="p-3 bg-[#121212] rounded-lg border border-[#00FF94]/30">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-medium text-white capitalize">{p.pattern.replace(/_/g, ' ')}</span>
+                              <Badge className="bg-[#00FF94]/20 text-[#00FF94] text-xs">
+                                {p.lead_time_days}d lead
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-[#A1A1AA] mb-2">{p.description}</p>
+                            <div className="text-xs">
+                              <span className="text-[#A1A1AA]">Historical: </span>
+                              <span className="text-[#FFB800]">{p.historical_impact}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* MEDIUM predictability */}
+                    <div>
+                      <h4 className="text-sm font-bold text-[#FFB800] mb-3 flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-[#FFB800]" />
+                        MEDIUM PREDICTABILITY
+                      </h4>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        {patterns.medium_predictability?.map((p, i) => (
+                          <div key={i} className="p-3 bg-[#121212] rounded-lg border border-[#FFB800]/30">
+                            <span className="font-medium text-white capitalize">{p.pattern.replace(/_/g, ' ')}</span>
+                            <p className="text-xs text-[#A1A1AA] mt-1">{p.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* LOW predictability */}
+                    <div>
+                      <h4 className="text-sm font-bold text-[#FF0055] mb-3 flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-[#FF0055]" />
+                        DIFFICULT TO PREDICT
+                      </h4>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        {patterns.low_predictability?.map((p, i) => (
+                          <div key={i} className="p-3 bg-[#121212] rounded-lg border border-[#FF0055]/30">
+                            <span className="font-medium text-white capitalize">{p.pattern.replace(/_/g, ' ')}</span>
+                            <p className="text-xs text-[#A1A1AA] mt-1">{p.description}</p>
+                            <div className="text-xs mt-2">
+                              <span className="text-[#A1A1AA]">Signals: </span>
+                              <span className="text-[#007AFF]">{p.signals?.join(', ')}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </TabsContent>
 
         {/* Timeline Tab */}
         <TabsContent value="timeline" className="space-y-4">
