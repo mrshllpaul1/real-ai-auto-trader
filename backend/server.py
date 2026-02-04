@@ -670,6 +670,19 @@ async def initialize_services():
         training_scheduler_routes.set_dependencies(training_scheduler)
         logger.info("✅ Training Scheduler initialized (3 trainers registered)")
         
+        # Initialize Learning Service for continuous model improvement
+        from services.learning_service import init_learning_service
+        from routes.learning import set_learning_service
+        learning_service = init_learning_service(
+            db,
+            transformer_predictor=transformer_predictor,
+            rl_agent=rl_trading_agent,
+            regime_predictor=regime_pred,
+            model_persistence=model_persistence_service
+        )
+        set_learning_service(learning_service)
+        logger.info("✅ Learning Service initialized")
+        
         # Start scheduler
         await scheduler_service.start()
         
