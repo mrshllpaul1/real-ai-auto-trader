@@ -465,6 +465,173 @@ class IsolatedPortfolioManager:
         
         return history
     
+    async def emergency_stop(
+        self,
+        liquidate_positions: bool = False,
+        confirmation_code: str = None,
+        user_id: str = "default"
+    ) -> Dict[str, Any]:
+        """
+        EMERGENCY STOP - Immediately halt all AI trading.
+        
+        This will:
+        1. Disable real trading immediately
+        2. Optionally liquidate all open AI positions
+        3. Log the emergency stop event
+        
+        Args:
+            liquidate_positions: If True, close all open positions at market price
+            confirmation_code: Must be "EMERGENCY_STOP_CONFIRMED" to execute
+        """
+        if confirmation_code != "EMERGENCY_STOP_CONFIRMED":
+            return {
+                "success": False,
+                "error": "Invalid confirmation code",
+                "required_code": "EMERGENCY_STOP_CONFIRMED",
+                "message": "Emergency stop requires confirmation. Send confirmation_code='EMERGENCY_STOP_CONFIRMED'"
+            }
+        
+        logger.warning(f"🚨 EMERGENCY STOP TRIGGERED by user {user_id}")
+        
+        # Get current state before stopping
+        budget = await self.budget_collection.find_one({"user_id": user_id})
+        positions = await self.get_ai_positions(user_id)
+        positions_value = await self._get_ai_positions_value(user_id)
+        
+        results = {
+            "emergency_stop_activated": True,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "trading_disabled": True,
+            "positions_before_stop": len(positions),
+            "positions_value_before_stop": positions_value,
+            "liquidated_positions": [],
+            "liquidation_errors": []
+        }
+        
+        # Disable real trading immediately
+        await self.budget_collection.update_one(
+            {"user_id": user_id},
+            {"$set": {
+                "real_trading_enabled": False,
+                "emergency_stopped": True,
+                "emergency_stop_at": datetime.now(timezone.utc).isoformat(),
+                "emergency_stop_reason": "Manual emergency stop"
+            }}
+        )
+        
+        # Liquidate positions if requested
+        if liquidate_positions and positions:
+            logger.warning(f"🔴 Liquidating {len(positions)} positions...")
+            
+            for pos in positions:
+                try:
+                    # Get current price for the position
+                    if self.kraken:
+                        symbol = pos.get("symbol")
+                        if symbol:
+                            ticker = await self.kraken.get_ticker(symbol)
+                            exit_price = float(ticker.get('c', [0])[0]) if ticker else pos.get("current_price", pos.get("entry_price", 0))
+                        else:
+                            exit_price = pos.get("current_price", pos.get("entry_price", 0))
+                    else:
+                        exit_price = pos.get("current_price", pos.get("entry_price", 0))
+                    
+                    # Close position
+                    close_result = await self.close_position(
+                        position_id=pos["position_id"],
+                        exit_price=exit_price,
+                        reason="emergency_stop_liquidation",
+                        user_id=user_id
+                    )
+                    
+                    if close_result.get("success"):
+                        results["liquidated_positions"].append({
+                            "position_id": pos["position_id"],
+                            "coin_id": pos.get("coin_id"),
+                            "exit_price": exit_price,
+                            "pnl_usd": close_result.get("pnl_usd", 0)
+                        })
+                        logger.info(f"  ✓ Liquidated {pos.get('coin_id')}")
+                    else:
+                        results["liquidation_errors"].append({
+                            "position_id": pos["position_id"],
+                            "error": close_result.get("error", "Unknown error")
+                        })
+                except Exception as e:
+                    results["liquidation_errors"].append({
+                        "position_id": pos.get("position_id"),
+                        "error": str(e)
+                    })
+                    logger.error(f"  ✗ Failed to liquidate {pos.get('coin_id')}: {e}")
+        
+        # Record emergency stop event
+        await self.transactions_collection.insert_one({
+            "type": "emergency_stop",
+            "user_id": user_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "positions_stopped": len(positions),
+            "liquidated": liquidate_positions,
+            "liquidation_count": len(results["liquidated_positions"]),
+            "errors": len(results["liquidation_errors"])
+        })
+        
+        # Get final state
+        final_budget = await self.get_budget_status(user_id)
+        results["final_budget_status"] = final_budget
+        results["success"] = True
+        results["message"] = f"🚨 EMERGENCY STOP COMPLETE. Trading disabled. {'Liquidated ' + str(len(results['liquidated_positions'])) + ' positions.' if liquidate_positions else 'Positions preserved.'}"
+        
+        logger.warning(f"🚨 Emergency stop complete: {results['message']}")
+        
+        return results
+    
+    async def resume_trading(
+        self,
+        confirmation_code: str = None,
+        user_id: str = "default"
+    ) -> Dict[str, Any]:
+        """
+        Resume trading after emergency stop.
+        Requires confirmation code for safety.
+        """
+        if confirmation_code != "RESUME_TRADING_CONFIRMED":
+            return {
+                "success": False,
+                "error": "Invalid confirmation code",
+                "required_code": "RESUME_TRADING_CONFIRMED"
+            }
+        
+        budget = await self.budget_collection.find_one({"user_id": user_id})
+        
+        if not budget:
+            return {
+                "success": False,
+                "error": "No budget allocated"
+            }
+        
+        if budget.get("initial_budget", 0) <= 0:
+            return {
+                "success": False,
+                "error": "Cannot resume with zero budget"
+            }
+        
+        await self.budget_collection.update_one(
+            {"user_id": user_id},
+            {"$set": {
+                "real_trading_enabled": True,
+                "emergency_stopped": False,
+                "resumed_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        logger.info(f"✅ Trading resumed for user {user_id}")
+        
+        return {
+            "success": True,
+            "trading_enabled": True,
+            "message": "Trading has been resumed. AI can now execute real trades."
+        }
+    
     async def verify_isolation(self, user_id: str = "default") -> Dict[str, Any]:
         """
         Verify that AI trading is properly isolated.
