@@ -163,6 +163,134 @@ async def update_trailing_stop_config(request: TrailingStopConfigRequest):
     }
 
 
+class PartialTpConfigRequest(BaseModel):
+    enabled: Optional[bool] = None
+    move_stop_to_breakeven: Optional[bool] = None
+    levels: Optional[list] = None
+
+
+@router.get("/partial-tp/config")
+async def get_partial_take_profit_config():
+    """Get current partial take-profit configuration"""
+    if not stop_loss_service:
+        raise HTTPException(status_code=503, detail="Automation service not initialized")
+    
+    config = stop_loss_service.config
+    stats = stop_loss_service.stats
+    
+    return {
+        "partial_take_profit": {
+            "enabled": config.get('partial_take_profit_enabled', False),
+            "move_stop_to_breakeven": config.get('move_stop_to_breakeven', True),
+            "levels": config.get('partial_tp_levels', []),
+            "description": "Partial TP closes portions of position at multiple profit levels, locking in gains while letting the rest ride"
+        },
+        "statistics": {
+            "partial_take_profits": stats.get('partial_take_profits', 0)
+        },
+        "example": {
+            "scenario": "Entry $100, position $1000",
+            "level_1": "At 30% profit ($130): Close 50% ($500) → Lock $150 profit, $500 remains",
+            "level_2": "At 50% profit ($150): Close 25% ($250) → Lock additional $125 profit, $250 remains",
+            "level_3": "At 100% profit ($200): Close final 25% ($250) → Lock final $250 profit",
+            "total_outcome": "If all levels hit: $525 total profit vs $300 if closed all at 30%",
+            "bonus": "After first partial TP, stop-loss moves to breakeven - zero risk on remaining!"
+        }
+    }
+
+
+@router.post("/partial-tp/config")
+async def update_partial_take_profit_config(request: PartialTpConfigRequest):
+    """Update partial take-profit configuration"""
+    if not stop_loss_service:
+        raise HTTPException(status_code=503, detail="Automation service not initialized")
+    
+    updated = {}
+    
+    if request.enabled is not None:
+        stop_loss_service.config['partial_take_profit_enabled'] = request.enabled
+        updated['partial_take_profit_enabled'] = request.enabled
+    
+    if request.move_stop_to_breakeven is not None:
+        stop_loss_service.config['move_stop_to_breakeven'] = request.move_stop_to_breakeven
+        updated['move_stop_to_breakeven'] = request.move_stop_to_breakeven
+    
+    if request.levels is not None:
+        # Validate levels
+        total_pct = sum(level.get('pct_of_position', 0) for level in request.levels)
+        if total_pct > 100:
+            raise HTTPException(status_code=400, detail="Total percentage across levels cannot exceed 100%")
+        
+        stop_loss_service.config['partial_tp_levels'] = request.levels
+        updated['partial_tp_levels'] = request.levels
+    
+    return {
+        "success": True,
+        "updated": updated,
+        "current_config": {
+            "enabled": stop_loss_service.config['partial_take_profit_enabled'],
+            "move_stop_to_breakeven": stop_loss_service.config['move_stop_to_breakeven'],
+            "levels": stop_loss_service.config['partial_tp_levels']
+        }
+    }
+
+
+@router.get("/partial-tp/positions")
+async def get_positions_with_partial_tp():
+    """Get all positions with their partial take-profit status"""
+    if not stop_loss_service:
+        raise HTTPException(status_code=503, detail="Automation service not initialized")
+    
+    positions = await stop_loss_service._get_open_positions()
+    
+    result = []
+    for pos in positions:
+        entry_price = pos.get('entry_price', 0)
+        current_price = await stop_loss_service._get_current_price(pos.get('symbol')) if pos.get('symbol') else None
+        pnl_pct = ((current_price - entry_price) / entry_price * 100) if entry_price > 0 and current_price else 0
+        
+        partial_tp_taken = pos.get('partial_tp_taken', [])
+        levels = stop_loss_service.config['partial_tp_levels']
+        
+        # Determine next TP level
+        next_level = None
+        for i, level in enumerate(levels):
+            level_id = f"level_{i}"
+            if level_id not in partial_tp_taken:
+                next_level = {
+                    'level_id': level_id,
+                    'at_profit_pct': level['at_profit_pct'],
+                    'close_pct': level['pct_of_position'],
+                    'distance_pct': round(level['at_profit_pct'] - pnl_pct, 2)
+                }
+                break
+        
+        result.append({
+            "coin_id": pos.get('coin_id'),
+            "position_id": pos.get('position_id'),
+            "entry_price": entry_price,
+            "current_price": current_price,
+            "pnl_pct": round(pnl_pct, 2),
+            "partial_tp_taken": partial_tp_taken,
+            "levels_taken": len(partial_tp_taken),
+            "levels_remaining": len(levels) - len(partial_tp_taken),
+            "next_level": next_level,
+            "stop_at_breakeven": pos.get('stop_moved_to_breakeven', False),
+            "original_amount_usd": pos.get('original_amount_usd', pos.get('amount_usd', 0)),
+            "remaining_amount_usd": pos.get('amount_usd', 0)
+        })
+    
+    return {
+        "positions": result,
+        "total": len(result),
+        "with_partial_tp_taken": len([p for p in result if p['levels_taken'] > 0]),
+        "config": {
+            "enabled": stop_loss_service.config['partial_take_profit_enabled'],
+            "levels": stop_loss_service.config['partial_tp_levels']
+        }
+    }
+
+
 @router.get("/trailing-stop/positions")
 async def get_positions_with_trailing_stop():
     """Get all positions with their trailing stop status"""
