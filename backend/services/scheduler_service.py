@@ -31,6 +31,9 @@ class SchedulerService:
         self.historical_trainer = None
         self.enhanced_trainer = None
         
+        # Stop-loss automation (set later via set_stop_loss_automation)
+        self.stop_loss_automation = None
+        
         # Initialize scheduler
         self.scheduler = AsyncIOScheduler(timezone='UTC')
         
@@ -66,6 +69,11 @@ class SchedulerService:
                 'day_of_week': 'mon',
                 'hour': 6,
                 'description': 'Retrain AI models on Mondays at 6 AM UTC'
+            },
+            'stop_loss_check': {
+                'trigger': 'interval',
+                'minutes': 5,
+                'description': 'Check positions against stop-loss/take-profit every 5 minutes'
             }
         }
     
