@@ -408,3 +408,102 @@ async def create_portfolio_snapshot():
     snapshot.pop("_id", None)
     
     return {"success": True, "snapshot": snapshot}
+
+
+# Global scheduler reference for snapshot management
+_scheduler = None
+
+
+def set_scheduler(scheduler_service):
+    """Set scheduler reference for snapshot scheduling"""
+    global _scheduler
+    _scheduler = scheduler_service
+
+
+@router.post("/snapshot/schedule")
+async def setup_automatic_snapshots(
+    interval_hours: int = Query(24, ge=1, le=168, description="Interval in hours (1-168)"),
+    hour: int = Query(0, ge=0, le=23, description="Hour of day for daily snapshots (0-23)")
+):
+    """
+    Setup automatic portfolio snapshots.
+    
+    Options:
+    - interval_hours=24, hour=0: Daily at midnight UTC (default)
+    - interval_hours=24, hour=8: Daily at 8 AM UTC
+    - interval_hours=6: Every 6 hours
+    - interval_hours=1: Hourly (for active trading)
+    
+    Snapshots build up the performance history chart automatically.
+    """
+    if _scheduler is None:
+        raise HTTPException(status_code=503, detail="Scheduler not initialized")
+    
+    result = await _scheduler.add_portfolio_snapshot_job(
+        interval_hours=interval_hours,
+        hour=hour
+    )
+    
+    return {
+        **result,
+        "message": f"Automatic snapshots scheduled: {result.get('schedule')}",
+        "note": "Snapshots will populate the performance history chart over time"
+    }
+
+
+@router.get("/snapshot/schedule")
+async def get_snapshot_schedule():
+    """Get current snapshot schedule status"""
+    if _scheduler is None:
+        raise HTTPException(status_code=503, detail="Scheduler not initialized")
+    
+    status = _scheduler.get_status()
+    
+    # Find snapshot job
+    snapshot_job = None
+    for job in status.get('jobs', []):
+        if job.get('id') == 'portfolio_snapshot':
+            snapshot_job = job
+            break
+    
+    active_config = _scheduler.active_jobs.get('portfolio_snapshot', None)
+    
+    return {
+        "scheduled": snapshot_job is not None,
+        "job": snapshot_job,
+        "config": active_config,
+        "scheduler_running": status.get('running', False)
+    }
+
+
+@router.delete("/snapshot/schedule")
+async def remove_snapshot_schedule():
+    """Remove automatic snapshot scheduling"""
+    if _scheduler is None:
+        raise HTTPException(status_code=503, detail="Scheduler not initialized")
+    
+    job_id = 'portfolio_snapshot'
+    
+    if _scheduler.scheduler.get_job(job_id):
+        _scheduler.scheduler.remove_job(job_id)
+        _scheduler.active_jobs.pop(job_id, None)
+        return {"success": True, "message": "Snapshot schedule removed"}
+    
+    return {"success": False, "message": "No snapshot schedule found"}
+
+
+@router.get("/snapshot/history")
+async def get_snapshot_history(limit: int = Query(100, ge=1, le=1000)):
+    """Get history of portfolio snapshots"""
+    if _db is None:
+        raise HTTPException(status_code=503, detail="Database not initialized")
+    
+    snapshots = await _db.portfolio_snapshots.find(
+        {}, {"_id": 0}
+    ).sort("timestamp", -1).limit(limit).to_list(limit)
+    
+    return {
+        "count": len(snapshots),
+        "snapshots": snapshots
+    }
+
