@@ -147,11 +147,11 @@ const AdaptiveStrategy = () => {
                     </Badge>
                   </div>
                 )}
-                {regimePrediction?.accuracy && (
+                {regimePrediction?.model_accuracy && (
                   <div className="text-center">
                     <p className="text-xs text-[#A1A1AA]">Model Accuracy</p>
                     <p className="text-2xl font-data font-bold text-[#00FF94]">
-                      {(regimePrediction.accuracy * 100).toFixed(0)}%
+                      {regimePrediction.model_accuracy.toFixed(0)}%
                     </p>
                   </div>
                 )}
