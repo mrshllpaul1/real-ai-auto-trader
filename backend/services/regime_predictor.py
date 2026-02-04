@@ -2,6 +2,11 @@
 ML/DL Regime Prediction Engine
 Multiple models compete to predict market regimes.
 Best model is automatically selected based on accuracy.
+
+ENHANCED: Now includes advanced DL models for comparison:
+- CNN-LSTM Hybrid
+- Bidirectional LSTM
+- Attention-based model
 """
 
 import asyncio
@@ -12,6 +17,9 @@ import numpy as np
 from enum import Enum
 import pickle
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 # ML Libraries
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
@@ -24,8 +32,13 @@ warnings.filterwarnings('ignore')
 # Try importing TensorFlow for deep learning
 try:
     import tensorflow as tf
-    from tensorflow.keras.models import Sequential, load_model
-    from tensorflow.keras.layers import LSTM, GRU, Dense, Dropout, BatchNormalization
+    from tensorflow.keras.models import Sequential, Model, load_model
+    from tensorflow.keras.layers import (
+        LSTM, GRU, Dense, Dropout, BatchNormalization, 
+        Conv1D, MaxPooling1D, Flatten, Bidirectional,
+        Input, Attention, MultiHeadAttention, LayerNormalization,
+        GlobalAveragePooling1D
+    )
     from tensorflow.keras.callbacks import EarlyStopping
     from tensorflow.keras.optimizers import Adam
     TF_AVAILABLE = True
