@@ -430,3 +430,33 @@ async def load_active_strategies():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to load strategies: {str(e)}")
 
+
+@router.get("/auto-trader/prediction-signals/{symbol}")
+async def get_prediction_signals(symbol: str):
+    """
+    Get comprehensive prediction signals for a symbol using all 8 prediction services.
+    
+    Returns combined signals from:
+    - Order Book Analysis
+    - On-Chain Analytics
+    - Social Sentiment
+    - Transformer Predictor
+    - RL Trading Agent
+    - Cross-Asset Correlation
+    - Advanced Technical Analysis
+    
+    Args:
+        symbol: Crypto symbol (e.g., BTC, ETH)
+        
+    Returns:
+        Composite prediction signal with all component scores
+    """
+    if _automated_trader is None:
+        raise HTTPException(status_code=503, detail="Auto trader not initialized")
+    
+    try:
+        signals = await _automated_trader.get_prediction_signals(symbol.upper())
+        return signals
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get signals: {str(e)}")
+
