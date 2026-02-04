@@ -91,6 +91,8 @@ function App() {
                 <Route path="/auto-exec" element={<AutoExecution />} />
                 <Route path="/advanced" element={<AdvancedFeatures />} />
                 <Route path="/budget" element={<TradingBudget />} />
+                <Route path="/trigger-performance" element={<TriggerPerformance />} />
+                <Route path="/adaptive" element={<AdaptiveStrategy />} />
                 <Route path="/guide" element={<Guide />} />
                 <Route path="/setup" element={<Setup />} />
                 <Route path="/settings" element={<Settings />} />
