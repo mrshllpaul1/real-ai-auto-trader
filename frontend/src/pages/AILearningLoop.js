@@ -118,19 +118,21 @@ const AILearningLoop = () => {
   const [feedback, setFeedback] = useState(null);
   const [recentPredictions, setRecentPredictions] = useState([]);
   const [unverifiedPredictions, setUnverifiedPredictions] = useState([]);
+  const [backtestStatus, setBacktestStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [statusRes, perfRes, insightsRes, feedbackRes, recentRes, unverifiedRes] = await Promise.all([
+      const [statusRes, perfRes, insightsRes, feedbackRes, recentRes, unverifiedRes, backtestRes] = await Promise.all([
         api.get('/ai-learning/status').catch(() => ({ data: null })),
         api.get('/ai-learning/model-performance?days=30').catch(() => ({ data: null })),
         api.get('/ai-learning/insights').catch(() => ({ data: null })),
         api.get('/ai-learning/training-feedback').catch(() => ({ data: null })),
         api.get('/ai-learning/predictions/recent?limit=20').catch(() => ({ data: { predictions: [] } })),
-        api.get('/ai-learning/predictions/unverified?limit=20').catch(() => ({ data: { predictions: [] } }))
+        api.get('/ai-learning/predictions/unverified?limit=20').catch(() => ({ data: { predictions: [] } })),
+        api.get('/gems/backtest/status').catch(() => ({ data: null }))
       ]);
 
       setStatus(statusRes.data);
@@ -139,6 +141,7 @@ const AILearningLoop = () => {
       setFeedback(feedbackRes.data);
       setRecentPredictions(recentRes.data?.predictions || []);
       setUnverifiedPredictions(unverifiedRes.data?.predictions || []);
+      setBacktestStatus(backtestRes.data);
     } catch (error) {
       console.error('Error loading AI learning data:', error);
       toast.error('Failed to load AI learning data');
