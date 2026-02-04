@@ -32,7 +32,16 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 **Fixed:** Route method name mismatch (`execute_weekly_strategy` → `execute_weekly_rebalance`)
 
-**Execution Results:**
+**Dynamic Confidence Threshold Implemented:**
+| Market Regime | Min Confidence | Logic |
+|---------------|----------------|-------|
+| Strong Bull | 65% | Be selective when market is hot |
+| Bull | 60% | Slightly higher bar |
+| Sideways | 55% | Base threshold |
+| Bear | 45% | Lower to allow some trades |
+| Strong Bear | 50% | Cautious but not frozen |
+
+**Execution Results (Bear Market):**
 | Metric | Value |
 |--------|-------|
 | Market Regime | BEAR (87.8% confidence) |
@@ -40,19 +49,20 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 | Position Size | 10.5% (adaptive) |
 | Stop Loss | 12% (adaptive) |
 | Take Profit | 20% (adaptive) |
-| Min Confidence | 70% |
-| Trades Executed | 0 |
+| Min Confidence | 45% (dynamic) |
+| Trades Executed | 3 |
+| Total Invested | $122.73 |
 
-**Why 0 Trades?**
-The AI correctly identified:
-1. Bear market regime (ML consensus)
-2. All coins below 70% confidence threshold
-3. Conservative capital protection mode activated
-
-**This is correct behavior** - the AI is protecting capital by NOT trading when signals are weak. The Enhanced AI engine is working exactly as designed.
+**Trades Executed:**
+| Coin | Amount | Entry Price | AI Score |
+|------|--------|-------------|----------|
+| Polkadot (DOT) | $40.91 | $1.52 | 49.4% |
+| Ethereum (ETH) | $40.91 | $2,278 | ~48% |
+| Cardano (ADA) | $40.91 | $0.30 | ~47% |
 
 **Files Modified:**
 - `/app/backend/routes/kraken.py` - Fixed method name mismatch (line 365)
+- `/app/backend/services/adaptive_strategy.py` - Dynamic confidence thresholds
 
 ---
 
