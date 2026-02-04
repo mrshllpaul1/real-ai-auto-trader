@@ -83,6 +83,7 @@ from routes import background_tasks as bg_tasks
 from routes import kraken as kraken_routes
 from routes import enhanced_ai as enhanced_ai_routes
 from routes import paper_trading as paper_trading_routes
+from routes import prediction_enhancements
 
 # Include routers
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
