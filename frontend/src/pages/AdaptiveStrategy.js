@@ -68,10 +68,10 @@ const AdaptiveStrategy = () => {
     );
   }
 
-  const currentRegime = regimePrediction?.regime || strategyStatus?.current_regime || 'unknown';
+  const currentRegime = regimePrediction?.predicted_regime || strategyStatus?.current_regime || 'unknown';
   const RegimeIcon = regimeIcons[currentRegime] || Activity;
   const regimeColor = regimeColors[currentRegime] || '#A1A1AA';
-  const params = strategyStatus?.current_params || {};
+  const params = strategyStatus?.adapted_params || strategyStatus?.current_params || {};
   const baseParams = strategyStatus?.base_params || {};
 
   return (
