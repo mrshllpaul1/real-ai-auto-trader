@@ -499,6 +499,9 @@ async def initialize_services():
         cross_asset_correlation = get_cross_asset_correlation(db)
         advanced_ta = get_advanced_ta(db)
         
+        # Inject task manager into RL agent for background training
+        rl_trading_agent.set_task_manager(task_manager)
+        
         # Set dependencies for prediction enhancements route
         prediction_enhancements.set_dependencies(
             db=db,
