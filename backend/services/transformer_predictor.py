@@ -62,6 +62,7 @@ class PositionalEncoding(tf.keras.layers.Layer):
         return config
 
 
+@tf.keras.saving.register_keras_serializable(package="CustomLayers")
 class TransformerBlock(tf.keras.layers.Layer):
     """Single Transformer block with multi-head attention"""
     
