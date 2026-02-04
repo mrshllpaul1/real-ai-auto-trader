@@ -4,7 +4,7 @@ import {
   LayoutDashboard, TrendingUp, BarChart3, Settings, Sparkles,
   Brain, Newspaper, Zap, Radar, Bot, FlaskConical, BookOpen,
   Menu, X, ChevronLeft, Key, Wallet, TestTube, Cpu, MessageCircle, Layers,
-  Target, Gem, Calendar, Shield, Award, Gauge
+  Target, Gem, Calendar, Shield, Award, Gauge, Briefcase
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NotificationCenter from './NotificationCenter';
@@ -180,6 +180,7 @@ const Sidebar = () => {
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/growth', icon: TrendingUp, label: '$500→$100k', highlight: true },
     { path: '/budget', icon: Shield, label: 'AI Budget', highlight: true },
+    { path: '/positions', icon: Briefcase, label: 'Positions', highlight: true },
     { path: '/ai-chat', icon: MessageCircle, label: 'Ask AI', highlight: true },
     { path: '/triggers', icon: Target, label: 'Event Triggers', highlight: true },
     { path: '/trigger-performance', icon: Award, label: 'Trigger Stats', highlight: true },
