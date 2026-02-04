@@ -246,3 +246,102 @@ async def get_performance_dashboard():
             'error': str(e),
             'message': 'Some metrics unavailable'
         }
+
+
+@router.get("/regime/ml-vs-dl")
+async def compare_ml_vs_dl():
+    """
+    Comprehensive comparison of Machine Learning vs Deep Learning models.
+    
+    Returns:
+    - ML models: Random Forest, Gradient Boosting, SVM
+    - DL models: LSTM, GRU, BiLSTM, CNN-LSTM, Attention
+    - Side-by-side accuracy comparison
+    - Best in each category
+    - Recommendation
+    """
+    if not regime_predictor:
+        raise HTTPException(status_code=503, detail="Regime predictor not initialized")
+    
+    model_accuracy = regime_predictor.model_accuracy
+    model_metadata = regime_predictor.model_metadata
+    
+    ml_models = []
+    dl_models = []
+    
+    for model_name, accuracy in model_accuracy.items():
+        metadata = model_metadata.get(model_name, {})
+        model_info = {
+            'name': model_name,
+            'accuracy': round(accuracy * 100, 2),
+            'type': metadata.get('type', 'Unknown'),
+            'category': metadata.get('category', 'Unknown'),
+            'description': metadata.get('description', ''),
+            'is_best': model_name == regime_predictor.best_model
+        }
+        
+        if metadata.get('type') == 'ML':
+            ml_models.append(model_info)
+        elif metadata.get('type') == 'DL':
+            dl_models.append(model_info)
+    
+    # Sort by accuracy
+    ml_models.sort(key=lambda x: x['accuracy'], reverse=True)
+    dl_models.sort(key=lambda x: x['accuracy'], reverse=True)
+    
+    best_ml = ml_models[0] if ml_models else None
+    best_dl = dl_models[0] if dl_models else None
+    
+    # Determine winner
+    winner = None
+    if best_ml and best_dl:
+        winner = 'ML' if best_ml['accuracy'] > best_dl['accuracy'] else 'DL'
+    
+    return {
+        'ml_models': ml_models,
+        'dl_models': dl_models,
+        'summary': {
+            'total_ml_models': len(ml_models),
+            'total_dl_models': len(dl_models),
+            'best_ml': best_ml,
+            'best_dl': best_dl,
+            'overall_best': regime_predictor.best_model,
+            'winner': winner,
+            'ml_avg_accuracy': round(sum(m['accuracy'] for m in ml_models) / len(ml_models), 2) if ml_models else 0,
+            'dl_avg_accuracy': round(sum(m['accuracy'] for m in dl_models) / len(dl_models), 2) if dl_models else 0
+        },
+        'recommendation': f"Use {regime_predictor.best_model} ({winner}) for regime prediction - highest accuracy at {model_accuracy.get(regime_predictor.best_model, 0) * 100:.1f}%",
+        'trained': regime_predictor.is_trained,
+        'timestamp': datetime.utcnow().isoformat()
+    }
+
+
+@router.get("/regime/models")
+async def get_all_models():
+    """Get detailed information about all available models"""
+    if not regime_predictor:
+        raise HTTPException(status_code=503, detail="Regime predictor not initialized")
+    
+    models = []
+    for model_name in regime_predictor.models.keys():
+        metadata = regime_predictor.model_metadata.get(model_name, {})
+        accuracy = regime_predictor.model_accuracy.get(model_name)
+        
+        models.append({
+            'name': model_name,
+            'type': metadata.get('type', 'Unknown'),
+            'category': metadata.get('category', 'Unknown'),
+            'description': metadata.get('description', ''),
+            'accuracy': round(accuracy * 100, 2) if accuracy else None,
+            'is_trained': accuracy is not None,
+            'is_best': model_name == regime_predictor.best_model
+        })
+    
+    return {
+        'models': models,
+        'total': len(models),
+        'ml_count': len([m for m in models if m['type'] == 'ML']),
+        'dl_count': len([m for m in models if m['type'] == 'DL']),
+        'best_model': regime_predictor.best_model,
+        'is_trained': regime_predictor.is_trained
+    }
