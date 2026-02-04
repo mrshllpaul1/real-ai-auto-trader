@@ -191,20 +191,18 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 ## Current Status
 - **Budget:** $500 allocated (isolated)
 - **Real Trading:** Enabled
-- **Active Schedules:** 1 (daily RL at 2 AM)
+- **Active Schedules:** 2 (daily RL at 2 AM, auto-spot scan every 60 min)
+- **Auto-Spot Scan:** Paper trade mode, every 60 minutes
 - **Models Saved:** Transformer (survives restart)
-- **Spot Trading:** 19 pairs, live prices from Kraken
-- **Auto-Trader Spot:** Can execute spot trades with AI validation
-- **AI Learning:** Panel on Training Dashboard, 4 recommendations active
 - **Regime Models:** 8 ML/DL models trained (100% accuracy on Random Forest)
+- **RL Agent:** Training in progress
 - **All Services:** Operational
 
 ---
 
 ## Backlog/Future Tasks
-- **P1:** Complete server.py modularization (600+ lines)
-- **P2:** Fix DL model input shape mismatch (bilstm, cnn_lstm, attention)
-- **P3:** Enhanced Training History with analytics
+- **P1:** Complete server.py full modularization (use init/services.py)
+- **P3:** Add auto-spot scan UI to Training Dashboard
 - **P3:** Model versioning with rollbacks
 - **P3:** Push notifications (Web Push API)
 - **P3:** Comprehensive backtesting feature
