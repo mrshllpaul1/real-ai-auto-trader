@@ -801,6 +801,220 @@ const TrainingDashboard = () => {
         </AnimatePresence>
       </motion.div>
 
+      {/* Auto-Spot Scan Panel */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.18 }}
+        className="mb-8"
+      >
+        <button
+          onClick={() => setShowAutoSpot(!showAutoSpot)}
+          className={`w-full flex items-center justify-between p-4 border rounded-xl hover:border-[#00FF94]/50 transition-all ${
+            autoSpotStatus?.enabled && !autoSpotStatus?.paper_trade
+              ? 'bg-gradient-to-r from-[#00FF94]/20 to-[#FFB800]/20 border-[#00FF94]/50'
+              : autoSpotStatus?.enabled
+              ? 'bg-gradient-to-r from-[#FFB800]/20 to-[#9D00FF]/20 border-[#FFB800]/30'
+              : 'bg-[#111] border-[#333]'
+          }`}
+          data-testid="toggle-auto-spot-panel"
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              autoSpotStatus?.enabled && !autoSpotStatus?.paper_trade
+                ? 'bg-[#00FF94]/20'
+                : 'bg-[#FFB800]/20'
+            }`}>
+              <Zap size={20} className={autoSpotStatus?.enabled && !autoSpotStatus?.paper_trade ? 'text-[#00FF94]' : 'text-[#FFB800]'} />
+            </div>
+            <div className="text-left">
+              <h3 className="text-white font-bold flex items-center gap-2">
+                Auto-Spot Trading Scanner
+                {autoSpotStatus?.enabled && !autoSpotStatus?.paper_trade && (
+                  <span className="px-2 py-0.5 bg-[#00FF94]/20 text-[#00FF94] text-xs rounded-full">LIVE</span>
+                )}
+                {autoSpotStatus?.enabled && autoSpotStatus?.paper_trade && (
+                  <span className="px-2 py-0.5 bg-[#FFB800]/20 text-[#FFB800] text-xs rounded-full">PAPER</span>
+                )}
+              </h3>
+              <p className="text-xs text-[#888]">
+                Interval: {autoSpotStatus?.interval_minutes || 60}min | 
+                Runs: {autoSpotStatus?.run_count || 0}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {autoSpotRunning && (
+              <div className="px-3 py-1 bg-[#00FF94]/20 text-[#00FF94] rounded-lg text-xs flex items-center gap-1">
+                <Activity size={12} className="animate-pulse" />
+                Scanning...
+              </div>
+            )}
+            {showAutoSpot ? <ChevronUp className="text-[#888]" /> : <ChevronDown className="text-[#888]" />}
+          </div>
+        </button>
+        
+        <AnimatePresence>
+          {showAutoSpot && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-4 grid md:grid-cols-2 gap-4">
+                {/* Control Panel */}
+                <div className="bg-[#111] border border-[#222] rounded-xl p-4">
+                  <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                    <Power size={16} className={autoSpotStatus?.enabled ? 'text-[#00FF94]' : 'text-[#FF4444]'} />
+                    Scanner Controls
+                  </h4>
+                  
+                  <div className="space-y-3">
+                    {/* Status */}
+                    <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
+                      <span className="text-sm text-[#888]">Status</span>
+                      <span className={`font-medium ${autoSpotStatus?.enabled ? 'text-[#00FF94]' : 'text-[#FF4444]'}`}>
+                        {autoSpotStatus?.enabled ? 'Active' : 'Disabled'}
+                      </span>
+                    </div>
+                    
+                    {/* Mode */}
+                    <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
+                      <span className="text-sm text-[#888]">Trading Mode</span>
+                      <button
+                        onClick={switchAutoSpotMode}
+                        className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                          autoSpotStatus?.paper_trade
+                            ? 'bg-[#FFB800]/20 text-[#FFB800] hover:bg-[#FFB800]/30'
+                            : 'bg-[#00FF94]/20 text-[#00FF94] hover:bg-[#00FF94]/30'
+                        }`}
+                        data-testid="switch-auto-spot-mode"
+                      >
+                        {autoSpotStatus?.paper_trade ? '📝 Paper' : '💰 Real'}
+                      </button>
+                    </div>
+                    
+                    {/* Last Run */}
+                    <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
+                      <span className="text-sm text-[#888]">Last Run</span>
+                      <span className="text-sm text-white">
+                        {autoSpotStatus?.last_run 
+                          ? new Date(autoSpotStatus.last_run).toLocaleTimeString()
+                          : 'Never'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      onClick={toggleAutoSpotScan}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                        autoSpotStatus?.enabled
+                          ? 'bg-[#FF4444] text-white hover:bg-[#DD3333]'
+                          : 'bg-[#00FF94] text-black hover:bg-[#00DD80]'
+                      }`}
+                      data-testid="toggle-auto-spot"
+                    >
+                      {autoSpotStatus?.enabled ? (
+                        <>
+                          <Pause size={14} />
+                          Disable
+                        </>
+                      ) : (
+                        <>
+                          <Play size={14} />
+                          Enable
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={runAutoSpotScan}
+                      disabled={autoSpotRunning}
+                      className="flex-1 py-2 bg-[#9D00FF] text-white rounded-lg text-sm font-medium hover:bg-[#8000CC] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      data-testid="run-auto-spot-now"
+                    >
+                      {autoSpotRunning ? (
+                        <>
+                          <RefreshCw size={14} className="animate-spin" />
+                          Scanning...
+                        </>
+                      ) : (
+                        <>
+                          <Zap size={14} />
+                          Scan Now
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Last Scan Results */}
+                <div className="bg-[#111] border border-[#222] rounded-xl p-4">
+                  <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                    <BarChart3 size={16} className="text-[#9D00FF]" />
+                    Last Scan Results
+                  </h4>
+                  
+                  {lastScanResults || autoSpotStatus?.last_result ? (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="bg-[#1a1a1a] rounded-lg p-3 text-center">
+                          <div className="text-xs text-[#666]">Scanned</div>
+                          <div className="text-xl font-bold text-white">
+                            {lastScanResults?.scanned_symbols || autoSpotStatus?.last_result?.scanned_symbols || 10}
+                          </div>
+                        </div>
+                        <div className="bg-[#1a1a1a] rounded-lg p-3 text-center">
+                          <div className="text-xs text-[#666]">Buy Signals</div>
+                          <div className="text-xl font-bold text-[#00FF94]">
+                            {lastScanResults?.buy_opportunities || autoSpotStatus?.last_result?.buy_opportunities || 0}
+                          </div>
+                        </div>
+                        <div className="bg-[#1a1a1a] rounded-lg p-3 text-center">
+                          <div className="text-xs text-[#666]">Sell Signals</div>
+                          <div className="text-xl font-bold text-[#FF4444]">
+                            {lastScanResults?.sell_opportunities || autoSpotStatus?.last_result?.sell_opportunities || 0}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 bg-[#1a1a1a] rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-[#888]">Trades Executed</span>
+                          <span className="text-lg font-bold text-[#9D00FF]">
+                            {lastScanResults?.executed_trades || autoSpotStatus?.last_result?.executed_trades || 0}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {lastScanResults?.trades?.length > 0 && (
+                        <div className="space-y-2 max-h-[150px] overflow-y-auto">
+                          {lastScanResults.trades.map((trade, idx) => (
+                            <div key={idx} className="p-2 bg-[#222] rounded-lg flex justify-between items-center">
+                              <span className="text-sm text-white font-medium">{trade.symbol}</span>
+                              <span className={`text-xs ${trade.side === 'buy' ? 'text-[#00FF94]' : 'text-[#FF4444]'}`}>
+                                {trade.side.toUpperCase()} ${trade.trade_value_usd?.toFixed(2)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-[#666]">
+                      <Zap size={32} className="mx-auto mb-2 opacity-50" />
+                      <p>No scan results yet</p>
+                      <p className="text-xs mt-1">Click "Scan Now" to run</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
       {/* Service Status Grid */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
