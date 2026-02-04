@@ -1,0 +1,86 @@
+{
+  "summary": "Completed testing of Auto-Trader Spot Trading endpoints. All 3 new endpoints working correctly: analyze, trade, and scan. AI validation blocks contradicting trades. Regime models trained with 8 ML/DL models.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/kraken/auto-trader/status",
+        "issue": "Some DL models (bilstm, cnn_lstm, attention) have shape mismatch errors during prediction",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_auto_trader_spot.py"
+  ],
+  "action_items": [
+    "Fix DL model input shape mismatch for bilstm, cnn_lstm, and attention models (expected shape (None, 14, 10), got (1, 10))"
+  ],
+  "critical_code_review_comments": [
+    "✓ /api/kraken/auto-trader/spot/analyze/{symbol} - Returns AI analysis with action, score, confidence, and prediction components",
+    "✓ /api/kraken/auto-trader/spot/trade - Executes paper trades with AI validation, blocks contradicting trades",
+    "✓ /api/kraken/auto-trader/spot/scan - Scans 10 symbols, identifies buy/sell opportunities, executes best trades",
+    "✓ AI validation correctly allows trades when action is 'hold' (neutral signal)",
+    "✓ Regime models trained with 8 models: random_forest (100%), gradient_boosting (100%), svm (87.23%), lstm (65.22%), gru (71.74%), bilstm (63.04%), cnn_lstm (61.96%), attention (64.13%)",
+    "✓ Auto-trader status shows all key services initialized: ai_trainer, adaptive_strategy, regime_predictor, isolated_portfolio, background_task_manager",
+    "✓ Prediction signals include: order_book, on_chain, social, transformer, cross_asset, advanced_ta components"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_auto_trader_spot.py"
+  ],
+  "success_rate": {
+    "backend": "100% - All 3 spot trading endpoints working",
+    "frontend": "N/A - Backend only testing"
+  },
+  "seed_data_creation": "None required - using real Kraken API data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Auto-trader spot trading endpoints fully tested. All 3 endpoints (/api/kraken/auto-trader/spot/analyze/{symbol}, /api/kraken/auto-trader/spot/trade, /api/kraken/auto-trader/spot/scan) working correctly with paper_trade=true. AI validation blocks trades that contradict AI signals. Regime models trained with 8 ML/DL models. Minor issue: Some DL models have shape mismatch during prediction but ML models work fine.",
+  "features_tested": {
+    "/api/kraken/auto-trader/spot/analyze/{symbol}": {
+      "status": "PASS",
+      "tested_symbols": ["BTC", "ETH", "SOL", "XRP", "ADA", "DOGE", "LINK", "AVAX", "DOT", "ATOM"],
+      "returns": ["symbol", "current_price", "signal", "score", "confidence", "action", "reason", "components", "timestamp"],
+      "action_values": ["buy", "sell", "hold", "consider_buy", "consider_sell"]
+    },
+    "/api/kraken/auto-trader/spot/trade": {
+      "status": "PASS",
+      "paper_trade_buy": "Working - executed BTC buy $50 @ $72,935",
+      "ai_validation": "Working - includes full AI analysis in response",
+      "ai_blocking": "Working - blocks trades contradicting AI signals",
+      "without_ai_validation": "Working - trades execute when use_ai_validation=false"
+    },
+    "/api/kraken/auto-trader/spot/scan": {
+      "status": "PASS",
+      "scanned_symbols": 10,
+      "returns": ["timestamp", "paper_trade", "scanned_symbols", "buy_opportunities", "sell_opportunities", "executed_trades", "trades", "scan_results", "best_buys", "best_sells"],
+      "scan_results_include": "Full analysis for each symbol with all prediction components"
+    },
+    "/api/kraken/auto-trader/status": {
+      "status": "PASS",
+      "initialized": true,
+      "kraken_connected": true,
+      "services_active": ["ai_trainer", "gem_finder_legacy", "adaptive_strategy", "regime_predictor", "performance_tracker", "isolated_portfolio", "background_task_manager", "notification_service"],
+      "regime_prediction": "bear (87.8% confidence from random_forest)"
+    },
+    "/api/performance/regime/models": {
+      "status": "PASS",
+      "total_models": 8,
+      "ml_models": ["random_forest (100%)", "gradient_boosting (100%)", "svm (87.23%)"],
+      "dl_models": ["lstm (65.22%)", "gru (71.74%)", "bilstm (63.04%)", "cnn_lstm (61.96%)", "attention (64.13%)"],
+      "best_model": "random_forest"
+    },
+    "/api/learning/status": {
+      "status": "PASS",
+      "transformer_trained": true,
+      "rl_agent_trained": false,
+      "regime_trained": true,
+      "note": "RL agent training was interrupted by backend restart"
+    }
+  }
+}
