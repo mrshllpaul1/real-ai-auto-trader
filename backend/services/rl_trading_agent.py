@@ -335,10 +335,15 @@ class RLTradingAgent:
         self.training_history = []
         self.task_manager = None  # Set via set_task_manager()
         self.current_training_task_id = None
+        self.history_service = None  # Training history tracking
     
     def set_task_manager(self, task_manager):
         """Set background task manager for async training"""
         self.task_manager = task_manager
+    
+    def set_history_service(self, history_service):
+        """Set training history service for tracking"""
+        self.history_service = history_service
         
     async def train(self, episodes: int = 100, symbols: List[str] = None) -> Dict[str, Any]:
         """Train RL agent on historical data"""
