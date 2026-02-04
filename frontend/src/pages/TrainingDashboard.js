@@ -577,6 +577,158 @@ const TrainingDashboard = () => {
         </div>
       </motion.div>
 
+      {/* Learning Panel */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="mb-8"
+      >
+        <button
+          onClick={() => setShowLearning(!showLearning)}
+          className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-[#9D00FF]/20 to-[#00FF94]/20 border border-[#9D00FF]/30 rounded-xl hover:border-[#9D00FF]/50 transition-all"
+          data-testid="toggle-learning-panel"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#9D00FF]/20 flex items-center justify-center">
+              <Brain size={20} className="text-[#9D00FF]" />
+            </div>
+            <div className="text-left">
+              <h3 className="text-white font-bold">AI Learning & Improvement</h3>
+              <p className="text-xs text-[#888]">
+                Accuracy: {learningStatus?.stats?.current_accuracy?.toFixed(1) || 0}% | 
+                Sessions: {learningStatus?.stats?.total_sessions || 0}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {learningCycleRunning && (
+              <div className="px-3 py-1 bg-[#FFB800]/20 text-[#FFB800] rounded-lg text-xs flex items-center gap-1">
+                <Activity size={12} className="animate-pulse" />
+                Learning...
+              </div>
+            )}
+            {showLearning ? <ChevronUp className="text-[#888]" /> : <ChevronDown className="text-[#888]" />}
+          </div>
+        </button>
+        
+        <AnimatePresence>
+          {showLearning && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-4 grid md:grid-cols-2 gap-4">
+                {/* Learning Stats */}
+                <div className="bg-[#111] border border-[#222] rounded-xl p-4">
+                  <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                    <TrendingUp size={16} className="text-[#00FF94]" />
+                    Learning Statistics
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-[#1a1a1a] rounded-lg p-3">
+                      <div className="text-xs text-[#666]">Accuracy</div>
+                      <div className="text-xl font-bold text-[#00FF94]">
+                        {learningStatus?.stats?.current_accuracy?.toFixed(1) || 0}%
+                      </div>
+                    </div>
+                    <div className="bg-[#1a1a1a] rounded-lg p-3">
+                      <div className="text-xs text-[#666]">Model Improvements</div>
+                      <div className="text-xl font-bold text-[#9D00FF]">
+                        {learningStatus?.stats?.model_improvements || 0}
+                      </div>
+                    </div>
+                    <div className="bg-[#1a1a1a] rounded-lg p-3">
+                      <div className="text-xs text-[#666]">Successful Trades</div>
+                      <div className="text-xl font-bold text-white">
+                        {learningStatus?.stats?.successful_trades_learned || 0}
+                      </div>
+                    </div>
+                    <div className="bg-[#1a1a1a] rounded-lg p-3">
+                      <div className="text-xs text-[#666]">Failed Analyzed</div>
+                      <div className="text-xl font-bold text-[#FF4444]">
+                        {learningStatus?.stats?.failed_trades_analyzed || 0}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      onClick={startLearningCycle}
+                      disabled={learningCycleRunning}
+                      className="flex-1 py-2 bg-[#9D00FF] text-white rounded-lg text-sm font-medium hover:bg-[#8000CC] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      data-testid="start-learning-cycle"
+                    >
+                      {learningCycleRunning ? (
+                        <>
+                          <RefreshCw size={14} className="animate-spin" />
+                          Learning...
+                        </>
+                      ) : (
+                        <>
+                          <Play size={14} />
+                          Start Learning Cycle
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={analyzeRecentTrades}
+                      className="px-4 py-2 bg-[#222] text-white rounded-lg text-sm hover:bg-[#333] transition-colors flex items-center gap-2"
+                      data-testid="analyze-trades"
+                    >
+                      <BarChart3 size={14} />
+                      Analyze
+                    </button>
+                  </div>
+                </div>
+                
+                {/* AI Recommendations */}
+                <div className="bg-[#111] border border-[#222] rounded-xl p-4">
+                  <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                    <AlertTriangle size={16} className="text-[#FFB800]" />
+                    AI Recommendations
+                  </h4>
+                  {learningRecommendations.length > 0 ? (
+                    <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                      {learningRecommendations.map((rec, idx) => (
+                        <div 
+                          key={idx}
+                          className={`p-3 rounded-lg ${
+                            rec.priority === 'high' 
+                              ? 'bg-[#FF4444]/10 border border-[#FF4444]/30'
+                              : rec.priority === 'medium'
+                              ? 'bg-[#FFB800]/10 border border-[#FFB800]/30'
+                              : 'bg-[#222] border border-[#333]'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2">
+                            <div className={`w-2 h-2 rounded-full mt-1.5 ${
+                              rec.priority === 'high' ? 'bg-[#FF4444]' :
+                              rec.priority === 'medium' ? 'bg-[#FFB800]' : 'bg-[#666]'
+                            }`} />
+                            <div className="flex-1">
+                              <div className="text-xs text-[#888] uppercase">{rec.category}</div>
+                              <div className="text-sm text-white">{rec.message}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-[#666]">
+                      <CheckCircle2 size={32} className="mx-auto mb-2 opacity-50" />
+                      <p>No recommendations - all models performing well!</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
       {/* Service Status Grid */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
