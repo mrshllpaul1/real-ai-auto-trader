@@ -312,9 +312,8 @@ class AutomatedWeeklyTrader:
             if len(portfolio['main_coins']) < original_count:
                 logger.info(f"   Filtered out {original_count - len(portfolio['main_coins'])} coins below {min_conf}% confidence")
         
-        # Get gem
-        gems = await self.gem_finder.find_gems(datetime.now(), max_gems=1)
-        gem = gems[0] if gems else None
+        # Get gem using ML/DL predictor (P1) if available, fallback to legacy
+        gem = await self._find_best_gem(paper_trade)
         
         logger.info(f"\nSelected {len(portfolio['main_coins'])} main coins + {1 if gem else 0} gem")
         
@@ -362,7 +361,6 @@ class AutomatedWeeklyTrader:
                 trades.append(trade_result)
         
         # Execute gem trade
-        if gem:
             kraken_symbol = self.kraken_symbols.get(gem['coin_id'])
             
             if kraken_symbol:
