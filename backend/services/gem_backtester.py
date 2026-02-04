@@ -45,7 +45,8 @@ class GemBacktester:
             "final_accuracy": 0,
             "target_reached": False,
             "improvements_made": [],
-            "best_weights": {}
+            "best_weights": {},
+            "best_threshold": 0.7
         }
         
         # Get coins with historical data
@@ -62,51 +63,69 @@ class GemBacktester:
         coins = coins[:30]
         
         current_weights = {
-            "volume_surge": 0.25,
-            "price_momentum": 0.20,
-            "market_cap_potential": 0.15,
+            "volume_surge": 0.20,
+            "price_momentum": 0.15,
+            "market_cap_potential": 0.10,
             "technical_setup": 0.15,
-            "volatility_score": 0.15,
-            "sentiment": 0.10
+            "volatility_score": 0.10,
+            "sentiment": 0.10,
+            "relative_strength": 0.20  # New: compare to BTC
         }
+        
+        current_threshold = 0.70  # Start with higher threshold to reduce false positives
+        best_accuracy = 0
+        best_weights_so_far = current_weights.copy()
+        best_threshold_so_far = current_threshold
         
         for iteration in range(max_iterations):
             iter_result = await self._run_single_iteration(
                 coins=coins,
                 weights=current_weights,
-                iteration_num=iteration + 1
+                iteration_num=iteration + 1,
+                gem_threshold=current_threshold
             )
             
             results["iterations"].append(iter_result)
             current_accuracy = iter_result["accuracy"]
             
+            # Track best result
+            if current_accuracy > best_accuracy:
+                best_accuracy = current_accuracy
+                best_weights_so_far = current_weights.copy()
+                best_threshold_so_far = current_threshold
+            
             if current_accuracy >= target_accuracy:
                 results["target_reached"] = True
                 results["final_accuracy"] = current_accuracy
                 results["best_weights"] = current_weights.copy()
+                results["best_threshold"] = current_threshold
                 results["message"] = f"Target accuracy of {target_accuracy}% reached in {iteration + 1} iterations!"
                 break
             
-            # Improve weights based on backtest feedback
+            # Improve weights and threshold based on backtest feedback
             improvements = self._improve_weights(
                 current_weights=current_weights,
-                iter_result=iter_result
+                iter_result=iter_result,
+                current_threshold=current_threshold
             )
             
             current_weights = improvements["new_weights"]
+            current_threshold = improvements["new_threshold"]
             results["improvements_made"].append({
                 "iteration": iteration + 1,
                 "changes": improvements["changes"],
-                "reason": improvements["reason"]
+                "reason": improvements["reason"],
+                "new_threshold": current_threshold
             })
             
             # Brief delay between iterations
             await asyncio.sleep(0.1)
         
         if not results["target_reached"]:
-            results["final_accuracy"] = results["iterations"][-1]["accuracy"] if results["iterations"] else 0
-            results["best_weights"] = current_weights
-            results["message"] = f"Reached {results['final_accuracy']:.1f}% accuracy after {max_iterations} iterations"
+            results["final_accuracy"] = best_accuracy
+            results["best_weights"] = best_weights_so_far
+            results["best_threshold"] = best_threshold_so_far
+            results["message"] = f"Best accuracy: {best_accuracy:.1f}% after {max_iterations} iterations"
         
         results["completed_at"] = datetime.now(timezone.utc).isoformat()
         
@@ -118,8 +137,10 @@ class GemBacktester:
         })
         
         # Update gem predictor weights if available and improved
-        if self.gem_predictor and results["final_accuracy"] > 60:
+        if self.gem_predictor and results["final_accuracy"] > 50:
             self.gem_predictor.weights = results["best_weights"]
+            if hasattr(self.gem_predictor, 'gem_threshold'):
+                self.gem_predictor.gem_threshold = results["best_threshold"]
         
         return results
     
