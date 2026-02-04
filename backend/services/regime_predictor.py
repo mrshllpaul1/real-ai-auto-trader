@@ -73,12 +73,17 @@ class RegimePredictionEngine:
     """
     Multi-model regime prediction system with automatic model selection.
     
-    Models:
-    - Random Forest (ML)
-    - Gradient Boosting (ML)
-    - Support Vector Machine (ML)
-    - LSTM Neural Network (DL)
-    - GRU Neural Network (DL)
+    ML Models:
+    - Random Forest
+    - Gradient Boosting (XGBoost-like)
+    - Support Vector Machine
+    
+    DL Models:
+    - LSTM Neural Network
+    - GRU Neural Network
+    - Bidirectional LSTM
+    - CNN-LSTM Hybrid (convolutional + recurrent)
+    - Transformer-style Attention
     
     The system tracks accuracy of each model and automatically selects the best.
     """
@@ -88,6 +93,7 @@ class RegimePredictionEngine:
         self.scaler = StandardScaler()
         self.models = {}
         self.model_accuracy = {}
+        self.model_metadata = {}  # Store training info per model
         self.best_model = None
         self.is_trained = False
         self.sequence_length = 14  # Days of history for DL models
@@ -112,6 +118,11 @@ class RegimePredictionEngine:
             random_state=42,
             n_jobs=-1
         )
+        self.model_metadata['random_forest'] = {
+            'type': 'ML',
+            'category': 'ensemble',
+            'description': 'Ensemble of decision trees with bagging'
+        }
         
         self.models['gradient_boosting'] = GradientBoostingClassifier(
             n_estimators=100,
@@ -119,6 +130,11 @@ class RegimePredictionEngine:
             learning_rate=0.1,
             random_state=42
         )
+        self.model_metadata['gradient_boosting'] = {
+            'type': 'ML',
+            'category': 'ensemble',
+            'description': 'Sequential boosting of weak learners'
+        }
         
         self.models['svm'] = SVC(
             kernel='rbf',
@@ -126,6 +142,11 @@ class RegimePredictionEngine:
             probability=True,
             random_state=42
         )
+        self.model_metadata['svm'] = {
+            'type': 'ML',
+            'category': 'kernel',
+            'description': 'Support Vector Machine with RBF kernel'
+        }
     
     def _init_dl_models(self):
         """Initialize deep learning models"""
@@ -134,9 +155,43 @@ class RegimePredictionEngine:
         
         # LSTM model
         self.models['lstm'] = self._build_lstm_model()
+        self.model_metadata['lstm'] = {
+            'type': 'DL',
+            'category': 'recurrent',
+            'description': 'Long Short-Term Memory network for sequence learning'
+        }
         
         # GRU model  
         self.models['gru'] = self._build_gru_model()
+        self.model_metadata['gru'] = {
+            'type': 'DL',
+            'category': 'recurrent',
+            'description': 'Gated Recurrent Unit - lighter than LSTM'
+        }
+        
+        # Bidirectional LSTM
+        self.models['bilstm'] = self._build_bilstm_model()
+        self.model_metadata['bilstm'] = {
+            'type': 'DL',
+            'category': 'recurrent',
+            'description': 'Bidirectional LSTM - learns forward and backward patterns'
+        }
+        
+        # CNN-LSTM Hybrid
+        self.models['cnn_lstm'] = self._build_cnn_lstm_model()
+        self.model_metadata['cnn_lstm'] = {
+            'type': 'DL',
+            'category': 'hybrid',
+            'description': 'CNN for pattern extraction + LSTM for sequence learning'
+        }
+        
+        # Transformer-style attention
+        self.models['attention'] = self._build_attention_model()
+        self.model_metadata['attention'] = {
+            'type': 'DL',
+            'category': 'attention',
+            'description': 'Multi-head attention mechanism for regime patterns'
+        }
     
     def _build_lstm_model(self, input_shape: Tuple = None) -> Sequential:
         """Build LSTM neural network"""
