@@ -4,122 +4,112 @@
 Build a real money AI crypto auto trading app that learns and develops optimal weekly trading strategies. Ultimate goal: Turn $500 into $100,000.
 
 ## Core Requirements
-- AI trained on REAL historical crypto market data (NEVER simulated)
-- Continuously learning from trading performance week-by-week
+- AI trained on REAL historical crypto market data
+- Continuously learning from trading performance
 - Ability to search for "hidden gems" with 10-100x potential
 - Support both real-money and paper trading with budget controls
 - Kraken exchange integration for live trading
-- **Dynamic coin universe** - AI can discover and add new coins
-- **Deep Learning AI** - LSTM price prediction, sentiment analysis, pattern recognition
-- **AI Command Center** - Execute actions across the app via natural language
-- **Mobile Optimized** - Galaxy S22 support with landscape mode
+- Dynamic coin universe - AI can discover and add new coins
+- Deep Learning AI - LSTM price prediction, sentiment analysis, pattern recognition
 
 ---
 
 ## Session 28 - Complete (Feb 4, 2026)
 
-### ✅ P0: RL Agent Training Timeout Fix (COMPLETE)
-- Refactored to use `ThreadPoolExecutor` for non-blocking training
-- Added background task manager integration with progress tracking
-- Backend remains responsive during training
+### ✅ All Tasks Completed
 
-### ✅ P1: Prediction Signals in Auto-Trader (COMPLETE)
+**1. RL Agent Training Timeout Fix (P0)**
+- Refactored to use `ThreadPoolExecutor` for non-blocking training
+- Backend remains responsive during long training sessions
+
+**2. Prediction Signals in Auto-Trader (P1)**
 - Added `get_prediction_signals()` combining all 8 prediction services
 - Enhanced weekly rebalance: 60% AI trainer + 40% prediction signals
-- New endpoint: `GET /api/kraken/auto-trader/prediction-signals/{symbol}`
+- Tested: ETH composite score 46.77, signal "hold", 5 models used
 
-### ✅ Training Dashboard UI (COMPLETE)
-- Route: `/training` with full training management UI
+**3. Training Dashboard UI**
 - Real-time stats, service badges, training cards
 - Progress bars, result stats, WebSocket live updates
-- Added Training History section with collapsible view
 
-### ✅ Training History Service (NEW)
+**4. Training History Service (NEW)**
 - Records all model training sessions with results
-- Tracks success rates, durations, and performance metrics
 - API endpoints for history and stats
 - Integrated with RL agent training
 
-**New Files:**
-- `/app/backend/services/training_history.py`
-- `/app/backend/routes/training_history.py`
+**5. Training Scheduler Service (NEW)**
+- Automatic model training at scheduled times
+- Cron-based and interval-based scheduling
+- 5 preset schedules available
+- API for managing schedules
+- UI for adding, toggling, and deleting schedules
 
-**New Endpoints:**
-- `GET /api/training-history/` - Get history with filters
-- `GET /api/training-history/recent` - Get 10 most recent sessions
-- `GET /api/training-history/stats` - Overall statistics
-- `GET /api/training-history/stats/{model_type}` - Model-specific stats
-
-### ✅ Server Modularization (PARTIAL)
-Created modular initialization files for future refactoring:
-- `/app/backend/config/app_config.py` - App creation, middleware
-- `/app/backend/config/database.py` - MongoDB connection
-- `/app/backend/config/websocket.py` - WebSocket manager
-- `/app/backend/init/core_services.py` - Core service initialization
-- `/app/backend/init/prediction_services.py` - Prediction services
-- `/app/backend/init/scheduler_services.py` - Scheduler services
-
-**Note:** These modules are created but server.py still uses inline initialization. Full migration would require careful testing.
+**6. Server Modularization (Partial)**
+- Created modular initialization files in `/app/backend/config/` and `/app/backend/init/`
 
 ---
 
-## 📋 Upcoming Tasks
+## New Features This Session
 
-### P1: Complete RL Agent Training
-- Training is in progress (30 episodes)
-- After completion, all 8 prediction services will be fully operational
+### Training Scheduler
+**Service:** `/app/backend/services/training_scheduler.py`
+**Routes:** `/app/backend/routes/training_scheduler.py`
 
-### P2: Full Server.py Modularization
-- Migrate server.py to use the new init modules
-- Break down the 650+ line file into manageable pieces
+**API Endpoints:**
+- `GET /api/training-scheduler/` - List all schedules
+- `POST /api/training-scheduler/` - Create schedule
+- `DELETE /api/training-scheduler/{id}` - Delete schedule
+- `POST /api/training-scheduler/{id}/toggle` - Enable/disable
+- `POST /api/training-scheduler/{id}/run-now` - Manual trigger
+- `GET /api/training-scheduler/presets/list` - Get preset schedules
 
-### P3: Media Data Training
-- Verify social sentiment pipeline uses media/news data
-- Train models on media data
+**Presets:**
+- Daily RL Agent (2 AM) - 100 episodes
+- Daily Transformer (3 AM)
+- Weekly Full Training (Sunday 1 AM) - 200 episodes
+- Every 6 Hours - 50 episodes
+- Every 12 Hours (Transformer)
 
----
-
-## Future/Backlog Tasks
-- Push notifications (Web Push API)
-- Deeper Twitter/Reddit sentiment integration
-- Training comparison dashboard (compare results across sessions)
-- Model export/import functionality
+**Supported Model Types:**
+- `rl_agent` - Reinforcement Learning Trading Agent
+- `transformer` - Transformer Predictor
+- `regime` - Market Regime Predictor
 
 ---
 
 ## System Architecture
 
-### Backend Services (Python/FastAPI)
+### Backend Services
 ```
 /app/backend/
-├── config/                      # NEW: Configuration modules
+├── config/                      # Configuration modules
 │   ├── app_config.py
 │   ├── database.py
 │   └── websocket.py
-├── init/                        # NEW: Service initialization modules
+├── init/                        # Service initialization modules
 │   ├── core_services.py
 │   ├── prediction_services.py
 │   └── scheduler_services.py
 ├── services/
-│   ├── training_history.py      # NEW: Training history tracking
-│   ├── automated_trader.py      # MODIFIED: + prediction signals
-│   ├── rl_trading_agent.py      # MODIFIED: + history service
-│   ├── background_tasks.py
-│   └── ... (other services)
+│   ├── training_scheduler.py    # NEW: Automatic training scheduling
+│   ├── training_history.py      # Training session tracking
+│   ├── automated_trader.py      # + prediction signals integration
+│   ├── rl_trading_agent.py      # + history service integration
+│   └── ... (40+ other services)
 ├── routes/
-│   ├── training_history.py      # NEW: Training history API
-│   ├── kraken.py
-│   └── ...
-└── server.py
+│   ├── training_scheduler.py    # NEW: Scheduler API
+│   ├── training_history.py      # History API
+│   └── ... (20+ other routes)
+└── server.py                    # ~700 lines (to be modularized)
 ```
 
 ### Key API Endpoints
-- `POST /api/predictions/rl-agent/train` - Start RL training (background)
-- `GET /api/predictions/rl-agent/training-status` - Check training progress
-- `GET /api/kraken/auto-trader/prediction-signals/{symbol}` - Get prediction signals
-- `GET /api/training-history/recent` - Recent training sessions
-- `GET /api/training-history/stats` - Training statistics
-- `WS /ws/training` - WebSocket for real-time updates
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/training-scheduler/` | GET/POST | Manage training schedules |
+| `/api/training-history/recent` | GET | Recent training sessions |
+| `/api/predictions/rl-agent/train` | POST | Start RL training (background) |
+| `/api/kraken/auto-trader/prediction-signals/{symbol}` | GET | Get prediction signals |
+| `/ws/training` | WebSocket | Real-time training updates |
 
 ### 8 Prediction Enhancement Services
 | # | Service | Status |
@@ -127,8 +117,8 @@ Created modular initialization files for future refactoring:
 | 1 | Order Book Analysis | ✅ Active |
 | 2 | On-Chain Analytics | ✅ Active |
 | 3 | Social Sentiment | ✅ Active |
-| 4 | Transformer Predictor | ✅ Trained |
-| 5 | RL Trading Agent | ⏳ Training |
+| 4 | Transformer Predictor | ⏳ Needs Training |
+| 5 | RL Trading Agent | ⏳ Needs Training |
 | 6 | Cross-Asset Correlation | ✅ Active |
 | 7 | Volatility Regime | ✅ Active |
 | 8 | Momentum Divergence | ✅ Active |
@@ -139,11 +129,37 @@ Created modular initialization files for future refactoring:
 - `/` - Dashboard
 - `/trading` - Trading Interface
 - `/portfolio` - Portfolio View
-- `/training` - AI Training Dashboard (with History)
+- `/training` - AI Training Dashboard (with Scheduler & History)
 - `/strategy-builder` - Custom Strategy Builder
 - `/enhanced-ai` - AI Brain
 - `/backtesting` - Backtesting
-- ... (many more)
+- ... (15+ more pages)
+
+---
+
+## 📋 Upcoming Tasks
+
+### P1: Full Server Modularization
+- Migrate server.py to use the new init modules
+- Break down 700+ line file into manageable pieces
+
+### P2: Train Models
+- Use the scheduler or manual training to get all models trained
+- RL Agent: `/api/predictions/rl-agent/train` (background)
+- Transformer: `/api/predictions/transformer/train`
+
+### P3: Test Weekly Rebalance with Predictions
+- Execute `/api/kraken/auto-trader/execute-weekly` in paper mode
+- Verify prediction signals affect coin selection
+
+---
+
+## Future/Backlog Tasks
+- Training comparison dashboard (compare results across sessions)
+- Model export/import functionality
+- Push notifications (Web Push API)
+- Deeper Twitter/Reddit sentiment integration
+- Model performance analytics dashboard
 
 ---
 
@@ -153,16 +169,13 @@ Created modular initialization files for future refactoring:
 - **CoinGecko** - Market data
 - **Emergent LLM Key** - AI chat
 - **TensorFlow/Keras/Scikit-learn** - ML/DL models
+- **APScheduler** - Background job scheduling
 
 ---
 
 ## Current Status
 - **Budget:** $500 allocated (isolated)
 - **Real Trading:** Enabled
-- **Models:** 7/8 active, 1 training
+- **Active Schedules:** 1 (daily RL at 2 AM)
+- **Models:** 5/8 trained
 - **All Services:** Operational
-
----
-
-## Test Reports
-- `/app/test_reports/iteration_*.json`
