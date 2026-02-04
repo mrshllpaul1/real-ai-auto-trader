@@ -529,6 +529,33 @@ async def execute_ai_command(request: CommandRequest):
         ])
         response_text += gem_summary
     
+    # Add event data to response
+    if event_data:
+        if event_data["type"] == "price_event":
+            likely_cause = event_data.get("likely_cause")
+            event_summary = f"\n\n**📰 Event Analysis for {event_data['coin']} on {event_data['date']}:**\n"
+            event_summary += f"• Price Change: {event_data['price_change']}\n"
+            if likely_cause:
+                event_summary += f"• Likely Cause: {likely_cause.get('title', 'Unknown')}\n"
+                event_summary += f"• Category: {likely_cause.get('category', 'general').title()}\n"
+                event_summary += f"• Confidence: {likely_cause.get('confidence', 0)}%\n"
+            if event_data.get("related_news"):
+                event_summary += "• Related News:\n" + "\n".join([f"  - {n}" for n in event_data["related_news"][:3]])
+            response_text += event_summary
+        
+        elif event_data["type"] == "coin_events":
+            event_summary = f"\n\n**📅 Major Events for {event_data['coin']}:**\n"
+            for e in event_data.get("events", []):
+                impact_emoji = "📈" if e["impact"] == "positive" else "📉" if e["impact"] == "negative" else "↔️"
+                event_summary += f"• {e['date']}: {impact_emoji} {e['event']}\n"
+            response_text += event_summary
+        
+        elif event_data["type"] == "keyword_events":
+            event_summary = f"\n\n**🔍 Events matching '{event_data['keyword']}':**\n"
+            for e in event_data.get("events", []):
+                event_summary += f"• {e['date']}: {e['event']}\n"
+            response_text += event_summary
+    
     return {
         "response": response_text,
         "query": request.query,
@@ -539,6 +566,7 @@ async def execute_ai_command(request: CommandRequest):
         "predictions": ai_response.get("predictions"),
         "gems": [g['symbol'] for g in gems_found] if gems_found else ai_response.get("gems", []),
         "gems_data": gems_found,
+        "event_data": event_data,
         "timestamp": datetime.utcnow().isoformat(),
         "error": False
     }
