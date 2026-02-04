@@ -68,15 +68,16 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ## Upcoming Tasks (Priority Order)
 
-### 🟠 P1 - Integrate Gem ML/DL Predictor into Auto-Trader
-- Update `automated_trader.py` to use `gem_ml_dl_predictor.py` service
-- Replace older gem-finding logic with ML/DL comparator
-- Status: NOT STARTED
+### ✅ P1 - Integrate Gem ML/DL Predictor (COMPLETE)
+- Updated `automated_trader.py` with `gem_ml_dl_predictor.py` integration
+- Added `_find_best_gem()` method that tries ML/DL first, falls back to legacy
+- Gem predictor scans for moonshot/high_potential/likely_gem/potential labels
 
-### 🟡 P2 - Integrate Background Task Manager
-- Refactor long-running operations to use `background_tasks.py`
-- Apply to: model training, backtesting, regime prediction
-- Status: NOT STARTED
+### ✅ P2 - Integrate Background Task Manager (COMPLETE)
+- Added `background_task_manager` to `automated_trader.py`
+- New methods: `train_models_background()`, `scan_gems_background()`
+- Long-running operations can now be offloaded to background tasks
+- Added `get_service_status()` for comprehensive status reporting
 
 ---
 
