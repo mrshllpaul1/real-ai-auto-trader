@@ -362,7 +362,7 @@ async def execute_weekly_strategy(paper_trade: bool = True):
         raise HTTPException(status_code=503, detail="Auto trader not initialized")
     
     try:
-        result = await _automated_trader.execute_weekly_strategy(paper_trade=paper_trade)
+        result = await _automated_trader.execute_weekly_rebalance(paper_trade=paper_trade)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Execution failed: {str(e)}")
