@@ -734,10 +734,13 @@ class RegimePredictionEngine:
         
         predictions = {}
         
+        # DL models that need sequence data
+        dl_models = ['lstm', 'gru', 'bilstm', 'cnn_lstm', 'attention']
+        
         # Get predictions from all models for comparison
         for name, model in self.models.items():
             try:
-                if name in ['lstm', 'gru'] and TF_AVAILABLE:
+                if name in dl_models and TF_AVAILABLE:
                     # Need sequence for DL models
                     if len(X) >= self.sequence_length:
                         X_seq = self.scaler.transform(X[-self.sequence_length:])
@@ -746,6 +749,10 @@ class RegimePredictionEngine:
                         pred_class = np.argmax(probs)
                         confidence = float(probs[pred_class]) * 100
                     else:
+                        # Not enough data for DL model
+                        predictions[name] = {
+                            'error': f'Need at least {self.sequence_length} data points for DL model'
+                        }
                         continue
                 else:
                     # ML models
