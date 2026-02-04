@@ -183,6 +183,9 @@ const TrainingDashboard = () => {
   const [rlStatus, setRlStatus] = useState(null);
   const [transformerStatus, setTransformerStatus] = useState(null);
   const [backgroundTasks, setBackgroundTasks] = useState([]);
+  const [trainingHistory, setTrainingHistory] = useState([]);
+  const [historyStats, setHistoryStats] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [wsConnected, setWsConnected] = useState(false);
