@@ -36,20 +36,24 @@ class LearningService:
     async def get_learning_status(self) -> Dict[str, Any]:
         """Get current learning status and statistics"""
         # Calculate recent accuracy from trades
-        recent_accuracy = await self._calculate_recent_accuracy()
+        try:
+            recent_accuracy = await self._calculate_recent_accuracy()
+        except Exception as e:
+            logger.error(f"Error calculating accuracy: {e}")
+            recent_accuracy = 0.0
         
-        # Get model statuses
+        # Get model statuses with safe attribute access
         model_statuses = {
             "transformer": {
-                "trained": self.transformer.is_trained if self.transformer else False,
+                "trained": getattr(self.transformer, 'is_trained', False) if self.transformer else False,
                 "last_train": None
             },
             "rl_agent": {
-                "trained": self.rl_agent.is_trained if self.rl_agent else False,
+                "trained": getattr(self.rl_agent, 'is_trained', False) if self.rl_agent else False,
                 "last_train": None
             },
             "regime": {
-                "trained": self.regime.is_trained if self.regime else False,
+                "trained": getattr(self.regime, 'is_trained', False) if self.regime else False,
                 "last_train": None
             }
         }
