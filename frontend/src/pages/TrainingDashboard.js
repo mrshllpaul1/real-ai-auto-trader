@@ -199,6 +199,11 @@ const TrainingDashboard = () => {
   const [learningRecommendations, setLearningRecommendations] = useState([]);
   const [learningCycleRunning, setLearningCycleRunning] = useState(false);
   const [showLearning, setShowLearning] = useState(true);
+  // Auto-Spot Scan state
+  const [autoSpotStatus, setAutoSpotStatus] = useState(null);
+  const [showAutoSpot, setShowAutoSpot] = useState(true);
+  const [autoSpotRunning, setAutoSpotRunning] = useState(false);
+  const [lastScanResults, setLastScanResults] = useState(null);
 
   // WebSocket connection for real-time updates (optional, with fallback to polling)
   useEffect(() => {
