@@ -7,7 +7,8 @@ import { Progress } from '@/components/ui/progress';
 import { 
   Wallet, TrendingUp, TrendingDown, RefreshCw, Settings, X,
   Target, Shield, DollarSign, Activity, AlertTriangle, Check,
-  ChevronDown, ChevronUp, Edit2, Trash2, Lock
+  Edit2, Lock, ArrowUpRight, ArrowDownRight, Zap, Clock,
+  BarChart3, Percent, Crosshair
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
@@ -15,12 +16,10 @@ import { toast } from 'sonner';
 
 const PositionManagement = () => {
   const [positions, setPositions] = useState([]);
-  const [trailingData, setTrailingData] = useState([]);
-  const [partialTpData, setPartialTpData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [expandedPosition, setExpandedPosition] = useState(null);
   const [editingPosition, setEditingPosition] = useState(null);
   const [editValues, setEditValues] = useState({ stop_loss: '', take_profit: '' });
+  const [closingPosition, setClosingPosition] = useState(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -31,7 +30,6 @@ const PositionManagement = () => {
         api.get('/automation/partial-tp/positions').catch(() => ({ data: { positions: [] } }))
       ]);
       
-      // Merge data from all sources
       const mergedPositions = mergePositionData(
         positionsRes.data?.positions || [],
         trailingRes.data?.positions || [],
@@ -39,8 +37,6 @@ const PositionManagement = () => {
       );
       
       setPositions(mergedPositions);
-      setTrailingData(trailingRes.data?.positions || []);
-      setPartialTpData(partialRes.data?.positions || []);
     } catch (error) {
       console.error('Error loading positions:', error);
       toast.error('Failed to load positions');
@@ -52,12 +48,10 @@ const PositionManagement = () => {
   const mergePositionData = (base, trailing, partial) => {
     const positionMap = new Map();
     
-    // Start with base positions
     base.forEach(pos => {
       positionMap.set(pos.position_id || pos.coin_id, { ...pos });
     });
     
-    // Merge trailing data
     trailing.forEach(t => {
       const key = t.position_id || t.coin_id;
       if (positionMap.has(key)) {
@@ -67,7 +61,6 @@ const PositionManagement = () => {
       }
     });
     
-    // Merge partial TP data
     partial.forEach(p => {
       const key = p.position_id || p.coin_id;
       if (positionMap.has(key)) {
@@ -112,13 +105,11 @@ const PositionManagement = () => {
   };
 
   const handleClosePosition = async (positionId, coinId) => {
-    if (!window.confirm(`Are you sure you want to close your ${coinId?.toUpperCase()} position?`)) {
-      return;
-    }
-    
+    setClosingPosition(positionId);
     try {
       await api.post('/isolated-portfolio/close-position', {
         position_id: positionId,
+        exit_price: 0,
         reason: 'manual_close'
       });
       
@@ -126,12 +117,14 @@ const PositionManagement = () => {
       loadData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to close position');
+    } finally {
+      setClosingPosition(null);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-[#050505]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-[#9D00FF] mx-auto mb-4" />
           <p className="text-[#A1A1AA]">Loading Positions...</p>
@@ -142,66 +135,76 @@ const PositionManagement = () => {
 
   const totalValue = positions.reduce((sum, p) => sum + (p.current_value || p.amount_usd || 0), 0);
   const totalPnl = positions.reduce((sum, p) => sum + (p.pnl_usd || 0), 0);
+  const totalPnlPct = totalValue > 0 ? (totalPnl / (totalValue - totalPnl)) * 100 : 0;
   const profitableCount = positions.filter(p => (p.pnl_pct || 0) > 0).length;
 
   return (
-    <div className="p-4 lg:p-8 space-y-6" data-testid="position-management-page">
+    <div className="min-h-screen bg-[#050505] p-4 lg:p-8" data-testid="position-management-page">
       {/* Header */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+        className="mb-8"
       >
-        <div>
-          <h1 className="text-3xl lg:text-4xl font-heading font-black tracking-tight mb-2 flex items-center gap-3">
-            <Wallet size={40} className="text-[#9D00FF]" />
-            <span className="text-white">Position</span>
-            <span className="text-[#9D00FF]">Management</span>
-          </h1>
-          <p className="text-[#A1A1AA]">
-            Manage your AI trading positions, stops, and take-profits
-          </p>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl lg:text-4xl font-heading font-black tracking-tight mb-2 flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-[#9D00FF]/20 to-[#00FF94]/20 border border-[#9D00FF]/30">
+                <Wallet size={32} className="text-[#9D00FF]" />
+              </div>
+              <span className="text-white">Position</span>
+              <span className="bg-gradient-to-r from-[#9D00FF] to-[#00FF94] bg-clip-text text-transparent">Manager</span>
+            </h1>
+            <p className="text-[#A1A1AA]">
+              Monitor and manage your AI trading positions with precision
+            </p>
+          </div>
+          <Button
+            onClick={loadData}
+            variant="outline"
+            className="border-[#1F1F1F] hover:border-[#9D00FF]/50 hover:bg-[#9D00FF]/10"
+            data-testid="refresh-btn"
+          >
+            <RefreshCw size={16} className="mr-2" />
+            Refresh
+          </Button>
         </div>
-        <Button
-          onClick={loadData}
-          variant="outline"
-          className="border-[#1F1F1F]"
-          data-testid="refresh-btn"
-        >
-          <RefreshCw size={16} className="mr-2" />
-          Refresh
-        </Button>
       </motion.div>
 
-      {/* Summary Cards */}
+      {/* Portfolio Summary Cards */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
       >
-        <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
-          <CardContent className="p-4">
+        <Card className="bg-gradient-to-br from-[#0A0A0A] to-[#111] border-[#1F1F1F] overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-[#9D00FF]/10 rounded-full blur-2xl" />
+          <CardContent className="p-4 relative">
             <div className="flex items-center gap-2 mb-2">
               <Activity size={18} className="text-[#9D00FF]" />
               <span className="text-sm text-[#A1A1AA]">Open Positions</span>
             </div>
             <div className="text-3xl font-data font-bold text-white">{positions.length}</div>
+            <p className="text-xs text-[#A1A1AA] mt-1">{profitableCount} profitable</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
-          <CardContent className="p-4">
+        <Card className="bg-gradient-to-br from-[#0A0A0A] to-[#111] border-[#1F1F1F] overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-[#00FF94]/10 rounded-full blur-2xl" />
+          <CardContent className="p-4 relative">
             <div className="flex items-center gap-2 mb-2">
               <DollarSign size={18} className="text-[#00FF94]" />
               <span className="text-sm text-[#A1A1AA]">Total Value</span>
             </div>
             <div className="text-3xl font-data font-bold text-white">${totalValue.toFixed(2)}</div>
+            <p className="text-xs text-[#A1A1AA] mt-1">across all positions</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
-          <CardContent className="p-4">
+        <Card className="bg-gradient-to-br from-[#0A0A0A] to-[#111] border-[#1F1F1F] overflow-hidden relative">
+          <div className={`absolute top-0 right-0 w-20 h-20 ${totalPnl >= 0 ? 'bg-[#00FF94]/10' : 'bg-[#FF0055]/10'} rounded-full blur-2xl`} />
+          <CardContent className="p-4 relative">
             <div className="flex items-center gap-2 mb-2">
               {totalPnl >= 0 ? (
                 <TrendingUp size={18} className="text-[#00FF94]" />
@@ -213,272 +216,320 @@ const PositionManagement = () => {
             <div className={`text-3xl font-data font-bold ${totalPnl >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
               {totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}
             </div>
+            <p className={`text-xs mt-1 ${totalPnlPct >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+              {totalPnlPct >= 0 ? '+' : ''}{totalPnlPct.toFixed(2)}%
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
-          <CardContent className="p-4">
+        <Card className="bg-gradient-to-br from-[#0A0A0A] to-[#111] border-[#1F1F1F] overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-[#FFB800]/10 rounded-full blur-2xl" />
+          <CardContent className="p-4 relative">
             <div className="flex items-center gap-2 mb-2">
-              <Check size={18} className="text-[#FFB800]" />
-              <span className="text-sm text-[#A1A1AA]">Profitable</span>
+              <Target size={18} className="text-[#FFB800]" />
+              <span className="text-sm text-[#A1A1AA]">Win Rate</span>
             </div>
             <div className="text-3xl font-data font-bold text-[#FFB800]">
-              {profitableCount}/{positions.length}
+              {positions.length > 0 ? ((profitableCount / positions.length) * 100).toFixed(0) : 0}%
             </div>
+            <p className="text-xs text-[#A1A1AA] mt-1">{profitableCount}/{positions.length} positions</p>
           </CardContent>
         </Card>
       </motion.div>
 
-      {/* Positions List */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-      >
-        <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Target className="text-[#FFB800]" />
-              All Positions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {positions.length === 0 ? (
-              <div className="text-center py-12 text-[#A1A1AA]">
-                <Wallet size={48} className="mx-auto mb-4 opacity-50" />
-                <p>No open positions</p>
-                <p className="text-sm">Positions opened by AI will appear here</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {positions.map((pos) => {
-                  const isExpanded = expandedPosition === pos.position_id;
-                  const isEditing = editingPosition === pos.position_id;
-                  const pnlPct = pos.pnl_pct || 0;
-                  const pnlUsd = pos.pnl_usd || 0;
-                  const hasTrailingStop = pos.trailing_stop_active || pos.trailing_stop_price > 0;
-                  const partialTpTaken = pos.partial_tp_taken?.length || pos.levels_taken || 0;
-                  
-                  return (
-                    <motion.div
-                      key={pos.position_id || pos.coin_id}
-                      className="bg-[#121212] rounded-lg border border-[#1F1F1F] overflow-hidden"
-                      layout
-                    >
-                      {/* Main Row */}
-                      <div 
-                        className="p-4 cursor-pointer hover:bg-[#1A1A1A] transition-colors"
-                        onClick={() => setExpandedPosition(isExpanded ? null : pos.position_id)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-white font-bold text-lg">{pos.coin_id?.toUpperCase()}</span>
-                                {pos.is_gem && <Badge className="bg-[#FFB800]/20 text-[#FFB800]">💎 Gem</Badge>}
-                                {hasTrailingStop && (
-                                  <Badge className="bg-[#9D00FF]/20 text-[#9D00FF]">Trailing</Badge>
-                                )}
-                                {partialTpTaken > 0 && (
-                                  <Badge className="bg-[#00FF94]/20 text-[#00FF94]">{partialTpTaken} TP</Badge>
-                                )}
-                                {pos.stop_at_breakeven && (
-                                  <Badge className="bg-[#007AFF]/20 text-[#007AFF]">BE</Badge>
-                                )}
-                              </div>
-                              <p className="text-sm text-[#A1A1AA]">
-                                {pos.quantity?.toFixed(6)} @ ${pos.entry_price?.toFixed(4)}
-                              </p>
-                            </div>
+      {/* Position Cards Grid */}
+      {positions.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center py-16"
+        >
+          <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-[#1F1F1F] flex items-center justify-center">
+            <Wallet size={40} className="text-[#A1A1AA]" />
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2">No Open Positions</h3>
+          <p className="text-[#A1A1AA] max-w-md mx-auto">
+            Positions opened by the AI trader will appear here. Set your trading budget to get started.
+          </p>
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+        >
+          {positions.map((pos, index) => {
+            const pnlPct = pos.pnl_pct || 0;
+            const pnlUsd = pos.pnl_usd || 0;
+            const isProfit = pnlPct >= 0;
+            const hasTrailingStop = pos.trailing_stop_active || pos.trailing_stop_price > 0;
+            const partialTpTaken = pos.partial_tp_taken?.length || pos.levels_taken || 0;
+            const isEditing = editingPosition === pos.position_id;
+            const isClosing = closingPosition === pos.position_id;
+            
+            return (
+              <motion.div
+                key={pos.position_id || pos.coin_id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <Card className={`bg-[#0A0A0A] border-[#1F1F1F] overflow-hidden hover:border-[#333] transition-all duration-300 ${
+                  isProfit ? 'hover:shadow-[0_0_30px_rgba(0,255,148,0.1)]' : 'hover:shadow-[0_0_30px_rgba(255,0,85,0.1)]'
+                }`}>
+                  {/* Card Header with Coin Info */}
+                  <div className={`p-4 border-b border-[#1F1F1F] bg-gradient-to-r ${
+                    isProfit ? 'from-[#00FF94]/5 to-transparent' : 'from-[#FF0055]/5 to-transparent'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg ${
+                          isProfit ? 'bg-[#00FF94]/20 text-[#00FF94]' : 'bg-[#FF0055]/20 text-[#FF0055]'
+                        }`}>
+                          {pos.coin_id?.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-white text-lg">{pos.coin_id?.toUpperCase()}</h3>
+                            {pos.is_gem && (
+                              <Badge className="bg-[#FFB800]/20 text-[#FFB800] text-xs">GEM</Badge>
+                            )}
                           </div>
-                          
-                          <div className="flex items-center gap-6">
-                            <div className="text-right">
-                              <p className="text-white font-data">${(pos.current_value || pos.amount_usd || 0).toFixed(2)}</p>
-                              <p className={`text-sm font-data ${pnlPct >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
-                                {pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(2)}% (${pnlUsd >= 0 ? '+' : ''}{pnlUsd.toFixed(2)})
-                              </p>
-                            </div>
-                            
-                            {isExpanded ? <ChevronUp size={20} className="text-[#A1A1AA]" /> : <ChevronDown size={20} className="text-[#A1A1AA]" />}
-                          </div>
+                          <p className="text-xs text-[#A1A1AA]">{pos.symbol}</p>
                         </div>
                       </div>
-                      
-                      {/* Expanded Details */}
-                      <AnimatePresence>
-                        {isExpanded && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="border-t border-[#1F1F1F]"
-                          >
-                            <div className="p-4 space-y-4">
-                              {/* Price Levels */}
-                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div className="p-3 bg-[#0A0A0A] rounded-lg">
-                                  <p className="text-xs text-[#A1A1AA] mb-1">Entry Price</p>
-                                  <p className="text-white font-data">${pos.entry_price?.toFixed(4)}</p>
-                                </div>
-                                <div className="p-3 bg-[#0A0A0A] rounded-lg">
-                                  <p className="text-xs text-[#A1A1AA] mb-1">Current Price</p>
-                                  <p className="text-white font-data">${pos.current_price?.toFixed(4) || 'N/A'}</p>
-                                </div>
-                                <div className="p-3 bg-[#0A0A0A] rounded-lg border border-[#FF0055]/30">
-                                  <p className="text-xs text-[#FF0055] mb-1 flex items-center gap-1">
-                                    <Shield size={12} /> Stop-Loss
-                                  </p>
-                                  <p className="text-[#FF0055] font-data">
-                                    ${(pos.trailing_stop_price || pos.stop_loss_price || 0).toFixed(4)}
-                                  </p>
-                                  {hasTrailingStop && (
-                                    <p className="text-xs text-[#A1A1AA]">Trailing active</p>
-                                  )}
-                                </div>
-                                <div className="p-3 bg-[#0A0A0A] rounded-lg border border-[#00FF94]/30">
-                                  <p className="text-xs text-[#00FF94] mb-1 flex items-center gap-1">
-                                    <Target size={12} /> Take-Profit
-                                  </p>
-                                  <p className="text-[#00FF94] font-data">
-                                    ${pos.take_profit_price?.toFixed(4) || 'N/A'}
-                                  </p>
-                                </div>
-                              </div>
-                              
-                              {/* Trailing Stop Info */}
-                              {hasTrailingStop && (
-                                <div className="p-3 bg-[#9D00FF]/10 rounded-lg border border-[#9D00FF]/30">
-                                  <p className="text-sm text-[#9D00FF] font-medium mb-2">📈 Trailing Stop Active</p>
-                                  <div className="grid grid-cols-3 gap-4 text-sm">
-                                    <div>
-                                      <p className="text-[#A1A1AA]">Highest Price</p>
-                                      <p className="text-white">${pos.highest_price?.toFixed(4)}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-[#A1A1AA]">Trailing Stop</p>
-                                      <p className="text-[#9D00FF]">${pos.trailing_stop_price?.toFixed(4)}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-[#A1A1AA]">Distance</p>
-                                      <p className="text-white">{pos.distance_to_trailing_stop?.toFixed(2)}%</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {/* Partial TP Info */}
-                              {(partialTpTaken > 0 || pos.next_level) && (
-                                <div className="p-3 bg-[#00FF94]/10 rounded-lg border border-[#00FF94]/30">
-                                  <p className="text-sm text-[#00FF94] font-medium mb-2">💰 Partial Take-Profit</p>
-                                  <div className="flex items-center gap-4">
-                                    <div>
-                                      <p className="text-[#A1A1AA] text-sm">Levels Taken</p>
-                                      <p className="text-white">{partialTpTaken} / 3</p>
-                                    </div>
-                                    {pos.next_level && (
-                                      <div>
-                                        <p className="text-[#A1A1AA] text-sm">Next Level</p>
-                                        <p className="text-[#00FF94]">
-                                          {pos.next_level.close_pct}% at {pos.next_level.at_profit_pct}% profit
-                                          ({pos.next_level.distance_pct > 0 ? `${pos.next_level.distance_pct}% away` : 'Ready!'})
-                                        </p>
-                                      </div>
-                                    )}
-                                    {pos.stop_at_breakeven && (
-                                      <Badge className="bg-[#007AFF]/20 text-[#007AFF]">
-                                        <Lock size={12} className="mr-1" /> Stop at Breakeven
-                                      </Badge>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {/* Edit Section */}
-                              {isEditing ? (
-                                <div className="p-4 bg-[#0A0A0A] rounded-lg border border-[#1F1F1F]">
-                                  <p className="text-white font-medium mb-3">Edit Position Levels</p>
-                                  <div className="grid grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                      <label className="text-xs text-[#A1A1AA] mb-1 block">Stop-Loss Price</label>
-                                      <Input
-                                        type="number"
-                                        placeholder={pos.stop_loss_price?.toString() || '0'}
-                                        value={editValues.stop_loss}
-                                        onChange={(e) => setEditValues({ ...editValues, stop_loss: e.target.value })}
-                                        className="bg-[#121212] border-[#1F1F1F]"
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="text-xs text-[#A1A1AA] mb-1 block">Take-Profit Price</label>
-                                      <Input
-                                        type="number"
-                                        placeholder={pos.take_profit_price?.toString() || '0'}
-                                        value={editValues.take_profit}
-                                        onChange={(e) => setEditValues({ ...editValues, take_profit: e.target.value })}
-                                        className="bg-[#121212] border-[#1F1F1F]"
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="flex gap-2">
-                                    <Button
-                                      onClick={() => handleUpdateLevels(pos.position_id)}
-                                      className="bg-[#00FF94] hover:bg-[#00FF94]/80 text-black"
-                                    >
-                                      <Check size={16} className="mr-2" /> Save
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => {
-                                        setEditingPosition(null);
-                                        setEditValues({ stop_loss: '', take_profit: '' });
-                                      }}
-                                      className="border-[#1F1F1F]"
-                                    >
-                                      Cancel
-                                    </Button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setEditingPosition(pos.position_id);
-                                      setEditValues({
-                                        stop_loss: pos.stop_loss_price?.toString() || '',
-                                        take_profit: pos.take_profit_price?.toString() || ''
-                                      });
-                                    }}
-                                    className="border-[#1F1F1F]"
-                                  >
-                                    <Edit2 size={16} className="mr-2" /> Edit Levels
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleClosePosition(pos.position_id, pos.coin_id);
-                                    }}
-                                    className="border-[#FF0055]/50 text-[#FF0055] hover:bg-[#FF0055]/10"
-                                  >
-                                    <X size={16} className="mr-2" /> Close Position
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          </motion.div>
+                      <div className={`flex items-center gap-1 px-3 py-1.5 rounded-full ${
+                        isProfit ? 'bg-[#00FF94]/20 text-[#00FF94]' : 'bg-[#FF0055]/20 text-[#FF0055]'
+                      }`}>
+                        {isProfit ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+                        <span className="font-data font-bold">{isProfit ? '+' : ''}{pnlPct.toFixed(2)}%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <CardContent className="p-4 space-y-4">
+                    {/* Position Value & P&L */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-3 rounded-lg bg-[#111] border border-[#1F1F1F]">
+                        <p className="text-xs text-[#A1A1AA] mb-1">Position Value</p>
+                        <p className="text-xl font-data font-bold text-white">
+                          ${(pos.current_value || pos.amount_usd || 0).toFixed(2)}
+                        </p>
+                      </div>
+                      <div className={`p-3 rounded-lg border ${
+                        isProfit ? 'bg-[#00FF94]/5 border-[#00FF94]/20' : 'bg-[#FF0055]/5 border-[#FF0055]/20'
+                      }`}>
+                        <p className="text-xs text-[#A1A1AA] mb-1">Unrealized P&L</p>
+                        <p className={`text-xl font-data font-bold ${isProfit ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                          {isProfit ? '+' : ''}${pnlUsd.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Entry & Current Price */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-[#A1A1AA] mb-1 flex items-center gap-1">
+                          <Clock size={12} /> Entry Price
+                        </p>
+                        <p className="font-data text-white">${pos.entry_price?.toFixed(4)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-[#A1A1AA] mb-1 flex items-center gap-1">
+                          <BarChart3 size={12} /> Current Price
+                        </p>
+                        <p className="font-data text-white">${pos.current_price?.toFixed(4) || 'N/A'}</p>
+                      </div>
+                    </div>
+
+                    {/* Quantity */}
+                    <div className="p-3 rounded-lg bg-[#111] border border-[#1F1F1F]">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-[#A1A1AA]">Quantity</span>
+                        <span className="font-data text-white">{pos.quantity?.toFixed(6)}</span>
+                      </div>
+                    </div>
+
+                    {/* Risk Management Badges */}
+                    <div className="flex flex-wrap gap-2">
+                      {hasTrailingStop && (
+                        <Badge className="bg-[#9D00FF]/20 text-[#9D00FF] border border-[#9D00FF]/30">
+                          <Zap size={12} className="mr-1" /> Trailing Stop
+                        </Badge>
+                      )}
+                      {partialTpTaken > 0 && (
+                        <Badge className="bg-[#00FF94]/20 text-[#00FF94] border border-[#00FF94]/30">
+                          <Target size={12} className="mr-1" /> {partialTpTaken} TP Taken
+                        </Badge>
+                      )}
+                      {pos.stop_at_breakeven && (
+                        <Badge className="bg-[#007AFF]/20 text-[#007AFF] border border-[#007AFF]/30">
+                          <Lock size={12} className="mr-1" /> Breakeven
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Stop Loss & Take Profit */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 rounded-lg bg-[#FF0055]/5 border border-[#FF0055]/20">
+                        <div className="flex items-center gap-1 mb-1">
+                          <Shield size={12} className="text-[#FF0055]" />
+                          <span className="text-xs text-[#FF0055]">Stop Loss</span>
+                        </div>
+                        <p className="font-data text-[#FF0055] font-bold">
+                          ${(pos.trailing_stop_price || pos.stop_loss_price || 0).toFixed(4)}
+                        </p>
+                        {hasTrailingStop && (
+                          <p className="text-xs text-[#A1A1AA] mt-1">Trailing active</p>
                         )}
-                      </AnimatePresence>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
+                      </div>
+                      <div className="p-3 rounded-lg bg-[#00FF94]/5 border border-[#00FF94]/20">
+                        <div className="flex items-center gap-1 mb-1">
+                          <Target size={12} className="text-[#00FF94]" />
+                          <span className="text-xs text-[#00FF94]">Take Profit</span>
+                        </div>
+                        <p className="font-data text-[#00FF94] font-bold">
+                          ${pos.take_profit_price?.toFixed(4) || 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Trailing Stop Details */}
+                    {hasTrailingStop && pos.highest_price && (
+                      <div className="p-3 rounded-lg bg-[#9D00FF]/5 border border-[#9D00FF]/20">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-[#A1A1AA]">Highest Price</span>
+                          <span className="text-[#9D00FF] font-data">${pos.highest_price?.toFixed(4)}</span>
+                        </div>
+                        {pos.distance_to_trailing_stop && (
+                          <div className="flex items-center justify-between text-sm mt-2">
+                            <span className="text-[#A1A1AA]">Distance to Stop</span>
+                            <span className="text-white font-data">{pos.distance_to_trailing_stop?.toFixed(2)}%</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Partial TP Progress */}
+                    {(partialTpTaken > 0 || pos.next_level) && (
+                      <div className="p-3 rounded-lg bg-[#00FF94]/5 border border-[#00FF94]/20">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-[#00FF94]">Partial Take Profit Progress</span>
+                          <span className="text-xs text-white">{partialTpTaken}/3</span>
+                        </div>
+                        <Progress value={(partialTpTaken / 3) * 100} className="h-2 bg-[#1F1F1F]" />
+                        {pos.next_level && (
+                          <p className="text-xs text-[#A1A1AA] mt-2">
+                            Next: {pos.next_level.close_pct}% at {pos.next_level.at_profit_pct}% profit
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Edit Mode */}
+                    <AnimatePresence>
+                      {isEditing && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="p-4 rounded-lg bg-[#111] border border-[#1F1F1F] space-y-3"
+                        >
+                          <p className="text-sm text-white font-medium">Edit Position Levels</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs text-[#A1A1AA] mb-1 block">Stop-Loss Price</label>
+                              <Input
+                                type="number"
+                                step="0.0001"
+                                placeholder={pos.stop_loss_price?.toString() || '0'}
+                                value={editValues.stop_loss}
+                                onChange={(e) => setEditValues({ ...editValues, stop_loss: e.target.value })}
+                                className="bg-[#0A0A0A] border-[#1F1F1F]"
+                                data-testid={`edit-sl-${pos.position_id}`}
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-[#A1A1AA] mb-1 block">Take-Profit Price</label>
+                              <Input
+                                type="number"
+                                step="0.0001"
+                                placeholder={pos.take_profit_price?.toString() || '0'}
+                                value={editValues.take_profit}
+                                onChange={(e) => setEditValues({ ...editValues, take_profit: e.target.value })}
+                                className="bg-[#0A0A0A] border-[#1F1F1F]"
+                                data-testid={`edit-tp-${pos.position_id}`}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => handleUpdateLevels(pos.position_id)}
+                              size="sm"
+                              className="flex-1 bg-[#00FF94] hover:bg-[#00FF94]/80 text-black"
+                              data-testid={`save-levels-${pos.position_id}`}
+                            >
+                              <Check size={14} className="mr-1" /> Save
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingPosition(null);
+                                setEditValues({ stop_loss: '', take_profit: '' });
+                              }}
+                              className="flex-1 border-[#1F1F1F]"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Action Buttons */}
+                    {!isEditing && (
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setEditingPosition(pos.position_id);
+                            setEditValues({
+                              stop_loss: pos.stop_loss_price?.toString() || '',
+                              take_profit: pos.take_profit_price?.toString() || ''
+                            });
+                          }}
+                          className="flex-1 border-[#1F1F1F] hover:border-[#9D00FF]/50 hover:bg-[#9D00FF]/10"
+                          data-testid={`edit-btn-${pos.position_id}`}
+                        >
+                          <Edit2 size={14} className="mr-1" /> Edit Levels
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleClosePosition(pos.position_id, pos.coin_id)}
+                          disabled={isClosing}
+                          className="flex-1 border-[#FF0055]/30 text-[#FF0055] hover:bg-[#FF0055]/10"
+                          data-testid={`close-btn-${pos.position_id}`}
+                        >
+                          {isClosing ? (
+                            <RefreshCw size={14} className="mr-1 animate-spin" />
+                          ) : (
+                            <X size={14} className="mr-1" />
+                          )}
+                          Close
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+      )}
     </div>
   );
 };
