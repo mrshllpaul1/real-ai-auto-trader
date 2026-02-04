@@ -265,7 +265,7 @@ const PositionManagement = () => {
             const isProfit = pnlPct >= 0;
             const hasTrailingStop = pos.trailing_stop_active || pos.trailing_stop_price > 0;
             const partialTpTaken = pos.partial_tp_taken?.length || pos.levels_taken || 0;
-            const isEditing = editingPosition === pos.position_id;
+            const isEditing = editingPosition !== null && editingPosition === (pos.position_id || pos.coin_id);
             const isClosing = closingPosition === pos.position_id;
             
             return (
