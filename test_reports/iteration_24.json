@@ -1,0 +1,86 @@
+{
+  "summary": "Partial Take-Profit Feature - All 17 backend tests passed. Feature is fully functional with correct default configuration (3 levels: 50% at 30%, 25% at 50%, 25% at 100%).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_partial_take_profit.py",
+    "/app/test_reports/pytest/pytest_partial_take_profit.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "✓ Partial take-profit correctly implemented with 3 default levels",
+    "✓ Level 1: Close 50% at 30% profit",
+    "✓ Level 2: Close 25% at 50% profit",
+    "✓ Level 3: Close 25% at 100% profit",
+    "✓ move_stop_to_breakeven enabled - stop moves to entry after first partial TP",
+    "✓ partial_take_profits stat tracked in automation status",
+    "✓ Validation correctly rejects levels exceeding 100% total",
+    "✓ All 7 positions show correct partial TP status with next_level info"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_partial_take_profit.py"
+  ],
+  "success_rate": {
+    "backend": "100% (17/17 tests passed)",
+    "frontend": "N/A (backend only testing)"
+  },
+  "seed_data_creation": "None required",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Partial take-profit is enabled by default with 3 levels. 7 positions currently open, none have partial TP taken yet (all need 30%+ profit for first level). All positions are in slight profit (1-3%) but far from first TP level (need ~27-29% more profit).",
+  "features_tested": {
+    "GET /api/automation/partial-tp/config": {
+      "status": "PASS",
+      "response": {
+        "enabled": true,
+        "move_stop_to_breakeven": true,
+        "levels": [
+          {"pct_of_position": 50, "at_profit_pct": 30},
+          {"pct_of_position": 25, "at_profit_pct": 50},
+          {"pct_of_position": 25, "at_profit_pct": 100}
+        ],
+        "statistics": {"partial_take_profits": 0},
+        "example": "present with scenario and bonus info"
+      }
+    },
+    "POST /api/automation/partial-tp/config": {
+      "status": "PASS",
+      "tests": [
+        "Update enabled status - works",
+        "Update move_stop_to_breakeven - works",
+        "Update levels - works",
+        "Validation rejects >100% total - works"
+      ]
+    },
+    "GET /api/automation/partial-tp/positions": {
+      "status": "PASS",
+      "response": {
+        "total": 7,
+        "with_partial_tp_taken": 0,
+        "positions": "All 7 positions with correct structure including next_level info"
+      }
+    },
+    "GET /api/automation/status": {
+      "status": "PASS",
+      "partial_tp_config_present": true,
+      "partial_take_profit_enabled": true,
+      "partial_tp_levels_count": 3
+    }
+  },
+  "verification_summary": {
+    "default_levels_verified": true,
+    "level_1": "50% at 30% profit ✓",
+    "level_2": "25% at 50% profit ✓",
+    "level_3": "25% at 100% profit ✓",
+    "total_percentage": "100% ✓",
+    "move_stop_to_breakeven": "enabled ✓",
+    "partial_take_profits_stat_tracked": true
+  }
+}
