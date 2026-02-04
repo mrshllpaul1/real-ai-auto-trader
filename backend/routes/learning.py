@@ -1,7 +1,18 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from typing import Dict, Any
+from datetime import datetime, timezone
 
 router = APIRouter()
+
+# Global reference for learning service
+_learning_service = None
+
+
+def set_learning_service(learning_service):
+    """Set the learning service reference"""
+    global _learning_service
+    _learning_service = learning_service
+
 
 async def get_database():
     from server import db
