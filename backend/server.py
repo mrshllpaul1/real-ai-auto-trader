@@ -521,7 +521,15 @@ async def initialize_services():
         # Initialize Push Notification Service
         from services.push_notification_service import get_notification_service
         push_notification = get_notification_service(db)
+        automated_trader.notification_service = push_notification
         logger.info("✅ Push Notification Service initialized")
+        
+        # Initialize OHLCV Data Manager
+        from services.ohlcv_data_manager import get_ohlcv_manager
+        ohlcv_manager = get_ohlcv_manager(db)
+        await ohlcv_manager.ensure_indexes()
+        ohlcv_routes.set_dependencies(ohlcv_manager)
+        logger.info("✅ OHLCV Data Manager initialized")
         
         # Start scheduler
         await scheduler_service.start()
