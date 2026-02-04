@@ -222,6 +222,69 @@ class AutomatedWeeklyTrader:
             'ml_prediction': ml_prediction
         }
     
+    async def _find_best_gem(self, paper_trade: bool = True) -> Optional[Dict]:
+        """
+        Find the best gem using ML/DL predictor (P1 integration).
+        Falls back to legacy gem finder if ML/DL predictor is unavailable.
+        
+        Returns:
+            Best gem candidate with coin_id, total_score, and prediction details
+        """
+        # Try ML/DL gem predictor first (more advanced)
+        if self.gem_ml_dl and self.gem_ml_dl.is_trained:
+            try:
+                logger.info("  🔮 Using ML/DL Gem Predictor...")
+                
+                # Scan for gems using ML/DL models
+                gem_candidates = await self.gem_ml_dl.scan_for_gems()
+                
+                if gem_candidates:
+                    # Filter to only tradeable gems (have Kraken symbol)
+                    tradeable_gems = [
+                        g for g in gem_candidates 
+                        if g['symbol'].lower() in self.kraken_symbols or g['coin_id'].lower() in self.kraken_symbols
+                    ]
+                    
+                    # Filter to high-potential gems
+                    high_potential = [
+                        g for g in tradeable_gems 
+                        if g['prediction'] in ['moonshot', 'high_potential', 'likely_gem', 'potential']
+                    ]
+                    
+                    if high_potential:
+                        best_gem = high_potential[0]  # Already sorted by gem_score
+                        logger.info(f"  💎 ML/DL Gem: {best_gem['symbol']} ({best_gem['prediction']}, score: {best_gem['gem_score']})")
+                        
+                        return {
+                            'coin_id': best_gem['coin_id'].lower(),
+                            'symbol': best_gem['symbol'],
+                            'total_score': best_gem['gem_score'],
+                            'prediction': best_gem['prediction'],
+                            'confidence': best_gem['confidence'],
+                            'ml_vote': best_gem.get('ml_vote'),
+                            'dl_vote': best_gem.get('dl_vote'),
+                            'source': 'ml_dl_predictor'
+                        }
+                    else:
+                        logger.info("  📊 No high-potential gems found by ML/DL predictor")
+                        
+            except Exception as e:
+                logger.warning(f"  ⚠️ ML/DL gem prediction failed: {e}, falling back to legacy")
+        
+        # Fallback to legacy gem finder
+        try:
+            logger.info("  🔍 Using legacy gem finder...")
+            gems = await self.gem_finder.find_gems(datetime.now(), max_gems=1)
+            if gems:
+                gem = gems[0]
+                gem['source'] = 'legacy_gem_finder'
+                logger.info(f"  💎 Legacy Gem: {gem.get('coin_id', 'unknown')} (score: {gem.get('total_score', 0)})")
+                return gem
+        except Exception as e:
+            logger.warning(f"  ⚠️ Legacy gem finder failed: {e}")
+        
+        return None
+    
     async def execute_weekly_rebalance(self, paper_trade: bool = True) -> Dict[str, Any]:
         """
         Execute weekly portfolio rebalance based on AI selection.
