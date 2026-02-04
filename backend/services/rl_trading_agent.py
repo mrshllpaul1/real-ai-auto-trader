@@ -643,7 +643,8 @@ class RLTradingAgent:
             task_name=f"rl_agent_training_{episodes}_episodes",
             timeout=900,  # 15 minutes
             episodes=episodes,
-            prices=normalized_prices
+            prices=normalized_prices,
+            history_service=self.history_service
         )
         
         self.current_training_task_id = task_id
