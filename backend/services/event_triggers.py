@@ -535,6 +535,13 @@ class EventTriggerService:
         # Store execution history
         await self.db[self.trigger_history_collection].insert_one(execution)
         
+        # Remove MongoDB _id before returning (added by insert_one)
+        execution.pop('_id', None)
+        
+        # Convert datetime to ISO string for JSON serialization
+        if isinstance(execution.get('executed_at'), datetime):
+            execution['executed_at'] = execution['executed_at'].isoformat()
+        
         return execution
     
     async def check_recent_events(self) -> List[Dict[str, Any]]:
