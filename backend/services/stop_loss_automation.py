@@ -263,7 +263,19 @@ class StopLossAutomation:
                 'timestamp': datetime.now(timezone.utc).isoformat()
             }
         
-        # Check take-profit
+        # PARTIAL TAKE PROFIT LOGIC
+        if self.config['partial_take_profit_enabled'] and pnl_pct > 0:
+            partial_result = await self._check_partial_take_profit(
+                position=position,
+                current_price=current_price,
+                entry_price=entry_price,
+                pnl_pct=pnl_pct
+            )
+            
+            if partial_result.get('action') == 'partial_take_profit':
+                return partial_result
+        
+        # Check take-profit (full close)
         if take_profit_price > 0 and current_price >= take_profit_price:
             logger.info(f"🟢 TAKE-PROFIT triggered for {coin_id}: ${current_price:.4f} >= ${take_profit_price:.4f}")
             
