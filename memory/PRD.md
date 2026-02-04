@@ -26,86 +26,74 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ---
 
-## 🎯 Session 27 - Weekly Strategy Execution (Feb 4, 2026)
+## 🎯 Session 28 - RL Agent Fix & Prediction Integration (Feb 4, 2026)
 
-### ✅ P0: Weekly Strategy with Enhanced AI (COMPLETE)
+### ✅ P0: RL Agent Training Timeout Fix (COMPLETE)
 
-**Fixed:** Route method name mismatch (`execute_weekly_strategy` → `execute_weekly_rebalance`)
+**Problem:** RL Agent training was timing out after 300s, blocking the backend event loop
 
-**Dynamic Confidence Threshold Implemented:**
-| Market Regime | Min Confidence | Logic |
-|---------------|----------------|-------|
-| Strong Bull | 65% | Be selective when market is hot |
-| Bull | 60% | Slightly higher bar |
-| Sideways | 55% | Base threshold |
-| Bear | 45% | Lower to allow some trades |
-| Strong Bear | 50% | Cautious but not frozen |
-
-**Execution Results (Bear Market):**
-| Metric | Value |
-|--------|-------|
-| Market Regime | BEAR (87.8% confidence) |
-| ML Model | Random Forest (100% accuracy) |
-| Position Size | 10.5% (adaptive) |
-| Stop Loss | 12% (adaptive) |
-| Take Profit | 20% (adaptive) |
-| Min Confidence | 45% (dynamic) |
-| Trades Executed | 3 |
-| Total Invested | $122.73 |
-
-**Trades Executed:**
-| Coin | Amount | Entry Price | AI Score |
-|------|--------|-------------|----------|
-| Polkadot (DOT) | $40.91 | $1.52 | 49.4% |
-| Ethereum (ETH) | $40.91 | $2,278 | ~48% |
-| Cardano (ADA) | $40.91 | $0.30 | ~47% |
+**Solution:** 
+- Refactored `/app/backend/services/rl_trading_agent.py` to use `ThreadPoolExecutor` for CPU-bound TensorFlow operations
+- Added new task types `RL_AGENT_TRAINING` and `TRANSFORMER_TRAINING` to background_tasks.py
+- Pre-fetch data async, then run training in thread pool to prevent event loop blocking
+- Added `/api/predictions/rl-agent/training-status` endpoints
 
 **Files Modified:**
-- `/app/backend/routes/kraken.py` - Fixed method name mismatch (line 365)
-- `/app/backend/services/adaptive_strategy.py` - Dynamic confidence thresholds
+- `/app/backend/services/rl_trading_agent.py` - New `train_background()` method with thread pool
+- `/app/backend/services/background_tasks.py` - New task types for RL and Transformer training
+- `/app/backend/routes/prediction_enhancements.py` - New training status endpoints
+- `/app/backend/server.py` - Inject task_manager into RL agent
+
+**Verification:** Backend remains responsive during training (health check passes)
+
+### ✅ P1: Prediction Signals Integration into Auto-Trader (COMPLETE)
+
+**Problem:** 8 prediction enhancement services were built but not used in trading decisions
+
+**Solution:**
+- Added `get_prediction_signals()` method to automated_trader.py
+- Enhanced `execute_weekly_rebalance()` to boost/reduce coin scores based on prediction signals
+- Weighted combination: 60% AI trainer + 40% prediction enhancements
+- Filter out "strong_sell" signals from coin selection
+- Added new API endpoint for getting prediction signals per symbol
+
+**Files Modified:**
+- `/app/backend/services/automated_trader.py` - New `get_prediction_signals()`, enhanced coin selection
+- `/app/backend/server.py` - Inject prediction_services into automated_trader
+- `/app/backend/routes/kraken.py` - New `/api/kraken/auto-trader/prediction-signals/{symbol}` endpoint
+
+**New API Endpoint:**
+```
+GET /api/kraken/auto-trader/prediction-signals/{symbol}
+Returns composite signal from all 8 prediction services
+```
 
 ---
 
-## Upcoming Tasks (Priority Order)
+## 📋 Upcoming Tasks (Priority Order)
 
-### ✅ Action Items Complete (Feb 4, 2026)
+### P1: Complete Model Training
+- Train Transformer model via `/api/predictions/transformer/train`
+- Train RL Agent via `/api/predictions/rl-agent/train` (now non-blocking)
+- Verify media data usage in social sentiment pipeline
 
-**1. OHLCV Data Download for ML/DL Training**
-- `/app/backend/services/ohlcv_data_manager.py` - Bulk download service
-- `/app/backend/routes/ohlcv_data.py` - API endpoints
-- Downloaded: 11,712+ records for 32 coins (365 days daily data)
-- Transformer Model: Trained (78.4% train, 68.5% val accuracy)
-- RL Agent: Training in progress
+### P2: WebSocket for Real-Time Notifications
+- Add WebSocket endpoint to server.py
+- Connect from frontend for live trade/alert notifications
+- Replace polling with push updates
 
-**2. Custom Strategy Integration into Auto-Trader**
-- Updated `/app/backend/services/automated_trader.py`:
-  - `load_active_strategies()` - Load strategies from DB
-  - `execute_custom_strategies()` - Execute all active strategies
-  - `_evaluate_strategy_conditions()` - Check entry/exit conditions
-  - `_execute_strategy_trade()` - Execute trades based on signals
-- API: `POST /api/kraken/auto-trader/execute-custom-strategies`
-
-**3. Custom Strategy Builder with AI Chat**
-- `/app/backend/services/custom_strategy_builder.py`
-- `/app/frontend/src/pages/StrategyBuilder.js`
-- 8 pre-built templates + AI natural language builder
-
-**4. Push Notification Service**
-- `/app/backend/services/push_notification_service.py`
-- Integrated into automated_trader for strategy signals
-
-### 📋 Future Tasks
-- Add WebSocket for real-time notifications
-- Build notification center UI component
-- Schedule automatic custom strategy execution
+### P3: UI Enhancements
+- Add prediction signals visualization to dashboard
+- Show real-time training progress for models
+- Display comprehensive analysis per coin
 
 ---
 
 ## Future/Backlog Tasks
-- Push notifications for gem alerts and regime changes
-- UI for building custom trading strategies
-- Social media sentiment integration (Twitter/Reddit)
-- Modularize `server.py` for better maintainability
+- Push notifications (Web Push API) for alerts when user is away
+- Deeper social media sentiment integration (Twitter/Reddit APIs)
+- Modularize server.py into smaller service registration modules
+- Add more coins to OHLCV data pipeline
 
 ---
 
@@ -115,47 +103,40 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 ```
 /app/backend/
 ├── services/
-│   ├── automated_trader.py      # Weekly trading executor
-│   ├── enhanced_ai_engine.py    # 8 AI enhancements
-│   ├── gem_ml_dl_predictor.py   # ML/DL gem prediction
-│   ├── paper_trading_simulator.py
-│   ├── adaptive_strategy.py
-│   ├── regime_predictor.py
-│   ├── isolated_portfolio.py
-│   └── background_tasks.py
+│   ├── automated_trader.py      # Weekly trading + prediction signals
+│   ├── rl_trading_agent.py      # RL agent with background training
+│   ├── background_tasks.py      # Task manager for long operations
+│   ├── transformer_predictor.py # Transformer model
+│   ├── order_book_analyzer.py   # Order book analysis
+│   ├── on_chain_analytics.py    # On-chain metrics
+│   ├── social_sentiment_pipeline.py # Social analysis
+│   ├── cross_asset_correlation.py # Cross-asset correlation
+│   ├── advanced_technical_analysis.py # Advanced TA
+│   └── ... (other services)
 ├── routes/
-│   ├── kraken.py               # Kraken exchange routes
-│   ├── enhanced_ai.py          # Enhanced AI routes
-│   └── portfolio_visualization.py
+│   ├── kraken.py               # Kraken exchange + prediction signals
+│   ├── prediction_enhancements.py # 8 prediction services
+│   └── ...
 └── server.py                   # Main application
 ```
 
 ### Key API Endpoints
-- `POST /api/kraken/auto-trader/execute-weekly` - Execute weekly strategy
-- `GET /api/kraken/auto-trader/status` - Auto-trader status
-- `GET /api/enhanced-ai/scan-top-coins` - Scan coins with enhanced AI
-- `GET /api/enhanced-ai/signal/{symbol}` - Enhanced signal for coin
-- `POST /api/paper-trading/simulate` - Run paper trading simulation
+- `POST /api/predictions/rl-agent/train` - Start RL training (background)
+- `GET /api/predictions/rl-agent/training-status` - Check training progress
+- `GET /api/kraken/auto-trader/prediction-signals/{symbol}` - Get all prediction signals
+- `POST /api/kraken/auto-trader/execute-weekly` - Execute weekly strategy (uses predictions)
 
-### 8 Enhanced AI Features
-1. **Ensemble Voting** - Weighted model consensus
-2. **Advanced Features** - 29 technical indicators
-3. **Sentiment Integration** - Fear & Greed + News + Social
-4. **Multi-Timeframe** - 1H, 4H, 1D, 1W analysis
-5. **Dynamic Risk** - Confidence-based position sizing
-6. **Reinforcement Learning** - Entry/exit optimization
-7. **Auto-Retraining** - Daily at 2:00 UTC
-8. **Whale Tracking** - Large wallet monitoring
-
-### ML/DL Models for Regime Prediction
-| Model | Type | Accuracy |
-|-------|------|----------|
-| Random Forest | ML | 100% |
-| Gradient Boosting | ML | 100% |
-| SVM | ML | 87.2% |
-| GRU | DL | 67.4% |
-| LSTM | DL | 66.3% |
-| BiLSTM | DL | 65.2% |
+### 8 Prediction Enhancement Services
+| # | Service | Status |
+|---|---------|--------|
+| 1 | Order Book Analysis | ✅ Active |
+| 2 | On-Chain Analytics | ✅ Active |
+| 3 | Social Sentiment | ✅ Active |
+| 4 | Transformer Predictor | ⏳ Needs Training |
+| 5 | RL Trading Agent | ⏳ Needs Training |
+| 6 | Cross-Asset Correlation | ✅ Active |
+| 7 | Volatility Regime | ✅ Active |
+| 8 | Momentum Divergence | ✅ Active |
 
 ---
 
@@ -172,13 +153,10 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 ## Current Status
 - **Budget:** $500 allocated (isolated)
 - **Real Trading:** Enabled
-- **Market Regime:** Bear (87.8% confidence)
-- **Models Trained:** Yes (8 models)
+- **Models:** 6/8 prediction services active
 - **All Services:** Operational
 
 ---
 
 ## Test Reports
-- `/app/test_reports/iteration_25.json`
-- `/app/test_reports/iteration_26.json`
-- `/app/test_reports/iteration_27.json`
+- `/app/test_reports/iteration_*.json`
