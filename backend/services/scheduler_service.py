@@ -338,6 +338,10 @@ class SchedulerService:
                 result = await self._run_weekly_retrain()
             elif job_id == 'gem_predictor_retrain':
                 result = await self._run_gem_predictor_retrain()
+            elif job_id == 'ml_model_retrain':
+                result = await self._run_model_retrain()
+            elif job_id == 'sentiment_scrape':
+                result = await self._run_sentiment_scrape()
             else:
                 return {'success': False, 'error': 'Unknown job type'}
             
