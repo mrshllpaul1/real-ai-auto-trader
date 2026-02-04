@@ -116,6 +116,7 @@ api_router.include_router(ensemble.router, tags=["Ensemble AI"])
 api_router.include_router(coindesk.router, tags=["CoinDesk News"])
 api_router.include_router(historical_data.router, tags=["Historical Data"])
 api_router.include_router(ai_learning_loop.router, tags=["AI Learning Loop"])
+api_router.include_router(events.router, tags=["Events"])
 
 # Include the router
 app.include_router(api_router)
