@@ -27,8 +27,8 @@ const EventTimeline = () => {
     try {
       setLoading(true);
       const [eventsRes, correlatedRes] = await Promise.all([
-        api.get(`/events/recent?limit=50`).catch(() => ({ data: { events: [] } })),
-        api.get(`/events/correlated?limit=30`).catch(() => ({ data: { events: [] } }))
+        api.get(`/events/database/list?limit=50`).catch(() => ({ data: { events: [] } })),
+        api.get(`/events/database/search?query=price&limit=30`).catch(() => ({ data: { events: [] } }))
       ]);
 
       setEvents(eventsRes.data?.events || []);
