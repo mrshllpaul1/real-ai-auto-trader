@@ -471,6 +471,11 @@ async def initialize_services():
         bg_tasks.set_dependencies(db, task_manager)
         logger.info("✅ Background Task Manager initialized")
         
+        # P1 & P2: Inject ML/DL gem predictor and task manager into automated trader
+        automated_trader.gem_ml_dl = gem_ml_dl_engine
+        automated_trader.task_manager = task_manager
+        logger.info("✅ Automated Trader updated with ML/DL Gem Predictor & Background Task Manager")
+        
         # Start scheduler
         await scheduler_service.start()
         
