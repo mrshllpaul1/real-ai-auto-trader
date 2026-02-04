@@ -71,7 +71,7 @@ class LearningService:
     
     async def _calculate_recent_accuracy(self, days: int = 7) -> float:
         """Calculate prediction accuracy from recent trades"""
-        if not self.db:
+        if self.db is None:
             return 0.0
         
         try:
