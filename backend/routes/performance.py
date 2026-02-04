@@ -273,7 +273,7 @@ async def compare_ml_vs_dl():
         metadata = model_metadata.get(model_name, {})
         model_info = {
             'name': model_name,
-            'accuracy': round(accuracy * 100, 2),
+            'accuracy': round(accuracy, 2),  # accuracy already stored as percentage
             'type': metadata.get('type', 'Unknown'),
             'category': metadata.get('category', 'Unknown'),
             'description': metadata.get('description', ''),
