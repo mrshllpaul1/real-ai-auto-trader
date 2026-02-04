@@ -338,6 +338,156 @@ class TrainingScheduler:
                 logger.warning(f"⚠️ Skipped schedule {schedule_id}: no trainer for {model_type}")
         
         logger.info(f"📋 Loaded {len(self.active_schedules)} training schedules")
+    
+    # ===========================================
+    # AUTO-SPOT SCAN SCHEDULING
+    # ===========================================
+    
+    async def add_auto_spot_scan_schedule(
+        self,
+        interval_minutes: int = 60,
+        paper_trade: bool = True,
+        enabled: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Add a scheduled auto-spot scan that runs periodically.
+        
+        Args:
+            interval_minutes: How often to scan (default: every 60 minutes)
+            paper_trade: Whether to use paper trading (default: True)
+            enabled: Whether schedule is active
+            
+        Returns:
+            Schedule creation result
+        """
+        schedule_id = f"auto_spot_scan_{interval_minutes}m"
+        
+        # Check if auto-spot scan job already exists
+        existing = await self.collection.find_one({"schedule_id": schedule_id})
+        if existing:
+            return {
+                "status": "exists",
+                "schedule_id": schedule_id,
+                "message": "Auto-spot scan schedule already exists"
+            }
+        
+        schedule = {
+            "schedule_id": schedule_id,
+            "model_type": "auto_spot_scan",
+            "schedule_type": "interval",
+            "interval_minutes": interval_minutes,
+            "paper_trade": paper_trade,
+            "enabled": enabled,
+            "created_at": datetime.now(timezone.utc),
+            "last_run": None,
+            "next_run": None,
+            "run_count": 0
+        }
+        
+        await self.collection.insert_one(schedule)
+        
+        if enabled:
+            job = await self._create_auto_spot_job(schedule)
+            if job:
+                schedule["next_run"] = job.next_run_time
+                self.active_schedules[schedule_id] = schedule
+        
+        logger.info(f"✅ Auto-spot scan schedule created: every {interval_minutes} minutes")
+        
+        return {
+            "status": "created",
+            "schedule_id": schedule_id,
+            "interval_minutes": interval_minutes,
+            "paper_trade": paper_trade,
+            "enabled": enabled
+        }
+    
+    async def _create_auto_spot_job(self, schedule: Dict) -> Any:
+        """Create APScheduler job for auto-spot scan"""
+        schedule_id = schedule["schedule_id"]
+        interval_minutes = schedule.get("interval_minutes", 60)
+        paper_trade = schedule.get("paper_trade", True)
+        
+        async def spot_scan_job():
+            """Execute auto-spot scan"""
+            logger.info(f"\n{'='*50}")
+            logger.info(f"⏰ SCHEDULED AUTO-SPOT SCAN")
+            logger.info(f"{'='*50}")
+            
+            try:
+                # Import automated trader
+                from routes.kraken import _automated_trader
+                
+                if _automated_trader is None:
+                    logger.error("Auto trader not available for spot scan")
+                    return
+                
+                result = await _automated_trader.auto_spot_scan(paper_trade=paper_trade)
+                
+                # Log results
+                executed = result.get('executed_trades', 0)
+                buys = result.get('buy_opportunities', 0)
+                sells = result.get('sell_opportunities', 0)
+                
+                logger.info(f"✅ Spot scan complete: {buys} buys, {sells} sells, {executed} executed")
+                
+                # Update schedule
+                await self.collection.update_one(
+                    {"schedule_id": schedule_id},
+                    {
+                        "$set": {
+                            "last_run": datetime.now(timezone.utc),
+                            "last_result": {
+                                "buy_opportunities": buys,
+                                "sell_opportunities": sells,
+                                "executed_trades": executed
+                            }
+                        },
+                        "$inc": {"run_count": 1}
+                    }
+                )
+                
+            except Exception as e:
+                logger.error(f"Auto-spot scan error: {e}")
+        
+        # Create interval trigger
+        trigger = IntervalTrigger(minutes=interval_minutes)
+        
+        job = self.scheduler.add_job(
+            spot_scan_job,
+            trigger=trigger,
+            id=schedule_id,
+            name=f"auto_spot_scan_{interval_minutes}m",
+            replace_existing=True
+        )
+        
+        logger.info(f"📅 Auto-spot scan job scheduled: every {interval_minutes} minutes")
+        return job
+    
+    async def get_auto_spot_scan_status(self) -> Dict[str, Any]:
+        """Get status of auto-spot scan schedule"""
+        schedule = await self.collection.find_one({"model_type": "auto_spot_scan"})
+        
+        if not schedule:
+            return {
+                "enabled": False,
+                "message": "No auto-spot scan schedule configured"
+            }
+        
+        # Clean up MongoDB fields
+        schedule_copy = dict(schedule)
+        schedule_copy.pop('_id', None)
+        
+        return {
+            "enabled": schedule.get("enabled", False),
+            "schedule_id": schedule.get("schedule_id"),
+            "interval_minutes": schedule.get("interval_minutes"),
+            "paper_trade": schedule.get("paper_trade", True),
+            "last_run": schedule.get("last_run"),
+            "next_run": schedule.get("next_run"),
+            "run_count": schedule.get("run_count", 0),
+            "last_result": schedule.get("last_result")
+        }
 
 
 def get_training_scheduler(db: AsyncIOMotorDatabase) -> TrainingScheduler:
