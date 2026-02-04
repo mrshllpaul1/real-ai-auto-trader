@@ -1211,3 +1211,155 @@ class SchedulerService:
             })
             
             return {'error': str(e)}
+
+    # ========== ML Model Retraining Job ==========
+    
+    async def add_model_retrain_job(
+        self,
+        day_of_week: str = 'sat',
+        hour: int = 3
+    ) -> Dict[str, Any]:
+        """
+        Add weekly ML/DL model retraining job.
+        Retrains all regime prediction models to stay accurate.
+        
+        Default: Saturday at 3 AM UTC
+        """
+        job_id = 'ml_model_retrain'
+        
+        if self.scheduler.get_job(job_id):
+            self.scheduler.remove_job(job_id)
+        
+        self.scheduler.add_job(
+            self._run_model_retrain,
+            trigger=CronTrigger(day_of_week=day_of_week, hour=hour, minute=0),
+            id=job_id,
+            name='ML Model Retraining',
+            replace_existing=True
+        )
+        
+        self.active_jobs[job_id] = {
+            'type': 'model_retrain',
+            'schedule': f'{day_of_week} at {hour:02d}:00 UTC',
+            'created_at': datetime.utcnow().isoformat()
+        }
+        
+        logger.info(f"🧠 ML model retrain job added ({day_of_week} at {hour}:00 UTC)")
+        return {
+            'success': True,
+            'job_id': job_id,
+            'schedule': f'{day_of_week.capitalize()} at {hour:02d}:00 UTC'
+        }
+    
+    async def _run_model_retrain(self) -> Dict[str, Any]:
+        """Execute ML/DL model retraining"""
+        timestamp = datetime.utcnow()
+        logger.info(f"🧠 [{timestamp.strftime('%H:%M')}] Running ML model retraining...")
+        
+        try:
+            from services.regime_predictor import get_regime_predictor
+            
+            regime_predictor = get_regime_predictor(self.db)
+            
+            if not regime_predictor:
+                logger.warning("  ⚠️ Regime predictor not available")
+                return {'error': 'Regime predictor not initialized'}
+            
+            # Train models on BTC data (primary indicator)
+            result = await regime_predictor.train_models('BTC')
+            
+            # Store execution record
+            execution = {
+                'job_id': 'ml_model_retrain',
+                'timestamp': timestamp.isoformat(),
+                'success': 'error' not in result,
+                'best_model': result.get('best_model', {}),
+                'models_trained': len(result.get('models', {}))
+            }
+            await self.db.scheduler_executions.insert_one(execution)
+            
+            # Send alert
+            if self.alert_service and 'error' not in result:
+                best = result.get('best_model', {})
+                await self.alert_service.send_alert(
+                    title="🧠 ML Models Retrained",
+                    message=f"Best model: {best.get('name', 'Unknown')} ({best.get('accuracy', 0):.1f}% accuracy)",
+                    alert_type="model_retrain",
+                    priority="low"
+                )
+            
+            logger.info(f"  ✅ Model retrain complete: {result.get('best_model', {})}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"  ❌ Model retrain error: {e}")
+            await self.db.scheduler_executions.insert_one({
+                'job_id': 'ml_model_retrain',
+                'timestamp': timestamp.isoformat(),
+                'success': False,
+                'error': str(e)
+            })
+            return {'error': str(e)}
+    
+    # ========== Social Sentiment Scraping Job ==========
+    
+    async def add_sentiment_scrape_job(
+        self,
+        interval_hours: int = 4
+    ) -> Dict[str, Any]:
+        """
+        Add periodic social sentiment scraping job.
+        Scrapes Reddit, Fear & Greed, and news sources.
+        
+        Default: Every 4 hours
+        """
+        job_id = 'sentiment_scrape'
+        
+        if self.scheduler.get_job(job_id):
+            self.scheduler.remove_job(job_id)
+        
+        self.scheduler.add_job(
+            self._run_sentiment_scrape,
+            trigger=IntervalTrigger(hours=interval_hours),
+            id=job_id,
+            name='Social Sentiment Scraper',
+            replace_existing=True
+        )
+        
+        self.active_jobs[job_id] = {
+            'type': 'sentiment_scrape',
+            'interval_hours': interval_hours,
+            'created_at': datetime.utcnow().isoformat()
+        }
+        
+        logger.info(f"📊 Sentiment scrape job added (every {interval_hours} hours)")
+        return {
+            'success': True,
+            'job_id': job_id,
+            'interval_hours': interval_hours
+        }
+    
+    async def _run_sentiment_scrape(self) -> Dict[str, Any]:
+        """Execute social sentiment scraping"""
+        timestamp = datetime.utcnow()
+        logger.info(f"📊 [{timestamp.strftime('%H:%M')}] Running sentiment scrape...")
+        
+        try:
+            from services.social_sentiment import get_sentiment_scraper
+            
+            scraper = get_sentiment_scraper(self.db)
+            
+            if not scraper:
+                logger.warning("  ⚠️ Sentiment scraper not available")
+                return {'error': 'Sentiment scraper not initialized'}
+            
+            # Get aggregated sentiment
+            result = await scraper.get_aggregated_sentiment()
+            
+            logger.info(f"  ✅ Sentiment: {result.get('overall_sentiment', 'unknown')} ({result.get('overall_score', 50)})")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"  ❌ Sentiment scrape error: {e}")
+            return {'error': str(e)}
