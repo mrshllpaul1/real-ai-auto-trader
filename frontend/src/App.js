@@ -25,6 +25,8 @@ import EventTriggers from "./pages/EventTriggers";
 import GemBacktester from "./pages/GemBacktester";
 import EventTimeline from "./pages/EventTimeline";
 import TradingBudget from "./pages/TradingBudget";
+import TriggerPerformance from "./pages/TriggerPerformance";
+import AdaptiveStrategy from "./pages/AdaptiveStrategy";
 import Sidebar from "./components/Sidebar";
 import FloatingAIChat from "./components/FloatingAIChat";
 import { Toaster } from "./components/ui/sonner";
