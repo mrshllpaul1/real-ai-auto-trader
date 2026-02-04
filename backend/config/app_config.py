@@ -1,36 +1,19 @@
 """
-Application Configuration Module
-Handles FastAPI app creation, middleware, and logging setup
+Application Configuration
+Central configuration for FastAPI application
 """
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-import logging
+import os
+from pathlib import Path
 
-def create_app() -> FastAPI:
-    """Create and configure the FastAPI application"""
-    app = FastAPI(
-        title="AI Crypto Trading API",
-        description="Real money AI-powered cryptocurrency auto trading platform",
-        version="1.0.0"
-    )
-    
-    # Add CORS middleware
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    
-    return app
+# App metadata
+APP_TITLE = "AI Crypto Trading API"
+APP_DESCRIPTION = "Real money AI-powered cryptocurrency auto trading platform"
+APP_VERSION = "1.0.0"
 
+# CORS settings
+CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*').split(',')
 
-def setup_logging() -> logging.Logger:
-    """Configure and return the application logger"""
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-    return logging.getLogger(__name__)
+# Logging configuration
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
