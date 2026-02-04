@@ -20,10 +20,79 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 - **AI Chat Trading Execution** - Execute real trades via chat commands
 - **Continuous AI Learning Loop** - Track predictions and improve models
 - **Automated Daily Data Updates** - Keep OHLCV data fresh
+- **Weekly OHLCV Expansion** - Download 50 new coins every Sunday until 200+ complete
+- **Gem Backtester** - Iteratively improve prediction accuracy
 
 ---
 
-## 🎯 NEW: P1, P2, P3 Features Complete (Feb 3, 2026 - Session 10)
+## 🎯 NEW: Session 11 Features Complete (Feb 4, 2026)
+
+### ✅ Weekly OHLCV Expansion (50 coins/Sunday)
+
+**What was implemented:**
+- [x] **Master AI Coin List** - 215 coins across 6 tiers:
+  - Tier 1: Major cryptos (BTC, ETH, SOL, etc.)
+  - Tier 2: DeFi & Layer 2 (AAVE, UNI, ARB, etc.)
+  - Tier 3: Gaming & Metaverse (SAND, MANA, AXS, etc.)
+  - Tier 4: Infrastructure & Scaling (MATIC, OP, STRK, etc.)
+  - Tier 5: AI & Data (FET, AGIX, OCEAN, etc.)
+  - Tier 6: Meme & Community (DOGE, SHIB, PEPE, etc.)
+
+- [x] **Weekly Expansion Job**:
+  - `POST /api/scheduler/jobs/weekly-ohlcv-expansion` - Schedule job
+  - `POST /api/scheduler/jobs/ohlcv-expansion-now` - Run immediately
+  - `GET /api/scheduler/ohlcv-expansion-status` - Check progress
+  - Default: Sundays 4 AM UTC, 50 coins per batch
+
+**Current Progress:**
+- 80/215 coins downloaded (37.2%)
+- ~136 coins remaining
+- Estimated completion: 3 more weeks
+
+### ✅ AI Learning Loop Frontend UI
+
+**New Page: `/learning-loop`**
+- [x] **Overview Tab**: Model rankings, accuracy badges, weight recommendations
+- [x] **Model Performance Tab**: Per-model accuracy by type and confidence level
+- [x] **Insights Tab**: Training feedback, coin performance, pattern analysis
+- [x] **Predictions Tab**: Pending verification list, recent predictions
+
+**UI Components:**
+- Total Predictions counter
+- Verified/Pending breakdown
+- Verification rate percentage
+- Model rankings with accuracy badges (Excellent/Good/Needs Improvement)
+- Recommended weight adjustments
+- "How Learning Loop Works" explanation
+
+### ✅ Gem Prediction Backtester
+
+**What was implemented:**
+- [x] **GemBacktester Service**:
+  - Iterative weight adjustment to improve accuracy
+  - Tests predictions against historical OHLCV data
+  - Calculates accuracy based on actual 30-day gains
+
+- [x] **API Endpoints**:
+  - `POST /api/gems/backtest/start` - Start iterative backtesting
+  - `GET /api/gems/backtest/status` - Get progress and results
+  - `GET /api/gems/backtest/history` - View past backtest runs
+
+**Backtesting Algorithm:**
+1. Test predictions at 30%, 50%, 70% points in historical data
+2. Calculate gem score based on weighted factors
+3. Compare prediction to actual 30-day gain (20%+ = gem)
+4. Adjust weights based on false positive/negative ratio
+5. Repeat until target accuracy or max iterations
+
+**Current Results:**
+- ~30% accuracy (improving with each iteration)
+- Weight adjustments reducing false positives
+- Best weights stored and applied to predictor
+
+---
+
+## 🎯 P1, P2, P3 Features Complete (Feb 3, 2026 - Session 10)
 
 ### ✅ P1 COMPLETE: AI Chat Trading Execution
 
