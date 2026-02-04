@@ -271,6 +271,9 @@ const AILearningLoop = () => {
           <TabsTrigger value="overview" className="data-[state=active]:bg-[#9D00FF]">
             Overview
           </TabsTrigger>
+          <TabsTrigger value="charts" className="data-[state=active]:bg-[#9D00FF]">
+            Charts
+          </TabsTrigger>
           <TabsTrigger value="models" className="data-[state=active]:bg-[#9D00FF]">
             Model Performance
           </TabsTrigger>
@@ -281,6 +284,157 @@ const AILearningLoop = () => {
             Predictions
           </TabsTrigger>
         </TabsList>
+
+        {/* Charts Tab - NEW */}
+        <TabsContent value="charts" className="space-y-6">
+          {/* Backtest Accuracy Card */}
+          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
+            <Card className="bg-[#0A0A0A] border-[#1F1F1F]" data-testid="backtest-accuracy-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <LineChart className="text-[#00FF94]" />
+                  Gem Prediction Accuracy (Backtesting)
+                </CardTitle>
+                <CardDescription>
+                  Accuracy improvement over iterations using OHLCV historical data
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {backtestStatus?.result?.iterations ? (
+                  <>
+                    {/* Accuracy Gauge */}
+                    <div className="flex justify-around items-center py-4">
+                      <AccuracyGauge 
+                        value={backtestStatus.result?.final_accuracy || 0} 
+                        label="Final Accuracy" 
+                      />
+                      <div className="text-center">
+                        <div className="text-4xl font-data font-bold text-[#9D00FF]">
+                          {backtestStatus.result?.iterations?.length || 0}
+                        </div>
+                        <div className="text-xs text-[#A1A1AA]">Iterations</div>
+                      </div>
+                      <AccuracyGauge 
+                        value={backtestStatus.result?.best_threshold * 100 || 70} 
+                        label="Optimal Threshold" 
+                      />
+                    </div>
+                    
+                    {/* Accuracy Trend Chart */}
+                    <AccuracyTrendChart 
+                      data={backtestStatus.result.iterations} 
+                      title="Accuracy per Iteration"
+                    />
+                    
+                    {/* Optimized Weights */}
+                    {backtestStatus.result?.best_weights && (
+                      <div className="mt-6">
+                        <h4 className="text-sm font-medium text-[#A1A1AA] mb-3">Optimized Prediction Weights</h4>
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                          {Object.entries(backtestStatus.result.best_weights)
+                            .sort((a, b) => b[1] - a[1])
+                            .map(([factor, weight]) => (
+                              <div key={factor} className="p-3 bg-[#121212] rounded-lg border border-[#1F1F1F]">
+                                <div className="text-xs text-[#A1A1AA] mb-1 capitalize">
+                                  {factor.replace(/_/g, ' ')}
+                                </div>
+                                <div className="text-lg font-data font-bold text-white">
+                                  {(weight * 100).toFixed(0)}%
+                                </div>
+                                <Progress value={weight * 100} className="h-1 mt-1" />
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <Gauge size={48} className="mx-auto mb-4 text-[#A1A1AA] opacity-50" />
+                    <p className="text-[#A1A1AA] mb-4">No backtest data yet</p>
+                    <p className="text-xs text-[#A1A1AA]">
+                      Run a backtest from the Gem Backtester page to see accuracy charts
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Model Performance Comparison */}
+          {insights?.model_rankings && insights.model_rankings.length > 0 && (
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}>
+              <Card className="bg-[#0A0A0A] border-[#1F1F1F]" data-testid="model-comparison-chart">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3">
+                    <Layers className="text-[#007AFF]" />
+                    Model Performance Comparison
+                  </CardTitle>
+                  <CardDescription>Accuracy comparison across all AI models</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ModelComparisonChart models={insights.model_rankings} />
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* Prediction Stats Grid */}
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }} 
+            animate={{ y: 0, opacity: 1 }} 
+            transition={{ delay: 0.2 }}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+          >
+            <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
+              <CardContent className="p-4 text-center">
+                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-[#00FF94]/20 flex items-center justify-center">
+                  <ArrowUpRight className="text-[#00FF94]" />
+                </div>
+                <div className="text-2xl font-data font-bold text-[#00FF94]">
+                  {insights?.strong_areas?.length || 0}
+                </div>
+                <div className="text-xs text-[#A1A1AA]">Strong Areas</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
+              <CardContent className="p-4 text-center">
+                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-[#FF0055]/20 flex items-center justify-center">
+                  <ArrowDownRight className="text-[#FF0055]" />
+                </div>
+                <div className="text-2xl font-data font-bold text-[#FF0055]">
+                  {insights?.weak_areas?.length || 0}
+                </div>
+                <div className="text-xs text-[#A1A1AA]">Weak Areas</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
+              <CardContent className="p-4 text-center">
+                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-[#9D00FF]/20 flex items-center justify-center">
+                  <Brain className="text-[#9D00FF]" />
+                </div>
+                <div className="text-2xl font-data font-bold text-[#9D00FF]">
+                  {Object.keys(performance || {}).length}
+                </div>
+                <div className="text-xs text-[#A1A1AA]">Active Models</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
+              <CardContent className="p-4 text-center">
+                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-[#FFB800]/20 flex items-center justify-center">
+                  <Target className="text-[#FFB800]" />
+                </div>
+                <div className="text-2xl font-data font-bold text-[#FFB800]">
+                  {backtestStatus?.result?.final_accuracy?.toFixed(0) || 0}%
+                </div>
+                <div className="text-xs text-[#A1A1AA]">Gem Accuracy</div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
