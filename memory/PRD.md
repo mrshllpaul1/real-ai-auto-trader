@@ -68,44 +68,28 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ## Upcoming Tasks (Priority Order)
 
-### ✅ All 8 Prediction Enhancements (COMPLETE)
+### ✅ Action Items Complete (Feb 4, 2026)
 
-**Enhancement #1: Order Book Depth Analysis**
-- `/app/backend/services/order_book_analyzer.py`
-- Bid/Ask spread analysis, order book imbalance, support/resistance wall detection
+**1. Custom Strategy Builder with AI Chat Integration**
+- `/app/backend/services/custom_strategy_builder.py` - AI-powered strategy creation
+- `/app/frontend/src/pages/StrategyBuilder.js` - Interactive UI
+- Features: Natural language strategy building, 8 templates, manual builder
+- API: `POST /api/strategy-builder/from-description` - AI parses strategy from text
 
-**Enhancement #2: On-Chain Analytics**
-- `/app/backend/services/on_chain_analytics.py`
-- Active addresses, NVT ratio, exchange flows, whale movements, MVRV ratio
+**2. Push Notification Service**
+- `/app/backend/services/push_notification_service.py` - Full notification system
+- Types: Gem alerts, regime changes, price alerts, trade execution, whale alerts
+- Features: Priority levels, SSE streaming, notification preferences
 
-**Enhancement #3: Social Sentiment Pipeline**
-- `/app/backend/services/social_sentiment_pipeline.py`
-- Twitter/X sentiment, Reddit analysis, FOMO/Fear detection, hype cycle, influencer tracking
+**3. All 8 Prediction Enhancements**
+- Order Book Analysis, On-Chain Analytics, Social Sentiment Pipeline
+- Transformer Architecture, RL Trading Agent, Cross-Asset Correlation
+- Volatility Regime Detection, Momentum Divergence Signals
 
-**Enhancement #4: Transformer Architecture**
-- `/app/backend/services/transformer_predictor.py`
-- GPT-style multi-head attention, positional encoding, deep sequence modeling
-
-**Enhancement #5: Reinforcement Learning Agent**
-- `/app/backend/services/rl_trading_agent.py`
-- DQN-based agent, experience replay, epsilon-greedy exploration, optimal entry/exit
-
-**Enhancement #6: Cross-Asset Correlation**
-- `/app/backend/services/cross_asset_correlation.py`
-- BTC dominance, DXY correlation, S&P 500/Nasdaq, Gold, risk regime detection
-
-**Enhancement #7: Volatility Regime Detection**
-- `/app/backend/services/advanced_technical_analysis.py`
-- ATR percentile ranking, realized volatility, volatility clustering/breakout
-
-**Enhancement #8: Momentum Divergence Signals**
-- `/app/backend/services/advanced_technical_analysis.py`
-- RSI/Price divergence, Volume/Price divergence, MACD divergence, MTF confirmation
-
-**API Endpoints:**
-- `GET /api/predictions/comprehensive/{symbol}` - All 8 enhancements combined
-- `GET /api/predictions/status` - Service status
-- Individual endpoints for each enhancement
+### 📋 Future Tasks
+- Download more historical OHLCV data to enable Transformer/RL training
+- Integrate custom strategies into automated trader execution
+- Add WebSocket support for real-time notification delivery
 
 ---
 
