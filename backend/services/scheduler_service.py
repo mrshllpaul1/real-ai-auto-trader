@@ -252,6 +252,30 @@ class SchedulerService:
         logger.info(f"📅 Weekly trader job added ({day_of_week} at {hour}:00 UTC, {mode})")
         return {'success': True, 'job_id': job_id, 'schedule': f'{day_of_week} at {hour}:00 UTC'}
     
+    async def add_stop_loss_job(self, interval_minutes: int = 5) -> Dict[str, Any]:
+        """Add job to check positions against stop-loss/take-profit every N minutes"""
+        job_id = 'stop_loss_check'
+        
+        if self.scheduler.get_job(job_id):
+            self.scheduler.remove_job(job_id)
+        
+        self.scheduler.add_job(
+            self._run_stop_loss_check,
+            trigger=IntervalTrigger(minutes=interval_minutes),
+            id=job_id,
+            name='Stop-Loss/Take-Profit Monitor',
+            replace_existing=True
+        )
+        
+        self.active_jobs[job_id] = {
+            'type': 'stop_loss_check',
+            'interval_minutes': interval_minutes,
+            'created_at': datetime.utcnow().isoformat()
+        }
+        
+        logger.info(f"🛡️ Stop-loss automation job added (every {interval_minutes} minutes)")
+        return {'success': True, 'job_id': job_id, 'interval_minutes': interval_minutes}
+    
     async def add_discovery_job(self, hour: int = 10) -> Dict[str, Any]:
         """Add daily AI discovery job to find new coins"""
         job_id = 'daily_discovery'
