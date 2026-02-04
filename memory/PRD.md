@@ -22,10 +22,70 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 - **Automated Daily Data Updates** - Keep OHLCV data fresh
 - **Weekly OHLCV Expansion** - Download 50 new coins every Sunday until 200+ complete
 - **Gem Backtester** - Iteratively improve prediction accuracy
+- **Custom Event Triggers** - Automated trading based on news events
 
 ---
 
-## 🎯 NEW: Session 11 Features Complete (Feb 4, 2026)
+## 🎯 NEW: Session 12 Features Complete (Feb 4, 2026)
+
+### ✅ Custom Event Triggers for Automated Trading (P0 COMPLETE)
+
+**What was implemented:**
+- [x] **EventTriggerService** - Full service for event-based automated trading
+  - `create_trigger()` - Create custom triggers with keywords, coins, and actions
+  - `create_from_template()` - Create from 8 pre-built templates
+  - `check_event_matches_trigger()` - Match news against trigger criteria
+  - `execute_trigger()` - Execute buy/sell/alert actions
+  - `check_recent_events()` - Scan latest news against all enabled triggers
+  - MongoDB persistence with execution history
+
+- [x] **8 Pre-built Trigger Templates**:
+  - `elon_doge` - Buy DOGE on positive Elon Musk tweets
+  - `elon_btc` - Alert on Elon Bitcoin mentions
+  - `sec_regulatory` - Sell on SEC negative actions
+  - `etf_approval` - Buy on ETF approval news
+  - `exchange_hack` - Alert on security breaches
+  - `china_ban` - Sell on China crypto ban news
+  - `institutional_buy` - Buy on institutional BTC purchases
+  - `whale_alert` - Alert on large crypto movements
+
+- [x] **API Endpoints** (15 total):
+  - `GET /api/triggers/status` - Service status and stats
+  - `GET /api/triggers/templates` - Available templates
+  - `POST /api/triggers/create` - Create custom trigger
+  - `POST /api/triggers/create-from-template` - Create from template
+  - `GET /api/triggers/list` - List all triggers
+  - `GET /api/triggers/{id}` - Get specific trigger
+  - `PUT /api/triggers/{id}` - Update trigger
+  - `DELETE /api/triggers/{id}` - Delete trigger
+  - `POST /api/triggers/{id}/enable` - Enable trigger
+  - `POST /api/triggers/{id}/disable` - Disable trigger
+  - `POST /api/triggers/check-now` - Manual check
+  - `GET /api/triggers/history/all` - All execution history
+  - `GET /api/triggers/history/{id}` - Trigger-specific history
+  - `POST /api/scheduler/jobs/event-trigger-check` - Schedule periodic checking
+  - `POST /api/scheduler/jobs/event-trigger-check-now` - Run immediate check
+
+- [x] **Scheduler Integration**:
+  - Configurable interval (default 15 minutes)
+  - Automatic news fetching from CoinDesk
+  - Matches against all enabled triggers
+  - Execution logging to MongoDB
+
+- [x] **Safety Features**:
+  - Trade actions use `pending_confirmation` status
+  - Requires manual confirmation for real trades
+  - Cooldown periods to prevent spam
+  - Sentiment and category filters
+
+**Testing Results:**
+- 23/23 backend tests passed (100%)
+- Fixed MongoDB ObjectId serialization bug
+- 10 successful trigger executions logged
+
+---
+
+## 🎯 Session 11 Features Complete (Feb 4, 2026)
 
 ### ✅ Event Correlation Engine
 
