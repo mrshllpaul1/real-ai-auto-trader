@@ -229,8 +229,11 @@ const TrainingDashboard = () => {
         ws.onclose = () => {
           console.log('WebSocket disconnected');
           setWsConnected(false);
-          // Reconnect after 5 seconds
-          reconnectTimeout = setTimeout(connect, 5000);
+          // Reconnect with exponential backoff, max 3 attempts
+          reconnectAttempts++;
+          if (reconnectAttempts <= maxReconnectAttempts) {
+            reconnectTimeout = setTimeout(connect, 5000 * reconnectAttempts);
+          }
         };
         
         ws.onerror = (err) => {
