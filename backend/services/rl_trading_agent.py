@@ -605,13 +605,17 @@ class RLTradingAgent:
                 final_avg_return = np.mean(episode_returns[-20:]) * 100 if len(episode_returns) >= 20 else np.mean(episode_returns) * 100
                 logger.info(f"✅ RL Agent trained: Final avg return = {final_avg_return:.1f}%")
                 
+                # Auto-save model after training
+                self.save_model()
+                
                 return {
                     'status': 'success',
                     'episodes': train_episodes,
                     'final_epsilon': round(self.agent.epsilon, 4),
                     'avg_reward_last_20': round(np.mean(episode_rewards[-20:]) if len(episode_rewards) >= 20 else np.mean(episode_rewards), 2),
                     'avg_return_last_20_pct': round(final_avg_return, 2),
-                    'total_experiences': len(self.agent.memory)
+                    'total_experiences': len(self.agent.memory),
+                    'model_saved': True
                 }
                 
             except Exception as e:
