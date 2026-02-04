@@ -27,6 +27,76 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ## 🎯 NEW: Session 11 Features Complete (Feb 4, 2026)
 
+### ✅ Event Correlation Engine
+
+**What was implemented:**
+- [x] **EventCorrelationEngine** - Correlates news with price movements
+  - `find_price_movements()` - Detect significant price changes (5%+)
+  - `find_news_around_event()` - Fetch news within time window
+  - `correlate_event()` - Score news relevance to price movement
+  - `classify_event()` - Categorize events (celebrity, regulatory, hack, etc.)
+  - `search_events_by_keyword()` - Search historical news
+
+- [x] **API Endpoints**:
+  - `POST /api/events/correlate` - Analyze date range
+  - `GET /api/events/what-caused?coin=BTC&date=2022-11-09` - Find cause of price change
+  - `GET /api/events/search?keyword=elon` - Search by keyword
+  - `GET /api/events/on-date?date=YYYY-MM-DD` - Get events on date
+
+**Example Query:**
+```
+GET /api/events/what-caused?coin=BTC&date=2022-11-09&direction=down
+
+Response:
+- Price Change: -14.69%
+- Likely Cause: "FTX Contagion Hits Crypto Stocks Following Binance Buyout"
+- Confidence: 100%
+- Category: exchange
+```
+
+### ✅ Historical Events Database
+
+**What was implemented:**
+- [x] **38 Curated Major Events** (2013-2024):
+  - Mt. Gox collapse (2014)
+  - Bitcoin halvings (2017, 2020, 2024)
+  - Elon Musk tweets & SNL (2021)
+  - Tesla BTC purchase (2021)
+  - Luna/Terra collapse (2022)
+  - FTX bankruptcy (2022)
+  - Bitcoin ETF approval (2024)
+
+- [x] **Event Categories**:
+  - `celebrity` - Elon Musk, influencers
+  - `regulatory` - SEC, bans, lawsuits
+  - `exchange` - Binance, Coinbase, FTX
+  - `hack` - Exploits, breaches
+  - `institutional` - BlackRock, ETFs
+  - `technology` - Forks, upgrades, halvings
+
+- [x] **API Endpoints**:
+  - `POST /api/events/database/seed` - Seed 38 events
+  - `POST /api/events/database/calculate-impact` - Add price impact
+  - `GET /api/events/database/stats` - Statistics
+  - `GET /api/events/database/category/{cat}` - Filter by category
+  - `GET /api/events/database/coin/{coin}` - Filter by coin
+
+### ✅ AI Chat Event Detection
+
+**Natural Language Queries:**
+- "What happened to BTC on 2022-11-09?" → FTX collapse, -14.69%
+- "Find Elon Musk crypto events" → 3 events found
+- "Why did DOGE crash in May 2021?" → SNL appearance
+- "List regulatory events" → 9 events
+
+**Response includes:**
+- Event data with price impact
+- Related news articles
+- Confidence scores
+- Category classification
+
+---
+
 ### ✅ Weekly OHLCV Expansion (50 coins/Sunday)
 
 **What was implemented:**
