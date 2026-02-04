@@ -16,62 +16,483 @@ The user wants to build a real money AI crypto auto trading app. The ultimate go
     -   Strict budget isolation to protect non-trading assets.
     -   An emergency stop button with double confirmation.
     -   Position-level stop loss, trailing stop loss, and partial take-profit automation.
--   **User-Requested Features (this session):**
+-   **User-Requested Features (from previous session):**
     -   A UI for manual position management (adjusting stop-loss/take-profit).
     -   Enhance the AI with multiple new capabilities.
     -   A portfolio visualization dashboard.
     -   A comprehensive paper trading simulation.
+-   **User-Requested Features (this session):**
+    -   Implement 8 new prediction enhancement models.
+    -   Create a custom strategy builder UI with AI Chat integration.
+    -   Download comprehensive historical data for advanced model training.
+    -   Integrate custom strategies into the auto-trader.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a sophisticated AI trading platform. In this session, several major features were added and verified:
--   **Position Management UI:** A new card-based UI allows users to view and manage open positions, including editing stop-loss/take-profit and closing positions.
--   **Enhanced AI Engine:** A new service () was built, implementing 8 advanced AI features including ensemble voting, multi-timeframe analysis, sentiment integration, dynamic risk management, and whale tracking. A corresponding dashboard was created to visualize these new signals.
--   **Portfolio Visualization:** A new dashboard () uses Recharts to display portfolio composition (pie chart), performance over time (line chart), and key metrics. This is supported by an automated daily portfolio snapshot job.
--   **Gem Prediction ML/DL Comparator:** A dedicated service and UI page were built to train and compare 8 different ML and DL models specifically for gem prediction.
--   **API Timeout Mitigation:** A background task manager service () was created to handle long-running operations asynchronously, preventing API timeouts.
--   **Paper Trading Simulator:** A full-fledged simulation service () was created to backtest the AI's strategies using all historical market and media data.
--   **Kraken Integration:** The connection to Kraken was fully verified, and dedicated API routes were created to check status, balances, and trader readiness. The auto-trader is now fully wired with all necessary services.
+The platform is a highly advanced AI trading system. This session saw the completion of several major upgrades:
+-   **Dynamic AI Confidence:** The AI's trading confidence threshold is now dynamic, adjusting automatically based on the detected market regime (e.g., more cautious in bear markets, more aggressive in bull markets).
+-   **Advanced Predictor Integration (P1 & P2):** The more sophisticated  is now integrated into the automated trader, with a fallback to the legacy system. The  is also integrated to handle model training without blocking.
+-   **New Prediction Enhancement Suite:** 8 new advanced prediction services have been created and are accessible via API. These include an Order Book Analyzer, On-Chain Analytics, Social Sentiment Pipeline, Transformer Predictor, RL Trading Agent, and more.
+-   **AI-Powered Custom Strategy Builder:** A new UI and backend service allows users to create custom trading strategies using natural language prompts to the AI Chat.
+-   **Historical Data Manager:** A new service () has been created and used to download over 11,000 historical data records for 32 coins, enabling the training of more advanced models.
+-   **Custom Strategy Execution:** The automated trader can now execute strategies created via the new Strategy Builder.
+-   **Advanced Model Training:** The Transformer model has been successfully trained on the newly downloaded data. Training for the Reinforcement Learning (RL) agent was initiated.
 
 **Last working item**:
--   **Last item agent was working:** The agent implemented and ran a comprehensive 30-day paper trading simulation using all stored market and media data, as requested by the user. The agent analyzed the results, which showed a -15.44% return, attributing it to challenging bear market conditions.
--   **Status:** USER VERIFICATION PENDING
--   **Agent Testing Done:** Y
--   **Which testing method agent to use?** NA
+-   **Last item agent was working:** The agent was fulfilling the user's request to Continue training on all OHLCV and media data. It had successfully downloaded extensive OHLCV data, trained the Transformer model, and initiated the training for the Reinforcement Learning (RL) model. However, the command to train the RL agent timed out, as did subsequent commands to check the training status, blocking further progress.
+-   **Status:** BLOCKED
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** Backend testing agent. The next agent needs to investigate the command timeouts, verify the final status of the RL agent training, and then proceed with training on media data.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   There are no known pending issues. All bugs identified by the testing agent during this session were fixed.
+-   **Issue 1: RL Agent Training Command Timeout (P0 - BLOCKER)**
+    -   **Description:** The  command to train the Reinforcement Learning agent () timed out after 300 seconds. While backend logs indicated the training process started, its final completion status is unknown. Subsequent commands to check data and training status also timed out. This is a recurring pattern for long-running processes that are not handled by the background task manager.
+    -   **Attempted fixes:** None. The agent was blocked by the timeout.
+    -   **Next debug checklist:**
+        1.  Check backend logs for completion or error messages: ==> /var/log/supervisor/backend.err.log <==
+2026-02-04 17:54:26,564 - server - INFO - ✅ Enhanced AI Engine initialized (Ensemble + MTF + Sentiment + Whale + Risk)
+2026-02-04 17:54:26,564 - server - INFO - ✅ Paper Trading Simulator initialized
+2026-02-04 17:54:26,564 - server - INFO - ✅ Social Sentiment Scraper initialized
+2026-02-04 17:54:26,565 - services.scheduler_service - INFO - ✅ Stop-loss automation configured for scheduler
+2026-02-04 17:54:26,566 - services.scheduler_service - INFO - 🛡️ Stop-loss automation job added (every 5 minutes)
+2026-02-04 17:54:26,566 - server - INFO - ✅ Stop-Loss Automation initialized (checking every 5 minutes)
+2026-02-04 17:54:26,773 - server - INFO - ✅ Gem ML/DL Prediction Engine initialized
+2026-02-04 17:54:26,773 - server - INFO - ✅ Portfolio Visualization initialized
+2026-02-04 17:54:26,774 - server - INFO - ✅ Background Task Manager initialized
+2026-02-04 17:54:26,774 - server - INFO - ✅ Automated Trader updated with ML/DL Gem Predictor & Background Task Manager
+2026-02-04 17:54:26,819 - server - INFO - ✅ Prediction Enhancements initialized (8 services)
+2026-02-04 17:54:26,819 - server - INFO - ✅ Custom Strategy Builder initialized (AI-assisted)
+2026-02-04 17:54:26,820 - server - INFO - ✅ Push Notification Service initialized
+2026-02-04 17:54:26,847 - services.ohlcv_data_manager - INFO - ✅ OHLCV indexes created
+2026-02-04 17:54:26,847 - server - INFO - ✅ OHLCV Data Manager initialized
+2026-02-04 17:54:26,848 - services.scheduler_service - INFO - ✅ Scheduler started
+2026-02-04 17:54:26,848 - services.scheduler_service - INFO - 📸 Portfolio snapshot job added (every 6 hours)
+2026-02-04 17:54:26,848 - server - INFO - ✅ Automatic Portfolio Snapshots enabled (every 6 hours)
+2026-02-04 17:54:26,849 - services.scheduler_service - INFO - 🔄 Auto-retrain job added (daily at 2:00 UTC)
+2026-02-04 17:54:26,849 - server - INFO - ✅ Auto-Retrain Models enabled (daily at 2:00 UTC)
+2026-02-04 17:54:26,849 - server - INFO - ✅ All services initialized successfully
+WARNING:  WatchFiles detected changes in 'routes/kraken.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [4195]
+INFO:     Started server process [4309]
+INFO:     Waiting for application startup.
+2026-02-04 17:54:45,804 - server - INFO - 🚀 Application starting...
+INFO:     Application startup complete.
+2026-02-04 17:54:47,805 - server - INFO - 🚀 Initializing services...
+2026-02-04 17:54:49,399 - services.dynamic_coin_universe - INFO - 🌌 Coin universe has 101 coins
+2026-02-04 17:54:49,399 - server - INFO - ✅ Dynamic Coin Universe initialized
+2026-02-04 17:54:49,399 - server - INFO - ✅ AI Sentiment Service initialized
+2026-02-04 17:54:49,401 - server - INFO - ✅ CryptoPanic Service initialized with fallback
+2026-02-04 17:54:49,401 - server - INFO - ✅ AI Discovery Service initialized
+2026-02-04 17:54:51,553 - server - INFO - ✅ Deep Learning AI initialized
+2026-02-04 17:54:51,554 - server - INFO - ✅ AI Chat Service initialized
+2026-02-04 17:54:51,554 - server - INFO - ✅ AI Universe Expander initialized
+2026-02-04 17:54:51,554 - server - INFO - ✅ Hidden Gem Predictor initialized
+2026-02-04 17:54:51,554 - server - INFO - ✅ Historical Simulation initialized
+2026-02-04 17:54:51,555 - server - INFO - ✅ Ensemble AI & Universe Optimizer initialized
+2026-02-04 17:54:51,555 - server - INFO - ✅ Kraken service initialized
+2026-02-04 17:54:51,555 - server - INFO - ✅ Gem Backtester initialized
+2026-02-04 17:54:51,555 - server - INFO - ✅ Isolated Portfolio Manager initialized
+2026-02-04 17:54:51,555 - server - INFO - ✅ Kraken Routes initialized
+2026-02-04 17:54:51,555 - services.scheduler_service - INFO - ✅ AI trainers configured for scheduler
+2026-02-04 17:54:51,556 - server - INFO - ✅ CoinDesk News service initialized
+2026-02-04 17:54:51,556 - server - INFO - ✅ CryptoCompare Historical Data service initialized
+2026-02-04 17:54:51,556 - server - INFO - ✅ AI Learning Loop service initialized
+2026-02-04 17:54:51,557 - server - INFO - ✅ Event Correlation Engine initialized
+2026-02-04 17:54:51,557 - server - INFO - ✅ Historical Events Database initialized
+2026-02-04 17:54:51,557 - server - INFO - ✅ Event Trigger Service initialized
+2026-02-04 17:54:51,557 - server - INFO - ✅ Kraken Universe Service initialized
+2026-02-04 17:54:51,557 - server - INFO - ✅ CoinDesk Universe Service initialized
+2026-02-04 17:54:51,558 - server - INFO - ✅ Adaptive Strategy Engine initialized
+2026-02-04 17:54:51,852 - server - INFO - ✅ Performance Tracker initialized
+2026-02-04 17:54:51,852 - server - INFO - ✅ Regime Prediction Engine initialized
+2026-02-04 17:54:51,852 - server - INFO - ✅ Automated Trader updated with adaptive strategy & ML regime prediction
+2026-02-04 17:54:51,853 - server - INFO - ✅ Enhanced AI Engine initialized (Ensemble + MTF + Sentiment + Whale + Risk)
+2026-02-04 17:54:51,853 - server - INFO - ✅ Paper Trading Simulator initialized
+2026-02-04 17:54:51,853 - server - INFO - ✅ Social Sentiment Scraper initialized
+2026-02-04 17:54:51,854 - services.scheduler_service - INFO - ✅ Stop-loss automation configured for scheduler
+2026-02-04 17:54:51,856 - services.scheduler_service - INFO - 🛡️ Stop-loss automation job added (every 5 minutes)
+2026-02-04 17:54:51,856 - server - INFO - ✅ Stop-Loss Automation initialized (checking every 5 minutes)
+2026-02-04 17:54:52,216 - server - INFO - ✅ Gem ML/DL Prediction Engine initialized
+2026-02-04 17:54:52,217 - server - INFO - ✅ Portfolio Visualization initialized
+2026-02-04 17:54:52,217 - server - INFO - ✅ Background Task Manager initialized
+2026-02-04 17:54:52,217 - server - INFO - ✅ Automated Trader updated with ML/DL Gem Predictor & Background Task Manager
+2026-02-04 17:54:52,261 - server - INFO - ✅ Prediction Enhancements initialized (8 services)
+2026-02-04 17:54:52,262 - server - INFO - ✅ Custom Strategy Builder initialized (AI-assisted)
+2026-02-04 17:54:52,263 - server - INFO - ✅ Push Notification Service initialized
+2026-02-04 17:54:52,264 - services.ohlcv_data_manager - INFO - ✅ OHLCV indexes created
+2026-02-04 17:54:52,264 - server - INFO - ✅ OHLCV Data Manager initialized
+2026-02-04 17:54:52,265 - services.scheduler_service - INFO - ✅ Scheduler started
+2026-02-04 17:54:52,265 - services.scheduler_service - INFO - 📸 Portfolio snapshot job added (every 6 hours)
+2026-02-04 17:54:52,266 - server - INFO - ✅ Automatic Portfolio Snapshots enabled (every 6 hours)
+2026-02-04 17:54:52,266 - services.scheduler_service - INFO - 🔄 Auto-retrain job added (daily at 2:00 UTC)
+2026-02-04 17:54:52,266 - server - INFO - ✅ Auto-Retrain Models enabled (daily at 2:00 UTC)
+2026-02-04 17:54:52,266 - server - INFO - ✅ All services initialized successfully
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [4309]
+INFO:     Stopping reloader process [2688]
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [4337] using WatchFiles
+INFO:     Started server process [4339]
+INFO:     Waiting for application startup.
+2026-02-04 17:54:56,042 - server - INFO - 🚀 Application starting...
+INFO:     Application startup complete.
+2026-02-04 17:54:58,043 - server - INFO - 🚀 Initializing services...
+2026-02-04 17:54:59,659 - services.dynamic_coin_universe - INFO - 🌌 Coin universe has 101 coins
+2026-02-04 17:54:59,659 - server - INFO - ✅ Dynamic Coin Universe initialized
+2026-02-04 17:54:59,659 - server - INFO - ✅ AI Sentiment Service initialized
+2026-02-04 17:54:59,661 - server - INFO - ✅ CryptoPanic Service initialized with fallback
+2026-02-04 17:54:59,661 - server - INFO - ✅ AI Discovery Service initialized
+2026-02-04 17:55:01,819 - server - INFO - ✅ Deep Learning AI initialized
+2026-02-04 17:55:01,819 - server - INFO - ✅ AI Chat Service initialized
+2026-02-04 17:55:01,819 - server - INFO - ✅ AI Universe Expander initialized
+2026-02-04 17:55:01,820 - server - INFO - ✅ Hidden Gem Predictor initialized
+2026-02-04 17:55:01,820 - server - INFO - ✅ Historical Simulation initialized
+2026-02-04 17:55:01,820 - server - INFO - ✅ Ensemble AI & Universe Optimizer initialized
+2026-02-04 17:55:01,820 - server - INFO - ✅ Kraken service initialized
+2026-02-04 17:55:01,820 - server - INFO - ✅ Gem Backtester initialized
+2026-02-04 17:55:01,821 - server - INFO - ✅ Isolated Portfolio Manager initialized
+2026-02-04 17:55:01,821 - server - INFO - ✅ Kraken Routes initialized
+2026-02-04 17:55:01,821 - services.scheduler_service - INFO - ✅ AI trainers configured for scheduler
+2026-02-04 17:55:01,821 - server - INFO - ✅ CoinDesk News service initialized
+2026-02-04 17:55:01,822 - server - INFO - ✅ CryptoCompare Historical Data service initialized
+2026-02-04 17:55:01,822 - server - INFO - ✅ AI Learning Loop service initialized
+2026-02-04 17:55:01,822 - server - INFO - ✅ Event Correlation Engine initialized
+2026-02-04 17:55:01,822 - server - INFO - ✅ Historical Events Database initialized
+2026-02-04 17:55:01,823 - server - INFO - ✅ Event Trigger Service initialized
+2026-02-04 17:55:01,823 - server - INFO - ✅ Kraken Universe Service initialized
+2026-02-04 17:55:01,823 - server - INFO - ✅ CoinDesk Universe Service initialized
+2026-02-04 17:55:01,824 - server - INFO - ✅ Adaptive Strategy Engine initialized
+2026-02-04 17:55:02,119 - server - INFO - ✅ Performance Tracker initialized
+2026-02-04 17:55:02,119 - server - INFO - ✅ Regime Prediction Engine initialized
+2026-02-04 17:55:02,119 - server - INFO - ✅ Automated Trader updated with adaptive strategy & ML regime prediction
+2026-02-04 17:55:02,119 - server - INFO - ✅ Enhanced AI Engine initialized (Ensemble + MTF + Sentiment + Whale + Risk)
+2026-02-04 17:55:02,120 - server - INFO - ✅ Paper Trading Simulator initialized
+2026-02-04 17:55:02,120 - server - INFO - ✅ Social Sentiment Scraper initialized
+2026-02-04 17:55:02,121 - services.scheduler_service - INFO - ✅ Stop-loss automation configured for scheduler
+2026-02-04 17:55:02,122 - services.scheduler_service - INFO - 🛡️ Stop-loss automation job added (every 5 minutes)
+2026-02-04 17:55:02,122 - server - INFO - ✅ Stop-Loss Automation initialized (checking every 5 minutes)
+2026-02-04 17:55:02,477 - server - INFO - ✅ Gem ML/DL Prediction Engine initialized
+2026-02-04 17:55:02,477 - server - INFO - ✅ Portfolio Visualization initialized
+2026-02-04 17:55:02,478 - server - INFO - ✅ Background Task Manager initialized
+2026-02-04 17:55:02,478 - server - INFO - ✅ Automated Trader updated with ML/DL Gem Predictor & Background Task Manager
+2026-02-04 17:55:02,522 - server - INFO - ✅ Prediction Enhancements initialized (8 services)
+2026-02-04 17:55:02,522 - server - INFO - ✅ Custom Strategy Builder initialized (AI-assisted)
+2026-02-04 17:55:02,523 - server - INFO - ✅ Push Notification Service initialized
+2026-02-04 17:55:02,525 - services.ohlcv_data_manager - INFO - ✅ OHLCV indexes created
+2026-02-04 17:55:02,525 - server - INFO - ✅ OHLCV Data Manager initialized
+2026-02-04 17:55:02,525 - services.scheduler_service - INFO - ✅ Scheduler started
+2026-02-04 17:55:02,526 - services.scheduler_service - INFO - 📸 Portfolio snapshot job added (every 6 hours)
+2026-02-04 17:55:02,526 - server - INFO - ✅ Automatic Portfolio Snapshots enabled (every 6 hours)
+2026-02-04 17:55:02,526 - services.scheduler_service - INFO - 🔄 Auto-retrain job added (daily at 2:00 UTC)
+2026-02-04 17:55:02,526 - server - INFO - ✅ Auto-Retrain Models enabled (daily at 2:00 UTC)
+2026-02-04 17:55:02,526 - server - INFO - ✅ All services initialized successfully
+2026-02-04 17:55:24,065 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for BTC
+2026-02-04 17:55:26,154 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for ETH
+2026-02-04 17:55:28,138 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for SOL
+2026-02-04 17:55:38,601 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for BTC
+2026-02-04 17:55:40,673 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for ETH
+2026-02-04 17:55:42,726 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for SOL
+2026-02-04 17:55:44,792 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for ADA
+2026-02-04 17:55:46,450 - services.automated_trader - INFO - Loaded 0 active custom strategies
+2026-02-04 17:55:46,843 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for DOT
+2026-02-04 17:55:48,873 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for MATIC
+2026-02-04 17:55:50,943 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for LINK
+2026-02-04 17:55:53,222 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for AVAX
+2026-02-04 17:55:55,278 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for ATOM
+2026-02-04 17:55:58,037 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for UNI
+2026-02-04 17:56:00,079 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for LTC
+2026-02-04 17:56:02,100 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for XRP
+2026-02-04 17:56:04,294 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for DOGE
+2026-02-04 17:56:06,308 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for SHIB
+2026-02-04 17:56:08,335 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for ARB
+2026-02-04 17:56:10,376 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for OP
+2026-02-04 17:56:12,412 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for NEAR
+2026-02-04 17:56:14,432 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for APT
+2026-02-04 17:56:16,494 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for INJ
+2026-02-04 17:56:17,339 - services.automated_trader - INFO - Loaded 1 active custom strategies
+2026-02-04 17:56:20,011 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for FTM
+2026-02-04 17:56:22,091 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for ALGO
+2026-02-04 17:56:24,434 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for VET
+2026-02-04 17:56:26,463 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for SAND
+2026-02-04 17:56:28,512 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for MANA
+2026-02-04 17:56:30,542 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for AXS
+2026-02-04 17:56:32,732 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for GALA
+2026-02-04 17:56:34,827 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for ENJ
+2026-02-04 17:56:36,865 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for CRV
+2026-02-04 17:56:38,946 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for AAVE
+2026-02-04 17:56:41,074 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for MKR
+2026-02-04 17:56:43,144 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for SNX
+2026-02-04 17:56:45,190 - services.ohlcv_data_manager - INFO - ✅ Downloaded 366 records for COMP
+2026-02-04 17:57:04,363 - services.transformer_predictor - INFO - 🤖 Training Transformer model...
+2026-02-04 17:57:04,502 - services.transformer_predictor - INFO - 📊 Training data shape: (1680, 30, 20)
+2026-02-04 17:57:54,998 - services.transformer_predictor - INFO - ✅ Transformer trained: 78.4% train, 68.5% val accuracy
+2026-02-04 17:58:04,268 - services.rl_trading_agent - INFO - 🤖 Training RL Agent for 50 episodes...
+2026-02-04 17:58:22,499 - services.rl_trading_agent - INFO -   Episode 0: Avg Reward=-25.49, Avg Return=-79.8%
+2026-02-04 18:09:33,119 - services.rl_trading_agent - INFO -   Episode 20: Avg Reward=-4.01, Avg Return=-5.1%
+2026-02-04 18:21:41,488 - services.rl_trading_agent - INFO -   Episode 40: Avg Reward=0.86, Avg Return=10.5%
+2026-02-04 18:27:31,853 - services.rl_trading_agent - INFO - ✅ RL Agent trained: Final avg return = -2.2%
+2026-02-04 18:27:31,855 - apscheduler.executors.default - WARNING - Run time of job "Stop-Loss/Take-Profit Monitor (trigger: interval[0:05:00], next run at: 2026-02-04 18:30:02 UTC)" was missed by 0:02:29.732478
+2026-02-04 18:30:02,124 - services.scheduler_service - INFO - 🛡️ [18:30] Running stop-loss automation check...
+2026-02-04 18:30:02,124 - services.stop_loss_automation - INFO - 🔍 Running stop-loss automation check...
+2026-02-04 18:30:02,126 - services.stop_loss_automation - INFO - 📊 Checking 16 open positions...
+2026-02-04 18:30:05,411 - services.stop_loss_automation - INFO - ✅ All positions within bounds
+2026-02-04 18:30:05,412 - services.scheduler_service - INFO -   ✅ Check complete: 16 checked, SL:0, TP:0
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [47] using WatchFiles
+INFO:     Started server process [88]
+INFO:     Waiting for application startup.
+2026-02-04 18:32:04,451 - server - INFO - 🚀 Application starting...
+INFO:     Application startup complete.
+
+==> /var/log/supervisor/backend.out.log <==
+✅ CryptoPanic service initialized
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+INFO:     10.64.128.138:56738 - "GET /api/predictions/status HTTP/1.1" 200 OK
+INFO:     10.64.131.7:41760 - "GET /api/predictions/comprehensive/BTC HTTP/1.1" 200 OK
+INFO:     10.64.130.144:46226 - "POST /api/predictions/transformer/train HTTP/1.1" 200 OK
+INFO:     10.64.131.9:54426 - "POST /api/predictions/rl-agent/train HTTP/1.1" 200 OK
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+INFO:     10.64.131.207:54508 - "GET /api/strategy-builder/templates HTTP/1.1" 200 OK
+INFO:     10.64.128.138:37116 - "GET /api/strategy-builder/status HTTP/1.1" 200 OK
+INFO:     10.64.128.138:60316 - "POST /api/strategy-builder/from-description HTTP/1.1" 200 OK
+INFO:     10.64.132.212:38950 - "POST /api/strategy-builder/from-description HTTP/1.1" 200 OK
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+INFO:     10.64.131.9:42242 - "POST /api/strategy-builder/from-description HTTP/1.1" 200 OK
+INFO:     10.64.134.88:44546 - "GET /api/strategy-builder/indicators HTTP/1.1" 200 OK
+INFO:     10.64.134.75:39004 - "GET /api/strategy-builder/templates HTTP/1.1" 200 OK
+INFO:     10.64.134.75:39018 - "GET /api/strategy-builder/strategies HTTP/1.1" 200 OK
+INFO:     10.64.134.75:39018 - "GET /api/notifications/?limit=20&user_id=demo_user_wp09cf9kd HTTP/1.1" 200 OK
+INFO:     10.64.128.138:38944 - "GET /api/notifications/?limit=20&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.140:43764 - "GET /api/strategies/list/demo_user?status=active&limit=3&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+CoinStats market overview error: Expecting value: line 1 column 1 (char 0)
+INFO:     10.64.128.138:42508 - "GET /api/market/global?user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.138:39292 - "GET /api/strategies/list/demo_user_o02gmssst?status=active&limit=3&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.138:34458 - "GET /api/notifications/?limit=20&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.138:34458 - "GET /api/scheduler/status?user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.140:49510 - "GET /api/ai-discovery/settings?user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.138:34496 - "GET /api/budget/?user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.140:49478 - "GET /api/ai-universe/coins/discovered?user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.140:49490 - "GET /api/ai-universe/coins/gems?user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.140:49502 - "GET /api/ai-discovery/pending?user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.140:49504 - "GET /api/growth/positions?status=OPEN&mode=paper&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.140:49520 - "GET /api/growth/positions?status=OPEN&mode=real&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.138:34474 - "GET /api/ai-universe/stats?user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.138:34482 - "GET /api/ai-discovery/stats?user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+CryptoPanic library error: API request failed: 429 Client Error: Too Many Requests for url: https://cryptopanic.com/api/developer/v2/posts/?currencies=BTC&filter=hot&auth_token=4f650af3b89f8959607b9c1b8220f2a8052d5ed1
+CryptoPanic library error: API request failed: 429 Client Error: Too Many Requests for url: https://cryptopanic.com/api/developer/v2/posts/?currencies=SOL&filter=hot&auth_token=4f650af3b89f8959607b9c1b8220f2a8052d5ed1
+CryptoPanic library error: API request failed: 429 Client Error: Too Many Requests for url: https://cryptopanic.com/api/developer/v2/posts/?currencies=ETH&filter=hot&auth_token=4f650af3b89f8959607b9c1b8220f2a8052d5ed1
+CryptoPanic library error: API request failed: 429 Client Error: Too Many Requests for url: https://cryptopanic.com/api/developer/v2/posts/?currencies=XRP&filter=hot&auth_token=4f650af3b89f8959607b9c1b8220f2a8052d5ed1
+CryptoPanic library error: API request failed: 429 Client Error: Too Many Requests for url: https://cryptopanic.com/api/developer/v2/posts/?currencies=BNB&filter=hot&auth_token=4f650af3b89f8959607b9c1b8220f2a8052d5ed1
+⚠️ CryptoPanic API quota exceeded: API monthly quota exceeded - Upgrade your API plan: /developers/api/plans/
+INFO:     10.64.128.138:34500 - "GET /api/growth/stats?mode=real&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.138:34492 - "GET /api/growth/stats?mode=paper&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.140:49466 - "GET /api/sentiment/market?user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.138:34474 - "GET /api/trading/balance?user_id=demo_user_o02gmssst HTTP/1.1" 404 Not Found
+INFO:     10.64.128.138:34458 - "GET /api/news/bullish?limit=15&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+⚠️ CryptoPanic API quota exceeded: API monthly quota exceeded - Upgrade your API plan: /developers/api/plans/
+⚠️ CryptoPanic API quota exceeded: API monthly quota exceeded - Upgrade your API plan: /developers/api/plans/
+INFO:     10.64.128.138:34480 - "GET /api/news/bearish?limit=15&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.140:49474 - "GET /api/news/trending?limit=15&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.138:58518 - "GET /api/notifications/?limit=20&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.140:47176 - "GET /api/strategies/list/demo_user_o02gmssst?status=active&limit=3&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.138:58518 - "GET /api/notifications/?limit=20&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.140:47176 - "GET /api/strategy-builder/templates HTTP/1.1" 200 OK
+INFO:     10.64.128.138:58518 - "GET /api/strategy-builder/indicators HTTP/1.1" 200 OK
+INFO:     10.64.128.140:47176 - "GET /api/strategy-builder/strategies HTTP/1.1" 200 OK
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+INFO:     10.64.128.138:59874 - "GET /api/trading/kraken/portfolio?user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.138:38712 - "GET /api/notifications/?limit=20&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.140:51248 - "GET /api/strategies/list/demo_user_o02gmssst?status=active&limit=3&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.140:48296 - "GET /api/trading/kraken/portfolio?user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.138:44782 - "GET /api/notifications/?limit=20&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.140:43194 - "GET /api/strategies/list/demo_user_o02gmssst?status=active&limit=3&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.140:43194 - "GET /api/notifications/?limit=20&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.138:44782 - "GET /api/strategy-builder/templates HTTP/1.1" 200 OK
+INFO:     10.64.128.138:44792 - "GET /api/strategy-builder/indicators HTTP/1.1" 200 OK
+INFO:     10.64.128.138:44796 - "GET /api/strategy-builder/strategies HTTP/1.1" 200 OK
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+INFO:     10.64.128.138:42508 - "GET /api/trading/portfolio/demo_user_o02gmssst?user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+INFO:     10.64.128.138:34474 - "GET /api/market/prices?coin_ids=bitcoin,ethereum,solana&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+INFO:     10.64.128.140:36832 - "GET /api/trading/kraken/portfolio?user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.138:42508 - "GET /api/trading/kraken/portfolio?user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+INFO:     10.64.128.140:36832 - "GET /api/trading/kraken/portfolio?user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.128.138:42508 - "GET /api/strategies/list/demo_user?status=active&limit=3&user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.128.138:42508 - "GET /api/notifications/?limit=20&user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+INFO:     10.64.128.138:59870 - "GET /api/trading/portfolio/demo_user_o02gmssst?user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+CoinStats market overview error: Expecting value: line 1 column 1 (char 0)
+INFO:     10.64.128.138:42758 - "GET /api/market/global?user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+INFO:     10.64.128.138:59884 - "GET /api/market/prices?coin_ids=bitcoin,ethereum,solana&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+INFO:     10.64.128.140:48302 - "GET /api/trading/portfolio/demo_user_o02gmssst?user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+INFO:     10.64.128.140:48312 - "GET /api/market/prices?coin_ids=bitcoin,ethereum,solana&user_id=demo_user_o02gmssst HTTP/1.1" 200 OK
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+INFO:     10.64.131.207:51216 - "GET /api/strategies/list/demo_user_sg0ms08nl?status=active&limit=3&user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+CoinStats market overview error: Expecting value: line 1 column 1 (char 0)
+INFO:     10.64.130.143:50982 - "GET /api/market/global?user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.132.212:48894 - "GET /api/notifications/?limit=20&user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.130.143:50992 - "GET /api/strategy-builder/templates HTTP/1.1" 200 OK
+INFO:     10.64.130.144:43496 - "GET /api/strategy-builder/strategies HTTP/1.1" 200 OK
+INFO:     10.64.130.144:43510 - "GET /api/strategy-builder/indicators HTTP/1.1" 200 OK
+INFO:     10.64.130.143:38784 - "POST /api/strategy-builder/from-description HTTP/1.1" 200 OK
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+INFO:     10.64.130.144:32948 - "GET /api/data/ohlcv/stats HTTP/1.1" 404 Not Found
+INFO:     10.64.128.140:60680 - "GET /api/notifications/?limit=20&user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.128.140:60680 - "GET /api/scheduler/status?user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.128.138:47596 - "GET /api/sentiment/market?user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.128.138:47642 - "GET /api/ai-discovery/settings?user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.128.138:47614 - "GET /api/ai-universe/coins/discovered?user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.128.140:60692 - "GET /api/ai-universe/coins/gems?user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.128.140:60708 - "GET /api/ai-discovery/pending?user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.128.140:60724 - "GET /api/budget/?user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.128.138:47670 - "GET /api/growth/positions?status=OPEN&mode=real&user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.128.140:60742 - "GET /api/growth/positions?status=OPEN&mode=paper&user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.128.138:47600 - "GET /api/ai-universe/stats?user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.128.138:47628 - "GET /api/ai-discovery/stats?user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+⚠️ CryptoPanic API quota exceeded: API monthly quota exceeded - Upgrade your API plan: /developers/api/plans/
+INFO:     10.64.128.138:47654 - "GET /api/growth/stats?mode=paper&user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.128.140:60728 - "GET /api/growth/stats?mode=real&user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.128.140:60680 - "GET /api/news/bearish?limit=15&user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.128.140:60708 - "GET /api/trading/balance?user_id=demo_user_sg0ms08nl HTTP/1.1" 404 Not Found
+⚠️ CryptoPanic API quota exceeded: API monthly quota exceeded - Upgrade your API plan: /developers/api/plans/
+INFO:     10.64.128.138:47568 - "GET /api/news/bullish?limit=15&user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+⚠️ CryptoPanic API quota exceeded: API monthly quota exceeded - Upgrade your API plan: /developers/api/plans/
+INFO:     10.64.128.138:47580 - "GET /api/news/trending?limit=15&user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+INFO:     10.64.128.138:39068 - "GET /api/growth/positions?status=OPEN&mode=paper&user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.128.138:39060 - "GET /api/growth/stats?mode=paper&user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.128.140:56862 - "GET /api/growth/stats?mode=paper&user_id=demo_user_sg0ms08nl HTTP/1.1" 500 Internal Server Error
+INFO:     10.64.128.140:56872 - "GET /api/growth/stats?mode=real&user_id=demo_user_sg0ms08nl HTTP/1.1" 500 Internal Server Error
+INFO:     10.64.128.140:56886 - "GET /api/budget/?user_id=demo_user_sg0ms08nl HTTP/1.1" 500 Internal Server Error
+INFO:     10.64.128.138:34996 - "GET /api/growth/positions?status=OPEN&mode=paper&user_id=demo_user_sg0ms08nl HTTP/1.1" 500 Internal Server Error
+INFO:     10.64.128.138:34998 - "GET /api/growth/positions?status=OPEN&mode=real&user_id=demo_user_sg0ms08nl HTTP/1.1" 500 Internal Server Error
+INFO:     10.64.128.140:56892 - "GET /api/scheduler/status?user_id=demo_user_sg0ms08nl HTTP/1.1" 500 Internal Server Error
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+INFO:     10.64.134.110:46644 - "GET /api/growth/positions?status=OPEN&mode=real&user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.134.75:48084 - "GET /api/budget/?user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.134.110:46648 - "GET /api/growth/stats?mode=real&user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.134.88:52204 - "GET /api/trading/balance?user_id=demo_user_sg0ms08nl HTTP/1.1" 404 Not Found
+INFO:     10.64.134.75:41530 - "GET /api/notifications/?limit=20&user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+INFO:     10.64.134.110:33200 - "GET /api/strategies/list/demo_user_sg0ms08nl?status=active&limit=3&user_id=demo_user_sg0ms08nl HTTP/1.1" 200 OK
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+Market data error: {'status': {'error_code': 429, 'error_message': "You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits."}}
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+✅ CryptoPanic client initialized
+✅ CryptoPanic service initialized
+INFO:     10.64.134.88:40028 - "GET /api/data/ohlcv/stats HTTP/1.1" 200 OK
+INFO:     10.64.134.88:40030 - "POST /api/data/ohlcv/download-sync HTTP/1.1" 200 OK
+INFO:     10.64.131.7:60760 - "POST /api/data/ohlcv/download HTTP/1.1" 200 OK
+INFO:     10.64.130.143:46268 - "POST /api/kraken/auto-trader/execute-custom-strategies?paper_trade=true HTTP/1.1" 200 OK
+INFO:     10.64.130.144:49444 - "POST /api/strategy-builder/from-template HTTP/1.1" 200 OK
+INFO:     10.64.130.144:56310 - "POST /api/strategy-builder/strategies/6983882ebd257ce05370afcc/activate HTTP/1.1" 200 OK
+INFO:     10.64.128.138:40766 - "POST /api/kraken/auto-trader/execute-custom-strategies?paper_trade=true HTTP/1.1" 200 OK
+INFO:     10.64.131.8:36736 - "GET /api/data/ohlcv/download/progress HTTP/1.1" 200 OK
+INFO:     10.64.128.138:54748 - "GET /api/data/ohlcv/stats HTTP/1.1" 200 OK
+INFO:     10.64.134.110:39664 - "POST /api/predictions/transformer/train HTTP/1.1" 200 OK
+INFO:     10.64.134.88:34466 - "POST /api/predictions/rl-agent/train HTTP/1.1" 200 OK
+INFO:     10.64.128.140:57620 - "GET /api/predictions/rl-agent/status HTTP/1.1" 200 OK
+INFO:     10.64.131.8:48058 - "GET /api/predictions/status HTTP/1.1" 200 OK
+INFO:     10.64.128.140:48490 - "GET /api/news/stats HTTP/1.1" 404 Not Found
+INFO:     10.64.128.138:33880 - "GET /api/predictions/status HTTP/1.1" 200 OK
+INFO:     10.64.131.9:52634 - "GET /api/data/ohlcv/stats HTTP/1.1" 200 OK
+INFO:     10.64.132.212:35210 - "GET /api/data/ohlcv/stats HTTP/1.1" 200 OK
+CoinStats market overview error: Expecting value: line 1 column 1 (char 0)
+INFO:     10.64.131.8:55444 - "GET /api/news/stats HTTP/1.1" 404 Not Found
+INFO:     10.64.132.212:59260 - "GET /api/coindesk/stats HTTP/1.1" 404 Not Found
+INFO:     10.64.132.212:35776 - "GET /api/sentiment/fear-greed HTTP/1.1" 404 Not Found.
+        2.  Check the RL agent's status endpoint: .
+        3.  **Primary Fix:** Refactor the  function in  to use the existing  service. This is the correct pattern for long-running operations and will prevent future timeouts. This is now a high-priority refactoring task.
+    -   **Why fix this issue and what will be achieved with the fix?** Fixing this will unblock the model training process, make the RL agent fully operational, and resolve the underlying architectural issue of long-running tasks causing API timeouts.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** Y (Symptom of a known architectural issue for long-running tasks).
+    -   **Should Test backend/backend/both after fix?** Backend.
+    -   **Blocked on other issue:** None.
 
 **In progress Task List**:
--   There are no tasks currently in progress.
+-   **Task 1: Comprehensive Model Training on All Data (P1)**
+    -   **Description:** The user requested that all models be trained on all available OHLCV and media data.
+    -   **Where to resume:** The OHLCV data is downloaded. The Transformer model is trained. The RL Agent training is blocked. The media data pipeline has not been used for training yet. The next step is to resolve the RL Agent training blocker, then verify and use media data for any relevant models.
+    -   **What will be achieved with this?** All AI/ML models in the system will be fully trained and ready for use, maximizing the platform's predictive power.
+    -   **Status:** IN PROGRESS
+    -   **Should Test backend/backend/both after fix?** Backend.
+    -   **Blocked on something:** **Issue 1: RL Agent Training Command Timeout**.
 
 **Upcoming and Future Tasks**
 **Upcoming Tasks:**
--   **P0: Execute Weekly Strategy with Enhanced AI:** Run the 's weekly strategy execution function to perform a live paper trade using the newly implemented Enhanced AI signals. This will demonstrate how the AI selects and acts on coins in the current market.
--   **P1: Integrate Gem ML/DL Predictor:** The  service still uses the older gem finding logic. It needs to be updated to use the new, more advanced  service for identifying potential gems.
--   **P2: Integrate Background Task Manager:** Refactor existing long-running operations (e.g., model training in , backtesting in ) to use the new  service to prevent potential API timeouts and provide better status tracking.
+-   **P0: Integrate New Prediction Signals into Auto-Trader:** The 8 new prediction enhancement services are operational but their signals are not yet used by . This is the most critical next step to leverage the new AI capabilities.
+-   **P1: Implement WebSocket for Real-Time Notifications:** The agent proposed adding WebSockets for live notifications (e.g., trade executions, alerts) but did not implement it. This would involve adding a WebSocket endpoint to  and connecting to it from the frontend.
+-   **P2: Verify and Utilize Media Data:** Check the  and other services for their data needs, ensure media data is being collected, and integrate it into the relevant model training processes.
 
 **Future Tasks:**
--   Add push notifications for gem alerts and regime changes.
--   Create a UI for building custom trading strategies from scratch.
--   Integrate social media sentiment (Twitter/Reddit) as a primary data source in the prediction models.
+-   Add a robust push notification system (e.g., Web Push API) for alerts when the user is not on the app.
+-   Integrate social media sentiment (Twitter/Reddit) more deeply as a primary data source in the core prediction models, beyond the current standalone service.
 
 **Completed work in this session**
--   **Position Management UI:** Implemented a new card-based UI in . (Tested)
--   **Gem Prediction ML/DL Enhancement:** Created a new service  and a comparison dashboard . (Tested)
--   **Portfolio Visualization Dashboard:** Built a new dashboard at  using Recharts, supported by new backend routes. (Tested)
--   **API Timeout Audit & Background Task Manager:** Created  to manage long-running jobs.
--   **Automatic Portfolio Snapshots:** Implemented a scheduled job in  to capture daily portfolio history. (Tested)
--   **Kraken Integration Verification:** Created  and fully tested the connection, authentication, and auto-trader readiness. (Tested)
--   **Enhanced AI Engine:** Implemented all 8 requested AI enhancements in  and created a new dashboard at . (Tested)
--   **Paper Trading Simulator:** Created and ran a comprehensive simulation via . (Tested)
--   **Model Training:** Successfully trained all 16 ML/DL models for both regime and gem prediction.
--   **System Health Check:** Implemented and ran a comprehensive health check across all services.
+-   **Dynamic AI Confidence Threshold:** Implemented in .
+-   **P1: Gem ML/DL Predictor Integration:** Integrated into .
+-   **P2: Background Task Manager Integration:** Injected into  via .
+-   **Prediction Enhancement Suite (8 Services):** Implemented all 8 new services in  (e.g., , , ) and exposed them via .
+-   **AI-Powered Custom Strategy Builder:** Implemented via  and .
+-   **Historical Data Manager:** Created  and downloaded ~12k OHLCV records.
+-   **Custom Strategy Execution:** Integrated into  and exposed via .
+-   **Transformer Model Training:** Successfully trained the model using the  endpoint.
 
 **Earlier issues found/mentioned but not fixed**
--   **API Timeouts (Partially Resolved):** A background task service () was created to address this systemic risk. However, it has not yet been integrated into all long-running tasks across the application. This is listed as an upcoming task (P2).
+-   **API Timeouts on Long-Running Tasks:** This was identified in the previous handoff. While a  service was created and partially integrated, the issue recurred with the RL agent training. The task to refactor all long-running operations to use this service is still not fully complete. The RL agent training is the most pressing instance.
 
 **Known issue recurrence from previous fork**
 -   None.
@@ -80,71 +501,58 @@ The application is a sophisticated AI trading platform. In this session, several
 
 
 **Key Technical Concepts**
--   **Recharts:** Used for creating interactive, data-driven charts (Pie, Line) in the Portfolio Visualization dashboard.
--   **Enhanced AI Engine:** A multi-faceted AI decision engine combining ensemble models, multi-timeframe analysis, advanced technical indicators, sentiment data, and dynamic risk management to generate trading signals.
--   **Paper Trading Simulation:** A service that simulates trading over a historical period, using stored market data and AI signals to generate performance reports without risking real capital.
--   **Asynchronous Task Management:** Use of a dedicated service () to run long-running, blocking operations (like model training or simulations) in the background, improving API responsiveness.
+-   **Reinforcement Learning (RL):** A new  service was created to train an agent that learns optimal trading actions through rewards and penalties.
+-   **Transformer Models:** A  service was added to use attention-based neural networks for sequence prediction tasks, like forecasting price movements.
+-   **On-Chain & Order Book Analysis:** New services now provide deeper market insights by analyzing blockchain transaction data and exchange order book liquidity.
+-   **AI-Driven Strategy Generation:** The system can now parse natural language from the AI chat to automatically generate and save structured trading strategies.
 
 **key DB schema**
--   **portfolio_snapshots:** 
--   **background_tasks:** 
+-   **custom_strategies:** 
+-   **ohlcv_data:** 
 
 **All files of reference**
--   **/app/backend/services/enhanced_ai_engine.py**: NEW. Core logic for the 8 new AI enhancements.
--   **/app/frontend/src/pages/EnhancedAIDashboard.js**: NEW. UI to visualize the new enhanced AI signals.
--   **/app/backend/services/paper_trading_simulator.py**: NEW. Logic for running comprehensive backtests.
--   **/app/frontend/src/pages/PortfolioDashboard.js**: NEW. UI for portfolio visualization using Recharts.
--   **/app/frontend/src/pages/PositionManagement.js**: MODIFIED. Completely redesigned with a card-based layout.
--   **/app/backend/routes/kraken.py**: NEW. API endpoints for managing and verifying the Kraken exchange connection.
--   **/app/backend/services/background_tasks.py**: NEW. Service to manage long-running asynchronous tasks.
--   **/app/server.py**: HEAVILY MODIFIED. All new routes and services were registered and initialized.
+-   **/app/backend/services/rl_trading_agent.py**: NEW. Contains the RL model that is causing timeouts during training. Needs refactoring to use the background task manager.
+-   **/app/backend/services/automated_trader.py**: HEAVILY MODIFIED. This is the central trading logic. It was updated to use the new ML/DL gem predictor and to execute custom strategies. The next step is to integrate the 8 new prediction enhancement signals here.
+-   **/app/backend/services/custom_strategy_builder.py**: NEW. Core logic for parsing natural language and creating trading strategies.
+-   **/app/frontend/src/pages/StrategyBuilder.js**: NEW. Frontend UI for the custom strategy builder.
+-   **/app/backend/server.py**: HEAVILY MODIFIED. A large number of new services and routes were initialized and registered here.
+-   **/app/backend/routes/prediction_enhancements.py**: NEW. Exposes all 8 new prediction services and their training endpoints.
 
 **Areas that need refactoring**:
--   **/app/backend/server.py**: This file has grown significantly with the addition of many new services and routes. It should be modularized to separate service initialization from route registration for better maintainability.
--   **Integration of Background Task Service:** The  service needs to be implemented across all identified long-running tasks (e.g., model training) to fully mitigate timeout risks.
+-   **/app/backend/services/rl_trading_agent.py**: The  method must be refactored to use  to fix the API timeout issue.
+-   **/app/backend/server.py**: This file is becoming very large and complex. It would benefit from being broken down into smaller, more focused modules for service registration and initialization.
 
 **key api endpoints**
--   **/api/paper-trading/run**:  Starts a new paper trading simulation.
--   **/api/paper-trading/status/{task_id}**:  Checks the status of a running simulation.
--   **/api/paper-trading/results/{task_id}**:  Retrieves the final results of a simulation.
--   **/api/enhanced-ai/scan-top-coins**:  Scans top coins using the enhanced AI engine.
--   **/api/enhanced-ai/signal/{symbol}**:  Gets a detailed enhanced signal for a specific coin.
--   **/api/portfolio/visualization/history**:  Fetches historical portfolio snapshots for the performance chart.
--   **/api/portfolio/snapshots/schedule/start**:  Starts the automatic daily snapshot job.
--   **/api/kraken/status**:  Provides a comprehensive status of the Kraken connection and auto-trader readiness.
--   **/api/tasks/train/regime-models**:  Starts a background task to train regime models.
--   **/api/tasks/train/gem-models**:  Starts a background task to train gem models.
+-   **/api/prediction-enhancements/analyze/{symbol}**:  Runs a comprehensive analysis on a symbol using all 8 new prediction services.
+-   **/api/prediction-enhancements/transformer/train**:  Trains the Transformer model.
+-   **/api/prediction-enhancements/rl-agent/train**:  Trains the RL agent (currently times out).
+-   **/api/strategy-builder/create-from-ai**:  Creates a custom strategy from a natural language prompt.
+-   **/api/strategy-builder/activate/{strategy_id}**:  Activates a saved custom strategy.
+-   **/api/data/ohlcv/download/bulk**:  Starts a background job to download historical OHLCV data.
+-   **/api/kraken/auto-trader/execute-custom-strategies**:  Executes all active custom strategies.
 
 **Critical Info for New Agent**
--   **Main Priority:** The user has requested continuous enhancement and testing of the AI. The immediate next step is to demonstrate the fully-equipped  in action by executing a weekly strategy.
--   **Frontend Workflow:** The frontend is a static build. After making changes to , you **must** run yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. and then frontend: ERROR (not running)
-frontend: started.
--   **Model Training:** All 16 models are not persistent and must be retrained after each backend restart. Use the new background task endpoints:  and .
--   **Full System is Operational:** All core components, including data pipelines, AI models, risk management, and exchange integration, are built and verified. The focus should now shift to using, testing, and refining the integrated system.
+-   **Training Timeouts:** Long-running training processes like the RL Agent will time out if called directly via a standard API request. They **must** be refactored to use the  service. This is the top priority technical debt to address.
+-   **Prediction vs. Execution:** A suite of 8 powerful prediction services has been built, but they are currently **not integrated** into the 's decision-making logic. The next major functional step is to make the trader use these new signals.
+-   **Model States:** Models are not persistent and must be retrained after a backend restart. Use the background task endpoints for  and . The new Transformer and RL models must also be trained via their  endpoints (after fixing the RL timeout).
 
 **documents and test reports created in this job**
 -    (Updated)
--   
--   
--   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.   (Message 366): User agrees to the agent's suggestion to build a comprehensive paper trading simulation. (COMPLETED)
-2.   (Message 365): User clarifies the paper trading request. (COMPLETED)
-3.   (Message 332): User agrees to continue with integrating the Enhanced AI and adding auto-retraining. (COMPLETED)
-4.   (Message 292): User requests the implementation of all 8 suggested AI enhancements. (COMPLETED)
-5.   (Message 289): User asks for further AI improvements after model training. (ADDRESSED)
-6.   (Message 268): User requests training for the ML/DL models after the health check. (COMPLETED)
-7.   (Message 260): User requests a system health check. (COMPLETED)
-8.   (Message 198): User requests verification of the Kraken integration and auto-trader functionality. (COMPLETED)
-9.   (Message 157): User approves the agent's suggestion to implement automatic portfolio snapshots. (COMPLETED)
-10.  (Message 91): User prioritizes building the Portfolio Visualization Dashboard and then performing the API Timeout Audit. (COMPLETED)
+1.   (In Progress, Blocked) - User wants to complete the model training.
+2.   (Completed) - User confirms the custom strategy builder works and approves moving on.
+3.   (Completed) - User approved the plan to build the strategy builder and other items.
+4.   (Completed) - User approved implementing all 8 prediction enhancements.
+5.   (Completed) - User asked for suggestions on how to improve the AI's prediction capabilities.
+6.   (Completed) - User approved the plan to integrate the ML/DL gem predictor and background task manager.
+7.   (Completed) - User chose the Dynamic threshold option for the AI's confidence.
+8.   (Addressed) - User requested to lower the AI's confidence to see trades, which led to the dynamic threshold implementation.
 
 **Project Health Check:**
--   **Broken:** None.
--   **Mocked:** No features are mocked.
--   **Overall Status:** **Healthy**. All services are operational. Models require training after each backend restart via the new async API endpoints.
+-   **Broken:** The RL agent training endpoint is broken due to API timeouts.
+-   **Mocked:** None.
+-   **Overall Status:** **Healthy but requires refactoring**. The platform is highly functional, but the timeout issue on long-running training jobs is a critical architectural flaw that needs to be fixed.
 
 **3rd Party Integrations**
 -   **Kraken API:** Active (portfolio, trading, data).
@@ -156,7 +564,7 @@ frontend: started.
 -   **:** Active (frontend data visualization).
 
 **Testing status**
--   **Testing agent used after significant changes:** YES. The agent was used 3 times to validate the Position Management UI, the Portfolio Dashboard, and the full Kraken integration, finding and fixing bugs in each phase.
+-   **Testing agent used after significant changes:** NO. Agent relied on  and manual log checks.
 -   **Troubleshoot agent used after agent stuck in loop:** NO.
 -   **Test files created:** None.
 -   **Known regressions:** None.
@@ -165,4 +573,5 @@ frontend: started.
 -    is present in . All other keys are pre-configured.
 
 **What agent forgot to execute**
--   The agent successfully implemented all direct user requests. The new  service was created as requested but has not been integrated into all existing long-running functions; this remains as a pending refactoring task.</analysis>
+-   The agent mentioned implementing WebSockets for real-time notifications but did not proceed with the implementation.
+-   Crucially, after building the 8 new prediction enhancement services, the agent did not integrate their signals into the 's core decision-making logic. This is a major pending task.</analysis>
