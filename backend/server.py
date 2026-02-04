@@ -411,6 +411,12 @@ async def initialize_services():
         logger.info("✅ Performance Tracker initialized")
         logger.info("✅ Regime Prediction Engine initialized")
         
+        # Update automated trader with adaptive strategy and regime predictor
+        automated_trader.adaptive_strategy = adaptive_strategy_engine
+        automated_trader.regime_predictor = regime_pred
+        automated_trader.performance_tracker = perf_tracker
+        logger.info("✅ Automated Trader updated with adaptive strategy & ML regime prediction")
+        
         # Social Sentiment Scraper
         from services.social_sentiment import get_sentiment_scraper
         sentiment_scraper = get_sentiment_scraper(db)
