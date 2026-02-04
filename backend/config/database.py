@@ -1,33 +1,36 @@
 """
-Database Configuration Module
-Handles MongoDB connection setup
+Database Configuration
+Central configuration for MongoDB connection
 """
 
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
-from dotenv import load_dotenv
-from pathlib import Path
 import os
+from motor.motor_asyncio import AsyncIOMotorClient
+from pathlib import Path
+from dotenv import load_dotenv
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent.parent
 load_dotenv(ROOT_DIR / '.env')
 
+# MongoDB connection
+MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+DB_NAME = os.environ.get('DB_NAME', 'crypto_trading_db')
 
-def get_database() -> tuple[AsyncIOMotorClient, AsyncIOMotorDatabase]:
-    """
-    Get MongoDB client and database connection
-    
-    Returns:
-        Tuple of (client, database)
-    """
-    mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-    db_name = os.environ.get('DB_NAME', 'crypto_trading_db')
-    
-    client = AsyncIOMotorClient(mongo_url)
-    db = client[db_name]
-    
-    return client, db
+# Create client and db
+client = AsyncIOMotorClient(MONGO_URL)
+db = client[DB_NAME]
 
 
-# Initialize database connection
-mongo_client, db = get_database()
+def get_db():
+    """Get database instance"""
+    return db
+
+
+def get_client():
+    """Get MongoDB client"""
+    return client
+
+
+async def close_db():
+    """Close database connection"""
+    client.close()
