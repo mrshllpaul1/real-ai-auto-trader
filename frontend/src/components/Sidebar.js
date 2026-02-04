@@ -189,6 +189,7 @@ const Sidebar = () => {
     { path: '/journal', icon: BookOpen, label: 'Journal' },
     { path: '/scanner', icon: Radar, label: 'Gem Scanner', highlight: true },
     { path: '/gem-backtest', icon: Gem, label: 'Gem Backtester', highlight: true },
+    { path: '/gem-ml-dl', icon: Cpu, label: 'ML vs DL Gems', highlight: true },
     { path: '/auto-exec', icon: Bot, label: 'Auto Execute', highlight: true },
     { path: '/advanced', icon: FlaskConical, label: 'Advanced' },
     { path: '/strategies', icon: Sparkles, label: 'AI Strategies' },

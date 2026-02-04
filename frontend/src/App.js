@@ -28,6 +28,7 @@ import TradingBudget from "./pages/TradingBudget";
 import TriggerPerformance from "./pages/TriggerPerformance";
 import AdaptiveStrategy from "./pages/AdaptiveStrategy";
 import PositionManagement from "./pages/PositionManagement";
+import GemMLDLComparison from "./pages/GemMLDLComparison";
 import Sidebar from "./components/Sidebar";
 import FloatingAIChat from "./components/FloatingAIChat";
 import { Toaster } from "./components/ui/sonner";
@@ -95,6 +96,7 @@ function App() {
                 <Route path="/trigger-performance" element={<TriggerPerformance />} />
                 <Route path="/adaptive" element={<AdaptiveStrategy />} />
                 <Route path="/positions" element={<PositionManagement />} />
+                <Route path="/gem-ml-dl" element={<GemMLDLComparison />} />
                 <Route path="/guide" element={<Guide />} />
                 <Route path="/setup" element={<Setup />} />
                 <Route path="/settings" element={<Settings />} />
