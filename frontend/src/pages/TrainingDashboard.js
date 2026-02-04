@@ -185,6 +185,56 @@ const TrainingDashboard = () => {
   const [backgroundTasks, setBackgroundTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [wsConnected, setWsConnected] = useState(false);
+
+  // WebSocket connection for real-time updates
+  useEffect(() => {
+    const wsUrl = API_URL.replace('http', 'ws') + '/ws/training';
+    let ws = null;
+    let reconnectTimeout = null;
+    
+    const connect = () => {
+      try {
+        ws = new WebSocket(wsUrl);
+        
+        ws.onopen = () => {
+          console.log('WebSocket connected');
+          setWsConnected(true);
+        };
+        
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'training_update' && data.tasks) {
+              setBackgroundTasks(data.tasks);
+            }
+          } catch (e) {
+            console.error('WebSocket message error:', e);
+          }
+        };
+        
+        ws.onclose = () => {
+          console.log('WebSocket disconnected');
+          setWsConnected(false);
+          // Reconnect after 5 seconds
+          reconnectTimeout = setTimeout(connect, 5000);
+        };
+        
+        ws.onerror = (err) => {
+          console.error('WebSocket error:', err);
+        };
+      } catch (err) {
+        console.error('WebSocket connection failed:', err);
+      }
+    };
+    
+    connect();
+    
+    return () => {
+      if (ws) ws.close();
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+    };
+  }, []);
 
   // Fetch all statuses
   const fetchStatuses = useCallback(async () => {
