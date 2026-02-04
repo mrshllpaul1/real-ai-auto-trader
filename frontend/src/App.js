@@ -102,6 +102,7 @@ function App() {
                 <Route path="/gem-ml-dl" element={<GemMLDLComparison />} />
                 <Route path="/portfolio-dashboard" element={<PortfolioDashboard />} />
                 <Route path="/enhanced-ai" element={<EnhancedAIDashboard />} />
+                <Route path="/strategy-builder" element={<StrategyBuilder />} />
                 <Route path="/guide" element={<Guide />} />
                 <Route path="/setup" element={<Setup />} />
                 <Route path="/settings" element={<Settings />} />
