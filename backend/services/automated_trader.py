@@ -975,13 +975,318 @@ Exit: ${exit_price:.4f}
         return {
             'ai_trainer': self.ai_trainer is not None,
             'gem_finder_legacy': self.gem_finder is not None,
-            'gem_ml_dl': self.gem_ml_dl is not None and self.gem_ml_dl.is_trained,
+            'gem_ml_dl': self.gem_ml_dl is not None and getattr(self.gem_ml_dl, 'is_trained', False),
             'adaptive_strategy': self.adaptive_strategy is not None,
             'regime_predictor': self.regime_predictor is not None,
             'performance_tracker': self.performance_tracker is not None,
             'isolated_portfolio': self.isolated_portfolio is not None,
             'enhanced_ai': self.enhanced_ai is not None,
             'background_task_manager': self.task_manager is not None,
-            'kraken_connected': self.kraken is not None
+            'kraken_connected': self.kraken is not None,
+            'custom_strategies': len(self.custom_strategies),
+            'notification_service': self.notification_service is not None
         }
+    
+    # Custom Strategy Integration
+    
+    async def load_active_strategies(self):
+        """Load all active custom strategies from database"""
+        try:
+            cursor = self.db.custom_strategies.find({'status': 'active'})
+            self.custom_strategies = await cursor.to_list(length=50)
+            logger.info(f"Loaded {len(self.custom_strategies)} active custom strategies")
+            return len(self.custom_strategies)
+        except Exception as e:
+            logger.error(f"Failed to load custom strategies: {e}")
+            return 0
+    
+    async def execute_custom_strategies(self, paper_trade: bool = True) -> Dict[str, Any]:
+        """
+        Execute all active custom strategies
+        
+        Args:
+            paper_trade: If True, simulates trades without real execution
+            
+        Returns:
+            Execution results for all strategies
+        """
+        if not self.custom_strategies:
+            await self.load_active_strategies()
+        
+        if not self.custom_strategies:
+            return {'message': 'No active custom strategies', 'trades': []}
+        
+        results = {
+            'timestamp': datetime.now().isoformat(),
+            'strategies_executed': 0,
+            'signals_generated': 0,
+            'trades_executed': 0,
+            'results': []
+        }
+        
+        for strategy in self.custom_strategies:
+            try:
+                strategy_result = await self._execute_single_strategy(strategy, paper_trade)
+                results['results'].append(strategy_result)
+                results['strategies_executed'] += 1
+                
+                if strategy_result.get('signal'):
+                    results['signals_generated'] += 1
+                
+                if strategy_result.get('trade_executed'):
+                    results['trades_executed'] += 1
+                    
+            except Exception as e:
+                logger.error(f"Strategy {strategy.get('name')} execution failed: {e}")
+                results['results'].append({
+                    'strategy_name': strategy.get('name'),
+                    'error': str(e)
+                })
+        
+        return results
+    
+    async def _execute_single_strategy(self, strategy: Dict, paper_trade: bool) -> Dict[str, Any]:
+        """Execute a single custom strategy"""
+        strategy_name = strategy.get('name', 'Unknown')
+        coins = strategy.get('coins', ['BTC', 'ETH'])
+        
+        result = {
+            'strategy_name': strategy_name,
+            'timestamp': datetime.now().isoformat(),
+            'coins_checked': [],
+            'signal': None,
+            'trade_executed': False
+        }
+        
+        # Get current market data for each coin
+        for coin in coins[:5]:  # Limit to 5 coins per strategy
+            try:
+                signal = await self._evaluate_strategy_conditions(strategy, coin)
+                result['coins_checked'].append({
+                    'coin': coin,
+                    'signal': signal
+                })
+                
+                if signal in ['buy', 'sell']:
+                    result['signal'] = signal
+                    result['signal_coin'] = coin
+                    
+                    # Execute trade if conditions met
+                    if signal == 'buy':
+                        trade_result = await self._execute_strategy_trade(
+                            strategy, coin, 'buy', paper_trade
+                        )
+                        if trade_result.get('success'):
+                            result['trade_executed'] = True
+                            result['trade'] = trade_result
+                            
+                            # Send notification
+                            await self._send_strategy_notification(
+                                strategy_name, 'entry', coin, 
+                                trade_result.get('confidence', 0)
+                            )
+                            
+            except Exception as e:
+                logger.warning(f"Error evaluating {coin} for {strategy_name}: {e}")
+        
+        return result
+    
+    async def _evaluate_strategy_conditions(self, strategy: Dict, coin: str) -> str:
+        """
+        Evaluate entry/exit conditions for a strategy
+        
+        Returns:
+            'buy', 'sell', or 'hold'
+        """
+        entry_conditions = strategy.get('entry_conditions', [])
+        exit_conditions = strategy.get('exit_conditions', [])
+        
+        # Get current indicators for the coin
+        indicators = await self._get_coin_indicators(coin)
+        
+        if not indicators:
+            return 'hold'
+        
+        # Check entry conditions
+        entry_met = all(
+            self._check_condition(cond, indicators) 
+            for cond in entry_conditions
+        ) if entry_conditions else False
+        
+        # Check exit conditions
+        exit_met = all(
+            self._check_condition(cond, indicators)
+            for cond in exit_conditions
+        ) if exit_conditions else False
+        
+        # Check if we have an existing position
+        has_position = await self._has_position(coin)
+        
+        if has_position and exit_met:
+            return 'sell'
+        elif not has_position and entry_met:
+            return 'buy'
+        
+        return 'hold'
+    
+    async def _get_coin_indicators(self, coin: str) -> Dict[str, Any]:
+        """Get current indicator values for a coin"""
+        try:
+            # Try to get from enhanced AI if available
+            if self.enhanced_ai:
+                signal = await self.enhanced_ai.get_enhanced_signal(coin)
+                if signal and 'indicators' in signal:
+                    return signal['indicators']
+            
+            # Fallback: Generate basic indicators from recent prices
+            ohlcv = await self.db.ohlcv_data.find(
+                {'symbol': coin.upper()}
+            ).sort('timestamp', -1).limit(50).to_list(length=50)
+            
+            if len(ohlcv) < 14:
+                return {}
+            
+            closes = [float(d['close']) for d in reversed(ohlcv)]
+            
+            # Calculate basic indicators
+            import numpy as np
+            
+            # RSI
+            deltas = np.diff(closes)
+            gains = np.where(deltas > 0, deltas, 0)
+            losses = np.abs(np.where(deltas < 0, deltas, 0))
+            avg_gain = np.mean(gains[-14:])
+            avg_loss = np.mean(losses[-14:])
+            rs = avg_gain / (avg_loss + 0.0001)
+            rsi = 100 - (100 / (1 + rs))
+            
+            # Moving averages
+            sma_20 = np.mean(closes[-20:]) if len(closes) >= 20 else closes[-1]
+            sma_50 = np.mean(closes[-50:]) if len(closes) >= 50 else closes[-1]
+            
+            # Price change
+            price_change_24h = ((closes[-1] - closes[-24]) / closes[-24] * 100) if len(closes) >= 24 else 0
+            
+            return {
+                'rsi': rsi,
+                'sma_20': sma_20,
+                'sma_50': sma_50,
+                'price': closes[-1],
+                'price_change_24h': price_change_24h,
+                'volume': ohlcv[0].get('volume', 0)
+            }
+            
+        except Exception as e:
+            logger.warning(f"Failed to get indicators for {coin}: {e}")
+            return {}
+    
+    def _check_condition(self, condition: Dict, indicators: Dict) -> bool:
+        """Check if a single condition is met"""
+        indicator = condition.get('indicator', '')
+        operator = condition.get('operator', '>')
+        value = condition.get('value')
+        
+        if indicator not in indicators:
+            return False
+        
+        current_value = indicators[indicator]
+        
+        # Handle comparison with another indicator
+        if isinstance(value, str) and value in indicators:
+            target_value = indicators[value]
+        else:
+            try:
+                target_value = float(value)
+            except (ValueError, TypeError):
+                return False
+        
+        # Evaluate condition
+        if operator == '>':
+            return current_value > target_value
+        elif operator == '<':
+            return current_value < target_value
+        elif operator == '>=':
+            return current_value >= target_value
+        elif operator == '<=':
+            return current_value <= target_value
+        elif operator == '==':
+            return abs(current_value - target_value) < 0.001
+        elif operator == '!=':
+            return abs(current_value - target_value) >= 0.001
+        
+        return False
+    
+    async def _has_position(self, coin: str) -> bool:
+        """Check if we have an existing position in a coin"""
+        try:
+            position = await self.db.positions.find_one({
+                'coin_id': coin.lower(),
+                'status': 'open'
+            })
+            return position is not None
+        except:
+            return False
+    
+    async def _execute_strategy_trade(
+        self, 
+        strategy: Dict, 
+        coin: str, 
+        action: str,
+        paper_trade: bool
+    ) -> Dict[str, Any]:
+        """Execute a trade based on strategy signal"""
+        risk_params = strategy.get('risk_params', {})
+        position_size_pct = risk_params.get('position_size_pct', 10)
+        stop_loss_pct = risk_params.get('stop_loss_pct', 10)
+        take_profit_pct = risk_params.get('take_profit_pct', 30)
+        
+        # Get balance
+        balance = 500  # Default
+        if self.isolated_portfolio:
+            budget_status = await self.isolated_portfolio.get_budget_status()
+            balance = budget_status.get('available', 500)
+        
+        amount = balance * (position_size_pct / 100)
+        
+        # Get Kraken symbol
+        kraken_symbol = self.kraken_symbols.get(coin.lower())
+        if not kraken_symbol:
+            return {'success': False, 'error': f'No Kraken symbol for {coin}'}
+        
+        # Execute trade
+        trade_result = await self._execute_isolated_trade(
+            coin_id=coin.lower(),
+            symbol=kraken_symbol,
+            amount_usd=amount,
+            stop_loss_pct=stop_loss_pct,
+            take_profit_pct=take_profit_pct,
+            paper_trade=paper_trade,
+            is_gem=False,
+            ai_score=70  # Custom strategy default score
+        )
+        
+        if trade_result:
+            trade_result['strategy'] = strategy.get('name')
+            trade_result['confidence'] = 75  # Custom strategy confidence
+        
+        return trade_result or {'success': False}
+    
+    async def _send_strategy_notification(
+        self, 
+        strategy_name: str, 
+        signal_type: str, 
+        coin: str, 
+        confidence: float
+    ):
+        """Send notification for strategy signal"""
+        if self.notification_service:
+            try:
+                await self.notification_service.send_strategy_signal(
+                    strategy_name=strategy_name,
+                    signal_type=signal_type,
+                    coin_symbol=coin,
+                    confidence=confidence
+                )
+            except Exception as e:
+                logger.warning(f"Failed to send strategy notification: {e}")
 
