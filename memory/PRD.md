@@ -60,24 +60,41 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 - 4,352 new OHLCV records added
 - 6 batches completed in ~7 minutes
 
-### ✅ Automated Event Triggers (P1 COMPLETE)
+### ✅ Automated Event Triggers (P1 COMPLETE - EXPANDED)
 
-**Triggers Created:**
-| Trigger ID | Name | Action | Coins | Keywords |
-|------------|------|--------|-------|----------|
-| mstr_btc_buy | Institutional Bitcoin Purchase | BUY $100 | BTC | microstrategy, saylor, institutional |
-| etf_news_buy | ETF Approval News | BUY $100 | BTC, ETH | etf, approved, blackrock, fidelity |
-| whale_movement | Whale Movement Alert | ALERT | BTC, ETH | whale, million, billion |
-| fomc_fed_alert | FOMC/Federal Reserve News | ALERT | BTC, ETH | fomc, fed rate, powell, interest rate |
-| btc_halving | Bitcoin Halving News | BUY $100 | BTC | halving, block reward |
-| test_elon_doge_1 | Elon Musk DOGE Tweets | BUY $50 | DOGE | elon, musk, doge |
-| test_sec_regulatory_1 | SEC Regulatory Actions | SELL $100 | BTC, ETH, BNB, SOL | sec, gensler, lawsuit |
+**36 Active Triggers Across All Categories:**
+
+| Category | Count | Action | Examples |
+|----------|-------|--------|----------|
+| **Regulatory/Government** | 5 | BUY/ALERT | Trump policy, SEC cases, ETF approvals, FOMC |
+| **Institutional** | 5 | BUY/ALERT | MicroStrategy, BlackRock, Tesla, Grayscale |
+| **Exchange Risk** | 3 | SELL/ALERT | Exchange crisis, Binance, Coinbase news |
+| **Macro/Economic** | 4 | BUY/ALERT | Banking crisis, inflation, dollar weakness |
+| **Technology** | 3 | BUY/SELL | ETH upgrades, Solana outages, DeFi exploits |
+| **Altcoins** | 6 | BUY/ALERT | XRP, ADA, LINK, AI tokens, Gaming, Layer 2 |
+| **Market Events** | 6 | BUY/ALERT | ATH, crashes, options expiry, funding rates |
+| **Supply Events** | 4 | BUY/ALERT | Halving, Mt.Gox, government sales, miners |
+
+**Key BUY Triggers (17):**
+- Market Crash: $300 → BTC, ETH (contrarian buy)
+- Banking Crisis: $200 → BTC (flight to safety)
+- Trump/Government Policy: $150 → BTC, ETH, XRP, SOL
+- BlackRock/Tesla News: $150 → BTC, ETH
+- Institutional Buys: $100 → BTC
+- ETF Approvals: $100 → BTC, ETH
+- Layer 2 Solutions: $75 → ARB, OP, MATIC
+- AI Crypto Projects: $50 → RNDR, FET, OCEAN
+
+**Key SELL Triggers (3):**
+- Exchange Crisis: $200 → All majors
+- SEC Negative Actions: $100 → BTC, ETH, BNB, SOL
+- Solana Outages: $100 → SOL
 
 **Trigger Statistics:**
-- Total: 7 active triggers
-- Executions: 12 successful
+- Total: 36 active triggers
+- Executions: 18 successful
 - Success Rate: 100%
-- Last Check: Automatic every 15 minutes
+- Auto-check: Every 15 minutes
 
 ### ✅ Gem Predictor Accuracy Verified
 
