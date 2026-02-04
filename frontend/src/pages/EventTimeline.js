@@ -224,7 +224,7 @@ const EventTimeline = () => {
               <span className="text-sm text-[#A1A1AA]">Bullish Events</span>
             </div>
             <div className="text-3xl font-data font-bold text-[#00FF94]">
-              {events.filter(e => (e.sentiment || 0) > 0.3).length}
+              {events.filter(e => e.impact === 'positive' || (e.sentiment || 0) > 0.3).length}
             </div>
           </CardContent>
         </Card>
@@ -236,7 +236,7 @@ const EventTimeline = () => {
               <span className="text-sm text-[#A1A1AA]">Bearish Events</span>
             </div>
             <div className="text-3xl font-data font-bold text-[#FF0055]">
-              {events.filter(e => (e.sentiment || 0) < -0.3).length}
+              {events.filter(e => e.impact === 'negative' || (e.sentiment || 0) < -0.3).length}
             </div>
           </CardContent>
         </Card>
