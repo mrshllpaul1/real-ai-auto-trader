@@ -389,6 +389,12 @@ async def initialize_services():
         logger.info("✅ Performance Tracker initialized")
         logger.info("✅ Regime Prediction Engine initialized")
         
+        # Social Sentiment Scraper
+        from services.social_sentiment import get_sentiment_scraper
+        sentiment_scraper = get_sentiment_scraper(db)
+        social_sentiment.set_dependencies(db, sentiment_scraper)
+        logger.info("✅ Social Sentiment Scraper initialized")
+        
         # Start scheduler
         await scheduler_service.start()
         
