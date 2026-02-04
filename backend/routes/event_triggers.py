@@ -300,6 +300,122 @@ async def get_trigger_execution_history(trigger_id: str, limit: int = 20):
     }
 
 
+@router.get("/performance/dashboard")
+async def get_trigger_performance_dashboard():
+    """
+    Get comprehensive trigger performance analytics for dashboard.
+    Includes fire counts, success rates, and P&L per trigger.
+    """
+    if not _trigger_service:
+        raise HTTPException(status_code=503, detail="Trigger service not initialized")
+    
+    # Get all triggers
+    triggers = await _trigger_service.list_triggers(enabled_only=False)
+    
+    # Get all execution history
+    all_history = await _db.trigger_executions.find(
+        {},
+        {"_id": 0}
+    ).sort("timestamp", -1).limit(1000).to_list(1000)
+    
+    # Calculate metrics per trigger
+    trigger_metrics = {}
+    
+    for trigger in triggers:
+        trigger_id = trigger.get('trigger_id')
+        trigger_history = [h for h in all_history if h.get('trigger_id') == trigger_id]
+        
+        # Calculate metrics
+        total_fires = len(trigger_history)
+        successful_fires = len([h for h in trigger_history if h.get('success', False)])
+        success_rate = (successful_fires / total_fires * 100) if total_fires > 0 else 0
+        
+        # Calculate P&L if available
+        total_pnl = sum(h.get('pnl_usd', 0) for h in trigger_history if h.get('pnl_usd'))
+        
+        # Get last fire time
+        last_fired = trigger_history[0].get('timestamp') if trigger_history else None
+        
+        trigger_metrics[trigger_id] = {
+            "trigger_id": trigger_id,
+            "name": trigger.get('name', trigger_id),
+            "keywords": trigger.get('keywords', []),
+            "action": trigger.get('action'),
+            "enabled": trigger.get('enabled', True),
+            "total_fires": total_fires,
+            "successful_fires": successful_fires,
+            "success_rate": round(success_rate, 1),
+            "total_pnl_usd": round(total_pnl, 2),
+            "last_fired": last_fired,
+            "category": _categorize_trigger(trigger.get('keywords', []))
+        }
+    
+    # Aggregate by category
+    categories = {}
+    for metrics in trigger_metrics.values():
+        cat = metrics['category']
+        if cat not in categories:
+            categories[cat] = {
+                "total_triggers": 0,
+                "total_fires": 0,
+                "total_pnl": 0,
+                "triggers": []
+            }
+        categories[cat]['total_triggers'] += 1
+        categories[cat]['total_fires'] += metrics['total_fires']
+        categories[cat]['total_pnl'] += metrics['total_pnl_usd']
+        categories[cat]['triggers'].append(metrics['trigger_id'])
+    
+    # Sort triggers by fires for top performers
+    sorted_by_fires = sorted(trigger_metrics.values(), key=lambda x: x['total_fires'], reverse=True)
+    sorted_by_pnl = sorted(trigger_metrics.values(), key=lambda x: x['total_pnl_usd'], reverse=True)
+    
+    return {
+        "summary": {
+            "total_triggers": len(triggers),
+            "enabled_triggers": len([t for t in triggers if t.get('enabled', True)]),
+            "total_executions": len(all_history),
+            "overall_success_rate": round(
+                len([h for h in all_history if h.get('success', False)]) / len(all_history) * 100
+                if all_history else 0, 1
+            ),
+            "total_pnl_usd": round(sum(h.get('pnl_usd', 0) for h in all_history if h.get('pnl_usd')), 2)
+        },
+        "by_category": categories,
+        "trigger_metrics": list(trigger_metrics.values()),
+        "top_performers": {
+            "by_fires": sorted_by_fires[:5],
+            "by_pnl": sorted_by_pnl[:5]
+        },
+        "recent_executions": all_history[:20]
+    }
+
+
+def _categorize_trigger(keywords: list) -> str:
+    """Categorize trigger based on keywords"""
+    keywords_lower = [k.lower() for k in keywords]
+    keywords_text = ' '.join(keywords_lower)
+    
+    if any(k in keywords_text for k in ['elon', 'musk', 'doge', 'tweet']):
+        return 'celebrity'
+    elif any(k in keywords_text for k in ['sec', 'regulation', 'ban', 'legal', 'lawsuit']):
+        return 'regulatory'
+    elif any(k in keywords_text for k in ['whale', 'large', 'million', 'billion', 'institutional']):
+        return 'whale'
+    elif any(k in keywords_text for k in ['etf', 'approval', 'blackrock', 'grayscale']):
+        return 'institutional'
+    elif any(k in keywords_text for k in ['hack', 'exploit', 'security', 'breach']):
+        return 'security'
+    elif any(k in keywords_text for k in ['partner', 'integration', 'launch', 'announce']):
+        return 'partnership'
+    elif any(k in keywords_text for k in ['fed', 'fomc', 'rate', 'inflation', 'gdp']):
+        return 'macro'
+    elif any(k in keywords_text for k in ['crash', 'dump', 'panic', 'capitulation']):
+        return 'market_event'
+    else:
+        return 'other'
+
+
 # Scheduler job integration
 @router.post("/schedule/enable")
 async def enable_scheduled_checking(interval_minutes: int = 15):
