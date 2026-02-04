@@ -287,10 +287,17 @@ async def initialize_services():
         # Sentiment Analyzer (use new scraper)
         sentiment_analyzer = get_sentiment_scraper(db)
         
-        # Automated Trader
+        # Isolated Portfolio Manager (initialize BEFORE automated trader)
+        from services.isolated_portfolio import get_isolated_portfolio
+        isolated_portfolio_mgr = get_isolated_portfolio(db, kraken_service)
+        isolated_portfolio.set_dependencies(db, isolated_portfolio_mgr)
+        logger.info("✅ Isolated Portfolio Manager initialized")
+        
+        # Automated Trader - now with budget isolation
         automated_trader = AutomatedWeeklyTrader(
             db=db, kraken_service=kraken_service, ai_trainer=ai_trainer,
-            gem_finder=gem_finder, alert_service=alert_service
+            gem_finder=gem_finder, alert_service=alert_service,
+            isolated_portfolio=isolated_portfolio_mgr
         )
         auto_trade.set_dependencies(db, automated_trader, alert_service, sentiment_analyzer)
         
