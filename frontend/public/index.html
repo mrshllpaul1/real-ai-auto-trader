@@ -5,6 +5,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#000000" />
         <meta name="description" content="A product of emergent.sh" />
+        <script>
+            // Runtime config - injected at runtime, not build time
+            window.__RUNTIME_CONFIG__ = {
+                REACT_APP_BACKEND_URL: 'https://crypto-trader-ai-15.preview.emergentagent.com'
+            };
+        </script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link href="https://fonts.googleapis.com/css2?family=Chivo:wght@700;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
