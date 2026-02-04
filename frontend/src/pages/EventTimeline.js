@@ -49,7 +49,7 @@ const EventTimeline = () => {
     if (!searchQuery.trim()) return;
     try {
       setLoading(true);
-      const response = await api.get(`/events/search?query=${encodeURIComponent(searchQuery)}&limit=50`);
+      const response = await api.get(`/events/database/search?query=${encodeURIComponent(searchQuery)}&limit=50`);
       setEvents(response.data?.events || []);
       toast.success(`Found ${response.data?.events?.length || 0} events`);
     } catch (error) {
