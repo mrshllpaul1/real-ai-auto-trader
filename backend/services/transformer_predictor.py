@@ -433,6 +433,9 @@ class TransformerPredictor:
             self.is_trained = True
             self.last_trained = datetime.utcnow()
             
+            # Auto-save model after training
+            self.save_model()
+            
             # Calculate final metrics
             final_acc = history.history['accuracy'][-1]
             val_acc = history.history.get('val_accuracy', [0])[-1]
@@ -445,7 +448,8 @@ class TransformerPredictor:
                 'train_accuracy': round(final_acc * 100, 2),
                 'val_accuracy': round(val_acc * 100, 2),
                 'epochs_trained': len(history.history['loss']),
-                'model_config': self.config
+                'model_config': self.config,
+                'model_saved': True
             }
             
         except Exception as e:
