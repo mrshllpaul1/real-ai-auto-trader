@@ -422,6 +422,12 @@ async def initialize_services():
         await scheduler_service.add_stop_loss_job(interval_minutes=5)
         logger.info("✅ Stop-Loss Automation initialized (checking every 5 minutes)")
         
+        # Gem ML/DL Prediction Engine
+        from services.gem_ml_dl_predictor import get_gem_prediction_engine
+        gem_ml_dl_engine = get_gem_prediction_engine(db)
+        gem_ml_dl.set_dependencies(db, gem_ml_dl_engine)
+        logger.info("✅ Gem ML/DL Prediction Engine initialized")
+        
         # Start scheduler
         await scheduler_service.start()
         
