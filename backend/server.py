@@ -317,6 +317,12 @@ async def initialize_services():
         kraken_routes.set_dependencies(db, kraken_service, isolated_portfolio_mgr, automated_trader)
         logger.info("✅ Kraken Routes initialized")
         
+        # Enhanced AI Engine
+        from services.enhanced_ai_engine import get_enhanced_ai
+        enhanced_ai = get_enhanced_ai(db)
+        enhanced_ai_routes.set_dependencies(db, enhanced_ai, regime_pred)
+        logger.info("✅ Enhanced AI Engine initialized (Ensemble + MTF + Sentiment + Whale + Risk)")
+        
         # Growth Engine
         growth_engine = AggressiveGrowthEngine(
             db=db, kraken_service=kraken_service, gem_finder=gem_finder,
