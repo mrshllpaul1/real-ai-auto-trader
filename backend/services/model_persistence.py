@@ -69,9 +69,12 @@ class ModelPersistence:
             logger.error(f"❌ Failed to save {self.model_type} model: {e}")
             return False
     
-    def load_keras_model(self):
+    def load_keras_model(self, custom_objects: dict = None):
         """
         Load a Keras/TensorFlow model from disk.
+        
+        Args:
+            custom_objects: Dictionary of custom layer classes
         
         Returns:
             Loaded model or None if not found
@@ -84,7 +87,20 @@ class ModelPersistence:
                 return None
             
             import tensorflow as tf
-            model = tf.keras.models.load_model(str(model_path))
+            
+            # For transformer models, we need to import custom layers
+            if self.model_type == "transformer":
+                try:
+                    from services.transformer_predictor import PositionalEncoding, TransformerBlock
+                    custom_objects = custom_objects or {}
+                    custom_objects.update({
+                        'PositionalEncoding': PositionalEncoding,
+                        'TransformerBlock': TransformerBlock
+                    })
+                except ImportError:
+                    pass
+            
+            model = tf.keras.models.load_model(str(model_path), custom_objects=custom_objects)
             
             logger.info(f"✅ Loaded {self.model_type} model from {model_path}")
             return model
