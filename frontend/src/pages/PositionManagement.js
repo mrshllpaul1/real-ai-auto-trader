@@ -447,7 +447,7 @@ const PositionManagement = () => {
                                 value={editValues.stop_loss}
                                 onChange={(e) => setEditValues({ ...editValues, stop_loss: e.target.value })}
                                 className="bg-[#0A0A0A] border-[#1F1F1F]"
-                                data-testid={`edit-sl-${pos.position_id}`}
+                                data-testid={`edit-sl-${pos.position_id || pos.coin_id}`}
                               />
                             </div>
                             <div>
@@ -459,16 +459,16 @@ const PositionManagement = () => {
                                 value={editValues.take_profit}
                                 onChange={(e) => setEditValues({ ...editValues, take_profit: e.target.value })}
                                 className="bg-[#0A0A0A] border-[#1F1F1F]"
-                                data-testid={`edit-tp-${pos.position_id}`}
+                                data-testid={`edit-tp-${pos.position_id || pos.coin_id}`}
                               />
                             </div>
                           </div>
                           <div className="flex gap-2">
                             <Button
-                              onClick={() => handleUpdateLevels(pos.position_id)}
+                              onClick={() => handleUpdateLevels(pos.position_id || pos.coin_id)}
                               size="sm"
                               className="flex-1 bg-[#00FF94] hover:bg-[#00FF94]/80 text-black"
-                              data-testid={`save-levels-${pos.position_id}`}
+                              data-testid={`save-levels-${pos.position_id || pos.coin_id}`}
                             >
                               <Check size={14} className="mr-1" /> Save
                             </Button>
