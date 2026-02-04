@@ -14,35 +14,66 @@ import re
 # Synonym mappings to reduce false negatives
 KEYWORD_SYNONYMS = {
     # Institutional buyers
-    "microstrategy": ["mstr", "michael saylor", "saylor"],
-    "blackrock": ["ibit", "larry fink", "ishares"],
-    "grayscale": ["gbtc", "ethe", "barry silbert", "dcg"],
-    "tesla": ["elon musk", "tsla"],
-    "fidelity": ["fbtc", "wise origin"],
+    "microstrategy": ["mstr", "michael saylor", "saylor", "strategy"],
+    "blackrock": ["ibit", "larry fink", "ishares", "blk"],
+    "grayscale": ["gbtc", "ethe", "barry silbert", "dcg", "digital currency group"],
+    "tesla": ["elon musk", "tsla", "spacex"],
+    "fidelity": ["fbtc", "wise origin", "fidelity digital"],
     
-    # Regulatory
-    "sec": ["securities", "gensler", "enforcement", "regulatory"],
-    "etf": ["exchange traded fund", "spot etf", "bitcoin etf", "eth etf"],
-    "fomc": ["federal reserve", "fed", "powell", "interest rate", "rate decision"],
+    # Regulatory bodies & people
+    "sec": ["securities", "gensler", "enforcement", "regulatory", "securities exchange"],
+    "cftc": ["commodities", "commodity futures"],
+    "trump": ["white house", "administration", "president", "executive order"],
+    "etf": ["exchange traded fund", "spot etf", "bitcoin etf", "eth etf", "crypto etf"],
+    "fomc": ["federal reserve", "fed", "powell", "interest rate", "rate decision", "fed meeting"],
     
     # Market events
-    "crash": ["plunge", "dump", "collapse", "tank", "tumble", "freefall"],
-    "rally": ["surge", "pump", "spike", "soar", "moon", "breakout"],
-    "halving": ["halvening", "block reward", "mining reward"],
+    "crash": ["plunge", "dump", "collapse", "tank", "tumble", "freefall", "bloodbath", "selloff", "sell-off"],
+    "rally": ["surge", "pump", "spike", "soar", "moon", "breakout", "rip", "skyrocket"],
+    "halving": ["halvening", "block reward", "mining reward", "bitcoin halving"],
+    "bull": ["bullish", "bull run", "bull market", "uptrend"],
+    "bear": ["bearish", "bear market", "downtrend", "correction"],
     
     # Exchange events
-    "bankruptcy": ["insolvent", "bankrupt", "chapter 11", "liquidation"],
-    "hack": ["exploit", "breach", "attack", "stolen", "drained"],
+    "bankruptcy": ["insolvent", "bankrupt", "chapter 11", "liquidation", "default"],
+    "hack": ["exploit", "breach", "attack", "stolen", "drained", "compromised", "vulnerability"],
+    "exchange": ["trading platform", "cex", "dex", "crypto exchange"],
+    
+    # Major exchanges
+    "binance": ["cz", "changpeng zhao", "bnb", "binance.us"],
+    "coinbase": ["brian armstrong", "coin", "base"],
+    "kraken": ["jesse powell", "payward"],
     
     # Whale movements
-    "whale": ["large holder", "big transfer", "massive", "huge"],
+    "whale": ["large holder", "big transfer", "massive", "huge", "giant", "major holder"],
+    "million": ["mln", "mm", "millions"],
+    "billion": ["bln", "bn", "billions"],
     
     # Price milestones
-    "ath": ["all-time high", "all time high", "record high", "new high"],
+    "ath": ["all-time high", "all time high", "record high", "new high", "highest ever"],
+    "atl": ["all-time low", "all time low", "record low", "lowest"],
     
     # Network events
-    "upgrade": ["fork", "update", "hardfork", "hard fork", "softfork"],
-    "outage": ["down", "halted", "congestion", "offline", "degraded"],
+    "upgrade": ["fork", "update", "hardfork", "hard fork", "softfork", "improvement"],
+    "outage": ["down", "halted", "congestion", "offline", "degraded", "network issue"],
+    
+    # Investment types
+    "institutional": ["institution", "hedge fund", "pension", "endowment", "fund"],
+    "purchase": ["buy", "bought", "acquire", "acquired", "accumulate", "add"],
+    "sold": ["sell", "selling", "liquidate", "dump", "offload"],
+    
+    # DeFi & Crypto specific
+    "defi": ["decentralized finance", "yield", "liquidity", "protocol"],
+    "nft": ["non-fungible", "collectible", "digital art"],
+    "staking": ["stake", "validator", "delegation", "proof of stake"],
+    "layer": ["l1", "l2", "layer 1", "layer 2", "scaling"],
+    
+    # Sentiment indicators
+    "positive": ["bullish", "optimistic", "growth", "gains", "profit"],
+    "negative": ["bearish", "pessimistic", "loss", "losses", "risk"],
+    
+    # AI & Tech
+    "ai": ["artificial intelligence", "machine learning", "ml", "gpt", "llm"],
 }
 
 # Confidence score adjustments
