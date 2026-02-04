@@ -487,6 +487,68 @@ const TrainingDashboard = () => {
     }
   };
 
+  // Auto-Spot Scan Functions
+  const runAutoSpotScan = async () => {
+    try {
+      setAutoSpotRunning(true);
+      const paperTrade = autoSpotStatus?.paper_trade ?? true;
+      const res = await fetch(`${API_URL}/api/training-scheduler/auto-spot-scan/run-now?paper_trade=${paperTrade}`, {
+        method: 'POST'
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setLastScanResults(data);
+        fetchStatuses();
+      }
+    } catch (err) {
+      console.error('Failed to run auto-spot scan:', err);
+    } finally {
+      setAutoSpotRunning(false);
+    }
+  };
+
+  const toggleAutoSpotScan = async () => {
+    try {
+      const newEnabled = !autoSpotStatus?.enabled;
+      const res = await fetch(`${API_URL}/api/training-scheduler/auto-spot-scan/toggle?enabled=${newEnabled}`, {
+        method: 'POST'
+      });
+      
+      if (res.ok) {
+        fetchStatuses();
+      }
+    } catch (err) {
+      console.error('Failed to toggle auto-spot scan:', err);
+    }
+  };
+
+  const switchAutoSpotMode = async () => {
+    try {
+      const currentPaperTrade = autoSpotStatus?.paper_trade ?? true;
+      const newPaperTrade = !currentPaperTrade;
+      
+      // Delete and recreate with new mode
+      await fetch(`${API_URL}/api/training-scheduler/auto-spot-scan`, {
+        method: 'DELETE'
+      });
+      
+      await fetch(`${API_URL}/api/training-scheduler/auto-spot-scan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          interval_minutes: autoSpotStatus?.interval_minutes || 60,
+          paper_trade: newPaperTrade,
+          enabled: true
+        })
+      });
+      
+      fetchStatuses();
+    } catch (err) {
+      console.error('Failed to switch auto-spot mode:', err);
+    }
+  };
+
   // Get service info
   const services = servicesStatus?.services || {};
   const activeServices = Object.entries(services).filter(([_, v]) => 
