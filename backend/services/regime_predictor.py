@@ -528,13 +528,32 @@ class RegimePredictionEngine:
                 X_train_seq, X_test_seq = X_seq[:split_seq], X_seq[split_seq:]
                 y_train_seq, y_test_seq = y_seq[:split_seq], y_seq[split_seq:]
                 
-                for name in ['lstm', 'gru']:
+                # Train all DL models
+                dl_models = ['lstm', 'gru', 'bilstm', 'cnn_lstm', 'attention']
+                
+                for name in dl_models:
                     try:
                         # Rebuild model with correct input shape
+                        input_shape = X_train_seq.shape[1:]
+                        
                         if name == 'lstm':
-                            self.models[name] = self._build_lstm_model(X_train_seq.shape[1:])
-                        else:
-                            self.models[name] = self._build_gru_model(X_train_seq.shape[1:])
+                            self.models[name] = self._build_lstm_model(input_shape)
+                        elif name == 'gru':
+                            self.models[name] = self._build_gru_model(input_shape)
+                        elif name == 'bilstm':
+                            self.models[name] = self._build_bilstm_model(input_shape)
+                        elif name == 'cnn_lstm':
+                            # CNN-LSTM needs longer sequences
+                            if input_shape[0] >= 6:  # Min length for convolutions
+                                self.models[name] = self._build_cnn_lstm_model(input_shape)
+                            else:
+                                results['models'][name] = {
+                                    'status': 'skipped',
+                                    'reason': 'Sequence too short for CNN'
+                                }
+                                continue
+                        elif name == 'attention':
+                            self.models[name] = self._build_attention_model(input_shape)
                         
                         model = self.models[name]
                         
@@ -561,6 +580,7 @@ class RegimePredictionEngine:
                         
                         results['models'][name] = {
                             'type': 'DL',
+                            'category': self.model_metadata.get(name, {}).get('category', 'unknown'),
                             'epochs_trained': len(history.history['loss']),
                             'test_accuracy': round(test_accuracy, 1),
                             'status': 'trained'
