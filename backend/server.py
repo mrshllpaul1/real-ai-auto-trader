@@ -629,6 +629,28 @@ async def initialize_services():
         rl_trading_agent.set_history_service(training_history)
         logger.info("✅ Training History Service initialized")
         
+        # Initialize Training Scheduler
+        from services.training_scheduler import get_training_scheduler
+        training_scheduler = get_training_scheduler(db)
+        
+        # Register trainers for schedulable models
+        async def train_rl(episodes=100, **kwargs):
+            return await rl_trading_agent.train_background(episodes=episodes)
+        
+        async def train_transformer(**kwargs):
+            return await transformer_predictor.train()
+        
+        async def train_regime(**kwargs):
+            return await regime_pred.train_models()
+        
+        training_scheduler.register_trainer("rl_agent", train_rl)
+        training_scheduler.register_trainer("transformer", train_transformer)
+        training_scheduler.register_trainer("regime", train_regime)
+        
+        await training_scheduler.start()
+        training_scheduler_routes.set_dependencies(training_scheduler)
+        logger.info("✅ Training Scheduler initialized (3 trainers registered)")
+        
         # Start scheduler
         await scheduler_service.start()
         
