@@ -233,6 +233,132 @@ class TestIsolatedPortfolioAPI:
         print(f"✅ Budget restored to $500 for other tests")
 
 
+class TestEmergencyStopFeature:
+    """Test emergency stop double confirmation feature"""
+    
+    def test_emergency_stop_step_1_confirmation(self):
+        """Test /api/isolated-portfolio/emergency-stop with CONFIRM_STEP_1 - should return step 1 confirmation"""
+        response = requests.post(
+            f"{BASE_URL}/api/isolated-portfolio/emergency-stop",
+            json={
+                "liquidate_positions": False,
+                "confirmation_code": "CONFIRM_STEP_1"
+            }
+        )
+        
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        data = response.json()
+        
+        # Verify step 1 response
+        assert data.get("step") == 1, f"Expected step=1, got {data.get('step')}"
+        assert data.get("status") == "confirmation_required", f"Expected status='confirmation_required', got {data.get('status')}"
+        assert "next_step" in data, f"Missing 'next_step' in response: {data}"
+        assert "EMERGENCY_STOP_CONFIRMED" in data.get("next_step", ""), f"Expected next_step to mention EMERGENCY_STOP_CONFIRMED"
+        
+        print(f"✅ Emergency stop step 1 test passed:")
+        print(f"   Step: {data.get('step')}")
+        print(f"   Status: {data.get('status')}")
+        print(f"   Message: {data.get('message')}")
+    
+    def test_emergency_stop_final_confirmation(self):
+        """Test /api/isolated-portfolio/emergency-stop with EMERGENCY_STOP_CONFIRMED - should activate emergency stop"""
+        response = requests.post(
+            f"{BASE_URL}/api/isolated-portfolio/emergency-stop",
+            json={
+                "liquidate_positions": False,
+                "confirmation_code": "EMERGENCY_STOP_CONFIRMED"
+            }
+        )
+        
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        data = response.json()
+        
+        # Verify emergency stop activated
+        assert data.get("success") == True, f"Expected success=True, got {data.get('success')}"
+        assert data.get("emergency_stop_activated") == True, f"Expected emergency_stop_activated=True, got {data.get('emergency_stop_activated')}"
+        assert data.get("trading_disabled") == True, f"Expected trading_disabled=True, got {data.get('trading_disabled')}"
+        
+        print(f"✅ Emergency stop final confirmation test passed:")
+        print(f"   Emergency Stop Activated: {data.get('emergency_stop_activated')}")
+        print(f"   Trading Disabled: {data.get('trading_disabled')}")
+        print(f"   Message: {data.get('message')}")
+    
+    def test_emergency_status_shows_stopped(self):
+        """Test /api/isolated-portfolio/emergency-status - should show emergency stopped state"""
+        response = requests.get(f"{BASE_URL}/api/isolated-portfolio/emergency-status")
+        
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        data = response.json()
+        
+        # Verify emergency status
+        assert "emergency_stopped" in data, f"Missing 'emergency_stopped' in response: {data}"
+        assert "trading_enabled" in data, f"Missing 'trading_enabled' in response: {data}"
+        
+        # After emergency stop, should be stopped
+        assert data.get("emergency_stopped") == True, f"Expected emergency_stopped=True, got {data.get('emergency_stopped')}"
+        assert data.get("trading_enabled") == False, f"Expected trading_enabled=False, got {data.get('trading_enabled')}"
+        
+        print(f"✅ Emergency status test passed:")
+        print(f"   Emergency Stopped: {data.get('emergency_stopped')}")
+        print(f"   Trading Enabled: {data.get('trading_enabled')}")
+    
+    def test_resume_trading(self):
+        """Test /api/isolated-portfolio/resume-trading with RESUME_TRADING_CONFIRMED - should re-enable trading"""
+        response = requests.post(
+            f"{BASE_URL}/api/isolated-portfolio/resume-trading",
+            json={
+                "confirmation_code": "RESUME_TRADING_CONFIRMED"
+            }
+        )
+        
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        data = response.json()
+        
+        # Verify trading resumed
+        assert data.get("success") == True, f"Expected success=True, got {data.get('success')}"
+        assert data.get("trading_enabled") == True, f"Expected trading_enabled=True, got {data.get('trading_enabled')}"
+        
+        print(f"✅ Resume trading test passed:")
+        print(f"   Success: {data.get('success')}")
+        print(f"   Trading Enabled: {data.get('trading_enabled')}")
+        print(f"   Message: {data.get('message')}")
+    
+    def test_emergency_status_after_resume(self):
+        """Verify emergency status shows trading resumed"""
+        response = requests.get(f"{BASE_URL}/api/isolated-portfolio/emergency-status")
+        
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        data = response.json()
+        
+        # After resume, should not be stopped
+        assert data.get("emergency_stopped") == False, f"Expected emergency_stopped=False after resume, got {data.get('emergency_stopped')}"
+        assert data.get("trading_enabled") == True, f"Expected trading_enabled=True after resume, got {data.get('trading_enabled')}"
+        
+        print(f"✅ Emergency status after resume test passed:")
+        print(f"   Emergency Stopped: {data.get('emergency_stopped')}")
+        print(f"   Trading Enabled: {data.get('trading_enabled')}")
+    
+    def test_invalid_confirmation_code_rejected(self):
+        """Test that invalid confirmation codes are rejected"""
+        response = requests.post(
+            f"{BASE_URL}/api/isolated-portfolio/emergency-stop",
+            json={
+                "liquidate_positions": False,
+                "confirmation_code": "INVALID_CODE"
+            }
+        )
+        
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        data = response.json()
+        
+        # Should fail with invalid code
+        assert data.get("success") == False, f"Expected success=False for invalid code, got {data.get('success')}"
+        assert "error" in data, f"Missing 'error' in response: {data}"
+        
+        print(f"✅ Invalid confirmation code rejection test passed:")
+        print(f"   Error: {data.get('error')}")
+
+
 class TestTriggerEndpoints:
     """Test trigger-related endpoints"""
     
