@@ -125,3 +125,95 @@ async def record_trade_outcome(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+# ============================================
+# Enhanced Learning Endpoints (Using Learning Service)
+# ============================================
+
+@router.get("/status")
+async def get_learning_status():
+    """Get current learning status and statistics"""
+    if _learning_service is None:
+        return {
+            "learning_active": False,
+            "stats": {
+                "total_sessions": 0,
+                "current_accuracy": 0
+            },
+            "message": "Learning service not initialized"
+        }
+    
+    return await _learning_service.get_learning_status()
+
+
+@router.post("/analyze")
+async def analyze_recent_trades(days: int = 7):
+    """Analyze recent trades for learning insights"""
+    if _learning_service is None:
+        raise HTTPException(status_code=503, detail="Learning service not initialized")
+    
+    return await _learning_service.learn_from_recent_trades(days=days)
+
+
+@router.post("/cycle")
+async def start_learning_cycle(background_tasks: BackgroundTasks):
+    """Start a full learning cycle (analyze trades + retrain models)"""
+    if _learning_service is None:
+        raise HTTPException(status_code=503, detail="Learning service not initialized")
+    
+    if _learning_service.learning_active:
+        return {
+            "status": "already_running",
+            "message": "A learning cycle is already in progress"
+        }
+    
+    # Run learning cycle in background
+    async def run_cycle():
+        return await _learning_service.start_learning_cycle()
+    
+    background_tasks.add_task(run_cycle)
+    
+    return {
+        "status": "started",
+        "message": "Learning cycle started in background",
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@router.get("/recommendations")
+async def get_recommendations():
+    """Get AI recommendations for improving trading performance"""
+    if _learning_service is None:
+        return {
+            "recommendations": [],
+            "count": 0,
+            "message": "Learning service not initialized"
+        }
+    
+    recommendations = await _learning_service.get_learning_recommendations()
+    
+    return {
+        "recommendations": recommendations,
+        "count": len(recommendations),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@router.get("/history")
+async def get_learning_history(limit: int = 20):
+    """Get recent learning session history"""
+    if _learning_service is None:
+        return {
+            "history": [],
+            "count": 0
+        }
+    
+    history = _learning_service.get_learning_history(limit=limit)
+    
+    return {
+        "history": history,
+        "count": len(history),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
