@@ -28,21 +28,25 @@ class AutomatedWeeklyTrader:
     6. Uses ML/DL models to predict market regimes
     7. BUDGET ISOLATION: Only trades with allocated funds, never touches main portfolio
     8. ENHANCED AI: Uses ensemble voting, multi-timeframe, sentiment, and dynamic risk
+    9. GEM ML/DL: Uses advanced ML/DL models for gem prediction
     """
     
     def __init__(self, db, kraken_service, ai_trainer, gem_finder, alert_service=None, 
                  adaptive_strategy=None, regime_predictor=None, performance_tracker=None,
-                 isolated_portfolio=None, enhanced_ai=None):
+                 isolated_portfolio=None, enhanced_ai=None, gem_ml_dl_predictor=None,
+                 background_task_manager=None):
         self.db = db
         self.kraken = kraken_service
         self.ai_trainer = ai_trainer
-        self.gem_finder = gem_finder
+        self.gem_finder = gem_finder  # Legacy gem finder
         self.alert_service = alert_service
         self.adaptive_strategy = adaptive_strategy
         self.regime_predictor = regime_predictor  # ML/DL regime prediction
         self.performance_tracker = performance_tracker  # Performance tracking
         self.isolated_portfolio = isolated_portfolio  # Budget isolation manager
         self.enhanced_ai = enhanced_ai  # Enhanced AI engine
+        self.gem_ml_dl = gem_ml_dl_predictor  # Advanced ML/DL gem predictor (P1)
+        self.task_manager = background_task_manager  # Background task manager (P2)
         
         # Base position sizing (can be overridden by adaptive strategy)
         self.config = {
