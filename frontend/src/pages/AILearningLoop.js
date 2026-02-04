@@ -7,11 +7,109 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Brain, TrendingUp, TrendingDown, Target, Activity, 
   CheckCircle, XCircle, Clock, Zap, BarChart3, 
-  AlertTriangle, Award, RefreshCw, Database
+  AlertTriangle, Award, RefreshCw, Database, LineChart,
+  Gauge, Layers, ArrowUpRight, ArrowDownRight
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
+
+// Simple chart components for accuracy visualization
+const AccuracyTrendChart = ({ data, title }) => {
+  if (!data || data.length === 0) return null;
+  
+  const maxValue = Math.max(...data.map(d => d.accuracy || 0), 100);
+  const minValue = Math.min(...data.map(d => d.accuracy || 0), 0);
+  
+  return (
+    <div className="space-y-2">
+      <h4 className="text-sm font-medium text-[#A1A1AA]">{title}</h4>
+      <div className="flex items-end gap-1 h-32 bg-[#121212] rounded-lg p-3">
+        {data.slice(-20).map((item, index) => {
+          const height = ((item.accuracy - minValue) / (maxValue - minValue || 1)) * 100;
+          const color = item.accuracy >= 70 ? '#00FF94' : item.accuracy >= 50 ? '#FFB800' : '#FF0055';
+          return (
+            <div
+              key={index}
+              className="flex-1 flex flex-col items-center justify-end group relative"
+            >
+              <div
+                className="w-full rounded-t transition-all duration-300 hover:opacity-80"
+                style={{ height: `${Math.max(height, 5)}%`, backgroundColor: color }}
+              />
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/90 px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                {item.accuracy?.toFixed(1)}%
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex justify-between text-xs text-[#A1A1AA]">
+        <span>Older</span>
+        <span>Recent</span>
+      </div>
+    </div>
+  );
+};
+
+const ModelComparisonChart = ({ models }) => {
+  if (!models || models.length === 0) return null;
+  
+  return (
+    <div className="space-y-3">
+      {models.map((model, index) => (
+        <div key={model.model || index} className="space-y-1">
+          <div className="flex justify-between text-sm">
+            <span className="text-white font-medium uppercase">{model.model}</span>
+            <span className={`font-data ${
+              model.accuracy >= 70 ? 'text-[#00FF94]' : 
+              model.accuracy >= 50 ? 'text-[#FFB800]' : 'text-[#FF0055]'
+            }`}>
+              {model.accuracy?.toFixed(1)}%
+            </span>
+          </div>
+          <div className="h-3 bg-[#1F1F1F] rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${model.accuracy}%` }}
+              transition={{ duration: 0.8, delay: index * 0.1 }}
+              className="h-full rounded-full"
+              style={{
+                backgroundColor: model.accuracy >= 70 ? '#00FF94' : 
+                  model.accuracy >= 50 ? '#FFB800' : '#FF0055'
+              }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const AccuracyGauge = ({ value, label }) => {
+  const rotation = (value / 100) * 180 - 90;
+  const color = value >= 70 ? '#00FF94' : value >= 50 ? '#FFB800' : '#FF0055';
+  
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative w-32 h-16 overflow-hidden">
+        <div className="absolute inset-0 border-8 border-[#1F1F1F] rounded-t-full" />
+        <div 
+          className="absolute bottom-0 left-1/2 w-1 h-14 origin-bottom transition-transform duration-700"
+          style={{ 
+            transform: `translateX(-50%) rotate(${rotation}deg)`,
+            backgroundColor: color
+          }}
+        />
+        <div className="absolute bottom-0 left-1/2 w-4 h-4 -translate-x-1/2 translate-y-1/2 rounded-full bg-white" />
+      </div>
+      <div className="text-2xl font-data font-bold mt-2" style={{ color }}>
+        {value?.toFixed(1)}%
+      </div>
+      <div className="text-xs text-[#A1A1AA]">{label}</div>
+    </div>
+  );
+};
 
 const AILearningLoop = () => {
   const [status, setStatus] = useState(null);
