@@ -75,7 +75,7 @@ from routes import ai_universe_expand, gem_predictor, simulation, ensemble, coin
 from routes import gem_predictor as gem_predictor_routes
 from routes import historical_data, ai_learning_loop, events, event_triggers
 from routes import kraken_universe, coindesk_universe
-from routes import adaptive_strategy, performance, social_sentiment
+from routes import adaptive_strategy, performance, social_sentiment, isolated_portfolio
 
 # Include routers
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
