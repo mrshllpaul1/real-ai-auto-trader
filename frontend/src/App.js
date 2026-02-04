@@ -75,6 +75,7 @@ function App() {
                 <Route path="/learning-loop" element={<AILearningLoop />} />
                 <Route path="/deep-learning" element={<DeepLearningAI />} />
                 <Route path="/ensemble" element={<EnsembleAI />} />
+                <Route path="/triggers" element={<EventTriggers />} />
                 <Route path="/ai-chat" element={<AIChat />} />
                 <Route path="/news" element={<NewsAndIntelligence />} />
                 <Route path="/news-filters" element={<NewsFilters />} />
