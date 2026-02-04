@@ -81,6 +81,7 @@ from routes import gem_ml_dl
 from routes import portfolio_visualization
 from routes import background_tasks as bg_tasks
 from routes import kraken as kraken_routes
+from routes import enhanced_ai as enhanced_ai_routes
 
 # Include routers
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
@@ -136,6 +137,7 @@ api_router.include_router(gem_ml_dl.router, tags=["Gem ML/DL Prediction"])
 api_router.include_router(portfolio_visualization.router, tags=["Portfolio Visualization"])
 api_router.include_router(bg_tasks.router, tags=["Background Tasks"])
 api_router.include_router(kraken_routes.router, tags=["Kraken Trading"])
+api_router.include_router(enhanced_ai_routes.router, tags=["Enhanced AI"])
 
 # Include the router
 app.include_router(api_router)
