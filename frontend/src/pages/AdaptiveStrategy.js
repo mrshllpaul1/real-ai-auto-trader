@@ -132,7 +132,7 @@ const AdaptiveStrategy = () => {
                   </h2>
                   {regimePrediction?.confidence && (
                     <p className="text-sm text-[#A1A1AA]">
-                      Confidence: {(regimePrediction.confidence * 100).toFixed(1)}%
+                      Confidence: {regimePrediction.confidence.toFixed(1)}%
                     </p>
                   )}
                 </div>
