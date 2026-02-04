@@ -560,6 +560,125 @@ const TrainingDashboard = () => {
         </motion.div>
       )}
 
+      {/* Training History Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="bg-[#111] border border-[#222] rounded-2xl overflow-hidden mb-8"
+      >
+        <button
+          onClick={() => setShowHistory(!showHistory)}
+          className="w-full p-6 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors"
+          data-testid="toggle-history-btn"
+        >
+          <div className="flex items-center gap-3">
+            <History size={20} className="text-[#9D00FF]" />
+            <h2 className="text-lg font-bold text-white">Training History</h2>
+            {historyStats?.by_model && (
+              <span className="text-xs text-[#888] bg-[#222] px-2 py-1 rounded-full">
+                {Object.values(historyStats.by_model).reduce((a, b) => a + b.total, 0)} sessions
+              </span>
+            )}
+          </div>
+          {showHistory ? <ChevronUp size={20} className="text-[#888]" /> : <ChevronDown size={20} className="text-[#888]" />}
+        </button>
+        
+        <AnimatePresence>
+          {showHistory && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="border-t border-[#222]"
+            >
+              {/* Stats Summary */}
+              {historyStats?.by_model && Object.keys(historyStats.by_model).length > 0 && (
+                <div className="p-4 border-b border-[#222] grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {Object.entries(historyStats.by_model).map(([model, stats]) => (
+                    <div key={model} className="bg-[#1a1a1a] rounded-xl p-3">
+                      <div className="text-xs text-[#888] mb-1 capitalize">{model.replace('_', ' ')}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-white">{stats.completed}</span>
+                        <span className="text-xs text-[#666]">/ {stats.total}</span>
+                        <span className={`text-xs ${stats.success_rate >= 80 ? 'text-[#00FF94]' : stats.success_rate >= 50 ? 'text-[#FFB800]' : 'text-[#FF4444]'}`}>
+                          {stats.success_rate}%
+                        </span>
+                      </div>
+                      {stats.avg_duration_seconds > 0 && (
+                        <div className="text-xs text-[#666] mt-1">
+                          Avg: {Math.round(stats.avg_duration_seconds)}s
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {/* Recent Sessions */}
+              <div className="p-4 max-h-64 overflow-y-auto">
+                {trainingHistory.length > 0 ? (
+                  <div className="space-y-2">
+                    {trainingHistory.map((session, idx) => (
+                      <div 
+                        key={idx}
+                        className="flex items-center justify-between p-3 bg-[#1a1a1a] rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-2 h-2 rounded-full ${
+                            session.status === 'completed' ? 'bg-[#00FF94]' :
+                            session.status === 'running' ? 'bg-[#FFB800] animate-pulse' :
+                            session.status === 'failed' ? 'bg-[#FF4444]' : 'bg-[#666]'
+                          }`} />
+                          <div>
+                            <span className="text-white text-sm capitalize">
+                              {session.model_type?.replace('_', ' ')}
+                            </span>
+                            {session.config?.episodes && (
+                              <span className="text-xs text-[#666] ml-2">
+                                ({session.config.episodes} episodes)
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          {session.result?.avg_return_last_20_pct !== undefined && (
+                            <span className={`text-xs font-medium ${
+                              session.result.avg_return_last_20_pct >= 0 ? 'text-[#00FF94]' : 'text-[#FF4444]'
+                            }`}>
+                              {session.result.avg_return_last_20_pct > 0 ? '+' : ''}{session.result.avg_return_last_20_pct}%
+                            </span>
+                          )}
+                          {session.result?.val_accuracy !== undefined && (
+                            <span className="text-xs text-[#9D00FF]">
+                              {session.result.val_accuracy}% acc
+                            </span>
+                          )}
+                          {session.duration_seconds && (
+                            <span className="text-xs text-[#666]">
+                              {Math.round(session.duration_seconds)}s
+                            </span>
+                          )}
+                          <span className="text-xs text-[#666]">
+                            {session.started_at ? new Date(session.started_at).toLocaleDateString() : ''}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-[#666]">
+                    <History size={32} className="mx-auto mb-2 opacity-50" />
+                    <p>No training history yet</p>
+                    <p className="text-xs">Start training a model to see history</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
       {/* Training Tips */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
