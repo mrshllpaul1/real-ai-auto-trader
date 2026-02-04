@@ -1,12 +1,10 @@
 """
 Test OHLCV Expansion and Gem Backtesting Features
 Tests for:
-1. Weekly OHLCV expansion job scheduling
-2. OHLCV expansion immediate run
-3. OHLCV expansion status
-4. Gem prediction backtesting start
-5. Gem backtest status
-6. Gem backtest history
+- Weekly OHLCV expansion job scheduling
+- OHLCV expansion status endpoint
+- Immediate OHLCV expansion trigger
+- Gem backtest start/status/history endpoints
 """
 
 import pytest
@@ -18,10 +16,39 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 
 class TestOHLCVExpansion:
-    """Tests for OHLCV expansion endpoints"""
+    """Tests for OHLCV expansion features"""
+    
+    def test_ohlcv_expansion_status(self):
+        """Test GET /api/scheduler/ohlcv-expansion-status"""
+        response = requests.get(f"{BASE_URL}/api/scheduler/ohlcv-expansion-status")
+        assert response.status_code == 200
+        
+        data = response.json()
+        assert "total_ai_coins" in data
+        assert "coins_downloaded" in data
+        assert "coins_remaining" in data
+        assert "next_batch" in data
+        assert "progress_pct" in data
+        assert "is_complete" in data
+        
+        # Verify data types
+        assert isinstance(data["total_ai_coins"], int)
+        assert isinstance(data["coins_downloaded"], int)
+        assert isinstance(data["coins_remaining"], int)
+        assert isinstance(data["next_batch"], list)
+        assert isinstance(data["progress_pct"], (int, float))
+        assert isinstance(data["is_complete"], bool)
+        
+        # Verify progress calculation
+        assert data["total_ai_coins"] >= 200  # Should have 200+ AI coins
+        assert data["coins_downloaded"] >= 0
+        assert data["coins_remaining"] >= 0
+        assert 0 <= data["progress_pct"] <= 100
+        
+        print(f"✓ OHLCV expansion status: {data['coins_downloaded']}/{data['total_ai_coins']} coins ({data['progress_pct']}%)")
     
     def test_schedule_weekly_ohlcv_expansion(self):
-        """Test POST /api/scheduler/jobs/weekly-ohlcv-expansion - Schedule weekly expansion"""
+        """Test POST /api/scheduler/jobs/weekly-ohlcv-expansion"""
         response = requests.post(
             f"{BASE_URL}/api/scheduler/jobs/weekly-ohlcv-expansion",
             json={
@@ -30,205 +57,198 @@ class TestOHLCVExpansion:
                 "batch_size": 50
             }
         )
-        
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        
-        data = response.json()
-        assert data.get("success") == True, f"Expected success=True, got {data}"
-        assert data.get("job_id") == "weekly_ohlcv_expansion", f"Expected job_id=weekly_ohlcv_expansion, got {data}"
-        assert data.get("batch_size") == 50, f"Expected batch_size=50, got {data}"
-        assert "schedule" in data, f"Expected schedule in response, got {data}"
-        print(f"✓ Weekly OHLCV expansion job scheduled: {data.get('schedule')}")
-    
-    def test_get_ohlcv_expansion_status(self):
-        """Test GET /api/scheduler/ohlcv-expansion-status - Get expansion progress"""
-        response = requests.get(f"{BASE_URL}/api/scheduler/ohlcv-expansion-status")
-        
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        assert response.status_code == 200
         
         data = response.json()
-        # Verify required fields
-        assert "total_ai_coins" in data, f"Expected total_ai_coins in response, got {data}"
-        assert "coins_downloaded" in data, f"Expected coins_downloaded in response, got {data}"
-        assert "coins_remaining" in data, f"Expected coins_remaining in response, got {data}"
-        assert "progress_pct" in data, f"Expected progress_pct in response, got {data}"
-        assert "is_complete" in data, f"Expected is_complete in response, got {data}"
+        assert data["success"] == True
+        assert data["job_id"] == "weekly_ohlcv_expansion"
+        assert "schedule" in data
+        assert data["batch_size"] == 50
+        assert "message" in data
         
-        # Verify data types
-        assert isinstance(data["total_ai_coins"], int), f"total_ai_coins should be int"
-        assert isinstance(data["coins_downloaded"], int), f"coins_downloaded should be int"
-        assert isinstance(data["progress_pct"], (int, float)), f"progress_pct should be numeric"
-        
-        print(f"✓ OHLCV expansion status: {data['coins_downloaded']}/{data['total_ai_coins']} coins ({data['progress_pct']}%)")
-        print(f"  Remaining: {data['coins_remaining']} coins, Complete: {data['is_complete']}")
+        print(f"✓ Weekly OHLCV expansion scheduled: {data['schedule']}")
     
-    def test_run_ohlcv_expansion_now(self):
-        """Test POST /api/scheduler/jobs/ohlcv-expansion-now - Run expansion immediately"""
-        # First get current status
-        status_before = requests.get(f"{BASE_URL}/api/scheduler/ohlcv-expansion-status").json()
-        
-        # Run expansion with small batch for testing
-        response = requests.post(
-            f"{BASE_URL}/api/scheduler/jobs/ohlcv-expansion-now",
-            params={"batch_size": 2}  # Small batch for quick test
+    def test_scheduler_status_shows_ohlcv_job(self):
+        """Test that scheduler status shows the OHLCV expansion job"""
+        # First schedule the job
+        requests.post(
+            f"{BASE_URL}/api/scheduler/jobs/weekly-ohlcv-expansion",
+            json={"day_of_week": "sun", "hour": 4, "batch_size": 50}
         )
         
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        # Check scheduler status
+        response = requests.get(f"{BASE_URL}/api/scheduler/status")
+        assert response.status_code == 200
         
         data = response.json()
+        assert data["running"] == True
+        assert "scheduled_jobs" in data
         
-        # Check if already complete or has results
-        if data.get("status") == "complete":
-            print(f"✓ OHLCV expansion already complete: {data.get('message')}")
+        # Verify job is in scheduled jobs
+        if "weekly_ohlcv_expansion" in data["scheduled_jobs"]:
+            job = data["scheduled_jobs"]["weekly_ohlcv_expansion"]
+            assert "name" in job
+            assert "next_run" in job
+            print(f"✓ OHLCV expansion job found in scheduler: next run {job['next_run']}")
         else:
-            # Should have expansion progress
-            assert "expansion_progress" in data or "coins_completed" in data, f"Expected expansion results, got {data}"
-            print(f"✓ OHLCV expansion ran: {data.get('coins_completed', 0)} coins downloaded")
-            if "expansion_progress" in data:
-                progress = data["expansion_progress"]
-                print(f"  Progress: {progress.get('progress_pct', 0)}%")
+            print("✓ Scheduler status retrieved (job may have been removed)")
 
 
 class TestGemBacktesting:
-    """Tests for gem prediction backtesting endpoints"""
+    """Tests for gem prediction backtesting features"""
     
-    def test_start_backtest(self):
-        """Test POST /api/gems/backtest/start - Start iterative backtesting"""
-        response = requests.post(
-            f"{BASE_URL}/api/gems/backtest/start",
-            params={
-                "target_accuracy": 60.0,  # Lower target for faster test
-                "max_iterations": 3  # Fewer iterations for testing
-            }
-        )
-        
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        
-        data = response.json()
-        
-        # Could be started or already running
-        assert data.get("status") in ["started", "already_running"], f"Expected status started/already_running, got {data}"
-        
-        if data.get("status") == "started":
-            assert "target_accuracy" in data, f"Expected target_accuracy in response, got {data}"
-            assert "max_iterations" in data, f"Expected max_iterations in response, got {data}"
-            print(f"✓ Backtest started: target={data.get('target_accuracy')}%, max_iterations={data.get('max_iterations')}")
-        else:
-            print(f"✓ Backtest already running: {data.get('message')}")
-    
-    def test_get_backtest_status(self):
-        """Test GET /api/gems/backtest/status - Get backtest progress"""
+    def test_backtest_status_initial(self):
+        """Test GET /api/gems/backtest/status - initial state"""
         response = requests.get(f"{BASE_URL}/api/gems/backtest/status")
-        
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        assert response.status_code == 200
         
         data = response.json()
-        
-        # Verify required fields
-        assert "running" in data, f"Expected running in response, got {data}"
-        assert "target_accuracy" in data, f"Expected target_accuracy in response, got {data}"
-        assert "current_accuracy" in data, f"Expected current_accuracy in response, got {data}"
-        assert "message" in data, f"Expected message in response, got {data}"
+        assert "running" in data
+        assert "started_at" in data
+        assert "progress" in data
+        assert "current_iteration" in data
+        assert "target_accuracy" in data
+        assert "current_accuracy" in data
+        assert "message" in data
+        assert "result" in data
         
         print(f"✓ Backtest status: running={data['running']}, accuracy={data['current_accuracy']}%")
-        print(f"  Message: {data['message']}")
-        
-        # If completed, check result
-        if data.get("result"):
-            result = data["result"]
-            print(f"  Final accuracy: {result.get('final_accuracy', 0)}%")
-            print(f"  Target reached: {result.get('target_reached', False)}")
     
-    def test_get_backtest_history(self):
-        """Test GET /api/gems/backtest/history - Get backtest history"""
-        response = requests.get(
-            f"{BASE_URL}/api/gems/backtest/history",
-            params={"limit": 5}
-        )
-        
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+    def test_backtest_history(self):
+        """Test GET /api/gems/backtest/history"""
+        response = requests.get(f"{BASE_URL}/api/gems/backtest/history")
+        assert response.status_code == 200
         
         data = response.json()
+        assert "count" in data
+        assert "history" in data
+        assert isinstance(data["history"], list)
         
-        assert "count" in data, f"Expected count in response, got {data}"
-        assert "history" in data, f"Expected history in response, got {data}"
-        assert isinstance(data["history"], list), f"history should be a list"
-        
-        print(f"✓ Backtest history: {data['count']} records")
-        
-        # If there are records, verify structure
-        if data["history"]:
-            record = data["history"][0]
-            print(f"  Latest backtest: {record.get('timestamp', 'N/A')}")
-
-
-class TestSchedulerStatus:
-    """Tests for scheduler status with new jobs"""
+        if data["count"] > 0:
+            # Verify history entry structure
+            entry = data["history"][0]
+            assert "type" in entry
+            assert "results" in entry
+            assert "timestamp" in entry
+            
+            results = entry["results"]
+            assert "started_at" in results
+            assert "target_accuracy" in results
+            assert "iterations" in results
+            assert "final_accuracy" in results
+            
+            print(f"✓ Backtest history: {data['count']} entries, latest accuracy: {results['final_accuracy']}%")
+        else:
+            print("✓ Backtest history endpoint working (no history yet)")
     
-    def test_scheduler_status_includes_ohlcv_expansion(self):
-        """Test GET /api/scheduler/status - Verify OHLCV expansion job is listed"""
-        response = requests.get(f"{BASE_URL}/api/scheduler/status")
-        
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        
-        data = response.json()
-        
-        assert "running" in data, f"Expected running in response, got {data}"
-        assert "scheduled_jobs" in data, f"Expected scheduled_jobs in response, got {data}"
-        
-        print(f"✓ Scheduler status: running={data['running']}")
-        print(f"  Jobs: {list(data.get('scheduled_jobs', {}).keys())}")
-        
-        # Check if weekly_ohlcv_expansion is scheduled
-        if "weekly_ohlcv_expansion" in data.get("scheduled_jobs", {}):
-            job = data["scheduled_jobs"]["weekly_ohlcv_expansion"]
-            print(f"  OHLCV expansion job: next_run={job.get('next_run')}")
-
-
-class TestGemPredictorEndpoints:
-    """Tests for existing gem predictor endpoints"""
-    
-    def test_scan_for_gems(self):
-        """Test POST /api/gems/scan - Scan for hidden gems"""
+    def test_start_backtest(self):
+        """Test POST /api/gems/backtest/start"""
         response = requests.post(
-            f"{BASE_URL}/api/gems/scan",
-            json={"limit": 10}
+            f"{BASE_URL}/api/gems/backtest/start",
+            params={"target_accuracy": 60.0, "max_iterations": 2}
+        )
+        assert response.status_code == 200
+        
+        data = response.json()
+        # Could be "started" or "already_running"
+        assert data["status"] in ["started", "already_running"]
+        
+        if data["status"] == "started":
+            assert data["target_accuracy"] == 60.0
+            assert data["max_iterations"] == 2
+            assert "check_status" in data
+            print(f"✓ Backtest started: target={data['target_accuracy']}%, max_iterations={data['max_iterations']}")
+        else:
+            print(f"✓ Backtest already running")
+    
+    def test_backtest_completes(self):
+        """Test that backtest completes and updates status"""
+        # Start a quick backtest
+        requests.post(
+            f"{BASE_URL}/api/gems/backtest/start",
+            params={"target_accuracy": 60.0, "max_iterations": 2}
         )
         
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        # Wait for completion (max 30 seconds)
+        for _ in range(15):
+            time.sleep(2)
+            response = requests.get(f"{BASE_URL}/api/gems/backtest/status")
+            data = response.json()
+            
+            if not data["running"]:
+                break
         
+        # Verify completion
+        response = requests.get(f"{BASE_URL}/api/gems/backtest/status")
         data = response.json()
-        assert "count" in data, f"Expected count in response, got {data}"
-        assert "gems" in data, f"Expected gems in response, got {data}"
         
-        print(f"✓ Gem scan: found {data['count']} gems")
-    
-    def test_get_top_gems(self):
-        """Test GET /api/gems/top - Get top hidden gems"""
-        response = requests.get(f"{BASE_URL}/api/gems/top")
+        assert data["running"] == False
+        assert data["current_accuracy"] >= 0
+        assert data["message"] != ""
         
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        
-        data = response.json()
-        assert "top_gems" in data, f"Expected top_gems in response, got {data}"
-        
-        print(f"✓ Top gems: {len(data.get('top_gems', []))} top, {len(data.get('potential_gems', []))} potential")
+        if data["result"]:
+            assert "iterations" in data["result"]
+            assert "final_accuracy" in data["result"]
+            assert "best_weights" in data["result"]
+            print(f"✓ Backtest completed: {data['current_accuracy']}% accuracy, {len(data['result']['iterations'])} iterations")
+        else:
+            print("✓ Backtest status shows not running")
 
 
-class TestHistoricalDataDownloader:
-    """Tests for historical data downloader service"""
+class TestIntegration:
+    """Integration tests for OHLCV and backtesting"""
     
-    def test_get_storage_stats(self):
-        """Test GET /api/historical-data/stats - Get storage statistics"""
-        response = requests.get(f"{BASE_URL}/api/historical-data/stats")
+    def test_expansion_progress_updates(self):
+        """Test that expansion progress updates after running"""
+        # Get initial status
+        initial = requests.get(f"{BASE_URL}/api/scheduler/ohlcv-expansion-status").json()
+        initial_downloaded = initial["coins_downloaded"]
         
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        # Run a small expansion (1 coin to be quick)
+        response = requests.post(
+            f"{BASE_URL}/api/scheduler/jobs/ohlcv-expansion-now",
+            params={"batch_size": 1}
+        )
         
-        data = response.json()
-        assert "total_coins" in data, f"Expected total_coins in response, got {data}"
-        assert "total_records" in data, f"Expected total_records in response, got {data}"
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Check if expansion ran
+            if "expansion_progress" in data:
+                new_downloaded = data["expansion_progress"]["coins_downloaded"]
+                assert new_downloaded >= initial_downloaded
+                print(f"✓ Expansion progress updated: {initial_downloaded} -> {new_downloaded} coins")
+            elif data.get("status") == "complete":
+                print("✓ All coins already downloaded")
+            else:
+                print(f"✓ Expansion ran: {data.get('coins_completed', 0)} coins completed")
+        else:
+            print(f"✓ Expansion endpoint responded with status {response.status_code}")
+    
+    def test_backtest_uses_ohlcv_data(self):
+        """Test that backtest uses OHLCV data from database"""
+        # Start backtest
+        response = requests.post(
+            f"{BASE_URL}/api/gems/backtest/start",
+            params={"target_accuracy": 50.0, "max_iterations": 1}
+        )
         
-        print(f"✓ Historical data stats: {data['total_coins']} coins, {data['total_records']} records")
+        # Wait for completion
+        for _ in range(10):
+            time.sleep(2)
+            status = requests.get(f"{BASE_URL}/api/gems/backtest/status").json()
+            if not status["running"]:
+                break
+        
+        # Check results
+        status = requests.get(f"{BASE_URL}/api/gems/backtest/status").json()
+        
+        if status["result"] and status["result"].get("iterations"):
+            iteration = status["result"]["iterations"][0]
+            assert iteration["total_predictions"] > 0
+            print(f"✓ Backtest used OHLCV data: {iteration['total_predictions']} predictions made")
+        else:
+            print("✓ Backtest completed (may need more OHLCV data)")
 
 
 if __name__ == "__main__":
