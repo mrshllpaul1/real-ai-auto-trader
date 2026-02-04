@@ -283,8 +283,8 @@ async def initialize_services():
         # Alert Service
         alert_service = AlertService(db)
         
-        # Sentiment Analyzer
-        sentiment_analyzer = SocialSentimentAnalyzer(db)
+        # Sentiment Analyzer (use new scraper)
+        sentiment_analyzer = get_sentiment_scraper(db)
         
         # Automated Trader
         automated_trader = AutomatedWeeklyTrader(
