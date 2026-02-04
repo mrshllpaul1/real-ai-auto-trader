@@ -273,7 +273,7 @@ const TrainingDashboard = () => {
   // Fetch all statuses
   const fetchStatuses = useCallback(async () => {
     try {
-      const [servicesRes, rlRes, transformerRes, tasksRes, historyRes, statsRes, schedulesRes, presetsRes, learningRes, recsRes] = await Promise.all([
+      const [servicesRes, rlRes, transformerRes, tasksRes, historyRes, statsRes, schedulesRes, presetsRes, learningRes, recsRes, autoSpotRes] = await Promise.all([
         fetch(`${API_URL}/api/predictions/status`),
         fetch(`${API_URL}/api/predictions/rl-agent/training-status`),
         fetch(`${API_URL}/api/predictions/transformer/status`),
@@ -283,7 +283,8 @@ const TrainingDashboard = () => {
         fetch(`${API_URL}/api/training-scheduler/`).catch(() => ({ ok: false })),
         fetch(`${API_URL}/api/training-scheduler/presets/list`).catch(() => ({ ok: false })),
         fetch(`${API_URL}/api/learning/status`).catch(() => ({ ok: false })),
-        fetch(`${API_URL}/api/learning/recommendations`).catch(() => ({ ok: false }))
+        fetch(`${API_URL}/api/learning/recommendations`).catch(() => ({ ok: false })),
+        fetch(`${API_URL}/api/training-scheduler/auto-spot-scan/status`).catch(() => ({ ok: false }))
       ]);
 
       if (servicesRes.ok) {
