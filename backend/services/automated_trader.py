@@ -669,12 +669,26 @@ class AutomatedWeeklyTrader:
         }
     
     async def _close_position(self, position: Dict, exit_price: float, reason: str):
-        """Close a position"""
+        """Close a position - updates both DB and isolated portfolio if applicable"""
         entry_price = position.get('entry_price', 0)
         pnl_pct = (exit_price - entry_price) / entry_price * 100 if entry_price > 0 else 0
         pnl_usd = position.get('amount_usd', 0) * (pnl_pct / 100)
         
-        # Update position
+        # If this is an isolated portfolio position, close it there too
+        position_id = position.get('position_id')
+        if position_id and self.isolated_portfolio and position.get('budget_isolated'):
+            try:
+                close_result = await self.isolated_portfolio.close_position(
+                    position_id=position_id,
+                    exit_price=exit_price,
+                    reason=reason
+                )
+                if close_result.get('success'):
+                    logger.info(f"📉 Closed isolated position: {position.get('coin_id')} - {reason} ({pnl_pct:+.2f}%)")
+            except Exception as e:
+                logger.error(f"Error closing isolated position: {e}")
+        
+        # Update position in DB
         await self.db.active_positions.update_one(
             {'_id': position['_id']},
             {'$set': {
