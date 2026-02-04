@@ -1073,3 +1073,109 @@ class SchedulerService:
             'coin_universe_size': len(all_coins),
             'message': f'Passive income schedule active! AI will retrain on {len(all_coins)} coins every Monday, Gem Predictor retrains Sundays at 2 AM MST.'
         }
+
+
+    # ========== Event Trigger Jobs ==========
+    
+    async def add_event_trigger_check_job(
+        self,
+        interval_minutes: int = 15
+    ) -> Dict[str, Any]:
+        """
+        Add periodic event trigger checking job.
+        Checks news events against all enabled triggers and executes matching actions.
+        
+        Default: Every 15 minutes
+        """
+        job_id = 'event_trigger_check'
+        
+        if self.scheduler.get_job(job_id):
+            self.scheduler.remove_job(job_id)
+        
+        self.scheduler.add_job(
+            self._run_event_trigger_check,
+            trigger=IntervalTrigger(minutes=interval_minutes),
+            id=job_id,
+            name='Event Trigger Checker',
+            replace_existing=True
+        )
+        
+        self.active_jobs[job_id] = {
+            'type': 'event_trigger_check',
+            'interval_minutes': interval_minutes,
+            'created_at': datetime.utcnow().isoformat()
+        }
+        
+        logger.info(f"🎯 Event trigger check job added (every {interval_minutes} minutes)")
+        return {
+            'success': True, 
+            'job_id': job_id, 
+            'interval_minutes': interval_minutes,
+            'message': f'Will check news events every {interval_minutes} minutes against all enabled triggers'
+        }
+    
+    async def _run_event_trigger_check(self) -> Dict[str, Any]:
+        """
+        Execute event trigger checking.
+        Fetches recent news and matches against all enabled triggers.
+        """
+        timestamp = datetime.utcnow()
+        logger.info(f"🎯 [{timestamp.strftime('%H:%M')}] Running event trigger check...")
+        
+        try:
+            from services.event_triggers import get_event_trigger_service
+            
+            trigger_service = get_event_trigger_service()
+            
+            if not trigger_service:
+                logger.warning("  ⚠️ Event trigger service not available")
+                return {'error': 'Trigger service not initialized'}
+            
+            # Check recent events against triggers
+            executions = await trigger_service.check_recent_events()
+            
+            # Store execution record
+            execution = {
+                'job_id': 'event_trigger_check',
+                'timestamp': timestamp.isoformat(),
+                'success': True,
+                'triggers_matched': len(executions),
+                'executions': [
+                    {
+                        'trigger_id': e.get('trigger_id'),
+                        'action': e.get('action'),
+                        'success': e.get('success')
+                    } for e in executions
+                ]
+            }
+            await self.db.scheduler_executions.insert_one(execution)
+            
+            # Send alert if triggers executed
+            if executions and self.alert_service:
+                successful = sum(1 for e in executions if e.get('success'))
+                await self.alert_service.send_alert(
+                    title="🎯 Event Triggers Executed",
+                    message=f"{len(executions)} trigger(s) matched news events\n{successful} executed successfully",
+                    alert_type="event_trigger",
+                    priority="high" if any(e.get('action') in ['buy', 'sell'] for e in executions) else "normal"
+                )
+            
+            logger.info(f"  ✅ Trigger check complete: {len(executions)} triggers matched")
+            
+            return {
+                'status': 'checked',
+                'triggers_matched': len(executions),
+                'executions': executions
+            }
+            
+        except Exception as e:
+            logger.error(f"  ❌ Event trigger check error: {e}")
+            
+            await self.db.scheduler_executions.insert_one({
+                'job_id': 'event_trigger_check',
+                'timestamp': timestamp.isoformat(),
+                'success': False,
+                'error': str(e)
+            })
+            
+            return {'error': str(e)}
