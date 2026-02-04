@@ -372,6 +372,12 @@ async def initialize_services():
         coindesk_universe.set_dependencies(coindesk_universe_service)
         logger.info("✅ CoinDesk Universe Service initialized")
         
+        # Adaptive Strategy Engine
+        from services.adaptive_strategy import get_adaptive_strategy
+        adaptive_strategy_engine = get_adaptive_strategy(db, kraken_service, alert_service)
+        adaptive_strategy.set_dependencies(db, adaptive_strategy_engine)
+        logger.info("✅ Adaptive Strategy Engine initialized")
+        
         # Start scheduler
         await scheduler_service.start()
         
