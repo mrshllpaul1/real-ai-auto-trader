@@ -719,7 +719,7 @@ class HistoricalEventsDatabase:
             "days_until": days_until,
             "predictability": "HIGH",
             "expected_impact": "positive",
-            "historical_avg_gain": "+300-500% within 18 months",
+            "historical_avg_impact": "+300-500% within 18 months",
             "coins_affected": ["BTC"],
             "preparation_signals": [
                 "Monitor block height (every 210,000 blocks)",
@@ -728,12 +728,12 @@ class HistoricalEventsDatabase:
             ]
         })
         
-        # FOMC meetings 2025 (8 meetings per year)
-        fomc_2025 = [
-            "2025-03-18", "2025-05-06", "2025-06-17",
-            "2025-07-29", "2025-09-16", "2025-11-04", "2025-12-16"
+        # FOMC meetings 2026 (8 meetings per year)
+        fomc_2026 = [
+            "2026-01-28", "2026-03-18", "2026-05-06", "2026-06-17",
+            "2026-07-29", "2026-09-16", "2026-11-04", "2026-12-16"
         ]
-        for fomc_date in fomc_2025:
+        for fomc_date in fomc_2026:
             fomc_dt = datetime.strptime(fomc_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
             if fomc_dt > now:
                 days_until = (fomc_dt - now).days
@@ -754,9 +754,10 @@ class HistoricalEventsDatabase:
         
         # Options expiry (last Friday of each month)
         current_month = now.month
+        current_year = now.year
         for month_offset in range(0, 6):
             month = (current_month + month_offset - 1) % 12 + 1
-            year = now.year if month >= current_month else now.year + 1
+            year = current_year if month >= current_month else current_year + 1
             
             # Find last Friday
             import calendar
@@ -773,7 +774,7 @@ class HistoricalEventsDatabase:
                     "days_until": days_until,
                     "predictability": "HIGH",
                     "expected_impact": "mixed",
-                    "historical_avg_impact": "Increased volatility +/- 5-10%",
+                    "historical_avg_impact": "+/- 5-10% volatility",
                     "coins_affected": ["BTC", "ETH"],
                     "preparation_signals": [
                         "Open interest levels",
@@ -782,24 +783,31 @@ class HistoricalEventsDatabase:
                     ]
                 })
         
-        # Ethereum Pectra upgrade (expected Q1 2025)
-        pectra_date = datetime(2025, 3, 15, tzinfo=timezone.utc)
-        if pectra_date > now:
-            days_until = (pectra_date - now).days
-            upcoming.append({
-                "event_type": "Ethereum Pectra Upgrade",
-                "predicted_date": "2025-Q1 (tentative)",
-                "days_until": days_until,
-                "predictability": "MEDIUM",
-                "expected_impact": "positive",
-                "historical_avg_impact": "+10-30% pre-upgrade",
-                "coins_affected": ["ETH"],
-                "preparation_signals": [
-                    "Testnet deployment success",
-                    "Developer announcements",
-                    "Client updates"
-                ]
-            })
+        # Quarterly earnings - next quarters
+        earnings_dates = [
+            {"date": "2026-02-15", "company": "MicroStrategy Q4 2025"},
+            {"date": "2026-02-27", "company": "Coinbase Q4 2025"},
+            {"date": "2026-05-01", "company": "MicroStrategy Q1 2026"},
+            {"date": "2026-05-08", "company": "Coinbase Q1 2026"},
+        ]
+        for earning in earnings_dates:
+            earn_dt = datetime.strptime(earning["date"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            if earn_dt > now:
+                days_until = (earn_dt - now).days
+                upcoming.append({
+                    "event_type": f"Earnings: {earning['company']}",
+                    "predicted_date": earning["date"],
+                    "days_until": days_until,
+                    "predictability": "HIGH",
+                    "expected_impact": "mixed",
+                    "historical_avg_impact": "+/- 5-15%",
+                    "coins_affected": ["BTC"],
+                    "preparation_signals": [
+                        "Pre-earnings guidance",
+                        "Analyst estimates",
+                        "Bitcoin treasury holdings"
+                    ]
+                })
         
         # Sort by days until
         upcoming.sort(key=lambda x: x["days_until"])
