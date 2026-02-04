@@ -28,6 +28,7 @@ except ImportError:
     logger.warning("TensorFlow not available for Transformer model")
 
 
+@tf.keras.saving.register_keras_serializable(package="CustomLayers")
 class PositionalEncoding(tf.keras.layers.Layer):
     """Positional encoding layer for sequence position information"""
     
