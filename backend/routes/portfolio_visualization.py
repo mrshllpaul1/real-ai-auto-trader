@@ -40,7 +40,7 @@ async def get_portfolio_composition():
     - Cash vs invested
     - Position types (main, gem, swap)
     """
-    if not _isolated_portfolio:
+    if _isolated_portfolio is None:
         raise HTTPException(status_code=503, detail="Portfolio manager not initialized")
     
     positions = await _isolated_portfolio.get_ai_positions()
@@ -261,7 +261,7 @@ async def get_portfolio_summary():
     """
     Get comprehensive portfolio summary with key metrics.
     """
-    if not _isolated_portfolio:
+    if _isolated_portfolio is None:
         raise HTTPException(status_code=503, detail="Portfolio manager not initialized")
     
     budget_status = await _isolated_portfolio.get_budget_status()
@@ -328,7 +328,7 @@ async def get_portfolio_summary():
 @router.get("/top-performers")
 async def get_top_performers(limit: int = Query(5, ge=1, le=20)):
     """Get top performing positions"""
-    if not _isolated_portfolio:
+    if _isolated_portfolio is None:
         raise HTTPException(status_code=503, detail="Portfolio manager not initialized")
     
     positions = await _isolated_portfolio.get_ai_positions()
@@ -355,7 +355,7 @@ async def get_top_performers(limit: int = Query(5, ge=1, le=20)):
 @router.get("/worst-performers")
 async def get_worst_performers(limit: int = Query(5, ge=1, le=20)):
     """Get worst performing positions"""
-    if not _isolated_portfolio:
+    if _isolated_portfolio is None:
         raise HTTPException(status_code=503, detail="Portfolio manager not initialized")
     
     positions = await _isolated_portfolio.get_ai_positions()
