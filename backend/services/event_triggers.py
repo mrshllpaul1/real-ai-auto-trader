@@ -1,6 +1,7 @@
 """
 Custom Event Triggers for Automated Trading
 Monitors news events and executes trades based on user-defined triggers.
+Enhanced with fuzzy matching, synonyms, and reduced false negatives.
 """
 
 import asyncio
@@ -8,6 +9,49 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
 import re
+
+
+# Synonym mappings to reduce false negatives
+KEYWORD_SYNONYMS = {
+    # Institutional buyers
+    "microstrategy": ["mstr", "michael saylor", "saylor"],
+    "blackrock": ["ibit", "larry fink", "ishares"],
+    "grayscale": ["gbtc", "ethe", "barry silbert", "dcg"],
+    "tesla": ["elon musk", "tsla"],
+    "fidelity": ["fbtc", "wise origin"],
+    
+    # Regulatory
+    "sec": ["securities", "gensler", "enforcement", "regulatory"],
+    "etf": ["exchange traded fund", "spot etf", "bitcoin etf", "eth etf"],
+    "fomc": ["federal reserve", "fed", "powell", "interest rate", "rate decision"],
+    
+    # Market events
+    "crash": ["plunge", "dump", "collapse", "tank", "tumble", "freefall"],
+    "rally": ["surge", "pump", "spike", "soar", "moon", "breakout"],
+    "halving": ["halvening", "block reward", "mining reward"],
+    
+    # Exchange events
+    "bankruptcy": ["insolvent", "bankrupt", "chapter 11", "liquidation"],
+    "hack": ["exploit", "breach", "attack", "stolen", "drained"],
+    
+    # Whale movements
+    "whale": ["large holder", "big transfer", "massive", "huge"],
+    
+    # Price milestones
+    "ath": ["all-time high", "all time high", "record high", "new high"],
+    
+    # Network events
+    "upgrade": ["fork", "update", "hardfork", "hard fork", "softfork"],
+    "outage": ["down", "halted", "congestion", "offline", "degraded"],
+}
+
+# Confidence score adjustments
+MATCH_CONFIDENCE = {
+    "exact_keyword": 100,      # Exact keyword match
+    "synonym_match": 85,       # Synonym of keyword matched
+    "partial_match": 60,       # Partial word match (e.g., "bitcoin" in "bitcoins")
+    "fuzzy_match": 40,         # Fuzzy/similar match
+}
 
 
 class EventTrigger:
