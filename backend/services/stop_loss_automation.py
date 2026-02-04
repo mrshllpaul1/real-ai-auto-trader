@@ -102,6 +102,8 @@ class StopLossAutomation:
             'positions_checked': len(positions),
             'stop_loss_triggered': [],
             'take_profit_triggered': [],
+            'trailing_stop_triggered': [],
+            'trailing_stops_updated': [],
             'errors': [],
             'timestamp': self.stats['last_check']
         }
@@ -113,6 +115,11 @@ class StopLossAutomation:
                 if action_result.get('action') == 'stop_loss':
                     results['stop_loss_triggered'].append(action_result)
                     self.stats['positions_closed_stop_loss'] += 1
+                    self.stats['total_pnl_from_automation'] += action_result.get('pnl_usd', 0)
+                
+                elif action_result.get('action') == 'trailing_stop':
+                    results['trailing_stop_triggered'].append(action_result)
+                    self.stats['positions_closed_trailing_stop'] += 1
                     self.stats['total_pnl_from_automation'] += action_result.get('pnl_usd', 0)
                     
                 elif action_result.get('action') == 'take_profit':
