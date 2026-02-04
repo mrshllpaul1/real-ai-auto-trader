@@ -309,6 +309,128 @@ class StopLossAutomation:
             'status': 'within_bounds'
         }
     
+    async def _check_partial_take_profit(
+        self,
+        position: Dict,
+        current_price: float,
+        entry_price: float,
+        pnl_pct: float
+    ) -> Dict[str, Any]:
+        """
+        Check if position qualifies for partial take profit.
+        
+        Logic:
+        1. Check each TP level in order
+        2. If profit exceeds level and that level hasn't been taken yet, close that portion
+        3. Update position with remaining quantity
+        4. Optionally move stop-loss to breakeven after first partial TP
+        
+        Example with default levels:
+        - At 30% profit: Close 50% of position
+        - At 50% profit: Close 25% of remaining
+        - At 100% profit: Close final 25%
+        """
+        coin_id = position.get('coin_id')
+        position_id = position.get('position_id')
+        symbol = position.get('symbol')
+        amount_usd = position.get('amount_usd', 0)
+        quantity = position.get('quantity', 0)
+        partial_tp_taken = position.get('partial_tp_taken', [])  # List of levels already taken
+        
+        tp_levels = self.config['partial_tp_levels']
+        
+        for i, level in enumerate(tp_levels):
+            level_id = f"level_{i}"
+            target_profit_pct = level['at_profit_pct']
+            close_pct = level['pct_of_position']
+            
+            # Skip if this level already taken
+            if level_id in partial_tp_taken:
+                continue
+            
+            # Check if we've reached this level
+            if pnl_pct >= target_profit_pct:
+                # Calculate how much to close
+                close_quantity = quantity * (close_pct / 100)
+                close_amount_usd = amount_usd * (close_pct / 100)
+                realized_pnl = close_amount_usd * (pnl_pct / 100)
+                
+                remaining_quantity = quantity - close_quantity
+                remaining_amount_usd = amount_usd - close_amount_usd
+                
+                logger.info(f"💰 PARTIAL TP {level_id} for {coin_id}: Closing {close_pct}% at {pnl_pct:.1f}% profit (+${realized_pnl:.2f})")
+                
+                # Update position
+                update_fields = {
+                    'quantity': remaining_quantity,
+                    'amount_usd': remaining_amount_usd,
+                    'partial_tp_taken': partial_tp_taken + [level_id],
+                    f'partial_tp_{level_id}': {
+                        'closed_at': datetime.now(timezone.utc).isoformat(),
+                        'close_pct': close_pct,
+                        'close_price': current_price,
+                        'realized_pnl': realized_pnl,
+                        'profit_pct': pnl_pct
+                    }
+                }
+                
+                # Move stop to breakeven after first partial TP
+                if i == 0 and self.config['move_stop_to_breakeven']:
+                    update_fields['stop_loss_price'] = entry_price
+                    update_fields['stop_moved_to_breakeven'] = True
+                    logger.info(f"  📍 Stop-loss moved to breakeven: ${entry_price:.4f}")
+                
+                # Update in database
+                if position_id:
+                    await self.db.active_positions.update_one(
+                        {'position_id': position_id},
+                        {'$set': update_fields}
+                    )
+                    
+                    await self.db.isolated_positions.update_one(
+                        {'position_id': position_id},
+                        {'$set': update_fields}
+                    )
+                
+                # Record partial TP transaction
+                await self.db.ai_transactions.insert_one({
+                    'type': 'partial_take_profit',
+                    'position_id': position_id,
+                    'coin_id': coin_id,
+                    'symbol': symbol,
+                    'level': level_id,
+                    'close_pct': close_pct,
+                    'close_quantity': close_quantity,
+                    'close_amount_usd': close_amount_usd,
+                    'close_price': current_price,
+                    'entry_price': entry_price,
+                    'profit_pct': pnl_pct,
+                    'realized_pnl_usd': realized_pnl,
+                    'remaining_quantity': remaining_quantity,
+                    'remaining_amount_usd': remaining_amount_usd,
+                    'timestamp': datetime.now(timezone.utc).isoformat()
+                })
+                
+                return {
+                    'action': 'partial_take_profit',
+                    'coin_id': coin_id,
+                    'symbol': symbol,
+                    'level': level_id,
+                    'close_pct': close_pct,
+                    'close_price': current_price,
+                    'entry_price': entry_price,
+                    'profit_pct': round(pnl_pct, 2),
+                    'realized_pnl_usd': round(realized_pnl, 2),
+                    'remaining_pct': round(100 - sum(l['pct_of_position'] for l in tp_levels[:i+1]), 0),
+                    'remaining_quantity': remaining_quantity,
+                    'remaining_amount_usd': round(remaining_amount_usd, 2),
+                    'stop_moved_to_breakeven': i == 0 and self.config['move_stop_to_breakeven'],
+                    'timestamp': datetime.now(timezone.utc).isoformat()
+                }
+        
+        # No partial TP triggered
+        return {'action': None}
+    
     async def _update_trailing_stop(
         self,
         position: Dict,
