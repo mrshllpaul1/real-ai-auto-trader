@@ -1,0 +1,718 @@
+"""
+Spot Trading API Routes
+Direct spot trading interface for manual and AI-assisted trades.
+"""
+
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
+from typing import Optional, List, Dict, Any
+from datetime import datetime, timezone
+import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/spot", tags=["Spot Trading"])
+
+# Global references
+_db = None
+_kraken_service = None
+_isolated_portfolio = None
+_automated_trader = None
+_prediction_services = None
+
+
+def set_dependencies(database, kraken_service, isolated_portfolio=None, automated_trader=None, prediction_services=None):
+    """Set dependencies from main app"""
+    global _db, _kraken_service, _isolated_portfolio, _automated_trader, _prediction_services
+    _db = database
+    _kraken_service = kraken_service
+    _isolated_portfolio = isolated_portfolio
+    _automated_trader = automated_trader
+    _prediction_services = prediction_services
+
+
+# Trading Pairs commonly used on Kraken
+TRADING_PAIRS = {
+    'BTC': {'pair': 'XXBTZUSD', 'name': 'Bitcoin', 'decimals': 8, 'min_order': 0.0001},
+    'ETH': {'pair': 'XETHZUSD', 'name': 'Ethereum', 'decimals': 8, 'min_order': 0.001},
+    'SOL': {'pair': 'SOLUSD', 'name': 'Solana', 'decimals': 8, 'min_order': 0.01},
+    'XRP': {'pair': 'XXRPZUSD', 'name': 'Ripple', 'decimals': 8, 'min_order': 1},
+    'ADA': {'pair': 'ADAUSD', 'name': 'Cardano', 'decimals': 8, 'min_order': 1},
+    'DOGE': {'pair': 'XDGUSD', 'name': 'Dogecoin', 'decimals': 8, 'min_order': 10},
+    'DOT': {'pair': 'DOTUSD', 'name': 'Polkadot', 'decimals': 8, 'min_order': 0.1},
+    'LINK': {'pair': 'LINKUSD', 'name': 'Chainlink', 'decimals': 8, 'min_order': 0.1},
+    'AVAX': {'pair': 'AVAXUSD', 'name': 'Avalanche', 'decimals': 8, 'min_order': 0.01},
+    'MATIC': {'pair': 'MATICUSD', 'name': 'Polygon', 'decimals': 8, 'min_order': 1},
+    'ATOM': {'pair': 'ATOMUSD', 'name': 'Cosmos', 'decimals': 8, 'min_order': 0.1},
+    'UNI': {'pair': 'UNIUSD', 'name': 'Uniswap', 'decimals': 8, 'min_order': 0.1},
+    'SHIB': {'pair': 'SHIBUSD', 'name': 'Shiba Inu', 'decimals': 8, 'min_order': 100000},
+    'LTC': {'pair': 'XLTCZUSD', 'name': 'Litecoin', 'decimals': 8, 'min_order': 0.01},
+    'BCH': {'pair': 'BCHUSD', 'name': 'Bitcoin Cash', 'decimals': 8, 'min_order': 0.01},
+    'NEAR': {'pair': 'NEARUSD', 'name': 'NEAR Protocol', 'decimals': 8, 'min_order': 0.1},
+    'APT': {'pair': 'APTUSD', 'name': 'Aptos', 'decimals': 8, 'min_order': 0.1},
+    'ARB': {'pair': 'ARBUSD', 'name': 'Arbitrum', 'decimals': 8, 'min_order': 1},
+    'OP': {'pair': 'OPUSD', 'name': 'Optimism', 'decimals': 8, 'min_order': 1},
+}
+
+
+class SpotOrderRequest(BaseModel):
+    symbol: str  # e.g., "BTC", "ETH"
+    side: str  # "buy" or "sell"
+    order_type: str  # "market" or "limit"
+    amount: Optional[float] = None  # Amount of crypto to buy/sell
+    usd_amount: Optional[float] = None  # USD amount for buy orders
+    price: Optional[float] = None  # Required for limit orders
+    use_ai_timing: bool = False  # Whether to use AI signals for timing
+
+
+class QuickBuyRequest(BaseModel):
+    symbol: str
+    usd_amount: float
+    use_ai_signal: bool = False
+
+
+class QuickSellRequest(BaseModel):
+    symbol: str
+    percent_to_sell: float = 100  # Percentage of holdings to sell
+    use_ai_signal: bool = False
+
+
+@router.get("/status")
+async def get_spot_trading_status():
+    """Get spot trading status and available features"""
+    if _kraken_service is None:
+        return {
+            "available": False,
+            "error": "Kraken service not initialized",
+            "features": []
+        }
+    
+    features = []
+    budget_info = None
+    
+    # Check trading permissions
+    try:
+        if _isolated_portfolio:
+            budget = await _isolated_portfolio.get_budget_status()
+            budget_info = {
+                "available_usd": budget.get("available_cash", 0),
+                "total_value": budget.get("current_value", 0),
+                "real_trading_enabled": budget.get("real_trading_enabled", False),
+                "allocated_budget": budget.get("allocated_budget", 500)
+            }
+            features.append("budget_isolation")
+            if budget.get("real_trading_enabled"):
+                features.append("real_trading")
+    except Exception as e:
+        logger.error(f"Budget check error: {e}")
+    
+    # Check AI features
+    if _prediction_services:
+        features.append("ai_signals")
+        if _prediction_services.get('transformer'):
+            features.append("transformer_predictions")
+        if _prediction_services.get('rl_agent'):
+            features.append("rl_recommendations")
+    
+    # Check Kraken connection
+    try:
+        balance = await _kraken_service.get_balance()
+        features.append("kraken_connected")
+    except:
+        pass
+    
+    return {
+        "available": True,
+        "features": features,
+        "budget": budget_info,
+        "supported_pairs": len(TRADING_PAIRS),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@router.get("/pairs")
+async def get_trading_pairs():
+    """Get all available trading pairs with current prices"""
+    if _kraken_service is None:
+        raise HTTPException(status_code=503, detail="Kraken service not initialized")
+    
+    pairs_with_prices = []
+    
+    for symbol, info in TRADING_PAIRS.items():
+        try:
+            ticker = await _kraken_service.get_ticker(info['pair'])
+            
+            if ticker:
+                last_price = float(ticker.get("c", [0])[0]) if ticker.get("c") else 0
+                volume_24h = float(ticker.get("v", [0, 0])[1]) if ticker.get("v") else 0
+                low_24h = float(ticker.get("l", [0, 0])[1]) if ticker.get("l") else 0
+                high_24h = float(ticker.get("h", [0, 0])[1]) if ticker.get("h") else 0
+                open_24h = float(ticker.get("o", 0)) if ticker.get("o") else last_price
+                
+                change_24h = ((last_price - open_24h) / open_24h * 100) if open_24h else 0
+                
+                pairs_with_prices.append({
+                    "symbol": symbol,
+                    "pair": info['pair'],
+                    "name": info['name'],
+                    "price": last_price,
+                    "change_24h": round(change_24h, 2),
+                    "volume_24h": volume_24h,
+                    "low_24h": low_24h,
+                    "high_24h": high_24h,
+                    "min_order": info['min_order'],
+                    "decimals": info['decimals']
+                })
+        except Exception as e:
+            logger.warning(f"Failed to get ticker for {symbol}: {e}")
+            pairs_with_prices.append({
+                "symbol": symbol,
+                "pair": info['pair'],
+                "name": info['name'],
+                "price": 0,
+                "error": "Price unavailable",
+                "min_order": info['min_order'],
+                "decimals": info['decimals']
+            })
+    
+    # Sort by 24h volume
+    pairs_with_prices.sort(key=lambda x: x.get('volume_24h', 0) or 0, reverse=True)
+    
+    return {
+        "pairs": pairs_with_prices,
+        "count": len(pairs_with_prices),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@router.get("/pair/{symbol}")
+async def get_pair_details(symbol: str):
+    """Get detailed information for a specific trading pair"""
+    symbol = symbol.upper()
+    
+    if symbol not in TRADING_PAIRS:
+        raise HTTPException(status_code=404, detail=f"Symbol {symbol} not supported")
+    
+    if _kraken_service is None:
+        raise HTTPException(status_code=503, detail="Kraken service not initialized")
+    
+    pair_info = TRADING_PAIRS[symbol]
+    
+    try:
+        ticker = await _kraken_service.get_ticker(pair_info['pair'])
+        
+        if not ticker:
+            raise HTTPException(status_code=404, detail=f"Ticker not available for {symbol}")
+        
+        last_price = float(ticker.get("c", [0])[0]) if ticker.get("c") else 0
+        ask = float(ticker.get("a", [0])[0]) if ticker.get("a") else 0
+        bid = float(ticker.get("b", [0])[0]) if ticker.get("b") else 0
+        volume_24h = float(ticker.get("v", [0, 0])[1]) if ticker.get("v") else 0
+        low_24h = float(ticker.get("l", [0, 0])[1]) if ticker.get("l") else 0
+        high_24h = float(ticker.get("h", [0, 0])[1]) if ticker.get("h") else 0
+        open_24h = float(ticker.get("o", 0)) if ticker.get("o") else last_price
+        
+        change_24h = ((last_price - open_24h) / open_24h * 100) if open_24h else 0
+        spread = ((ask - bid) / last_price * 100) if last_price else 0
+        
+        # Get AI signal if available
+        ai_signal = None
+        if _automated_trader and hasattr(_automated_trader, 'get_prediction_signals'):
+            try:
+                ai_signal = await _automated_trader.get_prediction_signals(symbol)
+            except Exception as e:
+                logger.warning(f"AI signal error for {symbol}: {e}")
+        
+        # Get user balance for this coin
+        user_balance = None
+        if _kraken_service:
+            try:
+                balance = await _kraken_service.get_balance()
+                # Kraken uses different naming for coins
+                kraken_symbols = {
+                    'BTC': ['XXBT', 'XBT'],
+                    'ETH': ['XETH', 'ETH'],
+                    'SOL': ['SOL'],
+                    'XRP': ['XXRP', 'XRP'],
+                }
+                for ks in kraken_symbols.get(symbol, [symbol]):
+                    if ks in balance:
+                        user_balance = float(balance[ks])
+                        break
+            except Exception as e:
+                logger.warning(f"Balance check error: {e}")
+        
+        return {
+            "symbol": symbol,
+            "name": pair_info['name'],
+            "pair": pair_info['pair'],
+            "price": {
+                "last": last_price,
+                "ask": ask,
+                "bid": bid,
+                "spread": round(spread, 4),
+                "open_24h": open_24h,
+                "low_24h": low_24h,
+                "high_24h": high_24h,
+                "change_24h": round(change_24h, 2)
+            },
+            "volume_24h": volume_24h,
+            "volume_usd_24h": volume_24h * last_price,
+            "min_order": pair_info['min_order'],
+            "min_order_usd": pair_info['min_order'] * last_price,
+            "user_balance": user_balance,
+            "user_balance_usd": user_balance * last_price if user_balance else None,
+            "ai_signal": ai_signal,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching pair details: {str(e)}")
+
+
+@router.get("/balance")
+async def get_spot_balance():
+    """Get user's spot balance across all supported coins"""
+    if _kraken_service is None:
+        raise HTTPException(status_code=503, detail="Kraken service not initialized")
+    
+    try:
+        balance = await _kraken_service.get_balance()
+        
+        # Map Kraken currency names to standard symbols
+        kraken_to_symbol = {
+            'XXBT': 'BTC', 'XBT': 'BTC',
+            'XETH': 'ETH', 'ETH': 'ETH',
+            'ZUSD': 'USD', 'USD': 'USD',
+            'XXRP': 'XRP', 'XRP': 'XRP',
+            'XXLM': 'XLM', 'XLM': 'XLM',
+            'XXDG': 'DOGE', 'DOGE': 'DOGE',
+            'SOL': 'SOL',
+            'ADA': 'ADA',
+            'DOT': 'DOT',
+            'LINK': 'LINK',
+            'AVAX': 'AVAX',
+            'MATIC': 'MATIC',
+            'ATOM': 'ATOM',
+            'UNI': 'UNI',
+            'SHIB': 'SHIB',
+            'XLTC': 'LTC', 'LTC': 'LTC',
+            'BCH': 'BCH',
+            'NEAR': 'NEAR',
+            'APT': 'APT',
+            'ARB': 'ARB',
+            'OP': 'OP',
+        }
+        
+        holdings = []
+        total_usd_value = 0
+        usd_balance = 0
+        
+        for currency, amount in balance.items():
+            amount = float(amount)
+            if amount <= 0:
+                continue
+            
+            symbol = kraken_to_symbol.get(currency, currency)
+            
+            if symbol == 'USD':
+                usd_balance = amount
+                continue
+            
+            # Get current price
+            usd_value = 0
+            price = 0
+            if symbol in TRADING_PAIRS:
+                try:
+                    ticker = await _kraken_service.get_ticker(TRADING_PAIRS[symbol]['pair'])
+                    if ticker:
+                        price = float(ticker.get("c", [0])[0]) if ticker.get("c") else 0
+                        usd_value = amount * price
+                except:
+                    pass
+            
+            if amount > 0:
+                holdings.append({
+                    "symbol": symbol,
+                    "name": TRADING_PAIRS.get(symbol, {}).get('name', symbol),
+                    "amount": amount,
+                    "price": price,
+                    "usd_value": round(usd_value, 2),
+                    "kraken_currency": currency
+                })
+                total_usd_value += usd_value
+        
+        # Sort by USD value
+        holdings.sort(key=lambda x: x['usd_value'], reverse=True)
+        
+        return {
+            "holdings": holdings,
+            "usd_balance": round(usd_balance, 2),
+            "total_crypto_value": round(total_usd_value, 2),
+            "total_portfolio_value": round(usd_balance + total_usd_value, 2),
+            "holdings_count": len(holdings),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Balance error: {str(e)}")
+
+
+@router.post("/order")
+async def place_spot_order(request: SpotOrderRequest):
+    """
+    Place a spot order.
+    
+    For buy orders, specify either:
+    - amount: Amount of crypto to buy
+    - usd_amount: USD amount to spend
+    
+    For sell orders, specify amount to sell.
+    """
+    symbol = request.symbol.upper()
+    
+    if symbol not in TRADING_PAIRS:
+        raise HTTPException(status_code=400, detail=f"Symbol {symbol} not supported")
+    
+    if _kraken_service is None:
+        raise HTTPException(status_code=503, detail="Kraken service not initialized")
+    
+    # Check trading permissions
+    if _isolated_portfolio:
+        budget = await _isolated_portfolio.get_budget_status()
+        if not budget.get("real_trading_enabled"):
+            raise HTTPException(
+                status_code=403,
+                detail="Real trading not enabled. Enable it in Trading Budget settings."
+            )
+    
+    pair_info = TRADING_PAIRS[symbol]
+    
+    try:
+        # Get current price
+        ticker = await _kraken_service.get_ticker(pair_info['pair'])
+        if not ticker:
+            raise HTTPException(status_code=404, detail=f"Cannot get price for {symbol}")
+        
+        current_price = float(ticker.get("c", [0])[0]) if ticker.get("c") else 0
+        
+        # Calculate volume
+        volume = request.amount
+        
+        if request.side.lower() == 'buy' and request.usd_amount:
+            # Convert USD amount to crypto amount
+            volume = request.usd_amount / current_price
+        
+        if not volume:
+            raise HTTPException(status_code=400, detail="Amount or usd_amount required")
+        
+        # Check minimum order
+        if volume < pair_info['min_order']:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Minimum order for {symbol} is {pair_info['min_order']} ({pair_info['min_order'] * current_price:.2f} USD)"
+            )
+        
+        # AI timing recommendation
+        ai_recommendation = None
+        if request.use_ai_timing and _automated_trader:
+            try:
+                signals = await _automated_trader.get_prediction_signals(symbol)
+                if signals:
+                    ai_recommendation = {
+                        "signal": signals.get('composite_signal', 'neutral'),
+                        "score": signals.get('composite_score', 0),
+                        "recommendation": signals.get('recommendation', 'Hold position')
+                    }
+                    
+                    # Warn if AI disagrees with order
+                    composite_score = signals.get('composite_score', 0)
+                    if request.side.lower() == 'buy' and composite_score < -0.3:
+                        logger.warning(f"AI signals suggest against buying {symbol} (score: {composite_score})")
+                    elif request.side.lower() == 'sell' and composite_score > 0.3:
+                        logger.warning(f"AI signals suggest against selling {symbol} (score: {composite_score})")
+            except Exception as e:
+                logger.warning(f"AI timing error: {e}")
+        
+        # Place order
+        order_params = {
+            "pair": pair_info['pair'],
+            "side": request.side.lower(),
+            "ordertype": request.order_type.lower(),
+            "volume": str(round(volume, pair_info['decimals']))
+        }
+        
+        if request.order_type.lower() == 'limit':
+            if not request.price:
+                raise HTTPException(status_code=400, detail="Price required for limit orders")
+            order_params["price"] = str(request.price)
+        else:
+            order_params["price"] = "0"
+        
+        result = await _kraken_service.place_order(**order_params)
+        
+        # Log trade to DB
+        if _db:
+            await _db.spot_trades.insert_one({
+                "symbol": symbol,
+                "pair": pair_info['pair'],
+                "side": request.side.lower(),
+                "order_type": request.order_type.lower(),
+                "volume": volume,
+                "price": current_price if request.order_type.lower() == 'market' else request.price,
+                "usd_value": volume * current_price,
+                "result": result,
+                "ai_recommendation": ai_recommendation,
+                "timestamp": datetime.now(timezone.utc)
+            })
+        
+        return {
+            "success": True,
+            "order": result,
+            "details": {
+                "symbol": symbol,
+                "side": request.side,
+                "type": request.order_type,
+                "volume": volume,
+                "price": current_price if request.order_type.lower() == 'market' else request.price,
+                "usd_value": round(volume * current_price, 2)
+            },
+            "ai_recommendation": ai_recommendation,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Order failed: {str(e)}")
+
+
+@router.post("/quick-buy")
+async def quick_buy(request: QuickBuyRequest):
+    """Quick market buy with USD amount"""
+    symbol = request.symbol.upper()
+    
+    if symbol not in TRADING_PAIRS:
+        raise HTTPException(status_code=400, detail=f"Symbol {symbol} not supported")
+    
+    # Use the main order endpoint
+    order_request = SpotOrderRequest(
+        symbol=symbol,
+        side="buy",
+        order_type="market",
+        usd_amount=request.usd_amount,
+        use_ai_timing=request.use_ai_signal
+    )
+    
+    return await place_spot_order(order_request)
+
+
+@router.post("/quick-sell")
+async def quick_sell(request: QuickSellRequest):
+    """Quick market sell of holdings"""
+    symbol = request.symbol.upper()
+    
+    if symbol not in TRADING_PAIRS:
+        raise HTTPException(status_code=400, detail=f"Symbol {symbol} not supported")
+    
+    if _kraken_service is None:
+        raise HTTPException(status_code=503, detail="Kraken service not initialized")
+    
+    # Get current balance
+    balance = await _kraken_service.get_balance()
+    
+    # Find balance for symbol
+    kraken_symbols = {
+        'BTC': ['XXBT', 'XBT'],
+        'ETH': ['XETH', 'ETH'],
+        'XRP': ['XXRP', 'XRP'],
+        'DOGE': ['XXDG', 'DOGE'],
+        'LTC': ['XLTC', 'LTC'],
+    }
+    
+    user_balance = 0
+    for ks in kraken_symbols.get(symbol, [symbol]):
+        if ks in balance:
+            user_balance = float(balance[ks])
+            break
+    
+    if user_balance <= 0:
+        raise HTTPException(status_code=400, detail=f"No {symbol} balance to sell")
+    
+    # Calculate amount to sell
+    amount_to_sell = user_balance * (request.percent_to_sell / 100)
+    
+    # Use the main order endpoint
+    order_request = SpotOrderRequest(
+        symbol=symbol,
+        side="sell",
+        order_type="market",
+        amount=amount_to_sell,
+        use_ai_timing=request.use_ai_signal
+    )
+    
+    return await place_spot_order(order_request)
+
+
+@router.get("/ai-recommendations")
+async def get_ai_recommendations():
+    """Get AI trading recommendations for all supported pairs"""
+    if _automated_trader is None:
+        raise HTTPException(status_code=503, detail="Auto trader not initialized")
+    
+    recommendations = []
+    
+    for symbol in list(TRADING_PAIRS.keys())[:10]:  # Top 10 pairs
+        try:
+            signals = await _automated_trader.get_prediction_signals(symbol)
+            
+            if signals:
+                pair_info = TRADING_PAIRS[symbol]
+                
+                # Get current price
+                price = 0
+                if _kraken_service:
+                    try:
+                        ticker = await _kraken_service.get_ticker(pair_info['pair'])
+                        if ticker:
+                            price = float(ticker.get("c", [0])[0]) if ticker.get("c") else 0
+                    except:
+                        pass
+                
+                recommendations.append({
+                    "symbol": symbol,
+                    "name": pair_info['name'],
+                    "price": price,
+                    "signal": signals.get('composite_signal', 'neutral'),
+                    "score": round(signals.get('composite_score', 0), 3),
+                    "confidence": signals.get('confidence', 0),
+                    "recommendation": signals.get('recommendation', 'Hold'),
+                    "components": {
+                        k: v for k, v in signals.items() 
+                        if k in ['order_book', 'on_chain', 'social', 'transformer', 'rl_agent', 'technical']
+                    }
+                })
+        except Exception as e:
+            logger.warning(f"AI recommendation error for {symbol}: {e}")
+    
+    # Sort by absolute score (strongest signals first)
+    recommendations.sort(key=lambda x: abs(x['score']), reverse=True)
+    
+    return {
+        "recommendations": recommendations,
+        "count": len(recommendations),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@router.get("/recent-trades")
+async def get_recent_spot_trades(limit: int = Query(20, ge=1, le=100)):
+    """Get recent spot trades from DB"""
+    if _db is None:
+        return {"trades": [], "count": 0}
+    
+    try:
+        trades = await _db.spot_trades.find(
+            {}, {"_id": 0}
+        ).sort("timestamp", -1).limit(limit).to_list(limit)
+        
+        return {
+            "trades": trades,
+            "count": len(trades),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error fetching trades: {e}")
+        return {"trades": [], "count": 0, "error": str(e)}
+
+
+@router.get("/trade-history/kraken")
+async def get_kraken_trade_history(limit: int = Query(50, ge=1, le=500)):
+    """Get actual trade history from Kraken exchange"""
+    if _kraken_service is None:
+        raise HTTPException(status_code=503, detail="Kraken service not initialized")
+    
+    try:
+        history = await _kraken_service.get_trades_history()
+        trades = history.get("trades", {})
+        
+        formatted_trades = []
+        for trade_id, trade in list(trades.items())[:limit]:
+            # Map Kraken pair to symbol
+            pair = trade.get("pair", "")
+            symbol = pair.replace("USD", "").replace("Z", "").replace("X", "")[:4]
+            
+            formatted_trades.append({
+                "id": trade_id,
+                "symbol": symbol,
+                "pair": pair,
+                "side": trade.get("type"),
+                "price": float(trade.get("price", 0)),
+                "volume": float(trade.get("vol", 0)),
+                "cost": float(trade.get("cost", 0)),
+                "fee": float(trade.get("fee", 0)),
+                "time": datetime.fromtimestamp(trade.get("time", 0)).isoformat()
+            })
+        
+        # Sort by time descending
+        formatted_trades.sort(key=lambda x: x['time'], reverse=True)
+        
+        return {
+            "trades": formatted_trades,
+            "count": len(formatted_trades),
+            "source": "kraken_exchange",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Trade history error: {str(e)}")
+
+
+@router.get("/open-orders")
+async def get_open_orders():
+    """Get all open orders"""
+    if _kraken_service is None:
+        raise HTTPException(status_code=503, detail="Kraken service not initialized")
+    
+    try:
+        result = await _kraken_service.get_open_orders()
+        orders = result.get("open", {})
+        
+        formatted_orders = []
+        for order_id, order in orders.items():
+            formatted_orders.append({
+                "id": order_id,
+                "pair": order.get("descr", {}).get("pair"),
+                "type": order.get("descr", {}).get("type"),
+                "order_type": order.get("descr", {}).get("ordertype"),
+                "price": order.get("descr", {}).get("price"),
+                "volume": float(order.get("vol", 0)),
+                "volume_exec": float(order.get("vol_exec", 0)),
+                "status": order.get("status"),
+                "open_time": datetime.fromtimestamp(order.get("opentm", 0)).isoformat()
+            })
+        
+        return {
+            "orders": formatted_orders,
+            "count": len(formatted_orders),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Open orders error: {str(e)}")
+
+
+@router.delete("/order/{order_id}")
+async def cancel_order(order_id: str):
+    """Cancel an open order"""
+    if _kraken_service is None:
+        raise HTTPException(status_code=503, detail="Kraken service not initialized")
+    
+    try:
+        result = await _kraken_service.cancel_order(order_id)
+        
+        return {
+            "success": True,
+            "order_id": order_id,
+            "result": result,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Cancel order error: {str(e)}")
