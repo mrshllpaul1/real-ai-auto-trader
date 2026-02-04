@@ -6,7 +6,7 @@ Provides conversational AI interface for crypto trading queries.
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 router = APIRouter(prefix="/ai-chat", tags=["AI Chat"])
 
