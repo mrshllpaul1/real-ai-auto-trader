@@ -155,6 +155,7 @@ from routes import paper_trading as paper_trading_routes
 from routes import prediction_enhancements
 from routes import strategy_builder as strategy_builder_routes
 from routes import ohlcv_data as ohlcv_routes
+from routes import training_history as training_history_routes
 
 # Include routers
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
