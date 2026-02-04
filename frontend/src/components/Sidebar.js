@@ -183,6 +183,7 @@ const Sidebar = () => {
     { path: '/positions', icon: Briefcase, label: 'Positions', highlight: true },
     { path: '/portfolio-dashboard', icon: PieChart, label: 'Portfolio', highlight: true },
     { path: '/ai-chat', icon: MessageCircle, label: 'Ask AI', highlight: true },
+    { path: '/strategy-builder', icon: Wand2, label: 'Strategy Builder', highlight: true },
     { path: '/triggers', icon: Target, label: 'Event Triggers', highlight: true },
     { path: '/trigger-performance', icon: Award, label: 'Trigger Stats', highlight: true },
     { path: '/adaptive', icon: Gauge, label: 'Adaptive AI', highlight: true },
