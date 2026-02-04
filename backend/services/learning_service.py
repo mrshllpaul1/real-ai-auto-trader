@@ -154,7 +154,7 @@ class LearningService:
     
     async def learn_from_recent_trades(self, days: int = 1) -> Dict[str, Any]:
         """Analyze recent trades and extract learning insights"""
-        if not self.db:
+        if self.db is None:
             return {"error": "Database not available"}
         
         try:
