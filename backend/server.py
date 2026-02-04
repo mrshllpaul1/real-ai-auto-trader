@@ -157,6 +157,7 @@ from routes import strategy_builder as strategy_builder_routes
 from routes import ohlcv_data as ohlcv_routes
 from routes import training_history as training_history_routes
 from routes import training_scheduler as training_scheduler_routes
+from routes import model_persistence as model_persistence_routes
 
 # Include routers
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
