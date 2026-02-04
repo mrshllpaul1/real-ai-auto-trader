@@ -151,11 +151,12 @@ class StopLossAutomation:
                 logger.error(f"Error checking position {position.get('coin_id')}: {e}")
         
         # Log summary
-        actions_taken = len(results['stop_loss_triggered']) + len(results['take_profit_triggered']) + len(results['trailing_stop_triggered'])
+        actions_taken = (len(results['stop_loss_triggered']) + len(results['take_profit_triggered']) + 
+                        len(results['trailing_stop_triggered']) + len(results['partial_take_profits']))
         results['actions_taken'] = actions_taken
         
         if actions_taken > 0 or len(results['trailing_stops_updated']) > 0:
-            logger.info(f"🎯 Actions: SL:{len(results['stop_loss_triggered'])} TP:{len(results['take_profit_triggered'])} Trailing:{len(results['trailing_stop_triggered'])} Updated:{len(results['trailing_stops_updated'])}")
+            logger.info(f"🎯 Actions: SL:{len(results['stop_loss_triggered'])} TP:{len(results['take_profit_triggered'])} Partial:{len(results['partial_take_profits'])} Trailing:{len(results['trailing_stop_triggered'])}")
             
             # Store execution record
             await self._store_execution_record(results)
@@ -169,7 +170,7 @@ class StopLossAutomation:
         return results
     
     async def _check_position(self, position: Dict) -> Dict[str, Any]:
-        """Check a single position against its stop-loss, take-profit, and trailing stop"""
+        """Check a single position against its stop-loss, take-profit, partial TP, and trailing stop"""
         coin_id = position.get('coin_id')
         symbol = position.get('symbol')
         entry_price = position.get('entry_price', 0)
