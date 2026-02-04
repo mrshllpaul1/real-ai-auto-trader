@@ -359,3 +359,40 @@ async def get_execution_history(limit: int = 50):
     
     history = await scheduler_service.get_execution_history(limit=limit)
     return {"history": history, "count": len(history)}
+
+
+# ========== Event Trigger Jobs ==========
+
+@router.post("/jobs/event-trigger-check")
+async def add_event_trigger_check(schedule: EventTriggerCheckSchedule):
+    """
+    Add periodic event trigger checking job.
+    
+    Monitors news events and executes trades based on custom triggers.
+    
+    Default: Every 15 minutes
+    
+    - Fetches latest news from CoinDesk/CryptoCompare
+    - Matches news against all enabled triggers
+    - Executes trade alerts or orders when matches found
+    - Essential for automated event-based trading
+    """
+    if scheduler_service is None:
+        raise HTTPException(status_code=500, detail="Scheduler not initialized")
+    
+    return await scheduler_service.add_event_trigger_check_job(
+        interval_minutes=schedule.interval_minutes
+    )
+
+
+@router.post("/jobs/event-trigger-check-now")
+async def run_event_trigger_check_now():
+    """
+    Manually trigger event checking immediately.
+    
+    Checks recent news against all enabled triggers.
+    """
+    if scheduler_service is None:
+        raise HTTPException(status_code=500, detail="Scheduler not initialized")
+    
+    return await scheduler_service._run_event_trigger_check()
