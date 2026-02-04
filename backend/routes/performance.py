@@ -332,7 +332,7 @@ async def get_all_models():
             'type': metadata.get('type', 'Unknown'),
             'category': metadata.get('category', 'Unknown'),
             'description': metadata.get('description', ''),
-            'accuracy': round(accuracy * 100, 2) if accuracy else None,
+            'accuracy': round(accuracy, 2) if accuracy else None,  # accuracy already stored as percentage
             'is_trained': accuracy is not None,
             'is_best': model_name == regime_predictor.best_model
         })
