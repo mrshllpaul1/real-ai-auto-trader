@@ -257,8 +257,14 @@ class TestPerformanceRegime:
         if "error" in data:
             print(f"⚠️ Prediction unavailable: {data.get('error', 'No models')}")
         else:
-            assert "regime" in data or "prediction" in data
-            print(f"✅ Regime prediction: {data}")
+            # Response may have 'predicted_regime' or 'all_predictions' with regime info
+            has_regime = "regime" in data or "predicted_regime" in data or "all_predictions" in data
+            assert has_regime, f"Expected regime data in response: {data.keys()}"
+            
+            if "all_predictions" in data:
+                print(f"✅ Regime prediction: model_used={data.get('model_used')}, confidence={data.get('confidence')}")
+            else:
+                print(f"✅ Regime prediction: {data}")
     
     def test_trading_performance(self):
         """Test GET /api/performance/trading - Get trading performance metrics"""
