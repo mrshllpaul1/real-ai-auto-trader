@@ -343,6 +343,18 @@ async def initialize_services():
         logger.info("✅ Event Correlation Engine initialized")
         logger.info("✅ Historical Events Database initialized")
         
+        # Event Triggers Service for Automated Trading
+        from services.event_triggers import get_event_trigger_service
+        trigger_service = get_event_trigger_service(
+            db=db,
+            coindesk_service=coindesk_service,
+            correlation_engine=correlation_engine,
+            kraken_service=kraken_service,
+            alert_service=alert_service
+        )
+        event_triggers.set_dependencies(db, trigger_service)
+        logger.info("✅ Event Trigger Service initialized")
+        
         # Start scheduler
         await scheduler_service.start()
         
