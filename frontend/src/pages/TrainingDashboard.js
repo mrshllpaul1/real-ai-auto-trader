@@ -324,6 +324,10 @@ const TrainingDashboard = () => {
         const recsData = await recsRes.json();
         setLearningRecommendations(recsData.recommendations || []);
       }
+      if (autoSpotRes.ok) {
+        const autoSpotData = await autoSpotRes.json();
+        setAutoSpotStatus(autoSpotData);
+      }
 
       setLoading(false);
     } catch (err) {
