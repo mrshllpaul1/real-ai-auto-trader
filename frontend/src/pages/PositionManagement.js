@@ -495,14 +495,14 @@ const PositionManagement = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            setEditingPosition(pos.position_id);
+                            setEditingPosition(pos.position_id || pos.coin_id);
                             setEditValues({
                               stop_loss: pos.stop_loss_price?.toString() || '',
                               take_profit: pos.take_profit_price?.toString() || ''
                             });
                           }}
                           className="flex-1 border-[#1F1F1F] hover:border-[#9D00FF]/50 hover:bg-[#9D00FF]/10"
-                          data-testid={`edit-btn-${pos.position_id}`}
+                          data-testid={`edit-btn-${pos.position_id || pos.coin_id}`}
                         >
                           <Edit2 size={14} className="mr-1" /> Edit Levels
                         </Button>
