@@ -86,7 +86,7 @@ class AdaptiveStrategyEngine:
                 'position_multiplier': 1.3,      # Increase positions
                 'stop_loss_adjust': -5,          # Tighter stops (15->10%)
                 'take_profit_adjust': +20,       # Higher targets (30->50%)
-                'min_confidence_adjust': -10,    # Lower threshold (60->50%)
+                'min_confidence_adjust': +10,    # Higher threshold in bull (55->65%)
                 'rebalance_multiplier': 0.5,     # More frequent rebalance
                 'preferred_assets': ['momentum', 'growth', 'gems'],
             },
@@ -94,7 +94,7 @@ class AdaptiveStrategyEngine:
                 'position_multiplier': 1.1,
                 'stop_loss_adjust': -2,
                 'take_profit_adjust': +10,
-                'min_confidence_adjust': -5,
+                'min_confidence_adjust': +5,     # Slightly higher (55->60%)
                 'rebalance_multiplier': 0.75,
                 'preferred_assets': ['large_cap', 'momentum'],
             },
@@ -102,7 +102,7 @@ class AdaptiveStrategyEngine:
                 'position_multiplier': 1.0,
                 'stop_loss_adjust': 0,
                 'take_profit_adjust': 0,
-                'min_confidence_adjust': 0,
+                'min_confidence_adjust': 0,      # Keep at base 55%
                 'rebalance_multiplier': 1.0,
                 'preferred_assets': ['yield', 'stable'],
             },
@@ -110,7 +110,7 @@ class AdaptiveStrategyEngine:
                 'position_multiplier': 0.7,      # Reduce positions
                 'stop_loss_adjust': -3,          # Tighter stops
                 'take_profit_adjust': -10,       # Lower targets
-                'min_confidence_adjust': 0,      # Keep at 59% (user-configured)
+                'min_confidence_adjust': -10,    # Lower threshold (55->45%) to allow some trades
                 'rebalance_multiplier': 1.5,     # Less frequent
                 'preferred_assets': ['large_cap', 'btc', 'eth'],
             },
@@ -118,7 +118,7 @@ class AdaptiveStrategyEngine:
                 'position_multiplier': 0.4,      # Minimal exposure
                 'stop_loss_adjust': -5,
                 'take_profit_adjust': -15,
-                'min_confidence_adjust': +20,
+                'min_confidence_adjust': -5,     # Slightly lower (55->50%) but still cautious
                 'rebalance_multiplier': 2.0,
                 'preferred_assets': ['btc', 'stablecoins'],
                 'max_exposure_override': 50.0,   # Cap at 50%
