@@ -187,20 +187,24 @@ const TrainingDashboard = () => {
   const [error, setError] = useState(null);
   const [wsConnected, setWsConnected] = useState(false);
 
-  // WebSocket connection for real-time updates
+  // WebSocket connection for real-time updates (optional, with fallback to polling)
   useEffect(() => {
-    // Construct WebSocket URL - use internal for development
+    // WebSocket URL construction
     let wsUrl;
-    if (API_URL.includes('localhost') || API_URL.includes('127.0.0.1')) {
-      wsUrl = API_URL.replace('http', 'ws') + '/ws/training';
-    } else {
-      // For production/preview, use relative WebSocket path
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      wsUrl = `${wsProtocol}//${window.location.host}/ws/training`;
+    try {
+      // Try to construct WebSocket URL
+      const baseUrl = new URL(API_URL);
+      const wsProtocol = baseUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+      wsUrl = `${wsProtocol}//${baseUrl.host}/ws/training`;
+    } catch {
+      // Fallback for development
+      wsUrl = 'ws://localhost:8001/ws/training';
     }
     
     let ws = null;
     let reconnectTimeout = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 3;
     
     const connect = () => {
       try {
