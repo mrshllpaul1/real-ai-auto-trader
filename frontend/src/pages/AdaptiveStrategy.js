@@ -35,9 +35,9 @@ const AdaptiveStrategy = () => {
     try {
       setLoading(true);
       const [statusRes, regimeRes, modelsRes] = await Promise.all([
-        api.get('/adaptive/status').catch(() => ({ data: null })),
-        api.get('/performance/regime/predict').catch(() => ({ data: null })),
-        api.get('/performance/regime/models').catch(() => ({ data: null }))
+        api.get('/strategy/status').catch(() => ({ data: null })),
+        api.post('/performance/regime/predict', { symbol: 'BTC' }).catch(() => ({ data: null })),
+        api.get('/performance/regime/compare').catch(() => ({ data: null }))
       ]);
       
       setStrategyStatus(statusRes.data);
