@@ -127,6 +127,7 @@ api_router.include_router(adaptive_strategy.router, tags=["Adaptive Strategy"])
 api_router.include_router(performance.router, tags=["Performance & Prediction"])
 api_router.include_router(social_sentiment.router, tags=["Social Sentiment"])
 api_router.include_router(isolated_portfolio.router, tags=["Isolated Portfolio"])
+api_router.include_router(stop_loss_routes.router, tags=["Stop-Loss Automation"])
 
 # Include the router
 app.include_router(api_router)
