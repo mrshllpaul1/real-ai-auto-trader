@@ -412,6 +412,96 @@ async def execute_ai_command(request: CommandRequest):
         except Exception as e:
             print(f"Sentiment fetch error: {e}")
     
+    # 11. Event Detection intents
+    event_data = None
+    if any(word in query for word in ["what happened", "what caused", "why did", "event", "crash", "pump", "dump"]):
+        try:
+            from services.event_correlation_engine import get_correlation_engine
+            from services.historical_events_db import get_historical_events_db
+            
+            correlation_engine = get_correlation_engine()
+            events_db = get_historical_events_db()
+            
+            if correlation_engine and events_db:
+                # Parse for date
+                import re
+                date_match = re.search(r'(\d{4}-\d{2}-\d{2})', query)
+                
+                # Parse for coin
+                coin_pattern = r'\b(btc|eth|sol|ada|dot|avax|bnb|xrp|doge|shib|matic|link|uni|atom|ltc|luna|ftt)\b'
+                coin_match = re.search(coin_pattern, query, re.IGNORECASE)
+                coin = coin_match.group(1).upper() if coin_match else None
+                
+                if date_match:
+                    # Query specific date
+                    from datetime import datetime, timezone
+                    query_date = datetime.strptime(date_match.group(1), "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                    
+                    if coin:
+                        # Get what caused price change
+                        from datetime import timedelta
+                        movements = await correlation_engine.find_price_movements(
+                            coin, 
+                            query_date - timedelta(days=1),
+                            query_date + timedelta(days=1),
+                            threshold_pct=2.0
+                        )
+                        
+                        if movements:
+                            news = await correlation_engine.find_news_around_event(
+                                coin, movements[0]["timestamp"], hours_before=48
+                            )
+                            correlation = await correlation_engine.correlate_event(movements[0], news)
+                            event_data = {
+                                "type": "price_event",
+                                "coin": coin,
+                                "date": date_match.group(1),
+                                "price_change": f"{movements[0]['change_pct']:+.2f}%",
+                                "likely_cause": correlation.get("likely_cause"),
+                                "related_news": [n["title"] for n in correlation.get("correlated_news", [])[:3]]
+                            }
+                            actions_executed.append({"type": "event_detected", "data": event_data})
+                    else:
+                        # Get events on date
+                        events = await correlation_engine.find_events_for_date(query_date)
+                        if events.get("events"):
+                            event_data = {
+                                "type": "date_events",
+                                "date": date_match.group(1),
+                                "events_count": events.get("events_found", 0),
+                                "top_events": [e["title"] for e in events.get("events", [])[:5]]
+                            }
+                            actions_executed.append({"type": "events_found", "count": events.get("events_found", 0)})
+                
+                elif coin:
+                    # Get events for coin
+                    events = await events_db.get_events_for_coin(coin, limit=10)
+                    if events:
+                        event_data = {
+                            "type": "coin_events",
+                            "coin": coin,
+                            "events": [{"date": e["date"], "event": e["event"], "impact": e["impact"]} for e in events[:5]]
+                        }
+                        actions_executed.append({"type": "coin_events_fetched", "coin": coin, "count": len(events)})
+                
+                else:
+                    # Search by keyword
+                    keywords = ["elon", "ftx", "luna", "hack", "etf", "sec", "halving", "crash"]
+                    for kw in keywords:
+                        if kw in query.lower():
+                            events = await events_db.search_events(kw, limit=10)
+                            if events:
+                                event_data = {
+                                    "type": "keyword_events",
+                                    "keyword": kw,
+                                    "events": [{"date": e["date"], "event": e["event"]} for e in events[:5]]
+                                }
+                                actions_executed.append({"type": "event_search", "keyword": kw, "count": len(events)})
+                            break
+                            
+        except Exception as e:
+            print(f"Event detection error: {e}")
+    
     # Get AI response with context
     ai_response = await _chat_service.chat_with_deep_learning(
         query=request.query,
