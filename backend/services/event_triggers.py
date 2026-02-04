@@ -334,24 +334,101 @@ class EventTriggerService:
         """Enable or disable a trigger"""
         return await self.update_trigger(trigger_id, {"enabled": enabled})
     
+    def _get_expanded_keywords(self, keywords: List[str]) -> Dict[str, List[str]]:
+        """Expand keywords with synonyms for better matching"""
+        expanded = {}
+        for kw in keywords:
+            kw_lower = kw.lower()
+            expanded[kw_lower] = [kw_lower]
+            
+            # Add synonyms if available
+            if kw_lower in KEYWORD_SYNONYMS:
+                expanded[kw_lower].extend(KEYWORD_SYNONYMS[kw_lower])
+            
+            # Check if this keyword is a synonym of another
+            for main_kw, synonyms in KEYWORD_SYNONYMS.items():
+                if kw_lower in synonyms or kw_lower == main_kw:
+                    expanded[kw_lower].append(main_kw)
+                    expanded[kw_lower].extend(synonyms)
+            
+            # Remove duplicates
+            expanded[kw_lower] = list(set(expanded[kw_lower]))
+        
+        return expanded
+    
+    def _fuzzy_word_match(self, word: str, text: str) -> bool:
+        """Check for word with common variations (plurals, -ing, -ed, etc.)"""
+        patterns = [
+            rf'\b{re.escape(word)}\b',           # Exact word boundary
+            rf'\b{re.escape(word)}s?\b',         # Plural
+            rf'\b{re.escape(word)}ed\b',         # Past tense
+            rf'\b{re.escape(word)}ing\b',        # Present participle
+            rf'\b{re.escape(word)}\'s\b',        # Possessive
+        ]
+        for pattern in patterns:
+            if re.search(pattern, text, re.IGNORECASE):
+                return True
+        return False
+    
     def check_event_matches_trigger(
         self,
         trigger: EventTrigger,
         event: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Check if an event matches a trigger's criteria"""
+        """
+        Check if an event matches a trigger's criteria.
+        Enhanced with synonym matching, fuzzy matching, and better scoring.
+        """
         title = event.get("title", "").lower()
         body = event.get("body", "").lower()
         text = title + " " + body
         
-        # Check keywords
-        keyword_matches = [kw for kw in trigger.keywords if kw in text]
-        if not keyword_matches:
+        # Expand keywords with synonyms
+        expanded_keywords = self._get_expanded_keywords(trigger.keywords)
+        
+        # Track all matches with confidence scores
+        matches = []
+        total_confidence = 0
+        
+        for original_kw, variations in expanded_keywords.items():
+            for variant in variations:
+                # Exact match in text
+                if variant in text:
+                    match_type = "exact_keyword" if variant == original_kw else "synonym_match"
+                    confidence = MATCH_CONFIDENCE[match_type]
+                    matches.append({
+                        "keyword": original_kw,
+                        "matched": variant,
+                        "type": match_type,
+                        "confidence": confidence
+                    })
+                    total_confidence = max(total_confidence, confidence)
+                    break  # Found match for this keyword, move to next
+                
+                # Word boundary match (prevents false positives like "coin" in "coincidence")
+                elif self._fuzzy_word_match(variant, text):
+                    match_type = "partial_match"
+                    confidence = MATCH_CONFIDENCE[match_type]
+                    matches.append({
+                        "keyword": original_kw,
+                        "matched": variant,
+                        "type": match_type,
+                        "confidence": confidence
+                    })
+                    total_confidence = max(total_confidence, confidence)
+                    break
+        
+        if not matches:
             return {"matches": False, "reason": "No keyword match"}
+        
+        # Calculate final confidence based on number and quality of matches
+        num_matches = len(matches)
+        avg_confidence = sum(m["confidence"] for m in matches) / num_matches
+        final_confidence = min(100, int(avg_confidence + (num_matches - 1) * 10))
         
         # Check sentiment filter
         sentiment = event.get("sentiment", "NEUTRAL")
-        if trigger.sentiment_filter:
+        if trigger.sentiment_filter and trigger.sentiment_filter != "any":
             if trigger.sentiment_filter == "positive" and sentiment != "POSITIVE":
                 return {"matches": False, "reason": "Sentiment not positive"}
             if trigger.sentiment_filter == "negative" and sentiment != "NEGATIVE":
@@ -369,11 +446,18 @@ class EventTriggerService:
             if datetime.now(timezone.utc) < cooldown_end:
                 return {"matches": False, "reason": "Cooldown active"}
         
+        # Boost confidence for title matches (more relevant)
+        title_matches = [m for m in matches if m["matched"] in title]
+        if title_matches:
+            final_confidence = min(100, final_confidence + 15)
+        
         return {
             "matches": True,
-            "keyword_matches": keyword_matches,
+            "keyword_matches": [m["keyword"] for m in matches],
+            "match_details": matches,
             "sentiment": sentiment,
-            "confidence": len(keyword_matches) * 25  # Basic confidence score
+            "confidence": final_confidence,
+            "title_match": len(title_matches) > 0
         }
     
     async def execute_trigger(
