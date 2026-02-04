@@ -154,10 +154,17 @@ async def transformer_status():
     if not _transformer:
         return {"initialized": False}
     
+    # Handle last_trained - could be datetime or string from loaded metadata
+    last_trained = _transformer.last_trained
+    if last_trained:
+        if hasattr(last_trained, 'isoformat'):
+            last_trained = last_trained.isoformat()
+        # else it's already a string
+    
     return {
         "initialized": True,
         "is_trained": _transformer.is_trained,
-        "last_trained": _transformer.last_trained.isoformat() if _transformer.last_trained else None,
+        "last_trained": last_trained,
         "config": _transformer.config
     }
 
