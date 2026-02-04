@@ -1,0 +1,568 @@
+"""
+ML/DL Regime Prediction Engine
+Multiple models compete to predict market regimes.
+Best model is automatically selected based on accuracy.
+"""
+
+import asyncio
+from datetime import datetime, timezone, timedelta
+from typing import Dict, Any, List, Optional, Tuple
+from motor.motor_asyncio import AsyncIOMotorDatabase
+import numpy as np
+from enum import Enum
+import pickle
+import os
+
+# ML Libraries
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.svm import SVC
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import cross_val_score
+import warnings
+warnings.filterwarnings('ignore')
+
+# Try importing TensorFlow for deep learning
+try:
+    import tensorflow as tf
+    from tensorflow.keras.models import Sequential, load_model
+    from tensorflow.keras.layers import LSTM, GRU, Dense, Dropout, BatchNormalization
+    from tensorflow.keras.callbacks import EarlyStopping
+    from tensorflow.keras.optimizers import Adam
+    TF_AVAILABLE = True
+except ImportError:
+    TF_AVAILABLE = False
+    print("TensorFlow not available - DL models disabled")
+
+
+class RegimeLabel(Enum):
+    """Regime labels for classification"""
+    STRONG_BULL = 0
+    BULL = 1
+    SIDEWAYS = 2
+    BEAR = 3
+    STRONG_BEAR = 4
+    HIGH_VOLATILITY = 5
+    ACCUMULATION = 6
+
+
+REGIME_NAMES = {
+    0: 'strong_bull',
+    1: 'bull',
+    2: 'sideways',
+    3: 'bear',
+    4: 'strong_bear',
+    5: 'high_volatility',
+    6: 'accumulation'
+}
+
+
+class RegimePredictionEngine:
+    """
+    Multi-model regime prediction system with automatic model selection.
+    
+    Models:
+    - Random Forest (ML)
+    - Gradient Boosting (ML)
+    - Support Vector Machine (ML)
+    - LSTM Neural Network (DL)
+    - GRU Neural Network (DL)
+    
+    The system tracks accuracy of each model and automatically selects the best.
+    """
+    
+    def __init__(self, db: AsyncIOMotorDatabase):
+        self.db = db
+        self.scaler = StandardScaler()
+        self.models = {}
+        self.model_accuracy = {}
+        self.best_model = None
+        self.is_trained = False
+        self.sequence_length = 14  # Days of history for DL models
+        self.model_path = "/app/backend/models"
+        
+        # Ensure model directory exists
+        os.makedirs(self.model_path, exist_ok=True)
+        
+        # Initialize ML models
+        self._init_ml_models()
+        
+        # Initialize DL models if TensorFlow available
+        if TF_AVAILABLE:
+            self._init_dl_models()
+    
+    def _init_ml_models(self):
+        """Initialize machine learning models"""
+        self.models['random_forest'] = RandomForestClassifier(
+            n_estimators=100,
+            max_depth=10,
+            min_samples_split=5,
+            random_state=42,
+            n_jobs=-1
+        )
+        
+        self.models['gradient_boosting'] = GradientBoostingClassifier(
+            n_estimators=100,
+            max_depth=5,
+            learning_rate=0.1,
+            random_state=42
+        )
+        
+        self.models['svm'] = SVC(
+            kernel='rbf',
+            C=1.0,
+            probability=True,
+            random_state=42
+        )
+    
+    def _init_dl_models(self):
+        """Initialize deep learning models"""
+        if not TF_AVAILABLE:
+            return
+        
+        # LSTM model
+        self.models['lstm'] = self._build_lstm_model()
+        
+        # GRU model  
+        self.models['gru'] = self._build_gru_model()
+    
+    def _build_lstm_model(self, input_shape: Tuple = None) -> Sequential:
+        """Build LSTM neural network"""
+        if input_shape is None:
+            input_shape = (self.sequence_length, 10)  # Default feature count
+        
+        model = Sequential([
+            LSTM(64, return_sequences=True, input_shape=input_shape),
+            Dropout(0.2),
+            BatchNormalization(),
+            LSTM(32, return_sequences=False),
+            Dropout(0.2),
+            Dense(32, activation='relu'),
+            Dropout(0.1),
+            Dense(len(RegimeLabel), activation='softmax')
+        ])
+        
+        model.compile(
+            optimizer=Adam(learning_rate=0.001),
+            loss='sparse_categorical_crossentropy',
+            metrics=['accuracy']
+        )
+        
+        return model
+    
+    def _build_gru_model(self, input_shape: Tuple = None) -> Sequential:
+        """Build GRU neural network"""
+        if input_shape is None:
+            input_shape = (self.sequence_length, 10)
+        
+        model = Sequential([
+            GRU(64, return_sequences=True, input_shape=input_shape),
+            Dropout(0.2),
+            BatchNormalization(),
+            GRU(32, return_sequences=False),
+            Dropout(0.2),
+            Dense(32, activation='relu'),
+            Dropout(0.1),
+            Dense(len(RegimeLabel), activation='softmax')
+        ])
+        
+        model.compile(
+            optimizer=Adam(learning_rate=0.001),
+            loss='sparse_categorical_crossentropy',
+            metrics=['accuracy']
+        )
+        
+        return model
+    
+    async def _prepare_features(self, ohlcv_data: List[Dict]) -> np.ndarray:
+        """
+        Prepare feature matrix from OHLCV data.
+        
+        Features:
+        - Price change % (1d, 7d, 14d, 30d)
+        - Volatility (7d, 14d rolling std)
+        - Volume change %
+        - RSI approximation
+        - Moving average ratios
+        - High-low range
+        """
+        if len(ohlcv_data) < 30:
+            return None
+        
+        # Sort by date ascending
+        data = sorted(ohlcv_data, key=lambda x: x.get('timestamp', 0))
+        
+        features = []
+        
+        for i in range(30, len(data)):
+            window = data[i-30:i]
+            current = data[i]
+            
+            closes = [d['close'] for d in window]
+            volumes = [d.get('volume_to', d.get('volume', 0)) for d in window]
+            highs = [d['high'] for d in window]
+            lows = [d['low'] for d in window]
+            
+            # Price changes
+            price_1d = (closes[-1] - closes[-2]) / closes[-2] * 100 if closes[-2] else 0
+            price_7d = (closes[-1] - closes[-8]) / closes[-8] * 100 if closes[-8] else 0
+            price_14d = (closes[-1] - closes[-15]) / closes[-15] * 100 if closes[-15] else 0
+            price_30d = (closes[-1] - closes[0]) / closes[0] * 100 if closes[0] else 0
+            
+            # Volatility
+            returns = [(closes[j] - closes[j-1]) / closes[j-1] * 100 for j in range(1, len(closes)) if closes[j-1]]
+            vol_7d = np.std(returns[-7:]) if len(returns) >= 7 else 0
+            vol_14d = np.std(returns[-14:]) if len(returns) >= 14 else 0
+            
+            # Volume change
+            vol_change = (volumes[-1] - np.mean(volumes[-7:])) / np.mean(volumes[-7:]) * 100 if np.mean(volumes[-7:]) else 0
+            
+            # RSI approximation (simplified)
+            gains = [r for r in returns[-14:] if r > 0]
+            losses = [-r for r in returns[-14:] if r < 0]
+            avg_gain = np.mean(gains) if gains else 0
+            avg_loss = np.mean(losses) if losses else 0.001
+            rsi = 100 - (100 / (1 + avg_gain / avg_loss))
+            
+            # MA ratios
+            ma_7 = np.mean(closes[-7:])
+            ma_30 = np.mean(closes)
+            ma_ratio = (ma_7 / ma_30 - 1) * 100 if ma_30 else 0
+            
+            # High-low range
+            hl_range = (max(highs[-7:]) - min(lows[-7:])) / closes[-1] * 100 if closes[-1] else 0
+            
+            feature_row = [
+                price_1d, price_7d, price_14d, price_30d,
+                vol_7d, vol_14d,
+                vol_change,
+                rsi,
+                ma_ratio,
+                hl_range
+            ]
+            
+            features.append(feature_row)
+        
+        return np.array(features)
+    
+    def _determine_regime_label(self, features: np.ndarray) -> int:
+        """Determine regime label from features"""
+        price_30d = features[3]
+        vol_14d = features[5]
+        
+        # High volatility check first
+        if vol_14d > 8:
+            return RegimeLabel.HIGH_VOLATILITY.value
+        
+        # Price-based regimes
+        if price_30d > 20:
+            return RegimeLabel.STRONG_BULL.value
+        elif price_30d > 5:
+            return RegimeLabel.BULL.value
+        elif price_30d < -20:
+            return RegimeLabel.STRONG_BEAR.value
+        elif price_30d < -5:
+            return RegimeLabel.BEAR.value
+        elif abs(price_30d) < 5 and vol_14d < 3:
+            return RegimeLabel.ACCUMULATION.value
+        else:
+            return RegimeLabel.SIDEWAYS.value
+    
+    async def train_models(self, symbol: str = 'BTC') -> Dict[str, Any]:
+        """
+        Train all models on historical data.
+        Returns training results with accuracy for each model.
+        """
+        print(f"🎓 Training regime prediction models on {symbol} data...")
+        
+        # Get historical OHLCV data
+        ohlcv_data = await self.db.historical_ohlcv.find(
+            {'symbol': symbol},
+            {'_id': 0}
+        ).sort('timestamp', -1).limit(500).to_list(500)
+        
+        if len(ohlcv_data) < 100:
+            return {'error': f'Insufficient data: {len(ohlcv_data)} records (need 100+)'}
+        
+        # Prepare features
+        X = await self._prepare_features(ohlcv_data)
+        if X is None or len(X) < 50:
+            return {'error': 'Could not prepare enough features'}
+        
+        # Create labels
+        y = np.array([self._determine_regime_label(row) for row in X])
+        
+        # Scale features for ML models
+        X_scaled = self.scaler.fit_transform(X)
+        
+        # Split data (80/20)
+        split_idx = int(len(X_scaled) * 0.8)
+        X_train, X_test = X_scaled[:split_idx], X_scaled[split_idx:]
+        y_train, y_test = y[:split_idx], y[split_idx:]
+        
+        results = {
+            'training_samples': len(X_train),
+            'test_samples': len(X_test),
+            'models': {}
+        }
+        
+        # Train ML models
+        for name in ['random_forest', 'gradient_boosting', 'svm']:
+            try:
+                model = self.models[name]
+                
+                # Cross-validation on training set
+                cv_scores = cross_val_score(model, X_train, y_train, cv=5)
+                
+                # Train on full training set
+                model.fit(X_train, y_train)
+                
+                # Test accuracy
+                test_accuracy = model.score(X_test, y_test) * 100
+                
+                self.model_accuracy[name] = test_accuracy
+                
+                results['models'][name] = {
+                    'type': 'ML',
+                    'cv_accuracy': round(np.mean(cv_scores) * 100, 1),
+                    'test_accuracy': round(test_accuracy, 1),
+                    'status': 'trained'
+                }
+                
+                print(f"  ✅ {name}: {test_accuracy:.1f}% accuracy")
+                
+            except Exception as e:
+                results['models'][name] = {
+                    'status': 'failed',
+                    'error': str(e)
+                }
+                print(f"  ❌ {name}: {e}")
+        
+        # Train DL models if available
+        if TF_AVAILABLE:
+            # Prepare sequences for LSTM/GRU
+            X_seq, y_seq = self._prepare_sequences(X_scaled, y)
+            
+            if len(X_seq) > 30:
+                split_seq = int(len(X_seq) * 0.8)
+                X_train_seq, X_test_seq = X_seq[:split_seq], X_seq[split_seq:]
+                y_train_seq, y_test_seq = y_seq[:split_seq], y_seq[split_seq:]
+                
+                for name in ['lstm', 'gru']:
+                    try:
+                        # Rebuild model with correct input shape
+                        if name == 'lstm':
+                            self.models[name] = self._build_lstm_model(X_train_seq.shape[1:])
+                        else:
+                            self.models[name] = self._build_gru_model(X_train_seq.shape[1:])
+                        
+                        model = self.models[name]
+                        
+                        early_stop = EarlyStopping(
+                            monitor='val_loss',
+                            patience=5,
+                            restore_best_weights=True
+                        )
+                        
+                        history = model.fit(
+                            X_train_seq, y_train_seq,
+                            epochs=50,
+                            batch_size=16,
+                            validation_split=0.2,
+                            callbacks=[early_stop],
+                            verbose=0
+                        )
+                        
+                        # Test accuracy
+                        _, test_accuracy = model.evaluate(X_test_seq, y_test_seq, verbose=0)
+                        test_accuracy *= 100
+                        
+                        self.model_accuracy[name] = test_accuracy
+                        
+                        results['models'][name] = {
+                            'type': 'DL',
+                            'epochs_trained': len(history.history['loss']),
+                            'test_accuracy': round(test_accuracy, 1),
+                            'status': 'trained'
+                        }
+                        
+                        print(f"  ✅ {name}: {test_accuracy:.1f}% accuracy")
+                        
+                    except Exception as e:
+                        results['models'][name] = {
+                            'status': 'failed',
+                            'error': str(e)
+                        }
+                        print(f"  ❌ {name}: {e}")
+        
+        # Select best model
+        if self.model_accuracy:
+            best_name = max(self.model_accuracy.items(), key=lambda x: x[1])
+            self.best_model = best_name[0]
+            results['best_model'] = {
+                'name': best_name[0],
+                'accuracy': round(best_name[1], 1)
+            }
+            print(f"\n🏆 Best Model: {best_name[0]} ({best_name[1]:.1f}%)")
+        
+        self.is_trained = True
+        
+        # Save model accuracy to DB
+        await self.db.model_training_history.insert_one({
+            'timestamp': datetime.now(timezone.utc),
+            'symbol': symbol,
+            'results': results
+        })
+        
+        return results
+    
+    def _prepare_sequences(self, X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """Prepare sequences for LSTM/GRU"""
+        sequences = []
+        labels = []
+        
+        for i in range(self.sequence_length, len(X)):
+            sequences.append(X[i-self.sequence_length:i])
+            labels.append(y[i])
+        
+        return np.array(sequences), np.array(labels)
+    
+    async def predict_regime(
+        self,
+        symbol: str = 'BTC',
+        use_model: str = None
+    ) -> Dict[str, Any]:
+        """
+        Predict current market regime using trained models.
+        
+        Args:
+            symbol: Coin symbol
+            use_model: Specific model to use (or 'best' for auto-select)
+        """
+        if not self.is_trained:
+            # Try to train first
+            await self.train_models(symbol)
+        
+        if not self.is_trained:
+            return {'error': 'Models not trained'}
+        
+        # Get recent data
+        ohlcv_data = await self.db.historical_ohlcv.find(
+            {'symbol': symbol},
+            {'_id': 0}
+        ).sort('timestamp', -1).limit(50).to_list(50)
+        
+        if len(ohlcv_data) < 35:
+            return {'error': 'Insufficient recent data'}
+        
+        # Prepare features
+        X = await self._prepare_features(ohlcv_data)
+        if X is None or len(X) == 0:
+            return {'error': 'Could not prepare features'}
+        
+        # Use latest features
+        X_latest = X[-1:] if len(X) > 0 else X
+        X_scaled = self.scaler.transform(X_latest)
+        
+        # Select model
+        model_name = use_model if use_model and use_model in self.models else self.best_model
+        
+        predictions = {}
+        
+        # Get predictions from all models for comparison
+        for name, model in self.models.items():
+            try:
+                if name in ['lstm', 'gru'] and TF_AVAILABLE:
+                    # Need sequence for DL models
+                    if len(X) >= self.sequence_length:
+                        X_seq = self.scaler.transform(X[-self.sequence_length:])
+                        X_seq = X_seq.reshape(1, self.sequence_length, -1)
+                        probs = model.predict(X_seq, verbose=0)[0]
+                        pred_class = np.argmax(probs)
+                        confidence = float(probs[pred_class]) * 100
+                    else:
+                        continue
+                else:
+                    # ML models
+                    pred_class = model.predict(X_scaled)[0]
+                    probs = model.predict_proba(X_scaled)[0]
+                    confidence = float(max(probs)) * 100
+                
+                predictions[name] = {
+                    'regime': REGIME_NAMES[pred_class],
+                    'confidence': round(confidence, 1),
+                    'accuracy': round(self.model_accuracy.get(name, 0), 1)
+                }
+                
+            except Exception as e:
+                predictions[name] = {'error': str(e)}
+        
+        # Get best model's prediction
+        best_pred = predictions.get(self.best_model, {})
+        
+        return {
+            'symbol': symbol,
+            'predicted_regime': best_pred.get('regime', 'unknown'),
+            'confidence': best_pred.get('confidence', 0),
+            'model_used': self.best_model,
+            'model_accuracy': self.model_accuracy.get(self.best_model, 0),
+            'all_predictions': predictions,
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        }
+    
+    async def compare_models(self) -> Dict[str, Any]:
+        """Compare all models' performance"""
+        if not self.model_accuracy:
+            return {'error': 'No trained models'}
+        
+        # Sort by accuracy
+        sorted_models = sorted(
+            self.model_accuracy.items(),
+            key=lambda x: x[1],
+            reverse=True
+        )
+        
+        return {
+            'ranking': [
+                {
+                    'rank': i + 1,
+                    'model': name,
+                    'accuracy': round(acc, 1),
+                    'type': 'DL' if name in ['lstm', 'gru'] else 'ML'
+                }
+                for i, (name, acc) in enumerate(sorted_models)
+            ],
+            'best_model': {
+                'name': sorted_models[0][0],
+                'accuracy': round(sorted_models[0][1], 1)
+            },
+            'best_ml': next(
+                ({'name': n, 'accuracy': round(a, 1)} 
+                 for n, a in sorted_models if n not in ['lstm', 'gru']),
+                None
+            ),
+            'best_dl': next(
+                ({'name': n, 'accuracy': round(a, 1)} 
+                 for n, a in sorted_models if n in ['lstm', 'gru']),
+                None
+            ) if TF_AVAILABLE else None
+        }
+    
+    async def get_training_history(self, limit: int = 10) -> List[Dict]:
+        """Get model training history"""
+        history = await self.db.model_training_history.find(
+            {}, {'_id': 0}
+        ).sort('timestamp', -1).limit(limit).to_list(limit)
+        
+        return history
+
+
+# Global instance
+_regime_predictor = None
+
+
+def get_regime_predictor(db: AsyncIOMotorDatabase = None) -> RegimePredictionEngine:
+    """Get or create regime prediction engine"""
+    global _regime_predictor
+    if _regime_predictor is None and db is not None:
+        _regime_predictor = RegimePredictionEngine(db)
+    return _regime_predictor
