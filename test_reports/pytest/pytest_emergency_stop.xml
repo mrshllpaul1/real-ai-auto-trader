@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="18" skipped="0" tests="19" time="8.353" timestamp="2026-02-04T05:11:12.094276+00:00" hostname="agent-env-de05d297-8ef0-4d8a-bf5f-cbdca3072066"><testcase classname="backend.tests.test_isolated_portfolio.TestIsolatedPortfolioAPI" name="test_health_check" time="7.447" /><testcase classname="backend.tests.test_isolated_portfolio.TestIsolatedPortfolioAPI" name="test_set_budget_500_with_real_trading" time="0.063"><failure message="AssertionError: Expected 200, got 520: {&quot;detail&quot;:&quot;Portfolio manager not initialized&quot;}&#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_isolated_portfolio.py:35: in test_set_budget_500_with_real_trading
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 520: {"detail":"Portfolio manager not initialized"}
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_isolated_portfolio.TestIsolatedPortfolioAPI" name="test_get_budget_status" time="0.038"><failure message="AssertionError: Expected 200, got 520: {&quot;detail&quot;:&quot;Portfolio manager not initialized&quot;}&#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_isolated_portfolio.py:55: in test_get_budget_status
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 520: {"detail":"Portfolio manager not initialized"}
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_isolated_portfolio.TestIsolatedPortfolioAPI" name="test_verify_isolation" time="0.036"><failure message="AssertionError: Expected 200, got 520: {&quot;detail&quot;:&quot;Portfolio manager not initialized&quot;}&#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_isolated_portfolio.py:85: in test_verify_isolation
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 520: {"detail":"Portfolio manager not initialized"}
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_isolated_portfolio.TestIsolatedPortfolioAPI" name="test_can_trade_100_usd" time="0.036"><failure message="AssertionError: Expected 200, got 520: {&quot;detail&quot;:&quot;Portfolio manager not initialized&quot;}&#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_isolated_portfolio.py:116: in test_can_trade_100_usd
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 520: {"detail":"Portfolio manager not initialized"}
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_isolated_portfolio.TestIsolatedPortfolioAPI" name="test_can_trade_exceeds_budget" time="0.036"><failure message="AssertionError: Expected 200, got 520: {&quot;detail&quot;:&quot;Portfolio manager not initialized&quot;}&#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_isolated_portfolio.py:141: in test_can_trade_exceeds_budget
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 520: {"detail":"Portfolio manager not initialized"}
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_isolated_portfolio.TestIsolatedPortfolioAPI" name="test_get_ai_positions" time="0.040"><failure message="AssertionError: Expected 200, got 520: {&quot;detail&quot;:&quot;Portfolio manager not initialized&quot;}&#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_isolated_portfolio.py:158: in test_get_ai_positions
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 520: {"detail":"Portfolio manager not initialized"}
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_isolated_portfolio.TestIsolatedPortfolioAPI" name="test_get_transactions" time="0.042"><failure message="AssertionError: Expected 200, got 520: {&quot;detail&quot;:&quot;Portfolio manager not initialized&quot;}&#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_isolated_portfolio.py:178: in test_get_transactions
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 520: {"detail":"Portfolio manager not initialized"}
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_isolated_portfolio.TestIsolatedPortfolioAPI" name="test_set_budget_zero_disables_trading" time="0.036"><failure message="AssertionError: Expected 200, got 520: {&quot;detail&quot;:&quot;Portfolio manager not initialized&quot;}&#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_isolated_portfolio.py:199: in test_set_budget_zero_disables_trading
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 520: {"detail":"Portfolio manager not initialized"}
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_isolated_portfolio.TestIsolatedPortfolioAPI" name="test_set_budget_negative_rejected" time="0.041"><failure message="AssertionError: Expected 400 for negative budget, got 520: {&quot;detail&quot;:&quot;Portfolio manager not initialized&quot;}&#10;assert 520 == 400&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_isolated_portfolio.py:219: in test_set_budget_negative_rejected
+    assert response.status_code == 400, f"Expected 400 for negative budget, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 400 for negative budget, got 520: {"detail":"Portfolio manager not initialized"}
+E   assert 520 == 400
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_isolated_portfolio.TestIsolatedPortfolioAPI" name="test_restore_budget_for_other_tests" time="0.038"><failure message="AssertionError: Expected 200, got 520: {&quot;detail&quot;:&quot;Portfolio manager not initialized&quot;}&#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_isolated_portfolio.py:232: in test_restore_budget_for_other_tests
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 520: {"detail":"Portfolio manager not initialized"}
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_isolated_portfolio.TestEmergencyStopFeature" name="test_emergency_stop_step_1_confirmation" time="0.050"><failure message="AssertionError: Expected 200, got 520: {&quot;detail&quot;:&quot;Portfolio manager not initialized&quot;}&#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_isolated_portfolio.py:249: in test_emergency_stop_step_1_confirmation
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 520: {"detail":"Portfolio manager not initialized"}
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_isolated_portfolio.TestEmergencyStopFeature" name="test_emergency_stop_final_confirmation" time="0.036"><failure message="AssertionError: Expected 200, got 520: {&quot;detail&quot;:&quot;Portfolio manager not initialized&quot;}&#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_isolated_portfolio.py:273: in test_emergency_stop_final_confirmation
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 520: {"detail":"Portfolio manager not initialized"}
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_isolated_portfolio.TestEmergencyStopFeature" name="test_emergency_status_shows_stopped" time="0.035"><failure message="AssertionError: Expected 200, got 520: {&quot;detail&quot;:&quot;Portfolio manager not initialized&quot;}&#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_isolated_portfolio.py:290: in test_emergency_status_shows_stopped
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 520: {"detail":"Portfolio manager not initialized"}
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_isolated_portfolio.TestEmergencyStopFeature" name="test_resume_trading" time="0.035"><failure message="AssertionError: Expected 200, got 520: {&quot;detail&quot;:&quot;Portfolio manager not initialized&quot;}&#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_isolated_portfolio.py:314: in test_resume_trading
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 520: {"detail":"Portfolio manager not initialized"}
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_isolated_portfolio.TestEmergencyStopFeature" name="test_emergency_status_after_resume" time="0.036"><failure message="AssertionError: Expected 200, got 520: {&quot;detail&quot;:&quot;Portfolio manager not initialized&quot;}&#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_isolated_portfolio.py:330: in test_emergency_status_after_resume
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 520: {"detail":"Portfolio manager not initialized"}
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_isolated_portfolio.TestEmergencyStopFeature" name="test_invalid_confirmation_code_rejected" time="0.034"><failure message="AssertionError: Expected 200, got 520: {&quot;detail&quot;:&quot;Portfolio manager not initialized&quot;}&#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_isolated_portfolio.py:351: in test_invalid_confirmation_code_rejected
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 520: {"detail":"Portfolio manager not initialized"}
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_isolated_portfolio.TestTriggerEndpoints" name="test_triggers_list" time="0.035"><failure message="AssertionError: Expected 200, got 520: {&quot;detail&quot;:&quot;Trigger service not initialized&quot;}&#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_isolated_portfolio.py:369: in test_triggers_list
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 520: {"detail":"Trigger service not initialized"}
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_isolated_portfolio.TestTriggerEndpoints" name="test_triggers_status" time="0.036"><failure message="AssertionError: Expected 200, got 520: {&quot;detail&quot;:&quot;Trigger service not initialized&quot;}&#10;assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_isolated_portfolio.py:393: in test_triggers_status
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 520: {"detail":"Trigger service not initialized"}
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase></testsuite></testsuites>
