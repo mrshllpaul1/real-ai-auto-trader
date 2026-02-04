@@ -405,6 +405,21 @@ async def initialize_services():
         social_sentiment.set_dependencies(db, sentiment_scraper)
         logger.info("✅ Social Sentiment Scraper initialized")
         
+        # Stop-Loss Automation
+        from services.stop_loss_automation import get_stop_loss_automation
+        stop_loss_automation = get_stop_loss_automation(
+            db=db,
+            kraken_service=kraken_service,
+            isolated_portfolio=isolated_portfolio_mgr,
+            alert_service=alert_service
+        )
+        stop_loss_routes.set_dependencies(db, stop_loss_automation)
+        scheduler_service.set_stop_loss_automation(stop_loss_automation)
+        
+        # Add stop-loss check job (every 5 minutes)
+        await scheduler_service.add_stop_loss_job(interval_minutes=5)
+        logger.info("✅ Stop-Loss Automation initialized (checking every 5 minutes)")
+        
         # Start scheduler
         await scheduler_service.start()
         
