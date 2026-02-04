@@ -167,6 +167,89 @@ async def verify_isolation():
     return await isolated_portfolio.verify_isolation()
 
 
+class EmergencyStopRequest(BaseModel):
+    liquidate_positions: bool = False
+    confirmation_code: str
+
+
+class ResumeRequest(BaseModel):
+    confirmation_code: str
+
+
+@router.post("/emergency-stop")
+async def emergency_stop(request: EmergencyStopRequest):
+    """
+    🚨 EMERGENCY STOP - Immediately halt all AI trading.
+    
+    ⚠️ REQUIRES DOUBLE CONFIRMATION:
+    1. First call: confirmation_code = "CONFIRM_STEP_1"
+    2. Second call: confirmation_code = "EMERGENCY_STOP_CONFIRMED"
+    
+    Options:
+    - liquidate_positions=False: Just disable trading, keep positions
+    - liquidate_positions=True: Disable trading AND close all positions at market
+    """
+    if not isolated_portfolio:
+        raise HTTPException(status_code=503, detail="Portfolio manager not initialized")
+    
+    # Step 1 confirmation
+    if request.confirmation_code == "CONFIRM_STEP_1":
+        return {
+            "step": 1,
+            "status": "confirmation_required",
+            "message": "⚠️ WARNING: You are about to activate EMERGENCY STOP. This will disable all AI trading immediately.",
+            "liquidate_positions": request.liquidate_positions,
+            "next_step": "Send confirmation_code='EMERGENCY_STOP_CONFIRMED' to proceed",
+            "warning": "This action cannot be easily undone. Are you absolutely sure?"
+        }
+    
+    # Step 2 - Final confirmation
+    return await isolated_portfolio.emergency_stop(
+        liquidate_positions=request.liquidate_positions,
+        confirmation_code=request.confirmation_code
+    )
+
+
+@router.post("/resume-trading")
+async def resume_trading(request: ResumeRequest):
+    """
+    Resume trading after emergency stop.
+    
+    Requires confirmation_code = "RESUME_TRADING_CONFIRMED"
+    """
+    if not isolated_portfolio:
+        raise HTTPException(status_code=503, detail="Portfolio manager not initialized")
+    
+    return await isolated_portfolio.resume_trading(
+        confirmation_code=request.confirmation_code
+    )
+
+
+@router.get("/emergency-status")
+async def get_emergency_status():
+    """
+    Check if emergency stop is active.
+    """
+    if not isolated_portfolio:
+        raise HTTPException(status_code=503, detail="Portfolio manager not initialized")
+    
+    budget = await db.trading_budgets.find_one({"user_id": "default"}, {"_id": 0})
+    
+    if not budget:
+        return {
+            "emergency_stopped": False,
+            "trading_enabled": False,
+            "reason": "No budget allocated"
+        }
+    
+    return {
+        "emergency_stopped": budget.get("emergency_stopped", False),
+        "trading_enabled": budget.get("real_trading_enabled", False),
+        "emergency_stop_at": budget.get("emergency_stop_at"),
+        "resumed_at": budget.get("resumed_at")
+    }
+
+
 @router.get("/can-trade")
 async def check_can_trade(amount_usd: float):
     """
