@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { 
   Brain, TrendingUp, TrendingDown, RefreshCw, Activity, Minus,
-  Gauge, Target, Shield, Percent, BarChart3, Zap, Clock, Award
+  Gauge, Target, Shield, Percent, BarChart3, Zap, Clock, Award,
+  Cpu, GitBranch, Trophy
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../services/api';
@@ -29,20 +30,23 @@ const AdaptiveStrategy = () => {
   const [strategyStatus, setStrategyStatus] = useState(null);
   const [regimePrediction, setRegimePrediction] = useState(null);
   const [modelComparison, setModelComparison] = useState(null);
+  const [mlVsDl, setMlVsDl] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [statusRes, regimeRes, modelsRes] = await Promise.all([
+      const [statusRes, regimeRes, modelsRes, mlDlRes] = await Promise.all([
         api.get('/strategy/status').catch(() => ({ data: null })),
         api.post('/performance/regime/predict', { symbol: 'BTC' }).catch(() => ({ data: null })),
-        api.get('/performance/regime/compare').catch(() => ({ data: null }))
+        api.get('/performance/regime/compare').catch(() => ({ data: null })),
+        api.get('/performance/regime/ml-vs-dl').catch(() => ({ data: null }))
       ]);
       
       setStrategyStatus(statusRes.data);
       setRegimePrediction(regimeRes.data);
       setModelComparison(modelsRes.data);
+      setMlVsDl(mlDlRes.data);
     } catch (error) {
       console.error('Error loading adaptive strategy:', error);
       toast.error('Failed to load adaptive strategy data');
