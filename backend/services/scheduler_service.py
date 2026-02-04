@@ -1456,3 +1456,134 @@ class SchedulerService:
         except Exception as e:
             logger.error(f"  ❌ Sentiment scrape error: {e}")
             return {'error': str(e)}
+    
+    # Portfolio Snapshot Jobs
+    
+    async def add_portfolio_snapshot_job(
+        self,
+        interval_hours: int = 24,
+        hour: int = 0
+    ) -> Dict[str, Any]:
+        """
+        Add job to create portfolio snapshots for performance history.
+        
+        Args:
+            interval_hours: If > 0, run every N hours (e.g., 6 for every 6 hours)
+            hour: If interval_hours is 24, run at this specific hour daily (0-23)
+        """
+        job_id = 'portfolio_snapshot'
+        
+        if self.scheduler.get_job(job_id):
+            self.scheduler.remove_job(job_id)
+        
+        if interval_hours == 24:
+            # Daily at specific hour
+            self.scheduler.add_job(
+                self._run_portfolio_snapshot,
+                trigger=CronTrigger(hour=hour),
+                id=job_id,
+                name='Daily Portfolio Snapshot',
+                replace_existing=True
+            )
+            schedule_desc = f'daily at {hour}:00 UTC'
+        else:
+            # Every N hours
+            self.scheduler.add_job(
+                self._run_portfolio_snapshot,
+                trigger=IntervalTrigger(hours=interval_hours),
+                id=job_id,
+                name='Portfolio Snapshot',
+                replace_existing=True
+            )
+            schedule_desc = f'every {interval_hours} hours'
+        
+        self.active_jobs[job_id] = {
+            'type': 'portfolio_snapshot',
+            'interval_hours': interval_hours,
+            'hour': hour,
+            'created_at': datetime.utcnow().isoformat()
+        }
+        
+        logger.info(f"📸 Portfolio snapshot job added ({schedule_desc})")
+        return {
+            'success': True,
+            'job_id': job_id,
+            'schedule': schedule_desc
+        }
+    
+    async def _run_portfolio_snapshot(self) -> Dict[str, Any]:
+        """Create a snapshot of current portfolio state for history tracking"""
+        timestamp = datetime.utcnow()
+        logger.info(f"📸 [{timestamp.strftime('%H:%M')}] Creating portfolio snapshot...")
+        
+        try:
+            from services.isolated_portfolio import get_isolated_portfolio
+            
+            # Get isolated portfolio manager
+            portfolio_mgr = get_isolated_portfolio(self.db)
+            
+            if portfolio_mgr is None:
+                logger.warning("  ⚠️ Portfolio manager not available")
+                return {'error': 'Portfolio manager not initialized'}
+            
+            # Get current budget status
+            budget_status = await portfolio_mgr.get_budget_status()
+            
+            if not budget_status.get('allocated'):
+                logger.info("  ℹ️ No budget allocated, skipping snapshot")
+                return {'skipped': True, 'reason': 'No budget allocated'}
+            
+            # Create snapshot
+            snapshot = {
+                'timestamp': timestamp.isoformat(),
+                'total_value': budget_status.get('current_value', 0),
+                'cash_available': budget_status.get('cash_available', 0),
+                'positions_value': budget_status.get('positions_value', 0),
+                'invested': budget_status.get('initial_budget', 0),
+                'pnl': budget_status.get('current_value', 0) - budget_status.get('initial_budget', 0),
+                'pnl_pct': budget_status.get('pnl_pct', 0),
+                'positions_count': budget_status.get('positions_count', 0),
+                'real_trading_enabled': budget_status.get('real_trading_enabled', False)
+            }
+            
+            # Store snapshot
+            await self.db.portfolio_snapshots.insert_one(snapshot)
+            snapshot.pop('_id', None)
+            
+            # Record execution
+            execution = {
+                'job_id': 'portfolio_snapshot',
+                'timestamp': timestamp.isoformat(),
+                'success': True,
+                'snapshot_value': snapshot['total_value'],
+                'pnl': snapshot['pnl'],
+                'pnl_pct': snapshot['pnl_pct']
+            }
+            await self.db.scheduler_executions.insert_one(execution)
+            
+            logger.info(f"  ✅ Snapshot created: ${snapshot['total_value']:.2f} (P&L: {snapshot['pnl_pct']:.2f}%)")
+            
+            return {
+                'success': True,
+                'snapshot': snapshot
+            }
+            
+        except Exception as e:
+            logger.error(f"  ❌ Portfolio snapshot error: {e}")
+            
+            await self.db.scheduler_executions.insert_one({
+                'job_id': 'portfolio_snapshot',
+                'timestamp': timestamp.isoformat(),
+                'success': False,
+                'error': str(e)
+            })
+            
+            return {'error': str(e)}
+    
+    async def get_portfolio_snapshot_history(self, limit: int = 100) -> list:
+        """Get history of portfolio snapshots"""
+        snapshots = await self.db.portfolio_snapshots.find(
+            {}, {'_id': 0}
+        ).sort('timestamp', -1).limit(limit).to_list(limit)
+        
+        return snapshots
