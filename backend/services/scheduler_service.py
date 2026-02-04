@@ -1090,6 +1090,12 @@ class SchedulerService:
             hour=9  # 9 AM UTC = 2 AM MST
         )
         
+        # 7. Daily OHLCV data update at 4 AM UTC - keeps all 500+ coins fresh
+        results['ohlcv_update'] = await self.add_daily_ohlcv_update_job(hour=4)
+        
+        # 8. Event trigger checking every 15 minutes
+        results['event_triggers'] = await self.add_event_trigger_check_job(interval_minutes=15)
+        
         logger.info(f"📋 Default schedule configured (training on {len(all_coins)} coins)")
         
         return {
@@ -1097,7 +1103,7 @@ class SchedulerService:
             'jobs_configured': len(results),
             'details': results,
             'coin_universe_size': len(all_coins),
-            'message': f'Passive income schedule active! AI will retrain on {len(all_coins)} coins every Monday, Gem Predictor retrains Sundays at 2 AM MST.'
+            'message': f'Passive income schedule active! AI will retrain on {len(all_coins)} coins every Monday, Gem Predictor retrains Sundays at 2 AM MST, OHLCV updated daily at 4 AM UTC.'
         }
 
 
