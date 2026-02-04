@@ -33,6 +33,7 @@ import PortfolioDashboard from "./pages/PortfolioDashboard";
 import EnhancedAIDashboard from "./pages/EnhancedAIDashboard";
 import StrategyBuilder from "./pages/StrategyBuilder";
 import TrainingDashboard from "./pages/TrainingDashboard";
+import SpotTrading from "./pages/SpotTrading";
 import Sidebar from "./components/Sidebar";
 import FloatingAIChat from "./components/FloatingAIChat";
 import { Toaster } from "./components/ui/sonner";
