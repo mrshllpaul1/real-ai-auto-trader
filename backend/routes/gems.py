@@ -130,3 +130,130 @@ async def get_gem_alerts():
     ).sort('created_at', -1).limit(20).to_list(20)
     
     return {'alerts': alerts}
+
+
+class WatchlistAddRequest(BaseModel):
+    coin_id: str
+    symbol: Optional[str] = None
+    reason: Optional[str] = "Manual add"
+    target_gain: Optional[float] = 100.0  # Target % gain
+    entry_price: Optional[float] = None
+    score: Optional[float] = None
+
+
+@router.get("/watchlist")
+async def get_gem_watchlist():
+    """Get current gem watchlist"""
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    watchlist = await db.gem_watchlist.find(
+        {"active": True}, {'_id': 0}
+    ).sort('added_at', -1).to_list(100)
+    
+    return {
+        'count': len(watchlist),
+        'watchlist': watchlist
+    }
+
+
+@router.post("/watchlist/add")
+async def add_to_gem_watchlist(request: WatchlistAddRequest):
+    """Add a coin to the gem watchlist"""
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    # Check if already exists
+    existing = await db.gem_watchlist.find_one({
+        "coin_id": request.coin_id.lower(),
+        "active": True
+    })
+    
+    if existing:
+        return {
+            "status": "already_exists",
+            "coin_id": request.coin_id,
+            "message": f"{request.coin_id} is already on the watchlist"
+        }
+    
+    watchlist_entry = {
+        "coin_id": request.coin_id.lower(),
+        "symbol": request.symbol or request.coin_id.upper(),
+        "reason": request.reason,
+        "target_gain": request.target_gain,
+        "entry_price": request.entry_price,
+        "score": request.score,
+        "added_at": datetime.utcnow(),
+        "active": True,
+        "alerts_sent": 0,
+        "peak_gain": 0.0,
+        "status": "watching"
+    }
+    
+    await db.gem_watchlist.insert_one(watchlist_entry)
+    watchlist_entry.pop('_id', None)
+    
+    return {
+        "status": "added",
+        "coin": watchlist_entry
+    }
+
+
+@router.post("/watchlist/add-bulk")
+async def add_bulk_to_watchlist(coins: List[WatchlistAddRequest]):
+    """Add multiple coins to watchlist at once"""
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    added = []
+    skipped = []
+    
+    for coin in coins:
+        existing = await db.gem_watchlist.find_one({
+            "coin_id": coin.coin_id.lower(),
+            "active": True
+        })
+        
+        if existing:
+            skipped.append(coin.coin_id)
+            continue
+        
+        entry = {
+            "coin_id": coin.coin_id.lower(),
+            "symbol": coin.symbol or coin.coin_id.upper(),
+            "reason": coin.reason,
+            "target_gain": coin.target_gain,
+            "entry_price": coin.entry_price,
+            "score": coin.score,
+            "added_at": datetime.utcnow(),
+            "active": True,
+            "alerts_sent": 0,
+            "peak_gain": 0.0,
+            "status": "watching"
+        }
+        await db.gem_watchlist.insert_one(entry)
+        added.append(coin.coin_id)
+    
+    return {
+        "status": "completed",
+        "added": added,
+        "skipped": skipped,
+        "total_added": len(added)
+    }
+
+
+@router.delete("/watchlist/{coin_id}")
+async def remove_from_watchlist(coin_id: str):
+    """Remove a coin from watchlist (soft delete)"""
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
+    result = await db.gem_watchlist.update_one(
+        {"coin_id": coin_id.lower(), "active": True},
+        {"$set": {"active": False, "removed_at": datetime.utcnow()}}
+    )
+    
+    if result.modified_count > 0:
+        return {"status": "removed", "coin_id": coin_id}
+    
+    return {"status": "not_found", "coin_id": coin_id}
