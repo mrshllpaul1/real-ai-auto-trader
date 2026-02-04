@@ -509,10 +509,10 @@ const PositionManagement = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleClosePosition(pos.position_id, pos.coin_id)}
+                          onClick={() => handleClosePosition(pos.position_id || pos.coin_id, pos.coin_id)}
                           disabled={isClosing}
                           className="flex-1 border-[#FF0055]/30 text-[#FF0055] hover:bg-[#FF0055]/10"
-                          data-testid={`close-btn-${pos.position_id}`}
+                          data-testid={`close-btn-${pos.position_id || pos.coin_id}`}
                         >
                           {isClosing ? (
                             <RefreshCw size={14} className="mr-1 animate-spin" />
