@@ -395,9 +395,9 @@ class GemBacktester:
         
         return min(1.0, max(0, total_score))
     
-    def _check_if_gem(self, future_data: List[Dict]) -> bool:
-        """Check if coin was actually a gem (significant gain in future)"""
-        if not future_data:
+    def _check_if_gem(self, future_data: List[Dict], btc_prices: Dict[str, float] = None) -> bool:
+        """Check if coin was actually a gem (significant gain vs BTC in future)"""
+        if not future_data or len(future_data) < 5:
             return False
         
         start_price = future_data[0]["close"]
@@ -407,10 +407,29 @@ class GemBacktester:
         if start_price <= 0:
             return False
         
-        gain_pct = ((max_price - start_price) / start_price) * 100
+        coin_gain_pct = ((max_price - start_price) / start_price) * 100
         
-        # Consider it a gem if it gained 20%+ in the next 30 days
-        return gain_pct >= 20
+        # Get BTC performance for the same period
+        btc_gain_pct = 0
+        if btc_prices:
+            try:
+                start_date = str(future_data[0].get("timestamp", future_data[0].get("date", "")))[:10]
+                end_date = str(future_data[-1].get("timestamp", future_data[-1].get("date", "")))[:10]
+                
+                btc_start = btc_prices.get(start_date, 0)
+                btc_end = btc_prices.get(end_date, 0)
+                
+                if btc_start > 0 and btc_end > 0:
+                    btc_gain_pct = ((btc_end - btc_start) / btc_start) * 100
+            except:
+                pass
+        
+        # A "gem" must:
+        # 1. Gain at least 30% absolute
+        # 2. Outperform BTC by at least 15%
+        relative_gain = coin_gain_pct - btc_gain_pct
+        
+        return coin_gain_pct >= 30 and relative_gain >= 15
     
     def _analyze_factors(
         self,
