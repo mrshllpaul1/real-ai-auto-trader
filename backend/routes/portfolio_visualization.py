@@ -385,7 +385,7 @@ async def create_portfolio_snapshot():
     Create a snapshot of current portfolio state.
     Called automatically by scheduler, can also be triggered manually.
     """
-    if not _isolated_portfolio or not _db:
+    if _isolated_portfolio is None or _db is None:
         raise HTTPException(status_code=503, detail="Services not initialized")
     
     budget_status = await _isolated_portfolio.get_budget_status()
