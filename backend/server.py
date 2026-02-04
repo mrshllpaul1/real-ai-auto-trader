@@ -222,6 +222,7 @@ api_router.include_router(ohlcv_routes.router, tags=["OHLCV Data"])
 api_router.include_router(training_history_routes.router, tags=["Training History"])
 api_router.include_router(training_scheduler_routes.router, tags=["Training Scheduler"])
 api_router.include_router(model_persistence_routes.router, tags=["Model Persistence"])
+api_router.include_router(spot_trading_routes.router, tags=["Spot Trading"])
 
 # Include the router
 app.include_router(api_router)
