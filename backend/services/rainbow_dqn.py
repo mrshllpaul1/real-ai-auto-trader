@@ -415,17 +415,18 @@ class RainbowDQN:
         self.c51 = C51Distribution(v_min, v_max, n_atoms)
         self.n_atoms = n_atoms
         
-        # Build networks
+        # Build networks - both use same architecture for weight copying
         self.online_network = self._build_network(
             state_dim, action_dim, sequence_length,
             d_model, num_heads, num_transformer_layers, ff_dim, dropout,
-            n_atoms
+            n_atoms,
+            noisy=True
         )
         self.target_network = self._build_network(
             state_dim, action_dim, sequence_length,
             d_model, num_heads, num_transformer_layers, ff_dim, dropout,
             n_atoms,
-            noisy=False  # Target network doesn't need noise
+            noisy=True  # Same architecture as online for weight transfer
         )
         self.target_network.set_weights(self.online_network.get_weights())
         
