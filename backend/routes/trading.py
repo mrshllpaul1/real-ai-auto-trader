@@ -182,7 +182,8 @@ async def get_kraken_trades(limit: int = 50):
 async def get_kraken_closed_orders(limit: int = 50):
     """Get closed orders from Kraken exchange"""
     try:
-        from server import kraken_service
+        from server import get_service
+        kraken_service = get_service('kraken')
         if not kraken_service:
             return {"orders": [], "count": 0, "error": "Kraken service not initialized"}
         
