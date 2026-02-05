@@ -63,6 +63,12 @@ class RewardNetwork:
     """
     Phase 1: Supervised Reward Network
     Learns to predict expert-labeled rewards from state-action pairs.
+    
+    MDPI Best Practices Applied:
+    - Gaussian noise injection to inputs (prevents overfitting)
+    - Higher dropout (0.35) for regularization
+    - L2 kernel regularization
+    - Early stopping support
     """
     
     def __init__(
@@ -70,11 +76,17 @@ class RewardNetwork:
         state_dim: int,
         action_dim: int = 5,
         hidden_dims: List[int] = [256, 128, 64],
-        learning_rate: float = 1e-4
+        learning_rate: float = 1e-4,
+        input_noise_std: float = 0.01,  # Gaussian noise for inputs
+        dropout_rate: float = 0.35,      # Higher dropout
+        l2_reg: float = 1e-4             # L2 regularization
     ):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.hidden_dims = hidden_dims
+        self.input_noise_std = input_noise_std
+        self.dropout_rate = dropout_rate
+        self.l2_reg = l2_reg
         
         # Build multi-head reward network (predicts multiple reward types)
         self.model = self._build_network()
@@ -84,33 +96,47 @@ class RewardNetwork:
         self.training_history = []
         self.expert_labels = []
         
+        # Early stopping state
+        self.best_loss = float('inf')
+        self.patience_counter = 0
+        
     def _build_network(self) -> Model:
-        """Build reward prediction network with multiple heads"""
+        """Build reward prediction network with multiple heads and regularization"""
+        from tensorflow.keras.regularizers import l2
+        
         state_input = Input(shape=(self.state_dim,), name='state')
         action_input = Input(shape=(self.action_dim,), name='action')
         
-        # Combine inputs
-        combined = layers.concatenate([state_input, action_input])
+        # Gaussian noise layer for input regularization (MDPI recommendation)
+        state_noisy = layers.GaussianNoise(self.input_noise_std)(state_input)
         
-        # Shared feature extraction
+        # Combine inputs
+        combined = layers.concatenate([state_noisy, action_input])
+        
+        # Shared feature extraction with L2 regularization
         x = combined
         for i, dim in enumerate(self.hidden_dims):
-            x = Dense(dim, activation='relu', name=f'shared_{i}')(x)
+            x = Dense(
+                dim, 
+                activation='relu', 
+                kernel_regularizer=l2(self.l2_reg),
+                name=f'shared_{i}'
+            )(x)
             x = BatchNormalization()(x)
-            x = Dropout(0.2)(x)
+            x = Dropout(self.dropout_rate)(x)
         
         # Multiple reward heads for different expert metrics
-        sharpe_head = Dense(32, activation='relu')(x)
+        sharpe_head = Dense(32, activation='relu', kernel_regularizer=l2(self.l2_reg))(x)
         sharpe_output = Dense(1, activation='tanh', name='sharpe_reward')(sharpe_head)
         
-        return_head = Dense(32, activation='relu')(x)
+        return_head = Dense(32, activation='relu', kernel_regularizer=l2(self.l2_reg))(x)
         return_output = Dense(1, activation='tanh', name='return_reward')(return_head)
         
-        risk_head = Dense(32, activation='relu')(x)
+        risk_head = Dense(32, activation='relu', kernel_regularizer=l2(self.l2_reg))(x)
         risk_output = Dense(1, activation='tanh', name='risk_reward')(risk_head)
         
         # Confidence score
-        confidence_head = Dense(32, activation='relu')(x)
+        confidence_head = Dense(32, activation='relu', kernel_regularizer=l2(self.l2_reg))(x)
         confidence_output = Dense(1, activation='sigmoid', name='confidence')(confidence_head)
         
         # Hybrid reward (weighted combination)
