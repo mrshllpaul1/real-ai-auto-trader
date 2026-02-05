@@ -541,6 +541,10 @@ async def _init_phase7_wire_dependencies(db):
     from routes import trading_intelligence as trading_intelligence_routes
     trading_intelligence_routes.set_dependencies(db, _services.get('trading_intelligence'))
     
+    # Wire SB3 Agents routes
+    from routes import sb3_agents as sb3_agents_routes
+    sb3_agents_routes.set_dependencies(db, _services.get('sb3_manager'))
+    
     # Start schedulers
     await _services['training_scheduler'].start()
     logger.info("✅ Training Scheduler started")
