@@ -555,6 +555,10 @@ async def _init_phase7_wire_dependencies(db):
     from routes import sb3_agents as sb3_agents_routes
     sb3_agents_routes.set_dependencies(db, _services.get('sb3_manager'))
     
+    # Wire SRDDQN routes
+    from routes import srddqn as srddqn_routes
+    srddqn_routes.set_dependencies(db, _services.get('srddqn_manager'))
+    
     # Start schedulers
     await _services['training_scheduler'].start()
     logger.info("✅ Training Scheduler started")
