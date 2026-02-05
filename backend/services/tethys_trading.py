@@ -141,7 +141,6 @@ class TradingExplainer:
         
         For each feature, compute how much Q-value changes when feature changes.
         """
-        epsilon = 0.01
         importance = np.zeros(len(features))
         
         # Use Q-value differences as proxy for importance
