@@ -118,6 +118,7 @@ def register_routes(api_router: APIRouter):
     api_router.include_router(srddqn_trading_routes.router, tags=["SRDDQN Live Trading"])
     api_router.include_router(kraken_exec_routes.router, tags=["Kraken Execution"])
     api_router.include_router(rainbow_routes.router, tags=["Rainbow DQN"])
+    api_router.include_router(tethys_routes.router, tags=["Tethys Safety"])
     
     logger.info("✅ All routes registered")
     
