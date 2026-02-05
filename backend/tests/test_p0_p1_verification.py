@@ -50,15 +50,15 @@ class TestRLAgentP0:
     
     def test_rl_agent_can_predict(self):
         """Test RL agent can make predictions after training"""
-        response = requests.post(
-            f"{BASE_URL}/api/predictions/rl-agent/predict",
-            json={"symbol": "BTC/USD"},
+        response = requests.get(
+            f"{BASE_URL}/api/predictions/rl-agent/signal/BTC",
             timeout=60
         )
-        # Should return 200 if trained, or 400 if not enough data
-        assert response.status_code in [200, 400], f"Unexpected status: {response.status_code}"
+        assert response.status_code == 200, f"Unexpected status: {response.status_code}"
         data = response.json()
-        print(f"✅ RL Agent Prediction response: {data}")
+        assert "signal" in data
+        assert data["signal"] in ["buy", "sell", "hold"]
+        print(f"✅ RL Agent Prediction: signal={data['signal']}, confidence={data.get('confidence')}")
 
 
 class TestPredictionServices:
