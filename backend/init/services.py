@@ -567,6 +567,10 @@ async def _init_phase7_wire_dependencies(db):
     from routes import srddqn_trading as srddqn_trading_routes
     srddqn_trading_routes.set_dependencies(db)
     
+    # Wire Kraken Execution routes
+    from routes import kraken_exec as kraken_exec_routes
+    kraken_exec_routes.set_dependencies(db)
+    
     # Start schedulers
     await _services['training_scheduler'].start()
     logger.info("✅ Training Scheduler started")
