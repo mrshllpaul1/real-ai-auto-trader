@@ -169,10 +169,27 @@ class CryptoTradingEnv(gym.Env):
         return observation
     
     def _calculate_reward(self, prev_value: float, current_value: float, action: float) -> float:
-        """Calculate reward with risk adjustment"""
+        """Calculate reward using Sharpe ratio methodology"""
         # Base return
         pnl = current_value - prev_value
         ret = pnl / (prev_value + 1e-8)
+        
+        # Track returns for Sharpe calculation
+        self.returns_history.append(ret)
+        
+        # Calculate rolling Sharpe ratio reward
+        if len(self.returns_history) >= self.sharpe_window:
+            recent_returns = np.array(list(self.returns_history)[-self.sharpe_window:])
+            mean_return = np.mean(recent_returns)
+            std_return = np.std(recent_returns) + 1e-8
+            
+            # Annualized Sharpe ratio (assuming hourly data)
+            sharpe_ratio = np.sqrt(24 * 365) * mean_return / std_return
+            
+            # Sharpe-based reward component
+            sharpe_reward = sharpe_ratio * 0.1  # Scale factor
+        else:
+            sharpe_reward = ret * 10  # Use simple return until enough data
         
         # Risk penalty for large positions
         position_ratio = abs(self.position * self._get_current_price()) / (current_value + 1e-8)
@@ -181,8 +198,14 @@ class CryptoTradingEnv(gym.Env):
         # Transaction cost penalty
         action_penalty = -abs(action) * self.transaction_cost_pct * 0.5
         
-        # Sharpe-like reward
-        reward = (ret + risk_penalty + action_penalty) * self.reward_scaling
+        # Drawdown penalty
+        if current_value > self.peak_value:
+            self.peak_value = current_value
+        drawdown = (self.peak_value - current_value) / (self.peak_value + 1e-8)
+        drawdown_penalty = -drawdown * 0.5 if drawdown > 0.1 else 0  # Penalize >10% drawdown
+        
+        # Combined Sharpe-based reward
+        reward = (sharpe_reward + risk_penalty + action_penalty + drawdown_penalty) * self.reward_scaling
         
         return float(reward)
     
