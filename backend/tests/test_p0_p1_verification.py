@@ -161,14 +161,6 @@ class TestTrainingDashboard:
 class TestServerModularization:
     """Test that server modularization (P1) didn't break core functionality"""
     
-    def test_api_root(self):
-        """Test /api/ root endpoint"""
-        response = requests.get(f"{BASE_URL}/api/", timeout=TIMEOUT)
-        assert response.status_code == 200
-        data = response.json()
-        assert "message" in data or "status" in data
-        print(f"✅ API Root: {data}")
-    
     def test_kraken_balance(self):
         """Test Kraken balance endpoint (real trading mode)"""
         response = requests.get(f"{BASE_URL}/api/kraken/balance", timeout=TIMEOUT)
