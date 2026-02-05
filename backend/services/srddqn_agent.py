@@ -558,6 +558,11 @@ class SRDDQNAgent:
         elif training:
             # Fallback epsilon-greedy if noisy networks disabled
             if np.random.random() < self.epsilon:
+                return np.random.randint(self.action_dim)
+            q_values = self.q_network.predict(state, verbose=0)[0]
+            return int(np.argmax(q_values))
+        else:
+            # Pure exploitation during inference
             q_values = self.q_network.predict(state, verbose=0)[0]
             return int(np.argmax(q_values))
     
