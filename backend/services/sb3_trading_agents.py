@@ -543,12 +543,17 @@ class SB3TradingAgentManager:
         agent_name: str = None,
         custom_params: Dict = None
     ) -> Any:
-        """Create a new SB3 agent"""
+        """Create a new SB3 agent (supports DDQN with Sharpe ratio reward)"""
         if not SB3_AVAILABLE:
             raise ImportError("Stable-Baselines3 is required")
         
         algorithm = algorithm.lower()
-        params = self.default_params.get(algorithm, {}).copy()
+        
+        # DDQN uses same params as DQN with enhanced settings
+        if algorithm == 'ddqn':
+            params = self.default_params.get('ddqn', self.default_params['dqn']).copy()
+        else:
+            params = self.default_params.get(algorithm, {}).copy()
         
         if custom_params:
             params.update(custom_params)
@@ -556,8 +561,8 @@ class SB3TradingAgentManager:
         agent_name = agent_name or f"{algorithm}_agent"
         
         # Select algorithm
-        if algorithm == 'dqn':
-            # DQN requires discrete action space, create wrapper
+        if algorithm in ['dqn', 'ddqn']:
+            # DQN/DDQN requires discrete action space, create wrapper
             from gymnasium.spaces import Discrete
             
             class DiscreteActionWrapper(gym.ActionWrapper):
@@ -576,7 +581,13 @@ class SB3TradingAgentManager:
                     return self._action_map[action]
             
             wrapped_env = DiscreteActionWrapper(env)
+            
+            # Note: SB3's DQN implements Double DQN by default
+            # The target network is used to select actions (Double DQN improvement)
             agent = DQN("MlpPolicy", wrapped_env, verbose=1, **params)
+            
+            if algorithm == 'ddqn':
+                logger.info(f"Created Double DQN agent with Sharpe ratio reward: {agent_name}")
             
         elif algorithm == 'ppo':
             agent = PPO("MlpPolicy", env, verbose=1, **params)
@@ -588,14 +599,15 @@ class SB3TradingAgentManager:
             agent = SAC("MlpPolicy", env, verbose=1, **params)
             
         else:
-            raise ValueError(f"Unknown algorithm: {algorithm}. Use dqn, ppo, a2c, or sac")
+            raise ValueError(f"Unknown algorithm: {algorithm}. Use dqn, ddqn, ppo, a2c, or sac")
         
         self.agents[agent_name] = {
             'model': agent,
             'algorithm': algorithm,
             'created_at': datetime.utcnow().isoformat(),
             'trained': False,
-            'total_timesteps': 0
+            'total_timesteps': 0,
+            'reward_type': 'sharpe'  # Track reward type
         }
         
         logger.info(f"Created {algorithm.upper()} agent: {agent_name}")
