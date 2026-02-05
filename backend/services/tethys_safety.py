@@ -847,19 +847,20 @@ class TethysSafetySystem:
         state_hash = self.audit_trail._hash_state(state)
         self.uncertainty.record_decision(action, state_hash, confidence, uncertainty)
         
+        # Convert numpy types to native Python for JSON serialization
         return {
-            'approved': final_approved,
-            'action': action,
-            'action_name': action_name,
-            'original_quantity': quantity,
-            'adjusted_quantity': adjusted_quantity,
-            'reduction_factor': reduction_factor,
-            'confidence': confidence,
-            'uncertainty': uncertainty,
-            'risk_approved': risk_approved,
+            'approved': bool(final_approved),
+            'action': int(action),
+            'action_name': str(action_name),
+            'original_quantity': float(quantity),
+            'adjusted_quantity': float(adjusted_quantity),
+            'reduction_factor': float(reduction_factor),
+            'confidence': float(confidence),
+            'uncertainty': float(uncertainty),
+            'risk_approved': bool(risk_approved),
             'violations': [v.value if hasattr(v, 'value') else str(v) for v in violations],
-            'audit_record_id': audit_record.record_id,
-            'rationale': rationale
+            'audit_record_id': str(audit_record.record_id),
+            'rationale': str(rationale)
         }
     
     def get_full_status(self) -> Dict[str, Any]:
