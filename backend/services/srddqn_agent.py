@@ -479,26 +479,44 @@ class SRDDQNAgent:
             'curiosity': deque(maxlen=1000)
         }
         
-        logger.info(f"SRDDQN Agent initialized: state_dim={state_dim}, action_dim={action_dim}")
+        # Noisy Networks flag (MDPI: parameter-space exploration)
+        self.use_noisy_networks = True
+        
+        logger.info(f"SRDDQN Agent initialized: state_dim={state_dim}, action_dim={action_dim}, noisy_nets={self.use_noisy_networks}")
     
-    def _build_q_network(self) -> Model:
-        """Build Q-network with dueling architecture"""
+    def _build_q_network(self, noisy: bool = True) -> Model:
+        """
+        Build Q-network with dueling architecture and optional Noisy Networks.
+        
+        MDPI Best Practice: Use parameter-space exploration (NoisyNet) instead of
+        ε-greedy which results in costly random trades in financial markets.
+        """
         state_input = Input(shape=(self.state_dim,), name='state_input')
         
-        # Shared feature extraction
+        # Shared feature extraction (standard Dense layers)
         x = state_input
         for i, dim in enumerate(self.hidden_dims):
             x = Dense(dim, activation='relu', name=f'shared_{i}')(x)
             x = BatchNormalization()(x)
         
-        # Dueling architecture: separate value and advantage streams
-        # Value stream
-        value = Dense(64, activation='relu', name='value_hidden')(x)
-        value = Dense(1, name='value_output')(value)
-        
-        # Advantage stream
-        advantage = Dense(64, activation='relu', name='advantage_hidden')(x)
-        advantage = Dense(self.action_dim, name='advantage_output')(advantage)
+        # Dueling architecture with Noisy layers for exploration
+        if noisy and self.use_noisy_networks:
+            # Value stream with noisy output
+            value = NoisyDense(64, name='value_noisy_1')(x)
+            value = tf.nn.relu(value)
+            value = NoisyDense(1, name='value_output')(value)
+            
+            # Advantage stream with noisy output  
+            advantage = NoisyDense(64, name='advantage_noisy_1')(x)
+            advantage = tf.nn.relu(advantage)
+            advantage = NoisyDense(self.action_dim, name='advantage_output')(advantage)
+        else:
+            # Standard Dense layers (for target network or inference)
+            value = Dense(64, activation='relu', name='value_hidden')(x)
+            value = Dense(1, name='value_output')(value)
+            
+            advantage = Dense(64, activation='relu', name='advantage_hidden')(x)
+            advantage = Dense(self.action_dim, name='advantage_output')(advantage)
         
         # Combine: Q(s,a) = V(s) + (A(s,a) - mean(A(s,a)))
         q_values = value + (advantage - tf.reduce_mean(advantage, axis=1, keepdims=True))
@@ -507,27 +525,39 @@ class SRDDQNAgent:
         return model
     
     def select_action(self, state: np.ndarray, training: bool = True) -> int:
-        """Select action using epsilon-greedy with self-reward guidance"""
+        """
+        Select action using Noisy Networks + self-reward guidance.
+        
+        MDPI Best Practice: With NoisyNets, the network learns when to explore.
+        We remove costly ε-greedy random actions and rely on:
+        1. Parameter noise in NoisyDense layers (learned exploration)
+        2. Self-reward predictor guidance (informed exploration)
+        """
         state = np.array(state).reshape(1, -1)
         
-        if training and np.random.random() < self.epsilon:
-            # Exploration: weighted random based on self-reward predictions
-            if np.random.random() < 0.5:
-                # Pure random
-                return np.random.randint(self.action_dim)
-            else:
-                # Self-reward guided exploration
+        if training and self.use_noisy_networks:
+            # NoisyNet exploration: forward pass with noise in weights
+            # The network naturally explores via its noisy parameters
+            q_values = self.q_network(state, training=True).numpy()[0]
+            
+            # Optional: Add self-reward guidance for smarter exploration
+            # This biases exploration toward predicted valuable actions
+            if np.random.random() < 0.1:  # 10% self-reward guided (much less than before)
                 rewards = []
                 for a in range(self.action_dim):
-                    r, _ = self.self_reward_predictor.predict_reward(state[0], a)
-                    rewards.append(r)
+                    r, conf = self.self_reward_predictor.predict_reward(state[0], a)
+                    rewards.append(r * conf)  # Weight by confidence
                 
-                # Softmax selection based on predicted rewards
+                # Combine Q-values with self-reward predictions
                 rewards = np.array(rewards)
-                probs = np.exp(rewards) / np.sum(np.exp(rewards))
-                return np.random.choice(self.action_dim, p=probs)
-        else:
-            # Exploitation: use Q-network
+                combined = q_values + rewards * 0.5
+                return int(np.argmax(combined))
+            
+            return int(np.argmax(q_values))
+        
+        elif training:
+            # Fallback epsilon-greedy if noisy networks disabled
+            if np.random.random() < self.epsilon:
             q_values = self.q_network.predict(state, verbose=0)[0]
             return int(np.argmax(q_values))
     
