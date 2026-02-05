@@ -43,6 +43,7 @@ def register_routes(api_router: APIRouter):
     from routes import srddqn as srddqn_routes
     from routes import srddqn_pipeline as srddqn_pipeline_routes
     from routes import srddqn_trading as srddqn_trading_routes
+    from routes import kraken_exec as kraken_exec_routes
     
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
