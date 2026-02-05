@@ -143,12 +143,12 @@ class TestTrainingDashboard:
         data = response.json()
         print(f"✅ Training History: {len(data.get('sessions', data)) if isinstance(data, dict) else len(data)} sessions")
     
-    def test_training_scheduler_status(self):
-        """Test training scheduler status"""
-        response = requests.get(f"{BASE_URL}/api/training-scheduler/status", timeout=TIMEOUT)
+    def test_training_scheduler_schedules(self):
+        """Test training scheduler schedules list"""
+        response = requests.get(f"{BASE_URL}/api/training-scheduler/schedules", timeout=TIMEOUT)
         assert response.status_code == 200
         data = response.json()
-        print(f"✅ Training Scheduler Status: {data}")
+        print(f"✅ Training Scheduler Schedules: {data}")
     
     def test_learning_status(self):
         """Test learning service status"""
