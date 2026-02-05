@@ -303,7 +303,6 @@ class KrakenOrderBookWebSocket:
                 continue
             
             book = self.order_books[symbol]
-            book_update = item.get("bids", []), item.get("asks", [])
             
             if msg_type == "snapshot":
                 # Clear and rebuild
