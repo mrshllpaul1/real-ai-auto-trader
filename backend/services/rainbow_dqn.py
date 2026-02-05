@@ -336,8 +336,8 @@ class C51Distribution:
         m = tf.zeros((batch_size, self.n_atoms))
         
         # Lower bound contribution
-        l_offset = (u - b) * next_dist
-        u_offset = (b - l) * next_dist
+        l_offset = (upper - b) * next_dist
+        u_offset = (b - lower) * next_dist
         
         # Use scatter_nd for projection
         batch_indices = tf.repeat(
