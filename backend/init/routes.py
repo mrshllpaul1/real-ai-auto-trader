@@ -38,6 +38,7 @@ def register_routes(api_router: APIRouter):
     from routes import model_persistence as model_persistence_routes
     from routes import spot_trading as spot_trading_routes
     from routes import drl_engine as drl_engine_routes
+    from routes import trading_intelligence as trading_intelligence_routes
     
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
