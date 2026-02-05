@@ -125,12 +125,12 @@ class TestSpotTrading:
         data = response.json()
         print(f"✅ Spot Trading Status: {data}")
     
-    def test_spot_positions(self):
-        """Test spot positions endpoint"""
-        response = requests.get(f"{BASE_URL}/api/spot/positions", timeout=TIMEOUT)
+    def test_spot_pairs(self):
+        """Test spot trading pairs endpoint"""
+        response = requests.get(f"{BASE_URL}/api/spot/pairs", timeout=TIMEOUT)
         assert response.status_code == 200
         data = response.json()
-        print(f"✅ Spot Positions: {len(data) if isinstance(data, list) else data}")
+        print(f"✅ Spot Pairs: {len(data) if isinstance(data, list) else data}")
 
 
 class TestTrainingDashboard:
