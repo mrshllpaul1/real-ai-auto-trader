@@ -563,6 +563,10 @@ async def _init_phase7_wire_dependencies(db):
     from routes import srddqn_pipeline as srddqn_pipeline_routes
     srddqn_pipeline_routes.set_dependencies(db)
     
+    # Wire SRDDQN Trading Integration routes
+    from routes import srddqn_trading as srddqn_trading_routes
+    srddqn_trading_routes.set_dependencies(db)
+    
     # Start schedulers
     await _services['training_scheduler'].start()
     logger.info("✅ Training Scheduler started")
