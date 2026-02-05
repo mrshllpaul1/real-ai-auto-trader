@@ -308,13 +308,18 @@ async def run_all_phases(config: TrainingConfig = None, background_tasks: Backgr
     try:
         config = config or TrainingConfig()
         
+        # Capture db reference for background task
+        db = _db
+        if db is None:
+            raise HTTPException(status_code=500, detail="Database not initialized")
+        
         async def run_full_pipeline():
             pipeline = get_pipeline()
             
             logger.info("Starting full 6-phase SRDDQN training pipeline...")
             
             # Phase 1
-            cursor = _db.price_history.find().sort("timestamp", -1).limit(5000)
+            cursor = db.price_history.find().sort("timestamp", -1).limit(5000)
             price_data = await cursor.to_list(length=5000)
             if price_data:
                 df = pd.DataFrame(price_data)
