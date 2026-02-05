@@ -146,8 +146,13 @@ async def create_environment(request: CreateEnvironmentRequest = None):
         from services.sb3_trading_agents import prepare_training_data
         df = prepare_training_data(price_data)
         
-        # Create environment
-        env = manager.create_env(df, env_name="crypto_trading")
+        # Create environment with Sharpe ratio reward
+        env = manager.create_env(
+            df, 
+            env_name="crypto_trading",
+            reward_type=reward_type,
+            sharpe_window=sharpe_window
+        )
         
         return {
             "status": "created",
@@ -155,7 +160,9 @@ async def create_environment(request: CreateEnvironmentRequest = None):
             "data_points": len(df),
             "features": list(df.columns),
             "observation_space": str(env.observation_space),
-            "action_space": str(env.action_space)
+            "action_space": str(env.action_space),
+            "reward_type": reward_type,
+            "sharpe_window": sharpe_window
         }
     except Exception as e:
         logger.error(f"Environment creation error: {e}")
@@ -164,7 +171,7 @@ async def create_environment(request: CreateEnvironmentRequest = None):
 
 @router.post("/create-agent")
 async def create_agent(request: CreateAgentRequest):
-    """Create a new SB3 trading agent"""
+    """Create a new SB3 trading agent (supports DDQN with Sharpe reward)"""
     try:
         manager = get_manager()
         if manager is None:
