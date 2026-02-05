@@ -327,35 +327,40 @@ async def get_kraken_portfolio():
             try:
                 price_data = await market_service.get_coin_price(list(set(coin_ids_to_fetch)))
                 prices = price_data
+                logger.info(f"Fetched prices for {len(prices)} coins")
             except Exception as e:
-                print(f"Error fetching prices: {e}")
+                logger.error(f"Error fetching prices: {e}")
         
         # Build portfolio
         holdings = []
         total_value_usd = 0.0
         
         for asset, amount in balances.items():
-            amount_float = float(amount)
-            if amount_float <= 0.0001:  # Skip dust
-                continue
-            
-            # Clean asset name
-            clean_asset = asset.replace('.S', '').replace('.M', '')
-            coingecko_id = KRAKEN_TO_COINGECKO.get(clean_asset, clean_asset.lower())
-            
-            # Get USD value
-            if coingecko_id in ['usd', 'zusd']:
-                usd_value = amount_float
-                price_usd = 1.0
-            elif coingecko_id in ['usdt', 'tether', 'usdc', 'usd-coin']:
-                usd_value = amount_float
-                price_usd = 1.0
-            else:
-                price_info = prices.get(coingecko_id, {})
-                price_usd = price_info.get('price_usd', 0)
-                usd_value = amount_float * price_usd
-            
-            if usd_value > 0.01:  # Only include if worth more than 1 cent
+            try:
+                amount_float = float(amount)
+                if amount_float <= 0.0001:  # Skip dust
+                    continue
+                
+                # Clean asset name
+                clean_asset = asset.replace('.S', '').replace('.M', '')
+                coingecko_id = KRAKEN_TO_COINGECKO.get(clean_asset, clean_asset.lower())
+                
+                # Get USD value
+                if coingecko_id in ['usd', 'zusd']:
+                    usd_value = amount_float
+                    price_usd = 1.0
+                    price_change = 0
+                elif coingecko_id in ['usdt', 'tether', 'usdc', 'usd-coin']:
+                    usd_value = amount_float
+                    price_usd = 1.0
+                    price_change = 0
+                else:
+                    price_info = prices.get(coingecko_id, {})
+                    price_usd = price_info.get('price_usd', 0)
+                    price_change = price_info.get('price_change_24h', 0)
+                    usd_value = amount_float * price_usd
+                
+                # Include even if price is 0 (we have the balance)
                 holdings.append({
                     "asset": clean_asset,
                     "symbol": clean_asset.replace('X', '').replace('XX', ''),
@@ -363,9 +368,12 @@ async def get_kraken_portfolio():
                     "amount": amount_float,
                     "price_usd": price_usd,
                     "value_usd": round(usd_value, 2),
-                    "price_change_24h": prices.get(coingecko_id, {}).get('price_change_24h', 0)
+                    "price_change_24h": price_change
                 })
                 total_value_usd += usd_value
+            except Exception as e:
+                logger.error(f"Error processing asset {asset}: {e}")
+                continue
         
         # Sort by USD value (highest first)
         holdings.sort(key=lambda x: x['value_usd'], reverse=True)
