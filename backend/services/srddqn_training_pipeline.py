@@ -847,7 +847,7 @@ class AttentionQNetwork(Model):
         value = self.value_head(x)
         advantage = self.advantage_head(x)
         
-        q_values = value + (advantage - tf.reduce_mean(advantage, axis=1, keepdims=True))
+        q_values = value + (advantage - keras.ops.mean(advantage, axis=1, keepdims=True))
         return q_values
 
 
