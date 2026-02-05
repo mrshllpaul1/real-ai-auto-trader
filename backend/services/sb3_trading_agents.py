@@ -236,6 +236,10 @@ class CryptoTradingEnv(gym.Env):
         self.trades = []
         self.portfolio_history = []
         
+        # Reset Sharpe ratio tracking
+        self.returns_history.clear()
+        self.peak_value = self.initial_balance
+        
         observation = self._get_observation()
         info = {}
         
