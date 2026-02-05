@@ -349,7 +349,7 @@ async def run_all_phases(config: TrainingConfig = None, background_tasks: Backgr
             # Save
             pipeline.save()
             
-            await _db.srddqn_pipeline_results.insert_one({
+            await db.srddqn_pipeline_results.insert_one({
                 "phase": "all",
                 "status": pipeline.get_status(),
                 "created_at": datetime.utcnow()
