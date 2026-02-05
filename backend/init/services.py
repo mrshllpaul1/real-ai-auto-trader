@@ -517,6 +517,10 @@ async def _init_phase7_wire_dependencies(db):
     journal_routes.set_dependencies(_services['journal'])
     set_learning_service(_services['learning'])
     
+    # Wire DRL Engine routes
+    from routes import drl_engine as drl_engine_routes
+    drl_engine_routes.set_dependencies(db, _services.get('drl_engine'))
+    
     # Start schedulers
     await _services['training_scheduler'].start()
     logger.info("✅ Training Scheduler started")
