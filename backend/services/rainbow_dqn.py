@@ -32,7 +32,7 @@ try:
     from tensorflow.keras import layers, Model, optimizers
     from tensorflow.keras.layers import (
         Dense, Input, LayerNormalization, Dropout,
-        MultiHeadAttention, Add, Embedding
+        MultiHeadAttention, Add, Embedding, Reshape, Activation, Softmax
     )
     TF_AVAILABLE = True
 except ImportError:
