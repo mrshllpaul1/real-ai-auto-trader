@@ -41,6 +41,7 @@ def register_routes(api_router: APIRouter):
     from routes import trading_intelligence as trading_intelligence_routes
     from routes import sb3_agents as sb3_agents_routes
     from routes import srddqn as srddqn_routes
+    from routes import srddqn_pipeline as srddqn_pipeline_routes
     
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
