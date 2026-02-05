@@ -310,29 +310,39 @@ async def get_kraken_portfolio():
         if not balances:
             return {"holdings": [], "total_value_usd": 0, "message": "No balances found"}
         
-        # Get market service for prices
-        market_service = await get_market_service()
+        # Build list of Kraken pairs for price lookup
+        kraken_pairs = []
+        asset_to_pair = {}
         
-        # Build list of coin IDs to fetch prices for
-        coin_ids_to_fetch = []
         for asset, amount in balances.items():
             amount_float = float(amount)
             if amount_float > 0:
-                # Map Kraken asset to CoinGecko ID
-                clean_asset = asset.replace('.S', '').replace('.M', '')  # Remove staking suffixes
-                coingecko_id = KRAKEN_TO_COINGECKO.get(clean_asset, clean_asset.lower())
-                if coingecko_id not in ['usd', 'zusd', 'usdt', 'usdc', 'usd-coin', 'tether']:
-                    coin_ids_to_fetch.append(coingecko_id)
+                clean_asset = asset.replace('.S', '').replace('.M', '')
+                if clean_asset not in ['ZUSD', 'USD', 'USDT', 'USDC']:
+                    # Build Kraken pair (e.g., XXBTZUSD, XETHZUSD)
+                    pair = f"{clean_asset}USD"
+                    if clean_asset in ['XXBT', 'XBT']:
+                        pair = "XXBTZUSD"
+                    elif clean_asset in ['XETH', 'ETH']:
+                        pair = "XETHZUSD"
+                    elif len(clean_asset) <= 4:
+                        pair = f"{clean_asset}USD"
+                    kraken_pairs.append(pair)
+                    asset_to_pair[clean_asset] = pair
         
-        # Fetch all prices at once
-        prices = {}
-        if coin_ids_to_fetch:
+        # Fetch prices from Kraken directly
+        kraken_prices = {}
+        if kraken_pairs:
             try:
-                price_data = await market_service.get_coin_price(list(set(coin_ids_to_fetch)))
-                prices = price_data
-                logger.info(f"Fetched prices for {len(prices)} coins")
+                ticker_data = await kraken_service.get_tickers_batch(list(set(kraken_pairs)))
+                if ticker_data:
+                    for pair, data in ticker_data.items():
+                        if isinstance(data, dict) and 'c' in data:
+                            price = float(data['c'][0]) if data['c'] else 0
+                            kraken_prices[pair] = price
+                logger.info(f"Fetched Kraken prices for {len(kraken_prices)} pairs")
             except Exception as e:
-                logger.error(f"Error fetching prices: {e}")
+                logger.error(f"Error fetching Kraken prices: {e}")
         
         # Build portfolio
         holdings = []
