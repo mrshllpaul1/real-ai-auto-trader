@@ -3,6 +3,9 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
