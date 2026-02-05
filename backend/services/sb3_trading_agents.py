@@ -63,7 +63,8 @@ class CryptoTradingEnv(gym.Env):
     - Realistic transaction costs and slippage
     - Multi-feature observation space
     - Continuous action space for position sizing
-    - Risk-adjusted reward function
+    - Sharpe ratio-based reward function
+    - Drawdown penalty for risk management
     """
     
     metadata = {'render_modes': ['human', 'ansi']}
@@ -76,7 +77,9 @@ class CryptoTradingEnv(gym.Env):
         slippage_pct: float = 0.0005,
         max_position_pct: float = 0.25,
         window_size: int = 60,
-        reward_scaling: float = 1e-4
+        reward_scaling: float = 1e-4,
+        sharpe_window: int = 24,  # Window for Sharpe ratio calculation
+        reward_type: str = 'sharpe'  # 'sharpe', 'simple', 'sortino'
     ):
         super().__init__()
         
@@ -87,6 +90,8 @@ class CryptoTradingEnv(gym.Env):
         self.max_position_pct = max_position_pct
         self.window_size = window_size
         self.reward_scaling = reward_scaling
+        self.sharpe_window = sharpe_window
+        self.reward_type = reward_type
         
         # State variables
         self.balance = initial_balance
@@ -96,6 +101,10 @@ class CryptoTradingEnv(gym.Env):
         self.total_pnl = 0.0
         self.trades = []
         self.portfolio_history = []
+        
+        # Sharpe ratio tracking
+        self.returns_history = deque(maxlen=sharpe_window * 2)
+        self.peak_value = initial_balance
         
         # Feature columns
         self.feature_cols = self._get_feature_columns()
