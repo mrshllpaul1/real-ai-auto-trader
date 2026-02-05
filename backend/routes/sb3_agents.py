@@ -438,13 +438,23 @@ async def get_supported_algorithms():
                 ]
             }
         },
-        "recommendation": "PPO for general trading, SAC for continuous position sizing, DQN for discrete actions"
+        "recommendation": "DDQN with Sharpe ratio reward for optimal risk-adjusted returns, PPO for stable training, SAC for continuous position sizing",
+        "reward_function": {
+            "type": "sharpe_ratio",
+            "description": "Rolling Sharpe ratio with drawdown penalty",
+            "components": [
+                "Rolling Sharpe ratio (24-hour window by default)",
+                "Risk penalty for over-leveraged positions",
+                "Transaction cost penalty",
+                "Drawdown penalty (>10% triggers penalty)"
+            ]
+        }
     }
 
 
 @router.get("/environment/metrics")
 async def get_environment_metrics():
-    """Get trading environment metrics"""
+    """Get trading environment metrics including Sharpe ratio"""
     try:
         manager = get_manager()
         if manager is None:
@@ -466,7 +476,9 @@ async def get_environment_metrics():
                 "transaction_cost_pct": base_env.transaction_cost_pct,
                 "slippage_pct": base_env.slippage_pct,
                 "max_position_pct": base_env.max_position_pct,
-                "window_size": base_env.window_size
+                "window_size": base_env.window_size,
+                "reward_type": getattr(base_env, 'reward_type', 'sharpe'),
+                "sharpe_window": getattr(base_env, 'sharpe_window', 24)
             }
         }
     except Exception as e:
