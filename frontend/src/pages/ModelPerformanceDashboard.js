@@ -644,21 +644,52 @@ const ModelPerformanceDashboard = () => {
                 </div>
 
                 <h4 className="text-white font-medium mb-4">Supported Algorithms</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {['DQN', 'PPO', 'A2C', 'SAC'].map((algo) => (
-                    <div key={algo} className="bg-[#1a1a2e] rounded-lg p-4 text-center">
-                      <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                        <Brain className="w-6 h-6 text-cyan-400" />
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  {['DDQN', 'DQN', 'PPO', 'A2C', 'SAC'].map((algo) => (
+                    <div key={algo} className={`rounded-lg p-4 text-center ${algo === 'DDQN' ? 'bg-gradient-to-br from-cyan-500/20 to-green-500/20 border border-cyan-500/30' : 'bg-[#1a1a2e]'}`}>
+                      <div className={`w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center ${algo === 'DDQN' ? 'bg-cyan-500/30' : 'bg-cyan-500/20'}`}>
+                        <Brain className={`w-6 h-6 ${algo === 'DDQN' ? 'text-green-400' : 'text-cyan-400'}`} />
                       </div>
-                      <h4 className="text-white font-medium">{algo}</h4>
+                      <h4 className={`font-medium ${algo === 'DDQN' ? 'text-green-400' : 'text-white'}`}>{algo}</h4>
                       <p className="text-gray-400 text-xs mt-1">
+                        {algo === 'DDQN' && 'Double DQN + Sharpe'}
                         {algo === 'DQN' && 'Deep Q-Network'}
                         {algo === 'PPO' && 'Proximal Policy Opt.'}
                         {algo === 'A2C' && 'Advantage Actor-Critic'}
                         {algo === 'SAC' && 'Soft Actor-Critic'}
                       </p>
+                      {algo === 'DDQN' && (
+                        <span className="inline-block mt-2 px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">
+                          Recommended
+                        </span>
+                      )}
                     </div>
                   ))}
+                </div>
+
+                <div className="mt-6 p-4 bg-[#1a1a2e] rounded-lg">
+                  <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                    <Target className="w-4 h-4 text-green-400" />
+                    Sharpe Ratio Reward Function
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                    <div className="p-2 bg-[#12121A] rounded">
+                      <p className="text-gray-400">Rolling Window</p>
+                      <p className="text-cyan-400 font-medium">24 hours</p>
+                    </div>
+                    <div className="p-2 bg-[#12121A] rounded">
+                      <p className="text-gray-400">Drawdown Penalty</p>
+                      <p className="text-red-400 font-medium">&gt;10%</p>
+                    </div>
+                    <div className="p-2 bg-[#12121A] rounded">
+                      <p className="text-gray-400">Position Limit</p>
+                      <p className="text-yellow-400 font-medium">25%</p>
+                    </div>
+                    <div className="p-2 bg-[#12121A] rounded">
+                      <p className="text-gray-400">Transaction Cost</p>
+                      <p className="text-gray-300 font-medium">0.1%</p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mt-6 p-4 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-lg border border-cyan-500/20">
