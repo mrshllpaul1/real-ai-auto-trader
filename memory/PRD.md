@@ -7,7 +7,31 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ## Session 34 - COMPLETE (Feb 5, 2026)
 
-### ✅ Stable-Baselines3 DRL Integration
+### ✅ Double DQN with Sharpe Ratio Reward Function
+
+**New Features Added:**
+
+1. **Double Deep Q-Network (DDQN)**
+   - Target network for action selection (reduces Q-value overestimation)
+   - Deeper network architecture [256, 256, 128]
+   - Soft target updates (tau=0.005)
+   - Lower exploration rate for stability (0.02 final epsilon)
+   - Experience replay buffer (100k transitions)
+
+2. **Sharpe Ratio-Based Reward Function**
+   - Rolling Sharpe ratio calculation (24-hour window default)
+   - Annualized Sharpe ratio: `sqrt(24*365) * mean_return / std_return`
+   - Drawdown penalty (triggers >10% drawdown)
+   - Risk penalty for over-leveraged positions (>25% position size)
+   - Transaction cost penalty in reward
+
+3. **GitHub DRL Libraries Researched:**
+   - FinRL (AI4Finance-Foundation)
+   - Stable-Baselines3 v2.7.1
+   - Gymnasium v1.2.3
+   - ElegantRL
+
+### ✅ Stable-Baselines3 Integration
 
 **New Components Created:**
 
