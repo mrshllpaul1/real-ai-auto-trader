@@ -13,6 +13,16 @@ from config.app_config import APP_TITLE, APP_DESCRIPTION, APP_VERSION, CORS_ORIG
 from config.database import db, client, close_db
 from config.websocket import ConnectionManager
 
+# Re-export db for backward compatibility with routes that import from server
+# This allows `from server import db` to work
+__all__ = ['db', 'client', 'app', 'get_service']
+
+
+def get_service(name: str):
+    """Get an initialized service by name"""
+    from init.services import get_service as _get_service
+    return _get_service(name)
+
 # Configure logging
 logging.basicConfig(level=getattr(logging, LOG_LEVEL), format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
