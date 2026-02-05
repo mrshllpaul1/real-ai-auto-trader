@@ -264,6 +264,8 @@ class DQNTradingAgent:
         
     def _build_dueling_dqn(self) -> Model:
         """Build Dueling DQN architecture"""
+        from tensorflow.keras.layers import Lambda
+        
         inputs = Input(shape=(self.state_dim,))
         
         # Shared layers
@@ -281,8 +283,12 @@ class DQNTradingAgent:
         advantage = Dense(64, activation='relu')(x)
         advantage = Dense(self.action_dim, activation='linear')(advantage)
         
-        # Combine: Q = V + (A - mean(A))
-        q_values = value + (advantage - tf.reduce_mean(advantage, axis=1, keepdims=True))
+        # Combine: Q = V + (A - mean(A)) using Lambda layer
+        def dueling_combine(tensors):
+            value_t, advantage_t = tensors
+            return value_t + (advantage_t - tf.reduce_mean(advantage_t, axis=1, keepdims=True))
+        
+        q_values = Lambda(dueling_combine)([value, advantage])
         
         model = Model(inputs, q_values)
         model.compile(optimizer=Adam(learning_rate=self.learning_rate), loss='huber')
