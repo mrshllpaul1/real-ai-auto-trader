@@ -7,6 +7,34 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ## Session 34 - COMPLETE (Feb 5, 2026)
 
+### ✅ SRDDQN (Self-Rewarding Double Deep Q-Network)
+
+**New Advanced DRL Agent:**
+
+Based on Huang et al. (2024) "A Self-Rewarding Mechanism in Deep Reinforcement Learning"
+
+**Components:**
+1. **Self-Reward Predictor** - MLP [128, 64, 32] that generates intrinsic rewards + confidence scores
+2. **Curiosity Module (ICM)** - Intrinsic Curiosity Module with:
+   - State encoder
+   - Forward model (predicts next state)
+   - Inverse model (predicts action from state pair)
+3. **Dueling DQN** - Separate Value + Advantage streams for better state value estimation
+4. **Double DQN Target** - Soft updates (tau=0.005) to reduce Q-value overestimation
+
+**Reward Formula:**
+```
+R = 0.5×Sharpe + 0.3×SelfReward×Confidence + 0.2×Curiosity
+```
+
+**API Endpoints:**
+- `GET /api/srddqn/status` - Manager status
+- `GET /api/srddqn/architecture` - Full architecture documentation
+- `POST /api/srddqn/create-agent` - Create SRDDQN agent
+- `POST /api/srddqn/train` - Train agent (background)
+- `POST /api/srddqn/predict` - Get trading signal
+- `POST /api/srddqn/update-weights` - Adjust reward component weights
+
 ### ✅ Double DQN with Sharpe Ratio Reward Function
 
 **New Features Added:**
