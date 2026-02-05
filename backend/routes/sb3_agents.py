@@ -38,9 +38,15 @@ def get_manager():
 
 # Request models
 class CreateAgentRequest(BaseModel):
-    algorithm: str = "ppo"  # dqn, ppo, a2c, sac
+    algorithm: str = "ddqn"  # dqn, ddqn, ppo, a2c, sac
     agent_name: str = "default_agent"
     custom_params: Optional[Dict] = None
+
+
+class CreateEnvironmentRequest(BaseModel):
+    lookback_days: int = 90
+    reward_type: str = "sharpe"  # sharpe, simple, sortino
+    sharpe_window: int = 24
 
 
 class TrainAgentRequest(BaseModel):
