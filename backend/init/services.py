@@ -576,6 +576,11 @@ async def _init_phase7_wire_dependencies(db):
     tethys_routes.set_db(db)
     logger.info("✅ Tethys Safety System wired")
     
+    # Wire Tethys Trading routes
+    from routes import tethys_trading as tethys_trading_routes
+    tethys_trading_routes.set_db(db)
+    logger.info("✅ Tethys Trading System wired")
+    
     # Start schedulers
     await _services['training_scheduler'].start()
     logger.info("✅ Training Scheduler started")
