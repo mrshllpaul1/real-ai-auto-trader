@@ -527,6 +527,10 @@ async def _init_phase7_wire_dependencies(db):
     from routes import drl_engine as drl_engine_routes
     drl_engine_routes.set_dependencies(db, _services.get('drl_engine'))
     
+    # Wire Trading Intelligence routes
+    from routes import trading_intelligence as trading_intelligence_routes
+    trading_intelligence_routes.set_dependencies(db, _services.get('trading_intelligence'))
+    
     # Start schedulers
     await _services['training_scheduler'].start()
     logger.info("✅ Training Scheduler started")
