@@ -473,7 +473,8 @@ class PrioritizedReplayBuffer:
         self.frame += 1
         
         total_priority = self.sum_tree[1]
-        min_priority = self.min_tree[1]
+        # min_priority used for max weight calculation (stored but not currently used)
+        _ = self.min_tree[1]
         
         # Stratified sampling
         segment = total_priority / batch_size
