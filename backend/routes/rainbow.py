@@ -58,14 +58,14 @@ async def start_orderbook_stream(config: OrderBookConfig = None):
         if _order_book_ws is None or not _order_book_ws.connected:
             _order_book_ws = await initialize_order_book_service(
                 symbols=symbols,
-                depth=depth
+                depth=config.depth
             )
             _feature_extractor = get_feature_extractor()
         
         return {
             "status": "started",
             "symbols": symbols,
-            "depth": depth,
+            "depth": config.depth,
             "message": "Order book WebSocket stream started"
         }
         
