@@ -114,6 +114,7 @@ def register_routes(api_router: APIRouter):
     api_router.include_router(srddqn_routes.router, tags=["SRDDQN Agent"])
     api_router.include_router(srddqn_pipeline_routes.router, tags=["SRDDQN Pipeline"])
     api_router.include_router(srddqn_trading_routes.router, tags=["SRDDQN Live Trading"])
+    api_router.include_router(kraken_exec_routes.router, tags=["Kraken Execution"])
     
     logger.info("✅ All routes registered")
     
