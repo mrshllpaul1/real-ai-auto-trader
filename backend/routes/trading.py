@@ -356,28 +356,45 @@ async def get_kraken_portfolio():
                 
                 # Clean asset name
                 clean_asset = asset.replace('.S', '').replace('.M', '')
-                coingecko_id = KRAKEN_TO_COINGECKO.get(clean_asset, clean_asset.lower())
                 
                 # Get USD value
-                if coingecko_id in ['usd', 'zusd']:
+                if clean_asset in ['ZUSD', 'USD']:
                     usd_value = amount_float
                     price_usd = 1.0
                     price_change = 0
-                elif coingecko_id in ['usdt', 'tether', 'usdc', 'usd-coin']:
+                elif clean_asset in ['USDT', 'USDC']:
                     usd_value = amount_float
                     price_usd = 1.0
                     price_change = 0
                 else:
-                    price_info = prices.get(coingecko_id, {})
-                    price_usd = price_info.get('price_usd', 0)
-                    price_change = price_info.get('price_change_24h', 0)
+                    # Get price from Kraken ticker
+                    pair = asset_to_pair.get(clean_asset)
+                    price_usd = 0
+                    price_change = 0
+                    
+                    # Try different pair formats
+                    for possible_pair in [pair, f"{clean_asset}USD", f"X{clean_asset}ZUSD", f"{clean_asset}ZUSD"]:
+                        if possible_pair and possible_pair in kraken_prices:
+                            price_usd = kraken_prices[possible_pair]
+                            break
+                    
+                    # Also try without X prefix
+                    if price_usd == 0:
+                        for p, v in kraken_prices.items():
+                            if clean_asset.replace('X', '') in p or clean_asset in p:
+                                price_usd = v
+                                break
+                    
                     usd_value = amount_float * price_usd
                 
-                # Include even if price is 0 (we have the balance)
+                # Include holding
+                symbol = clean_asset.replace('XX', '').replace('X', '')
+                if symbol.startswith('Z'):
+                    symbol = symbol[1:]
+                
                 holdings.append({
                     "asset": clean_asset,
-                    "symbol": clean_asset.replace('X', '').replace('XX', ''),
-                    "coingecko_id": coingecko_id,
+                    "symbol": symbol,
                     "amount": amount_float,
                     "price_usd": price_usd,
                     "value_usd": round(usd_value, 2),
