@@ -289,6 +289,16 @@ async def _init_phase5_predictions(db):
     _services['trading_intelligence'] = trading_intelligence
     logger.info("✅ Trading Intelligence Engine initialized")
     
+    # Initialize SB3 Trading Agent Manager (Stable-Baselines3)
+    try:
+        from services.sb3_trading_agents import initialize_sb3_manager
+        sb3_manager = await initialize_sb3_manager(db)
+        _services['sb3_manager'] = sb3_manager
+        logger.info("✅ SB3 Trading Agent Manager initialized")
+    except Exception as e:
+        logger.warning(f"⚠️ SB3 Manager initialization failed: {e}")
+        _services['sb3_manager'] = None
+    
     order_book = get_order_book_analyzer(db)
     on_chain = get_on_chain_analytics(db)
     social_sentiment = get_social_sentiment(db)
