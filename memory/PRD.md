@@ -7,6 +7,27 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ## Session 35 - IN PROGRESS (Feb 5, 2026)
 
+### ✅ MDPI Best Practices Audit & Critical Fixes
+
+**Audit Report:** `/app/backend/docs/SRDDQN_AUDIT_REPORT.md`
+
+**P0 Critical Fixes Implemented:**
+
+| Fix | Component | Description |
+|-----|-----------|-------------|
+| **Gaussian Noise Injection** | Reward Network | Added `GaussianNoise(0.01)` layer to inputs to prevent overfitting |
+| **Noisy Networks** | SRDDQN Agent | Replaced ε-greedy with `NoisyDense` layers for learned exploration |
+| **CVaR Penalty** | Trading Env | Added Conditional Value-at-Risk penalty for tail risk control |
+| **Volatility Scaling** | Trading Env | Position limits now scale inversely with market volatility |
+| **Prioritized Experience Replay** | SRDDQN Agent | TD-error based sampling with importance sampling correction |
+| **Higher Dropout** | Reward Network | Increased from 0.2 → 0.35 for better generalization |
+| **L2 Regularization** | Reward Network | Added kernel regularizer to all Dense layers |
+
+**Key Code Changes:**
+- `/app/backend/services/srddqn_agent.py`: Added `NoisyDense`, `PrioritizedReplayBuffer` classes
+- `/app/backend/services/srddqn_training_pipeline.py`: Enhanced `RewardNetwork` with regularization
+- `/app/backend/services/sb3_trading_agents.py`: Added CVaR + volatility-scaled risk management
+
 ### ✅ Bug Fixes Applied
 
 **1. Frontend Build Stability (P0)**
@@ -17,11 +38,6 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 - Fixed Keras/TensorFlow compatibility: replaced `tf.reduce_mean()` with `keras.ops.mean()` in dueling network
 - Fixed state dimension mismatch: Pipeline now auto-detects env observation space (24 → 27)
 - Fixed background task db reference: Captured db before async task execution
-
-**3. Training Status**
-- Phase 1 (Reward Modeling): ✅ COMPLETE - Loss 3.49
-- Phase 2 (Reinforcement Learning): ⏳ IN PROGRESS - Training with 27-dim state space
-- Phases 3-6: Pending
 
 ---
 
