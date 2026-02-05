@@ -144,10 +144,10 @@ class TestTrainingDashboard:
     
     def test_training_scheduler_schedules(self):
         """Test training scheduler schedules list"""
-        response = requests.get(f"{BASE_URL}/api/training-scheduler/schedules", timeout=TIMEOUT)
+        response = requests.get(f"{BASE_URL}/api/training-scheduler/", timeout=TIMEOUT)
         assert response.status_code == 200
         data = response.json()
-        print(f"✅ Training Scheduler Schedules: {data}")
+        print(f"✅ Training Scheduler Schedules: {data.get('count', 0)} schedules")
     
     def test_learning_status(self):
         """Test learning service status"""
