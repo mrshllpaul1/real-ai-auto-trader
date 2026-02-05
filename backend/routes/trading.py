@@ -310,25 +310,48 @@ async def get_kraken_portfolio():
         if not balances:
             return {"holdings": [], "total_value_usd": 0, "message": "No balances found"}
         
+        # Kraken asset to pair mapping
+        ASSET_TO_PAIR = {
+            'XXBT': 'XXBTZUSD',
+            'XBT': 'XXBTZUSD',
+            'XETH': 'XETHZUSD',
+            'ETH': 'XETHZUSD',
+            'SOL': 'SOLUSD',
+            'DOT': 'DOTUSD',
+            'ADA': 'ADAUSD',
+            'ATOM': 'ATOMUSD',
+            'LINK': 'LINKUSD',
+            'AAVE': 'AAVEUSD',
+            'UNI': 'UNIUSD',
+            'APT': 'APTUSD',
+            'NEAR': 'NEARUSD',
+            'MATIC': 'MATICUSD',
+            'AVAX': 'AVAXUSD',
+            'FTM': 'FTMUSD',
+            'ALGO': 'ALGOUSD',
+            'XRP': 'XXRPZUSD',
+            'LTC': 'XLTCZUSD',
+            'DOGE': 'XDGUSD',
+            'SHIB': 'SHIBUSD',
+            'TRX': 'TRXUSD',
+        }
+        
         # Build list of Kraken pairs for price lookup
         kraken_pairs = []
         asset_to_pair = {}
         
         for asset, amount in balances.items():
             amount_float = float(amount)
-            if amount_float > 0:
+            if amount_float > 0.0001:
                 clean_asset = asset.replace('.S', '').replace('.M', '')
                 if clean_asset not in ['ZUSD', 'USD', 'USDT', 'USDC']:
-                    # Build Kraken pair (e.g., XXBTZUSD, XETHZUSD)
-                    pair = f"{clean_asset}USD"
-                    if clean_asset in ['XXBT', 'XBT']:
-                        pair = "XXBTZUSD"
-                    elif clean_asset in ['XETH', 'ETH']:
-                        pair = "XETHZUSD"
-                    elif len(clean_asset) <= 4:
-                        pair = f"{clean_asset}USD"
+                    # Use predefined mapping or build pair
+                    pair = ASSET_TO_PAIR.get(clean_asset, f"{clean_asset}USD")
                     kraken_pairs.append(pair)
                     asset_to_pair[clean_asset] = pair
+        
+        logger.info(f"Assets: {list(balances.keys())}")
+        logger.info(f"Kraken pairs to fetch: {kraken_pairs}")
         
         # Fetch prices from Kraken directly
         kraken_prices = {}
@@ -340,7 +363,7 @@ async def get_kraken_portfolio():
                         if isinstance(data, dict) and 'c' in data:
                             price = float(data['c'][0]) if data['c'] else 0
                             kraken_prices[pair] = price
-                logger.info(f"Fetched Kraken prices for {len(kraken_prices)} pairs")
+                logger.info(f"Fetched Kraken prices: {kraken_prices}")
             except Exception as e:
                 logger.error(f"Error fetching Kraken prices: {e}")
         
