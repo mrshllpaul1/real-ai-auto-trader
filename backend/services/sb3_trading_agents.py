@@ -178,7 +178,15 @@ class CryptoTradingEnv(gym.Env):
         return observation
     
     def _calculate_reward(self, prev_value: float, current_value: float, action: float) -> float:
-        """Calculate reward using Sharpe ratio methodology"""
+        """
+        Calculate reward using Sharpe ratio methodology with CVaR penalty.
+        
+        MDPI Best Practices Applied:
+        - CVaR (Conditional Value-at-Risk) penalty for tail risk
+        - Sharpe ratio as primary reward
+        - Drawdown penalty
+        - Position risk penalty
+        """
         # Base return
         pnl = current_value - prev_value
         ret = pnl / (prev_value + 1e-8)
@@ -197,12 +205,31 @@ class CryptoTradingEnv(gym.Env):
             
             # Sharpe-based reward component
             sharpe_reward = sharpe_ratio * 0.1  # Scale factor
+            
+            # CVaR penalty (MDPI recommendation for tail risk control)
+            # CVaR at 95% confidence = expected loss in worst 5% of cases
+            sorted_returns = np.sort(recent_returns)
+            cvar_threshold = int(len(sorted_returns) * 0.05)
+            if cvar_threshold > 0:
+                cvar = np.mean(sorted_returns[:cvar_threshold])
+                cvar_penalty = cvar * 0.5 if cvar < -0.01 else 0  # Penalize large tail losses
+            else:
+                cvar_penalty = 0
         else:
             sharpe_reward = ret * 10  # Use simple return until enough data
+            cvar_penalty = 0
         
-        # Risk penalty for large positions
+        # Risk penalty for large positions (volatility-scaled)
         position_ratio = abs(self.position * self._get_current_price()) / (current_value + 1e-8)
-        risk_penalty = -0.1 * max(0, position_ratio - self.max_position_pct)
+        
+        # Volatility scaling: reduce position limit when volatility is high
+        if len(self.returns_history) >= 10:
+            recent_vol = np.std(list(self.returns_history)[-10:])
+            vol_scaled_max = self.max_position_pct / (1 + recent_vol * 10)  # Scale down with volatility
+        else:
+            vol_scaled_max = self.max_position_pct
+        
+        risk_penalty = -0.1 * max(0, position_ratio - vol_scaled_max)
         
         # Transaction cost penalty
         action_penalty = -abs(action) * self.transaction_cost_pct * 0.5
@@ -213,8 +240,8 @@ class CryptoTradingEnv(gym.Env):
         drawdown = (self.peak_value - current_value) / (self.peak_value + 1e-8)
         drawdown_penalty = -drawdown * 0.5 if drawdown > 0.1 else 0  # Penalize >10% drawdown
         
-        # Combined Sharpe-based reward
-        reward = (sharpe_reward + risk_penalty + action_penalty + drawdown_penalty) * self.reward_scaling
+        # Combined Sharpe-based reward with CVaR penalty
+        reward = (sharpe_reward + cvar_penalty + risk_penalty + action_penalty + drawdown_penalty) * self.reward_scaling
         
         return float(reward)
     
