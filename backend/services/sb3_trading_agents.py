@@ -731,7 +731,7 @@ class SB3TradingAgentManager:
         
         algorithm = algorithm.lower()
         
-        if algorithm == 'dqn':
+        if algorithm in ['dqn', 'ddqn']:
             model = DQN.load(model_path)
         elif algorithm == 'ppo':
             model = PPO.load(model_path)
