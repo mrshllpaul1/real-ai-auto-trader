@@ -223,6 +223,15 @@ async def get_kraken_closed_orders(limit: int = 50):
         return {"orders": [], "count": 0, "error": str(e)}
 
 async def get_market_service():
+    """Get the initialized market service from services"""
+    try:
+        from server import get_service
+        market = get_service('market')
+        if market:
+            return market
+    except Exception:
+        pass
+    # Fallback to creating new instance
     from services.market_data_service import MarketDataService
     return MarketDataService()
 
