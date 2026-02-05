@@ -889,7 +889,7 @@ class SRDDQNAgent:
         avg_losses = {}
         if episode_losses:
             for key in episode_losses[0].keys():
-                avg_losses[key] = np.mean([l[key] for l in episode_losses])
+                avg_losses[key] = np.mean([loss[key] for loss in episode_losses])
         
         episode_result = {
             'episode': self.episode_count,
