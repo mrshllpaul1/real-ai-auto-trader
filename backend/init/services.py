@@ -266,7 +266,7 @@ async def _init_phase4_automation(db):
 
 
 async def _init_phase5_predictions(db):
-    """Phase 5: Prediction Enhancement Services (All 8 models)"""
+    """Phase 5: Deep RL Trading Engine + Prediction Services"""
     from services.order_book_analyzer import get_order_book_analyzer
     from services.on_chain_analytics import get_on_chain_analytics
     from services.social_sentiment_pipeline import get_social_sentiment
@@ -274,8 +274,14 @@ async def _init_phase5_predictions(db):
     from services.rl_trading_agent import get_rl_agent
     from services.cross_asset_correlation import get_cross_asset_correlation
     from services.advanced_technical_analysis import get_advanced_ta
+    from services.deep_rl_trading_engine import get_drl_engine, initialize_drl_engine
     
     task_manager = _services['task_manager']
+    
+    # Initialize Deep RL Trading Engine (replaces traditional ML)
+    drl_engine = await initialize_drl_engine(db)
+    _services['drl_engine'] = drl_engine
+    logger.info("✅ Deep RL Trading Engine initialized")
     
     order_book = get_order_book_analyzer(db)
     on_chain = get_on_chain_analytics(db)
