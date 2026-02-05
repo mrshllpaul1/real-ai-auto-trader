@@ -141,7 +141,8 @@ async def get_portfolio_performance(
 async def get_kraken_trades(limit: int = 50):
     """Get real trade history from Kraken exchange"""
     try:
-        from server import kraken_service
+        from server import get_service
+        kraken_service = get_service('kraken')
         if not kraken_service:
             return {"trades": [], "count": 0, "error": "Kraken service not initialized"}
         
