@@ -604,6 +604,75 @@ const ModelPerformanceDashboard = () => {
             </Card>
           </div>
         )}
+
+        {/* SB3 Agents Tab */}
+        {activeTab === 'sb3' && (
+          <div className="space-y-6">
+            <Card className="bg-[#12121A] border-gray-800">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Box className="w-5 h-5 text-cyan-400" />
+                  Stable-Baselines3 Trading Agents
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-[#1a1a2e] rounded-lg p-4">
+                    <p className="text-gray-400 text-sm">SB3 Available</p>
+                    <p className="text-xl font-bold text-white">
+                      {sb3Status?.sb3_available ? 'Yes' : 'No'}
+                    </p>
+                  </div>
+                  <div className="bg-[#1a1a2e] rounded-lg p-4">
+                    <p className="text-gray-400 text-sm">Gymnasium</p>
+                    <p className="text-xl font-bold text-white">
+                      {sb3Status?.gymnasium_available ? 'Yes' : 'No'}
+                    </p>
+                  </div>
+                  <div className="bg-[#1a1a2e] rounded-lg p-4">
+                    <p className="text-gray-400 text-sm">Active Agents</p>
+                    <p className="text-xl font-bold text-cyan-400">
+                      {Object.keys(sb3Status?.agents || {}).length}
+                    </p>
+                  </div>
+                  <div className="bg-[#1a1a2e] rounded-lg p-4">
+                    <p className="text-gray-400 text-sm">Environments</p>
+                    <p className="text-xl font-bold text-white">
+                      {sb3Status?.environments?.length || 0}
+                    </p>
+                  </div>
+                </div>
+
+                <h4 className="text-white font-medium mb-4">Supported Algorithms</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {['DQN', 'PPO', 'A2C', 'SAC'].map((algo) => (
+                    <div key={algo} className="bg-[#1a1a2e] rounded-lg p-4 text-center">
+                      <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                        <Brain className="w-6 h-6 text-cyan-400" />
+                      </div>
+                      <h4 className="text-white font-medium">{algo}</h4>
+                      <p className="text-gray-400 text-xs mt-1">
+                        {algo === 'DQN' && 'Deep Q-Network'}
+                        {algo === 'PPO' && 'Proximal Policy Opt.'}
+                        {algo === 'A2C' && 'Advantage Actor-Critic'}
+                        {algo === 'SAC' && 'Soft Actor-Critic'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 p-4 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-lg border border-cyan-500/20">
+                  <h4 className="text-white font-medium mb-2">GitHub References</h4>
+                  <div className="text-xs text-gray-400 space-y-1">
+                    <p>• <a href="https://github.com/AI4Finance-Foundation/FinRL" className="text-cyan-400 hover:underline" target="_blank" rel="noopener noreferrer">FinRL - Financial RL Framework</a></p>
+                    <p>• <a href="https://github.com/DLR-RM/stable-baselines3" className="text-cyan-400 hover:underline" target="_blank" rel="noopener noreferrer">Stable-Baselines3</a></p>
+                    <p>• Custom Gymnasium trading environment with realistic costs/slippage</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
