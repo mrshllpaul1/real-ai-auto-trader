@@ -33,13 +33,17 @@ class ActionRequest(BaseModel):
 # ORDER BOOK ENDPOINTS
 # =============================================================================
 
-@router.post("/orderbook/start")
-async def start_orderbook_stream(
-    symbols: List[str] = None,
+class OrderBookConfig(BaseModel):
+    symbols: List[str] = ["BTC/USD", "ETH/USD", "SOL/USD"]
     depth: int = 25
-):
+
+
+@router.post("/orderbook/start")
+async def start_orderbook_stream(config: OrderBookConfig = None):
     """Start Kraken order book WebSocket stream"""
     global _order_book_ws, _feature_extractor
+    
+    config = config or OrderBookConfig()
     
     try:
         from services.kraken_orderbook_ws import (
@@ -48,7 +52,7 @@ async def start_orderbook_stream(
             get_feature_extractor
         )
         
-        symbols = symbols or ["BTC/USD", "ETH/USD", "SOL/USD"]
+        symbols = config.symbols
         
         # Initialize if not already running
         if _order_book_ws is None or not _order_book_ws.connected:
