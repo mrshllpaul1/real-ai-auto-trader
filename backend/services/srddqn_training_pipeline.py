@@ -1097,6 +1097,15 @@ class SRDDQNTrainingPipeline:
         """Phase 2: Reinforcement Learning"""
         logger.info("=== PHASE 2: Reinforcement Learning ===")
         
+        # Get actual state dim from environment
+        actual_state_dim = env.observation_space.shape[0]
+        
+        # Reinitialize reward network if state_dim mismatch
+        if self.state_dim != actual_state_dim:
+            logger.info(f"Updating state_dim from {self.state_dim} to {actual_state_dim}")
+            self.state_dim = actual_state_dim
+            self.reward_network = RewardNetwork(actual_state_dim, self.action_dim)
+        
         # Initialize agent with trained reward network
         self.agent = Phase2Agent(
             self.state_dim,
