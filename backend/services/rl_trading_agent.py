@@ -354,6 +354,9 @@ class RLTradingAgent:
                     self.agent.target_model = model
                     self.is_trained = True
                     meta = persistence.get_metadata() or {}
+                    # Restore epsilon from metadata
+                    if 'epsilon' in meta:
+                        self.agent.epsilon = meta['epsilon']
                     logger.info(f"✅ RL Agent loaded saved model (trained: {meta.get('saved_at', 'unknown')})")
         except Exception as e:
             logger.warning(f"Could not load saved RL model: {e}")
