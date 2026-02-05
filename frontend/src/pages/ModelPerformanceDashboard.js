@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button';
 import { 
   Brain, TrendingUp, Activity, Cpu, BarChart3, 
   RefreshCw, Play, CheckCircle, XCircle, Clock,
-  Zap, Target, Award, Settings, LineChart
+  Zap, Target, Award, Settings, LineChart, Box
 } from 'lucide-react';
 import { 
   LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, 
@@ -17,21 +17,24 @@ const ModelPerformanceDashboard = () => {
   const [drlStatus, setDrlStatus] = useState(null);
   const [intelligenceStatus, setIntelligenceStatus] = useState(null);
   const [backtestResults, setBacktestResults] = useState(null);
+  const [sb3Status, setSb3Status] = useState(null);
   const [loading, setLoading] = useState(true);
   const [training, setTraining] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
   const fetchAllData = useCallback(async () => {
     try {
-      const [drl, intelligence, backtest] = await Promise.all([
+      const [drl, intelligence, backtest, sb3] = await Promise.all([
         api.get('/drl-engine/status').catch(() => ({ data: null })),
         api.get('/trading-intelligence/status').catch(() => ({ data: null })),
-        api.get('/drl-engine/backtest/status').catch(() => ({ data: null }))
+        api.get('/drl-engine/backtest/status').catch(() => ({ data: null })),
+        api.get('/sb3-agents/status').catch(() => ({ data: null }))
       ]);
       
       setDrlStatus(drl.data);
       setIntelligenceStatus(intelligence.data);
       setBacktestResults(backtest.data);
+      setSb3Status(sb3.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
