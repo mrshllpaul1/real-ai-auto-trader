@@ -810,6 +810,10 @@ class SRDDQNAgent:
         gradients = tape.gradient(q_loss, self.q_network.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.q_network.trainable_variables))
         
+        # Update priorities in replay buffer (PER)
+        td_errors_np = td_errors.numpy()
+        self.replay_buffer.update_priorities(indices, td_errors_np)
+        
         # Soft update target network
         for target_var, var in zip(self.target_network.weights, self.q_network.weights):
             target_var.assign(self.tau * var + (1 - self.tau) * target_var)
@@ -823,7 +827,7 @@ class SRDDQNAgent:
         
         self.training_steps += 1
         
-        # Update exploration rate
+        # Update exploration rate (kept for fallback mode)
         progress = min(1.0, self.total_timesteps / (self.exploration_fraction * self.buffer_size))
         self.epsilon = self.exploration_initial + progress * (
             self.exploration_final - self.exploration_initial
@@ -833,7 +837,8 @@ class SRDDQNAgent:
             'q_loss': float(q_loss),
             'sr_loss': float(sr_loss),
             'curiosity_loss': curiosity_losses['total_loss'],
-            'epsilon': self.epsilon
+            'epsilon': self.epsilon,
+            'mean_td_error': float(np.mean(np.abs(td_errors_np)))
         }
     
     def train_episode(self, env, max_steps: int = 1000) -> Dict[str, Any]:
