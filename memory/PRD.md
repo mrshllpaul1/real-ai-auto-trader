@@ -5,6 +5,26 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ---
 
+## Session 35 - IN PROGRESS (Feb 5, 2026)
+
+### ✅ Bug Fixes Applied
+
+**1. Frontend Build Stability (P0)**
+- Created `/app/frontend/build.sh` with `NODE_OPTIONS=--max-old-space-size=4096`
+- Prevents heap allocation failures during large builds
+
+**2. SRDDQN Training Pipeline Fixes**
+- Fixed Keras/TensorFlow compatibility: replaced `tf.reduce_mean()` with `keras.ops.mean()` in dueling network
+- Fixed state dimension mismatch: Pipeline now auto-detects env observation space (24 → 27)
+- Fixed background task db reference: Captured db before async task execution
+
+**3. Training Status**
+- Phase 1 (Reward Modeling): ✅ COMPLETE - Loss 3.49
+- Phase 2 (Reinforcement Learning): ⏳ IN PROGRESS - Training with 27-dim state space
+- Phases 3-6: Pending
+
+---
+
 ## Session 34 - COMPLETE (Feb 5, 2026)
 
 ### ✅ SRDDQN Live Trading Integration
