@@ -761,7 +761,8 @@ class SB3TradingAgentManager:
                 'trained': info.get('trained', False),
                 'total_timesteps': info.get('total_timesteps', 0),
                 'created_at': info.get('created_at'),
-                'last_trained': info.get('last_trained')
+                'last_trained': info.get('last_trained'),
+                'reward_type': info.get('reward_type', 'sharpe')
             }
         
         return {
@@ -770,7 +771,12 @@ class SB3TradingAgentManager:
             'agents': agent_statuses,
             'environments': list(self.envs.keys()),
             'model_directory': self.model_dir,
-            'supported_algorithms': ['dqn', 'ppo', 'a2c', 'sac']
+            'supported_algorithms': ['dqn', 'ddqn', 'ppo', 'a2c', 'sac'],
+            'reward_function': 'sharpe_ratio',
+            'features': {
+                'ddqn': 'Double Deep Q-Network with target network action selection',
+                'sharpe_reward': 'Rolling Sharpe ratio-based reward with drawdown penalty'
+            }
         }
 
 
