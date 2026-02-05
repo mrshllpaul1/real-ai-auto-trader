@@ -571,6 +571,11 @@ async def _init_phase7_wire_dependencies(db):
     from routes import kraken_exec as kraken_exec_routes
     kraken_exec_routes.set_dependencies(db)
     
+    # Wire Tethys Safety routes
+    from routes import tethys as tethys_routes
+    tethys_routes.set_db(db)
+    logger.info("✅ Tethys Safety System wired")
+    
     # Start schedulers
     await _services['training_scheduler'].start()
     logger.info("✅ Training Scheduler started")
