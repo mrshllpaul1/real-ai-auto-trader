@@ -727,7 +727,7 @@ class UncertaintyQuantifier:
     def get_uncertainty_report(self) -> Dict[str, Any]:
         """Get uncertainty analysis report"""
         if not self.recent_decisions:
-            return {'status': 'no_data'}
+            return {'status': 'no_data', 'agent': AGENT_NAME}
         
         confidences = [d['confidence'] for d in self.recent_decisions]
         uncertainties = [d['uncertainty'] for d in self.recent_decisions]
@@ -735,14 +735,14 @@ class UncertaintyQuantifier:
         return {
             'agent': AGENT_NAME,
             'recent_decisions': len(self.recent_decisions),
-            'avg_confidence': np.mean(confidences),
-            'min_confidence': np.min(confidences),
-            'avg_uncertainty': np.mean(uncertainties),
-            'max_uncertainty': np.max(uncertainties),
-            'temporal_consistency': self.compute_temporal_consistency(
+            'avg_confidence': float(np.mean(confidences)),
+            'min_confidence': float(np.min(confidences)),
+            'avg_uncertainty': float(np.mean(uncertainties)),
+            'max_uncertainty': float(np.max(uncertainties)),
+            'temporal_consistency': float(self.compute_temporal_consistency(
                 self.recent_decisions[-1]['action'],
                 self.recent_decisions[-1]['state_hash']
-            )
+            ))
         }
 
 
