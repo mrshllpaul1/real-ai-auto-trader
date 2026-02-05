@@ -744,24 +744,31 @@ class SRDDQNAgent:
         done: bool,
         extrinsic_reward: float
     ):
-        """Store transition in replay buffer"""
-        self.replay_buffer.append({
+        """Store transition in prioritized replay buffer"""
+        transition = {
             'state': state,
             'action': action,
             'reward': reward,
             'next_state': next_state,
             'done': done,
             'extrinsic_reward': extrinsic_reward
-        })
+        }
+        # New transitions get max priority (will be updated after training)
+        self.replay_buffer.push(transition)
     
     def train_step(self) -> Dict[str, float]:
-        """Perform one training step"""
+        """
+        Perform one training step with Prioritized Experience Replay.
+        
+        MDPI Best Practice: Sample important transitions more frequently
+        and use importance sampling weights to correct the bias.
+        """
         if len(self.replay_buffer) < self.batch_size:
             return {}
         
-        # Sample batch
-        indices = np.random.choice(len(self.replay_buffer), self.batch_size, replace=False)
-        batch = [self.replay_buffer[i] for i in indices]
+        # Sample batch with priorities (PER)
+        batch, indices, weights = self.replay_buffer.sample(self.batch_size)
+        weights = tf.constant(weights, dtype=tf.float32)
         
         states = np.array([t['state'] for t in batch])
         actions = np.array([t['action'] for t in batch])
@@ -770,7 +777,7 @@ class SRDDQNAgent:
         dones = np.array([t['done'] for t in batch])
         extrinsic_rewards = np.array([t['extrinsic_reward'] for t in batch])
         
-        # Double DQN update
+        # Double DQN update with importance sampling
         with tf.GradientTape() as tape:
             # Current Q-values
             q_values = self.q_network(states, training=True)
@@ -792,8 +799,12 @@ class SRDDQNAgent:
             # Compute targets
             targets = rewards + self.gamma * next_q_selected * (1 - dones)
             
-            # Huber loss for stability
-            q_loss = tf.reduce_mean(tf.keras.losses.huber(targets, q_values_selected))
+            # TD-errors for priority updates
+            td_errors = targets - q_values_selected
+            
+            # Weighted Huber loss (importance sampling correction)
+            element_wise_loss = tf.keras.losses.huber(targets, q_values_selected)
+            q_loss = tf.reduce_mean(weights * element_wise_loss)
         
         # Update Q-network
         gradients = tape.gradient(q_loss, self.q_network.trainable_variables)
