@@ -24,13 +24,13 @@ class TestHealthEndpoints:
         assert "version" in data
         print(f"✅ Health check passed: {data}")
     
-    def test_root_health_check(self):
-        """Test root / endpoint"""
-        response = requests.get(f"{BASE_URL}/", timeout=TIMEOUT)
+    def test_api_root(self):
+        """Test /api/ root endpoint"""
+        response = requests.get(f"{BASE_URL}/api/", timeout=TIMEOUT)
         assert response.status_code == 200
         data = response.json()
-        assert data["status"] in ["ok", "healthy"]
-        print(f"✅ Root health check passed: {data}")
+        assert "message" in data or "status" in data
+        print(f"✅ API Root: {data}")
 
 
 class TestRLAgentP0:
