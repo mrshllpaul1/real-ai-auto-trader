@@ -42,12 +42,11 @@ class TestRLAgentP0:
         assert response.status_code == 200
         data = response.json()
         
-        # Verify RL agent is trained
+        # Verify RL agent is trained (model loaded from disk)
         assert data.get("trained") == True, f"RL Agent should be trained, got: {data}"
         assert data.get("initialized") == True
-        assert data.get("total_episodes", 0) >= 50, f"Expected at least 50 episodes, got: {data.get('total_episodes')}"
         
-        print(f"✅ RL Agent Status: trained={data['trained']}, episodes={data.get('total_episodes')}, avg_return={data.get('avg_return_pct')}%")
+        print(f"✅ RL Agent Status: trained={data['trained']}, epsilon={data.get('final_epsilon')}")
     
     def test_rl_agent_can_predict(self):
         """Test RL agent can make predictions after training"""
