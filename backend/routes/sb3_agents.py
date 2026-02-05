@@ -91,16 +91,18 @@ async def initialize_manager():
         return {
             "status": "initialized",
             "message": "SB3 Trading Agent Manager initialized",
-            "supported_algorithms": ["dqn", "ppo", "a2c", "sac"],
+            "supported_algorithms": ["dqn", "ddqn", "ppo", "a2c", "sac"],
             "features": [
-                "DQN with Dueling architecture",
+                "Double DQN (DDQN) with target network action selection",
+                "Sharpe ratio-based reward function",
+                "Drawdown penalty for risk management",
                 "PPO with GAE",
                 "A2C with entropy regularization",
                 "SAC with automatic entropy tuning",
                 "Custom Gymnasium trading environment",
-                "Vectorized training support",
-                "Checkpoint and evaluation callbacks"
-            ]
+                "Vectorized training support"
+            ],
+            "reward_function": "sharpe_ratio"
         }
     except Exception as e:
         logger.error(f"Manager initialization error: {e}")
@@ -108,12 +110,16 @@ async def initialize_manager():
 
 
 @router.post("/create-environment")
-async def create_environment(lookback_days: int = 90):
-    """Create trading environment from historical data"""
+async def create_environment(request: CreateEnvironmentRequest = None):
+    """Create trading environment with Sharpe ratio reward"""
     try:
         manager = get_manager()
         if manager is None:
             raise HTTPException(status_code=400, detail="Manager not initialized")
+        
+        lookback_days = request.lookback_days if request else 90
+        reward_type = request.reward_type if request else "sharpe"
+        sharpe_window = request.sharpe_window if request else 24
         
         # Fetch historical data
         cursor = _db.price_history.find().sort("timestamp", -1).limit(lookback_days * 24)
