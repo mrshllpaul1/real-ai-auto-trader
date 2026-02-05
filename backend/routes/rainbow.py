@@ -353,16 +353,20 @@ async def save_model():
 # COMBINED ENDPOINTS
 # =============================================================================
 
-@router.post("/full-init")
-async def full_initialization(
-    symbols: List[str] = None,
+class FullInitConfig(BaseModel):
+    symbols: List[str] = ["BTC/USD", "ETH/USD", "SOL/USD"]
     depth: int = 25
-):
+
+
+@router.post("/full-init")
+async def full_initialization(config: FullInitConfig = None):
     """Initialize both order book stream and Rainbow DQN"""
-    symbols = symbols or ["BTC/USD", "ETH/USD", "SOL/USD"]
+    config = config or FullInitConfig()
+    symbols = config.symbols
     
     # Start order book
-    ob_result = await start_orderbook_stream(symbols, depth)
+    ob_config = OrderBookConfig(symbols=symbols, depth=config.depth)
+    ob_result = await start_orderbook_stream(ob_config)
     
     # Calculate state dim based on order book features
     levels = 10
