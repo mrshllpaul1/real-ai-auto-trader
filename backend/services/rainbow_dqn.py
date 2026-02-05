@@ -321,16 +321,16 @@ class C51Distribution:
         
         # Compute projection
         b = (Tz - self.v_min) / self.delta_z
-        l = tf.floor(b)
-        u = tf.math.ceil(b)
+        lower = tf.floor(b)
+        upper = tf.math.ceil(b)
         
         # Handle edge cases
-        l = tf.clip_by_value(l, 0, self.n_atoms - 1)
-        u = tf.clip_by_value(u, 0, self.n_atoms - 1)
+        lower = tf.clip_by_value(lower, 0, self.n_atoms - 1)
+        upper = tf.clip_by_value(upper, 0, self.n_atoms - 1)
         
         # Distribute probability
-        l_idx = tf.cast(l, tf.int32)
-        u_idx = tf.cast(u, tf.int32)
+        l_idx = tf.cast(lower, tf.int32)
+        u_idx = tf.cast(upper, tf.int32)
         
         # Create projected distribution
         m = tf.zeros((batch_size, self.n_atoms))
