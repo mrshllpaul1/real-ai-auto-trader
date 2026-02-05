@@ -90,27 +90,3 @@ frontend/node_modules/.cache/default-development/10.pack
 
 # Note: .env files are NOT ignored - they are required for Emergent deployment
 # The deployment system will auto-update secrets during deployment
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
