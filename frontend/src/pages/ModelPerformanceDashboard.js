@@ -644,27 +644,72 @@ const ModelPerformanceDashboard = () => {
                 </div>
 
                 <h4 className="text-white font-medium mb-4">Supported Algorithms</h4>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  {['DDQN', 'DQN', 'PPO', 'A2C', 'SAC'].map((algo) => (
-                    <div key={algo} className={`rounded-lg p-4 text-center ${algo === 'DDQN' ? 'bg-gradient-to-br from-cyan-500/20 to-green-500/20 border border-cyan-500/30' : 'bg-[#1a1a2e]'}`}>
-                      <div className={`w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center ${algo === 'DDQN' ? 'bg-cyan-500/30' : 'bg-cyan-500/20'}`}>
-                        <Brain className={`w-6 h-6 ${algo === 'DDQN' ? 'text-green-400' : 'text-cyan-400'}`} />
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+                  {['SRDDQN', 'DDQN', 'DQN', 'PPO', 'A2C', 'SAC'].map((algo) => (
+                    <div key={algo} className={`rounded-lg p-3 text-center ${
+                      algo === 'SRDDQN' 
+                        ? 'bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30' 
+                        : algo === 'DDQN' 
+                          ? 'bg-gradient-to-br from-cyan-500/20 to-green-500/20 border border-cyan-500/30' 
+                          : 'bg-[#1a1a2e]'
+                    }`}>
+                      <div className={`w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center ${
+                        algo === 'SRDDQN' ? 'bg-purple-500/30' : algo === 'DDQN' ? 'bg-cyan-500/30' : 'bg-cyan-500/20'
+                      }`}>
+                        <Brain className={`w-5 h-5 ${
+                          algo === 'SRDDQN' ? 'text-pink-400' : algo === 'DDQN' ? 'text-green-400' : 'text-cyan-400'
+                        }`} />
                       </div>
-                      <h4 className={`font-medium ${algo === 'DDQN' ? 'text-green-400' : 'text-white'}`}>{algo}</h4>
+                      <h4 className={`font-medium text-sm ${
+                        algo === 'SRDDQN' ? 'text-pink-400' : algo === 'DDQN' ? 'text-green-400' : 'text-white'
+                      }`}>{algo}</h4>
                       <p className="text-gray-400 text-xs mt-1">
-                        {algo === 'DDQN' && 'Double DQN + Sharpe'}
+                        {algo === 'SRDDQN' && 'Self-Rewarding DQN'}
+                        {algo === 'DDQN' && 'Double DQN'}
                         {algo === 'DQN' && 'Deep Q-Network'}
-                        {algo === 'PPO' && 'Proximal Policy Opt.'}
-                        {algo === 'A2C' && 'Advantage Actor-Critic'}
+                        {algo === 'PPO' && 'Proximal Policy'}
+                        {algo === 'A2C' && 'Actor-Critic'}
                         {algo === 'SAC' && 'Soft Actor-Critic'}
                       </p>
+                      {algo === 'SRDDQN' && (
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded-full">
+                          Advanced
+                        </span>
+                      )}
                       {algo === 'DDQN' && (
-                        <span className="inline-block mt-2 px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">
                           Recommended
                         </span>
                       )}
                     </div>
                   ))}
+                </div>
+
+                {/* SRDDQN Details Card */}
+                <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg border border-purple-500/20">
+                  <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-pink-400" />
+                    SRDDQN - Self-Rewarding Architecture
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div className="p-3 bg-[#12121A] rounded">
+                      <p className="text-purple-400 font-medium mb-1">Self-Reward Predictor</p>
+                      <p className="text-gray-400">Generates intrinsic rewards for dense learning signal</p>
+                    </div>
+                    <div className="p-3 bg-[#12121A] rounded">
+                      <p className="text-pink-400 font-medium mb-1">Curiosity Module (ICM)</p>
+                      <p className="text-gray-400">Exploration bonus from state prediction error</p>
+                    </div>
+                    <div className="p-3 bg-[#12121A] rounded">
+                      <p className="text-cyan-400 font-medium mb-1">Dueling Architecture</p>
+                      <p className="text-gray-400">Separate Value + Advantage streams</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 p-2 bg-[#12121A] rounded text-xs">
+                    <p className="text-gray-300">
+                      <span className="text-purple-400">Reward Formula:</span> R = 0.5×Sharpe + 0.3×SelfReward×Confidence + 0.2×Curiosity
+                    </p>
+                  </div>
                 </div>
 
                 <div className="mt-6 p-4 bg-[#1a1a2e] rounded-lg">
@@ -693,11 +738,11 @@ const ModelPerformanceDashboard = () => {
                 </div>
 
                 <div className="mt-6 p-4 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-lg border border-cyan-500/20">
-                  <h4 className="text-white font-medium mb-2">GitHub References</h4>
+                  <h4 className="text-white font-medium mb-2">References</h4>
                   <div className="text-xs text-gray-400 space-y-1">
+                    <p>• <a href="https://www.mdpi.com/2227-7390/12/24/4020" className="text-purple-400 hover:underline" target="_blank" rel="noopener noreferrer">Huang et al. (2024) - Self-Rewarding DRL</a></p>
                     <p>• <a href="https://github.com/AI4Finance-Foundation/FinRL" className="text-cyan-400 hover:underline" target="_blank" rel="noopener noreferrer">FinRL - Financial RL Framework</a></p>
                     <p>• <a href="https://github.com/DLR-RM/stable-baselines3" className="text-cyan-400 hover:underline" target="_blank" rel="noopener noreferrer">Stable-Baselines3</a></p>
-                    <p>• Custom Gymnasium trading environment with realistic costs/slippage</p>
                   </div>
                 </div>
               </CardContent>
