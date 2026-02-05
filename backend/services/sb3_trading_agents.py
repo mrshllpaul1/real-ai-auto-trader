@@ -415,7 +415,8 @@ class TradingCallback(BaseCallback):
 class SB3TradingAgentManager:
     """
     Manager for Stable-Baselines3 trading agents.
-    Supports DQN, PPO, A2C, and SAC algorithms.
+    Supports DQN (with Double DQN), PPO, A2C, and SAC algorithms.
+    Features Sharpe ratio-based reward function.
     """
     
     def __init__(self, db, model_dir: str = "/app/backend/models/sb3"):
@@ -441,6 +442,24 @@ class SB3TradingAgentManager:
                 'exploration_fraction': 0.3,
                 'exploration_initial_eps': 1.0,
                 'exploration_final_eps': 0.05
+            },
+            # Double DQN - uses target network for action selection
+            'ddqn': {
+                'learning_rate': 1e-4,
+                'buffer_size': 100000,
+                'learning_starts': 1000,
+                'batch_size': 64,
+                'tau': 0.005,  # Soft update coefficient
+                'gamma': 0.99,
+                'train_freq': 4,
+                'target_update_interval': 1000,
+                'exploration_fraction': 0.2,
+                'exploration_initial_eps': 1.0,
+                'exploration_final_eps': 0.02,
+                # DDQN specific - SB3 DQN implements Double DQN by default
+                'policy_kwargs': {
+                    'net_arch': [256, 256, 128]  # Deeper network for trading
+                }
             },
             'ppo': {
                 'learning_rate': 3e-4,
@@ -475,12 +494,22 @@ class SB3TradingAgentManager:
             }
         }
     
-    def create_env(self, df: pd.DataFrame, env_name: str = "default") -> gym.Env:
-        """Create and register trading environment"""
+    def create_env(
+        self, 
+        df: pd.DataFrame, 
+        env_name: str = "default",
+        reward_type: str = 'sharpe',
+        sharpe_window: int = 24
+    ) -> gym.Env:
+        """Create and register trading environment with Sharpe ratio reward"""
         if not GYMNASIUM_AVAILABLE:
             raise ImportError("Gymnasium is required for SB3 agents")
         
-        env = CryptoTradingEnv(df)
+        env = CryptoTradingEnv(
+            df, 
+            reward_type=reward_type,
+            sharpe_window=sharpe_window
+        )
         env = Monitor(env)  # Wrap with Monitor for logging
         self.envs[env_name] = env
         
