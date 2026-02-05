@@ -813,6 +813,19 @@ class RLTradingAgent:
     
     def get_training_summary(self) -> Dict[str, Any]:
         """Get training summary"""
+        # If model is trained (loaded from disk), return trained status even without history
+        if self.is_trained and not self.training_history:
+            return {
+                'trained': True,
+                'total_episodes': 0,
+                'best_return_pct': 0,
+                'worst_return_pct': 0,
+                'avg_return_pct': 0,
+                'final_epsilon': round(self.agent.epsilon, 4),
+                'memory_size': len(self.agent.memory),
+                'note': 'Model loaded from disk'
+            }
+        
         if not self.training_history:
             return {'trained': False}
         
