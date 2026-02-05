@@ -568,7 +568,7 @@ class SRDDQNAgent:
         
         # Build networks
         self.q_network = self._build_q_network()
-        self.target_network = self._build_q_network()
+        self.target_network = self._build_q_network(noisy=False)  # Target uses standard layers
         self.target_network.set_weights(self.q_network.get_weights())
         
         # Self-reward predictor
@@ -587,8 +587,13 @@ class SRDDQNAgent:
             learning_rate=learning_rate
         )
         
-        # Experience replay buffer
-        self.replay_buffer = deque(maxlen=buffer_size)
+        # Prioritized Experience Replay (MDPI: better sample efficiency)
+        self.replay_buffer = PrioritizedReplayBuffer(
+            capacity=buffer_size,
+            alpha=0.6,
+            beta_start=0.4,
+            beta_frames=100000
+        )
         
         # Optimizer
         self.optimizer = optimizers.Adam(learning_rate=learning_rate)
