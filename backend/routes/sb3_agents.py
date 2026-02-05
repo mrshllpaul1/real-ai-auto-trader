@@ -384,6 +384,19 @@ async def get_supported_algorithms():
     """Get information about supported algorithms"""
     return {
         "algorithms": {
+            "ddqn": {
+                "name": "Double Deep Q-Network",
+                "description": "Enhanced DQN with target network action selection to reduce overestimation",
+                "best_for": "Discrete trading decisions with better value estimation",
+                "reward_function": "Sharpe ratio-based",
+                "features": [
+                    "Target network for action selection (Double DQN)",
+                    "Experience replay buffer (100k transitions)",
+                    "Soft target updates (tau=0.005)",
+                    "Deeper network architecture [256, 256, 128]",
+                    "Lower exploration rate for stability"
+                ]
+            },
             "dqn": {
                 "name": "Deep Q-Network",
                 "description": "Value-based DRL with discrete actions",
