@@ -11,7 +11,7 @@ import hashlib
 import base64
 import urllib.parse
 import time
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, List
 from datetime import datetime
 import os
 import aiohttp
