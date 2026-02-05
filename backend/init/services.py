@@ -275,6 +275,7 @@ async def _init_phase5_predictions(db):
     from services.cross_asset_correlation import get_cross_asset_correlation
     from services.advanced_technical_analysis import get_advanced_ta
     from services.deep_rl_trading_engine import get_drl_engine, initialize_drl_engine
+    from services.trading_intelligence_engine import initialize_trading_intelligence
     
     task_manager = _services['task_manager']
     
@@ -282,6 +283,11 @@ async def _init_phase5_predictions(db):
     drl_engine = await initialize_drl_engine(db)
     _services['drl_engine'] = drl_engine
     logger.info("✅ Deep RL Trading Engine initialized")
+    
+    # Initialize Trading Intelligence Engine (XGBoost/LightGBM + FinRL)
+    trading_intelligence = await initialize_trading_intelligence(db)
+    _services['trading_intelligence'] = trading_intelligence
+    logger.info("✅ Trading Intelligence Engine initialized")
     
     order_book = get_order_book_analyzer(db)
     on_chain = get_on_chain_analytics(db)
