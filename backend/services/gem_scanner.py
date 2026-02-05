@@ -20,14 +20,36 @@ class GemScanner:
         self.coinmarketcap_key = os.getenv('COINMARKETCAP_API_KEY')
         self.coinstats_key = os.getenv('COINSTATS_API_KEY')
         
-        # CoinMarketCap ID mapping
+        # CoinMarketCap ID mapping - Expanded to 50+ coins
         self.cmc_ids = {
+            # Major coins
             'bitcoin': 1, 'ethereum': 1027, 'solana': 5426, 'cardano': 2010,
             'polkadot': 6636, 'avalanche': 5805, 'chainlink': 1975, 
             'polygon': 3890, 'uniswap': 7083, 'litecoin': 2,
             'dogecoin': 74, 'shiba-inu': 5994, 'ripple': 52, 'tron': 1958,
             'cosmos': 3794, 'near': 6535, 'aptos': 21794, 'sui': 20947,
-            'arbitrum': 11841, 'optimism': 11840
+            'arbitrum': 11841, 'optimism': 11840,
+            # Layer 1s
+            'binancecoin': 1839, 'stellar': 512, 'monero': 328, 
+            'ethereum-classic': 1321, 'bitcoin-cash': 1831, 'hedera': 4642,
+            'internet-computer': 8916, 'vechain': 3077, 'tezos': 2011, 
+            'eos': 1765, 'fantom': 3513, 'algorand': 4030,
+            # DeFi
+            'aave': 7278, 'maker': 1518, 'compound': 5692, 'curve-dao-token': 6538,
+            'lido-dao': 8000, 'synthetix': 2586, 'yearn-finance': 5864,
+            'pancakeswap-token': 7186, '1inch': 8104, 'sushi': 6758,
+            # Gaming/Metaverse
+            'the-sandbox': 6210, 'decentraland': 1966, 'axie-infinity': 6783,
+            'gala': 7080, 'enjin-coin': 2130, 'immutable-x': 10603,
+            # AI tokens
+            'fetch-ai': 3773, 'render-token': 5690, 'bittensor': 22861,
+            'singularitynet': 2424, 'ocean-protocol': 3911,
+            # Meme coins
+            'pepe': 24478, 'bonk': 23095, 'floki': 10804, 'worldcoin': 13502,
+            # New L2s
+            'starknet': 22691, 'base': 27716, 'mantle': 27075,
+            # Others
+            'injective': 7226, 'sei': 23149, 'celestia': 22861
         }
         
         # Coins to monitor
