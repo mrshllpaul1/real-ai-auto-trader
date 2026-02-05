@@ -287,7 +287,8 @@ async def get_kraken_portfolio():
         return _kraken_portfolio_cache["data"]
     
     try:
-        from server import kraken_service
+        from server import get_service
+        kraken_service = get_service('kraken')
         if not kraken_service:
             return {"error": "Kraken service not initialized", "holdings": [], "total_value_usd": 0}
         
