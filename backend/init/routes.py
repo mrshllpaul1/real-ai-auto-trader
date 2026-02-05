@@ -112,6 +112,7 @@ def register_routes(api_router: APIRouter):
     api_router.include_router(sb3_agents_routes.router, tags=["SB3 Trading Agents"])
     api_router.include_router(srddqn_routes.router, tags=["SRDDQN Agent"])
     api_router.include_router(srddqn_pipeline_routes.router, tags=["SRDDQN Pipeline"])
+    api_router.include_router(srddqn_trading_routes.router, tags=["SRDDQN Live Trading"])
     
     logger.info("✅ All routes registered")
     
