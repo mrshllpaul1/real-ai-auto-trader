@@ -352,8 +352,12 @@ class Phase2Agent:
         advantage = Dense(64, activation='relu')(x)
         advantage = Dense(self.action_dim, name='advantage')(advantage)
         
-        # Q = V + (A - mean(A))
-        q_values = value + (advantage - tf.reduce_mean(advantage, axis=1, keepdims=True))
+        # Q = V + (A - mean(A)) using Lambda layer for Keras compatibility
+        def combine_streams(inputs):
+            value_stream, advantage_stream = inputs
+            return value_stream + (advantage_stream - keras.ops.mean(advantage_stream, axis=1, keepdims=True))
+        
+        q_values = layers.Lambda(combine_streams, name='q_values')([value, advantage])
         
         return Model(state_input, q_values, name='dueling_dqn')
     
