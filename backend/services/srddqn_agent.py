@@ -385,6 +385,134 @@ class CuriosityModule:
         }
 
 
+# =============================================================================
+# PRIORITIZED EXPERIENCE REPLAY (MDPI Recommendation)
+# =============================================================================
+
+class PrioritizedReplayBuffer:
+    """
+    Prioritized Experience Replay Buffer.
+    
+    MDPI Best Practice: Sample important transitions more frequently.
+    Priority = |TD-error| + small constant (to avoid zero probability)
+    
+    Reference: "Prioritized Experience Replay" (Schaul et al., 2015)
+    """
+    
+    def __init__(
+        self,
+        capacity: int = 100000,
+        alpha: float = 0.6,  # How much prioritization (0 = uniform, 1 = full prioritization)
+        beta_start: float = 0.4,  # Importance sampling correction start
+        beta_frames: int = 100000  # Frames to anneal beta to 1.0
+    ):
+        self.capacity = capacity
+        self.alpha = alpha
+        self.beta_start = beta_start
+        self.beta_frames = beta_frames
+        self.frame = 1
+        
+        # Sum tree for efficient priority sampling
+        self.tree_capacity = 1
+        while self.tree_capacity < capacity:
+            self.tree_capacity *= 2
+        
+        self.sum_tree = np.zeros(2 * self.tree_capacity)
+        self.min_tree = np.full(2 * self.tree_capacity, float('inf'))
+        self.data = [None] * self.tree_capacity
+        
+        self.size = 0
+        self.position = 0
+        self.max_priority = 1.0
+        
+    def _update_tree(self, idx, priority):
+        """Update sum tree and min tree"""
+        tree_idx = idx + self.tree_capacity
+        self.sum_tree[tree_idx] = priority
+        self.min_tree[tree_idx] = priority
+        
+        while tree_idx > 1:
+            tree_idx //= 2
+            left = 2 * tree_idx
+            right = left + 1
+            self.sum_tree[tree_idx] = self.sum_tree[left] + self.sum_tree[right]
+            self.min_tree[tree_idx] = min(self.min_tree[left], self.min_tree[right])
+    
+    def push(self, transition: Dict, priority: float = None):
+        """Add transition with priority"""
+        if priority is None:
+            priority = self.max_priority
+        
+        priority = max(priority, 1e-6) ** self.alpha
+        
+        self.data[self.position] = transition
+        self._update_tree(self.position, priority)
+        
+        self.position = (self.position + 1) % self.tree_capacity
+        self.size = min(self.size + 1, self.capacity)
+    
+    def _sample_idx(self, value):
+        """Sample index from sum tree"""
+        idx = 1
+        while idx < self.tree_capacity:
+            left = 2 * idx
+            if value <= self.sum_tree[left]:
+                idx = left
+            else:
+                value -= self.sum_tree[left]
+                idx = left + 1
+        return idx - self.tree_capacity
+    
+    def sample(self, batch_size: int):
+        """Sample batch with priorities"""
+        indices = []
+        weights = []
+        
+        # Current beta for importance sampling
+        beta = min(1.0, self.beta_start + self.frame * (1.0 - self.beta_start) / self.beta_frames)
+        self.frame += 1
+        
+        total_priority = self.sum_tree[1]
+        min_priority = self.min_tree[1]
+        
+        # Stratified sampling
+        segment = total_priority / batch_size
+        
+        for i in range(batch_size):
+            a = segment * i
+            b = segment * (i + 1)
+            value = np.random.uniform(a, b)
+            
+            idx = self._sample_idx(value)
+            if idx >= self.size:
+                idx = np.random.randint(0, self.size)
+            
+            indices.append(idx)
+            
+            # Importance sampling weight
+            prob = self.sum_tree[idx + self.tree_capacity] / total_priority
+            weight = (prob * self.size) ** (-beta)
+            weights.append(weight)
+        
+        # Normalize weights
+        max_weight = max(weights)
+        weights = [w / max_weight for w in weights]
+        
+        batch = [self.data[i] for i in indices]
+        
+        return batch, np.array(indices), np.array(weights)
+    
+    def update_priorities(self, indices: np.ndarray, td_errors: np.ndarray):
+        """Update priorities based on TD-errors"""
+        for idx, td_error in zip(indices, td_errors):
+            priority = (abs(td_error) + 1e-6) ** self.alpha
+            self.max_priority = max(self.max_priority, priority)
+            self._update_tree(idx, priority)
+    
+    def __len__(self):
+        return self.size
+
+
 class SRDDQNAgent:
     """
     Self-Rewarding Double Deep Q-Network (SRDDQN)
