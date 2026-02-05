@@ -8,6 +8,7 @@ import requests
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+TIMEOUT = 30  # Increased timeout for all requests
 
 
 class TestHealthEndpoints:
