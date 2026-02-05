@@ -115,11 +115,17 @@ class PositionalEncoding(layers.Layer):
         position = np.arange(self.max_len)[:, np.newaxis]
         div_term = np.exp(np.arange(0, self.d_model, 2) * (-np.log(10000.0) / self.d_model))
         
-        pe = np.zeros((self.max_len, self.d_model))
+        pe = np.zeros((self.max_len, self.d_model), dtype=np.float32)
         pe[:, 0::2] = np.sin(position * div_term)
         pe[:, 1::2] = np.cos(position * div_term)
         
-        self.pe = tf.constant(pe, dtype=tf.float32)
+        # Use add_weight instead of tf.constant for proper graph scoping
+        self.pe = self.add_weight(
+            name='positional_encoding',
+            shape=(self.max_len, self.d_model),
+            initializer=tf.keras.initializers.Constant(pe),
+            trainable=False
+        )
         
     def call(self, x):
         seq_len = tf.shape(x)[1]
