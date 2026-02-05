@@ -35,6 +35,97 @@ except ImportError:
     logger.warning("TensorFlow not available for SRDDQN")
 
 
+# =============================================================================
+# NOISY LINEAR LAYER (MDPI Recommendation: Parameter-Space Exploration)
+# =============================================================================
+
+class NoisyDense(layers.Layer):
+    """
+    Noisy Linear Layer for parameter-space exploration.
+    
+    Instead of ε-greedy random actions (which are costly in financial trading),
+    we add learnable noise to network weights. The network learns when to explore.
+    
+    Reference: "Noisy Networks for Exploration" (Fortunato et al., 2018)
+    """
+    
+    def __init__(self, units, sigma_init=0.5, **kwargs):
+        super().__init__(**kwargs)
+        self.units = units
+        self.sigma_init = sigma_init
+        
+    def build(self, input_shape):
+        self.input_dim = input_shape[-1]
+        
+        # Factorized Gaussian noise (more efficient)
+        mu_range = 1.0 / np.sqrt(float(self.input_dim))
+        
+        # Mean weights
+        self.w_mu = self.add_weight(
+            name='w_mu',
+            shape=(self.input_dim, self.units),
+            initializer=tf.keras.initializers.RandomUniform(-mu_range, mu_range),
+            trainable=True
+        )
+        
+        # Noise weights (sigma)
+        self.w_sigma = self.add_weight(
+            name='w_sigma',
+            shape=(self.input_dim, self.units),
+            initializer=tf.keras.initializers.Constant(self.sigma_init / np.sqrt(float(self.input_dim))),
+            trainable=True
+        )
+        
+        # Mean bias
+        self.b_mu = self.add_weight(
+            name='b_mu',
+            shape=(self.units,),
+            initializer=tf.keras.initializers.RandomUniform(-mu_range, mu_range),
+            trainable=True
+        )
+        
+        # Noise bias (sigma)
+        self.b_sigma = self.add_weight(
+            name='b_sigma',
+            shape=(self.units,),
+            initializer=tf.keras.initializers.Constant(self.sigma_init / np.sqrt(float(self.units))),
+            trainable=True
+        )
+        
+    def _scale_noise(self, size):
+        """Factorized Gaussian noise"""
+        x = tf.random.normal([size])
+        return tf.sign(x) * tf.sqrt(tf.abs(x))
+    
+    def call(self, inputs, training=None):
+        if training:
+            # Generate factorized noise
+            epsilon_in = self._scale_noise(self.input_dim)
+            epsilon_out = self._scale_noise(self.units)
+            
+            # Outer product for weight noise
+            w_epsilon = tf.tensordot(epsilon_in, epsilon_out, axes=0)
+            b_epsilon = epsilon_out
+            
+            # Add noise to weights
+            w = self.w_mu + self.w_sigma * w_epsilon
+            b = self.b_mu + self.b_sigma * b_epsilon
+        else:
+            # No noise during inference
+            w = self.w_mu
+            b = self.b_mu
+        
+        return tf.matmul(inputs, w) + b
+    
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'units': self.units,
+            'sigma_init': self.sigma_init
+        })
+        return config
+
+
 class SelfRewardPredictor:
     """
     Self-Reward Predictor Network
