@@ -497,16 +497,20 @@ class RainbowDQN:
             
             advantage = Dense(d_model, activation='relu', name='advantage_1')(encoded)
             advantage = Dense(action_dim * n_atoms, name='advantage_dist')(advantage)
-            advantage = tf.reshape(advantage, (-1, action_dim, n_atoms))
+            advantage = layers.Reshape((action_dim, n_atoms))(advantage)
         
-        # Expand value for broadcasting
-        value = tf.expand_dims(value, axis=1)  # (batch, 1, atoms)
+        # Expand value for broadcasting - use Lambda layer for Keras compatibility
+        value = layers.Lambda(lambda x: keras.ops.expand_dims(x, axis=1))(value)  # (batch, 1, atoms)
         
         # Dueling combination: Q(s,a) = V(s) + A(s,a) - mean(A(s,:))
-        q_dist = value + (advantage - tf.reduce_mean(advantage, axis=1, keepdims=True))
+        def combine_streams(inputs):
+            v, a = inputs
+            return v + (a - keras.ops.mean(a, axis=1, keepdims=True))
+        
+        q_dist = layers.Lambda(combine_streams)([value, advantage])
         
         # Softmax over atoms for each action
-        q_dist = tf.nn.softmax(q_dist, axis=-1)  # (batch, actions, atoms)
+        q_dist = layers.Softmax(axis=-1)(q_dist)  # (batch, actions, atoms)
         
         return Model(state_input, q_dist, name='rainbow_dqn')
     
