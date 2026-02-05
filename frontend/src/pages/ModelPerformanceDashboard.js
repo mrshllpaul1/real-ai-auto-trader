@@ -173,18 +173,18 @@ const ModelPerformanceDashboard = () => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex gap-2 border-b border-gray-800 pb-2">
-          {['overview', 'ensemble', 'timeseries', 'finrl', 'backtest'].map((tab) => (
+        <div className="flex gap-2 border-b border-gray-800 pb-2 overflow-x-auto">
+          {['overview', 'ensemble', 'timeseries', 'finrl', 'sb3', 'backtest'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-t-lg transition-colors ${
+              className={`px-4 py-2 rounded-t-lg transition-colors whitespace-nowrap ${
                 activeTab === tab 
                   ? 'bg-cyan-500/20 text-cyan-400 border-b-2 border-cyan-400' 
                   : 'text-gray-400 hover:text-gray-200'
               }`}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'sb3' ? 'SB3 Agents' : tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
         </div>
