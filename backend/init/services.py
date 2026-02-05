@@ -299,6 +299,16 @@ async def _init_phase5_predictions(db):
         logger.warning(f"⚠️ SB3 Manager initialization failed: {e}")
         _services['sb3_manager'] = None
     
+    # Initialize SRDDQN Manager (Self-Rewarding Double DQN)
+    try:
+        from services.srddqn_agent import initialize_srddqn_manager
+        srddqn_manager = await initialize_srddqn_manager(db)
+        _services['srddqn_manager'] = srddqn_manager
+        logger.info("✅ SRDDQN Manager initialized")
+    except Exception as e:
+        logger.warning(f"⚠️ SRDDQN Manager initialization failed: {e}")
+        _services['srddqn_manager'] = None
+    
     order_book = get_order_book_analyzer(db)
     on_chain = get_on_chain_analytics(db)
     social_sentiment = get_social_sentiment(db)
