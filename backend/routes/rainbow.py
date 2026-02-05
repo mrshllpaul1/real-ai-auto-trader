@@ -12,7 +12,7 @@ import asyncio
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/rainbow", tags=["Rainbow DQN"])
+router = APIRouter(prefix="/rainbow", tags=["Rainbow DQN"])
 
 # Global references
 _order_book_ws = None
