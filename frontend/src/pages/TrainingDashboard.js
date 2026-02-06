@@ -1005,7 +1005,7 @@ const TrainingDashboard = () => {
                     <div className="text-center py-8 text-[#666]">
                       <Zap size={32} className="mx-auto mb-2 opacity-50" />
                       <p>No scan results yet</p>
-                      <p className="text-xs mt-1">Click "Scan Now" to run</p>
+                      <p className="text-xs mt-1">Click &quot;Scan Now&quot; to run</p>
                     </div>
                   )}
                 </div>

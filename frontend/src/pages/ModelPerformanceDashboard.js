@@ -567,7 +567,7 @@ const ModelPerformanceDashboard = () => {
                 ) : (
                   <div className="text-center py-8 text-gray-400">
                     <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>No backtest results yet. Click "Run Backtest" to start.</p>
+                    <p>No backtest results yet. Click &quot;Run Backtest&quot; to start.</p>
                   </div>
                 )}
 
