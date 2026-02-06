@@ -76,7 +76,7 @@ const tutorialSteps = [
     content: (
       <div className="space-y-4">
         <p className="text-[#A1A1AA]">
-          To enable real money trading, you'll need to add your Kraken API credentials.
+          To enable real money trading, you&apos;ll need to add your Kraken API credentials.
           This is optional - you can use paper trading indefinitely.
         </p>
         <div className="p-4 bg-[#121212] rounded-lg space-y-3">
@@ -85,7 +85,7 @@ const tutorialSteps = [
             <li>Log in to Kraken.com</li>
             <li>Go to Settings → API</li>
             <li>Create a new API key</li>
-            <li>Enable "Query Funds" and "Create & Modify Orders"</li>
+            <li>Enable &quot;Query Funds&quot; and &quot;Create &amp; Modify Orders&quot;</li>
             <li>Add keys in Settings page of this app</li>
           </ol>
         </div>

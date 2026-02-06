@@ -199,7 +199,7 @@ const GemMLDLComparison = () => {
                 <Zap className="text-[#FFB800]" />
                 <div>
                   <p className="text-[#FFB800] font-medium">Models not trained</p>
-                  <p className="text-xs text-[#A1A1AA]">Click "Train Models" to start training all ML and DL models</p>
+                  <p className="text-xs text-[#A1A1AA]">Click &quot;Train Models&quot; to start training all ML and DL models</p>
                 </div>
               </div>
             </CardContent>

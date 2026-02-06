@@ -428,7 +428,7 @@ const GemScanner = () => {
             <Radar size={64} className="mx-auto mb-4 text-[#007AFF] opacity-50" />
             <h3 className="text-xl font-heading text-white mb-2">No Hidden Gems Detected</h3>
             <p className="text-[#A1A1AA] mb-4">
-              Click "Scan Now" to analyze the market for 10x-100x opportunities
+              Click &quot;Scan Now&quot; to analyze the market for 10x-100x opportunities
             </p>
             <Button
               onClick={scanNow}
