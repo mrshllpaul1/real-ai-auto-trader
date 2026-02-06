@@ -313,7 +313,7 @@ const Guide = () => {
               Go to Auto Execute → AI Status to see learning progress
             </StepItem>
             <StepItem number="2" title="Check Signal Weights">
-              View which signals are performing best (weight > 1.0 = above average)
+              View which signals are performing best (weight &gt; 1.0 = above average)
             </StepItem>
             <StepItem number="3" title="Get AI Insights">
               Click "AI Insights" for personalized strategy recommendations
