@@ -40,9 +40,6 @@ def register_routes(api_router: APIRouter):
     from routes import drl_engine as drl_engine_routes
     from routes import trading_intelligence as trading_intelligence_routes
     from routes import sb3_agents as sb3_agents_routes
-    from routes import srddqn as srddqn_routes
-    from routes import srddqn_pipeline as srddqn_pipeline_routes
-    from routes import srddqn_trading as srddqn_trading_routes
     from routes import kraken_exec as kraken_exec_routes
     from routes import rainbow as rainbow_routes
     from routes import tethys as tethys_routes
