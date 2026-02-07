@@ -78,7 +78,6 @@ def register_routes(api_router: APIRouter):
     api_router.include_router(ai_discovery.router, tags=["AI Discovery"])
     api_router.include_router(sentiment.router, tags=["Sentiment Analysis"])
     api_router.include_router(cryptopanic.router, tags=["Crypto News"])
-    api_router.include_router(deep_learning.router, tags=["Deep Learning AI"])
     api_router.include_router(ai_chat.router, tags=["AI Chat"])
     api_router.include_router(ai_universe_expand.router, tags=["AI Universe Expansion"])
     api_router.include_router(gem_predictor.router, tags=["Hidden Gem Predictor"])
