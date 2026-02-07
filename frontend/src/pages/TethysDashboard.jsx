@@ -440,27 +440,37 @@ const TethysDashboard = () => {
 
               {/* News Feed */}
               <div className="space-y-2 pt-2 border-t border-slate-700/50">
-                <p className="text-[10px] text-slate-500 uppercase">Latest News</p>
+                <p className="text-[10px] text-slate-500 uppercase">Latest News ({sentimentData?.source || 'coinstats'})</p>
                 {sentimentData?.news?.slice(0, 3).map((item, i) => (
                   <div key={i} className="flex items-start gap-2 pb-2 border-b border-slate-700/50 last:border-0">
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                      item.kind === 'news' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded shrink-0 ${
+                      item.sentiment?.label === 'BULLISH' ? 'bg-green-500/20 text-green-400' :
+                      item.sentiment?.label === 'BEARISH' ? 'bg-red-500/20 text-red-400' :
+                      'bg-blue-500/20 text-blue-400'
                     }`}>
-                      {item.kind || 'news'}
+                      {item.sentiment?.label?.charAt(0) || 'N'}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-slate-300 line-clamp-2">{item.title}</p>
+                      <a 
+                        href={item.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-slate-300 line-clamp-2 hover:text-cyan-400 transition-colors"
+                      >
+                        {item.title}
+                      </a>
                       <div className="flex items-center gap-2 mt-1">
-                        {item.currencies?.slice(0, 2).map((c, j) => (
-                          <span key={j} className="text-[10px] text-cyan-400">{c.code}</span>
+                        {item.related_coins?.slice(0, 2).map((coin, j) => (
+                          <span key={j} className="text-[10px] text-cyan-400">{coin}</span>
                         ))}
                         <span className="text-[10px] text-slate-500">
-                          {new Date(item.published_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                          {item.source} • {new Date(item.published_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </span>
                       </div>
                     </div>
                   </div>
-                )) || (
+                ))}
+                {(!sentimentData?.news || sentimentData.news.length === 0) && (
                   <p className="text-xs text-slate-500">No recent news</p>
                 )}
               </div>
