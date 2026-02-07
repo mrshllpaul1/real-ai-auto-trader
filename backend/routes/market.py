@@ -23,19 +23,28 @@ async def get_crypto_prices(
     enhanced_service = Depends(get_enhanced_market_service)
 ):
     """Get current prices for cryptocurrencies from multiple sources"""
+    import asyncio
     try:
         coin_list = coin_ids.split(',')
         
         if enhanced:
-            # Use aggregated data from multiple sources
-            prices = await enhanced_service.get_aggregated_prices(coin_list)
+            # Use aggregated data with timeout
+            try:
+                prices = await asyncio.wait_for(
+                    enhanced_service.get_aggregated_prices(coin_list),
+                    timeout=10.0
+                )
+            except asyncio.TimeoutError:
+                # Fallback to simple service
+                prices = await market_service.get_coin_price(coin_list)
         else:
             # Use single source (CoinGecko)
             prices = await market_service.get_coin_price(coin_list)
         
         return prices
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Return empty prices on error
+        return {coin: {"price": 0, "error": str(e)} for coin in coin_ids.split(',')}
 
 @router.get("/global")
 async def get_global_metrics(
