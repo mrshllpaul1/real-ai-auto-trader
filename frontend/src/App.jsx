@@ -38,7 +38,7 @@ import ModelPerformanceDashboard from "./pages/ModelPerformanceDashboard";
 import SRDDQNDashboard from "./pages/SRDDQNDashboard";
 import TethysDashboard from "./pages/TethysDashboard";
 import Sidebar from "./components/Sidebar";
-import FloatingAIChat from "./components/FloatingAIChat";
+import FloatingCommandHub from "./components/FloatingCommandHub";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "framer-motion";
 import { TradingModeProvider } from "./context/TradingModeContext";
