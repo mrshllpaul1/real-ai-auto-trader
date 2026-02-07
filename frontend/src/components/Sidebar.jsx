@@ -189,7 +189,6 @@ const Sidebar = () => {
     { path: '/enhanced-ai', icon: Brain, label: 'AI Brain', highlight: true },
     { path: '/training', icon: GraduationCap, label: 'AI Training', highlight: true },
     { path: '/models', icon: Cpu, label: 'Model Performance', highlight: true },
-    { path: '/srddqn', icon: Brain, label: 'SRDDQN Agent', highlight: true },
     { path: '/tethys', icon: Waves, label: 'Tethys AI', highlight: true },
     { path: '/event-timeline', icon: Calendar, label: 'Event Timeline', highlight: true },
     { path: '/journal', icon: BookOpen, label: 'Journal' },
