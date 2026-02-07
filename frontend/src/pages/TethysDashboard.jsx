@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -7,11 +7,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { 
   Activity, Brain, Shield, TrendingUp, TrendingDown, 
   AlertTriangle, Play, Pause, BarChart3, Zap, 
-  RefreshCw, ChevronDown, ChevronUp, Waves
+  RefreshCw, ChevronDown, ChevronUp, Waves, Wifi, WifiOff
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const API_URL = window.__RUNTIME_CONFIG__?.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+const WS_URL = API_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
 
 // Mobile-optimized Tethys Dashboard for Galaxy S22 (1080x2340)
 const TethysDashboard = () => {
@@ -20,22 +21,79 @@ const TethysDashboard = () => {
   const [tradingData, setTradingData] = useState(null);
   const [trainingData, setTrainingData] = useState(null);
   const [sentimentData, setSentimentData] = useState(null);
+  const [marketSentiment, setMarketSentiment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedCard, setExpandedCard] = useState(null);
+  const [wsConnected, setWsConnected] = useState(false);
+  const wsRef = useRef(null);
+
+  // WebSocket connection for real-time training updates
+  useEffect(() => {
+    const connectWebSocket = () => {
+      try {
+        const ws = new WebSocket(`${WS_URL}/api/tethys-train/ws/progress`);
+        
+        ws.onopen = () => {
+          setWsConnected(true);
+          console.log('Training WebSocket connected');
+        };
+        
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          if (data.type === 'episode' || data.type === 'status') {
+            setTrainingData(prev => ({
+              ...prev,
+              training: {
+                ...prev?.training,
+                ...data.data,
+                recent_history: data.type === 'episode' 
+                  ? [...(prev?.training?.recent_history || []).slice(-19), data.data]
+                  : prev?.training?.recent_history
+              }
+            }));
+          }
+        };
+        
+        ws.onclose = () => {
+          setWsConnected(false);
+          // Attempt reconnect after 5 seconds
+          setTimeout(connectWebSocket, 5000);
+        };
+        
+        ws.onerror = () => {
+          setWsConnected(false);
+        };
+        
+        wsRef.current = ws;
+      } catch (e) {
+        console.log('WebSocket not available');
+      }
+    };
+    
+    connectWebSocket();
+    
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
-      const [dashboard, trading, training, sentiment] = await Promise.all([
+      const [dashboard, trading, training, sentiment, mktSentiment] = await Promise.all([
         fetch(`${API_URL}/api/tethys/dashboard`).then(r => r.json()),
         fetch(`${API_URL}/api/tethys-trading/dashboard`).then(r => r.json()),
         fetch(`${API_URL}/api/tethys-train/dashboard`).then(r => r.json()),
-        fetch(`${API_URL}/api/news/trending?limit=5`).then(r => r.json()).catch(() => ({ news: [] }))
+        fetch(`${API_URL}/api/news/trending?limit=5`).then(r => r.json()).catch(() => ({ news: [] })),
+        fetch(`${API_URL}/api/tethys/sentiment`).then(r => r.json()).catch(() => null)
       ]);
       
       setDashboardData(dashboard);
       setTradingData(trading);
       setTrainingData(training);
       setSentimentData(sentiment);
+      setMarketSentiment(mktSentiment);
     } catch (error) {
       console.error('Fetch error:', error);
     } finally {
