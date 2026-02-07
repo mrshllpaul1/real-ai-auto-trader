@@ -86,7 +86,6 @@ function App() {
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/learning" element={<AILearning />} />
                 <Route path="/learning-loop" element={<AILearningLoop />} />
-                <Route path="/deep-learning" element={<DeepLearningAI />} />
                 <Route path="/ensemble" element={<EnsembleAI />} />
                 <Route path="/triggers" element={<EventTriggers />} />
                 <Route path="/gem-backtest" element={<GemBacktester />} />
