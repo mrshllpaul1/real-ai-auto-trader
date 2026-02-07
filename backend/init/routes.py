@@ -122,6 +122,7 @@ def register_routes(api_router: APIRouter):
     api_router.include_router(rainbow_routes.router, tags=["Rainbow DQN"])
     api_router.include_router(tethys_routes.router, tags=["Tethys Safety"])
     api_router.include_router(tethys_trading_routes.router, tags=["Tethys Trading"])
+    api_router.include_router(tethys_train_routes.router, tags=["Tethys Training"])
     
     logger.info("✅ All routes registered")
     
