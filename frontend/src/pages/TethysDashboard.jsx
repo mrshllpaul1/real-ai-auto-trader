@@ -357,6 +357,46 @@ const TethysDashboard = () => {
             onToggle={() => setExpandedCard(expandedCard === 'sentiment' ? null : 'sentiment')}
           >
             <div className="space-y-3">
+              {/* Fear & Greed Index - Primary Indicator */}
+              {marketSentiment?.fear_greed_index !== undefined && (
+                <div className="p-3 rounded-lg bg-gradient-to-r from-red-500/10 via-yellow-500/10 to-green-500/10 border border-slate-700/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-slate-400">Fear & Greed Index</span>
+                    <Badge className={`text-[10px] ${
+                      marketSentiment.fear_greed_index <= 24 ? 'bg-red-500/20 text-red-400' :
+                      marketSentiment.fear_greed_index <= 44 ? 'bg-orange-500/20 text-orange-400' :
+                      marketSentiment.fear_greed_index <= 55 ? 'bg-yellow-500/20 text-yellow-400' :
+                      marketSentiment.fear_greed_index <= 74 ? 'bg-lime-500/20 text-lime-400' :
+                      'bg-green-500/20 text-green-400'
+                    }`}>
+                      {marketSentiment.fear_greed_classification}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-2xl font-bold ${
+                      marketSentiment.fear_greed_index <= 24 ? 'text-red-400' :
+                      marketSentiment.fear_greed_index <= 44 ? 'text-orange-400' :
+                      marketSentiment.fear_greed_index <= 55 ? 'text-yellow-400' :
+                      marketSentiment.fear_greed_index <= 74 ? 'text-lime-400' :
+                      'text-green-400'
+                    }`}>
+                      {marketSentiment.fear_greed_index}
+                    </span>
+                    <div className="flex-1 h-2 rounded-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 relative">
+                      <div 
+                        className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-slate-900 shadow-lg"
+                        style={{ left: `${marketSentiment.fear_greed_index}%` }}
+                      />
+                    </div>
+                  </div>
+                  {marketSentiment.fear_greed_recommendation && (
+                    <p className="text-[10px] text-slate-500 mt-2">
+                      Recommendation: <span className="text-slate-300">{marketSentiment.fear_greed_recommendation}</span>
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Aggregated Sentiment Score */}
               {marketSentiment && (
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-900/50">
@@ -365,7 +405,7 @@ const TethysDashboard = () => {
                       marketSentiment.signal === 'BULLISH' ? 'bg-green-400' :
                       marketSentiment.signal === 'BEARISH' ? 'bg-red-400' : 'bg-yellow-400'
                     }`} />
-                    <span className="text-xs text-slate-400">Overall Market</span>
+                    <span className="text-xs text-slate-400">Combined Score</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`text-sm font-mono ${
