@@ -1,0 +1,6 @@
+artifact_location: file:///app/backend/mlruns/377898301508199054
+creation_time: 1770493600555
+experiment_id: '377898301508199054'
+last_update_time: 1770493600555
+lifecycle_stage: active
+name: tethys_rainbow_dqn
