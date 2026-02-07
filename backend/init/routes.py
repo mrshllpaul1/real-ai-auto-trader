@@ -17,7 +17,7 @@ def register_routes(api_router: APIRouter):
     from routes import auto_trading, allocation, scanner, auto_execute, backtest, rebalance
     from routes import social, notifications, alerts, email, ai_portfolio, ai_selection
     from routes import gems, auto_trade, growth, scheduler, budget, journal, ai_decisions
-    from routes import ai_universe, ai_discovery, sentiment, cryptopanic, deep_learning, ai_chat
+    from routes import ai_universe, ai_discovery, sentiment, cryptopanic, ai_chat
     from routes import ai_universe_expand, gem_predictor, simulation, ensemble, coindesk
     from routes import gem_predictor as gem_predictor_routes
     from routes import historical_data, ai_learning_loop, events, event_triggers
