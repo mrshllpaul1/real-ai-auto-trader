@@ -118,10 +118,10 @@ function App() {
                 <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
-              {/* Floating AI Chat - hidden on AI Chat page */}
+              {/* Floating Command Hub - hidden on AI Chat page */}
               <Routes>
                 <Route path="/ai-chat" element={null} />
-                <Route path="*" element={<FloatingAIChat />} />
+                <Route path="*" element={<FloatingCommandHub />} />
               </Routes>
             </motion.main>
           </div>
