@@ -249,11 +249,13 @@ class TestTethysRisk:
         assert response.status_code == 200
         data = response.json()
         
-        # Verify structure
+        # Verify structure - actual response has risk_gateway not risk
         assert "agent" in data
-        assert "risk" in data
+        assert "risk_gateway" in data
+        assert "audit_summary" in data
+        assert "uncertainty" in data
         
-        print(f"✓ Tethys status: {data['agent']['name']}")
+        print(f"✓ Tethys status: {data['agent']}")
 
 
 class TestScannerAndPortfolio:
@@ -271,11 +273,14 @@ class TestScannerAndPortfolio:
             print(f"⚠ Scanner returned {response.status_code} - may be rate limited")
     
     def test_portfolio_endpoint(self):
-        """Test /api/trading/portfolio returns portfolio data"""
-        response = requests.get(f"{BASE_URL}/api/trading/portfolio", timeout=15)
+        """Test /api/trading/kraken/portfolio returns portfolio data (main portfolio endpoint)"""
+        # Note: /api/trading/portfolio doesn't exist, use /api/trading/kraken/portfolio
+        response = requests.get(f"{BASE_URL}/api/trading/kraken/portfolio", timeout=30)
         assert response.status_code == 200
         data = response.json()
-        print(f"✓ Portfolio endpoint returned data")
+        assert "holdings" in data
+        assert "total_value_usd" in data
+        print(f"✓ Portfolio endpoint returned ${data['total_value_usd']:.2f}")
 
 
 if __name__ == "__main__":
