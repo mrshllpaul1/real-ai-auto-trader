@@ -162,8 +162,35 @@ class SentimentScorer:
             return {'score': 0.5, 'confidence': 0, 'available': False}
     
     async def _get_news_sentiment(self, symbol: str) -> Dict[str, Any]:
-        """Get sentiment from news sources"""
+        """Get sentiment from news sources (CoinStats primary, CryptoPanic fallback)"""
         try:
+            # Try CoinStats first (primary news source)
+            from services.coinstats_service import get_coinstats_service
+            coinstats = get_coinstats_service()
+            
+            if coinstats and coinstats.initialized:
+                # Map common symbols to CoinStats coin IDs
+                coin_map = {
+                    'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana',
+                    'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin',
+                    'DOT': 'polkadot', 'AVAX': 'avalanche-2', 'MATIC': 'polygon'
+                }
+                coin_id = coin_map.get(symbol.upper(), symbol.lower())
+                
+                sentiment = await coinstats.get_news_sentiment(limit=10)
+                
+                if sentiment.get('available'):
+                    return {
+                        'score': sentiment['score'],
+                        'confidence': min(sentiment['news_count'] / 5, 1),
+                        'available': True,
+                        'news_count': sentiment['news_count'],
+                        'source': 'coinstats',
+                        'bullish_articles': sentiment.get('bullish_articles', 0),
+                        'bearish_articles': sentiment.get('bearish_articles', 0)
+                    }
+            
+            # Fallback to CryptoPanic
             from services.cryptopanic_service import get_cryptopanic_service
             service = get_cryptopanic_service()
             
@@ -178,20 +205,17 @@ class SentimentScorer:
             )
             
             if not news:
-                return {'score': 0.5, 'confidence': 0.3, 'available': True}
+                return {'score': 0.5, 'confidence': 0.3, 'available': False, 'source': 'cryptopanic'}
             
             # Analyze sentiment from news
             positive = 0
             negative = 0
             
             for item in news:
-                # Check for sentiment indicators
                 title_lower = item.get('title', '').lower()
                 
-                # Bullish keywords
                 bullish_words = ['surge', 'rally', 'gain', 'rise', 'bull', 'up', 
                                'high', 'record', 'breakout', 'positive', 'growth']
-                # Bearish keywords
                 bearish_words = ['drop', 'fall', 'crash', 'bear', 'down', 'low',
                                'decline', 'loss', 'negative', 'fear', 'sell']
                 
@@ -207,15 +231,16 @@ class SentimentScorer:
             
             total = positive + negative
             if total > 0:
-                score = (positive / total) * 0.4 + 0.3  # Normalize to 0.3-0.7 range
+                score = (positive / total) * 0.4 + 0.3
             else:
                 score = 0.5
             
             return {
                 'score': score,
-                'confidence': min(total / 5, 1),  # More news = higher confidence
+                'confidence': min(total / 5, 1),
                 'available': True,
-                'news_count': len(news)
+                'news_count': len(news),
+                'source': 'cryptopanic'
             }
             
         except Exception as e:
