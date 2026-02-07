@@ -282,6 +282,39 @@ const TethysDashboard = () => {
               </div>
             </ExpandableCard>
           )}
+
+          {/* Market Sentiment Card */}
+          <ExpandableCard
+            title="Market Sentiment"
+            icon={<Activity className="w-4 h-4 text-orange-400" />}
+            expanded={expandedCard === 'sentiment'}
+            onToggle={() => setExpandedCard(expandedCard === 'sentiment' ? null : 'sentiment')}
+          >
+            <div className="space-y-2">
+              {sentimentData?.news?.slice(0, 4).map((item, i) => (
+                <div key={i} className="flex items-start gap-2 pb-2 border-b border-slate-700/50 last:border-0">
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                    item.kind === 'news' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'
+                  }`}>
+                    {item.kind || 'news'}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-slate-300 line-clamp-2">{item.title}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {item.currencies?.slice(0, 2).map((c, j) => (
+                        <span key={j} className="text-[10px] text-cyan-400">{c.code}</span>
+                      ))}
+                      <span className="text-[10px] text-slate-500">
+                        {new Date(item.published_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )) || (
+                <p className="text-xs text-slate-500">No recent news</p>
+              )}
+            </div>
+          </ExpandableCard>
         </TabsContent>
 
         {/* AI Tab */}
