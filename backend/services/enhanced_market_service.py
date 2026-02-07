@@ -222,51 +222,44 @@ class AggregatedMarketDataService:
     
     async def get_aggregated_prices(self, coin_ids: List[str]) -> Dict[str, Any]:
         """
-        Get aggregated price data from multiple sources
-        Returns the most reliable data with source attribution
+        Get aggregated price data from CoinStats (primary source with API key)
         """
         import asyncio
+        from services.coinstats_service import get_coinstats_service
         
         result = {}
+        coinstats = get_coinstats_service()
         
-        # Try CoinGecko first (more reliable, no API key needed)
-        try:
-            cg_data = await asyncio.wait_for(
-                self.coingecko.get_coin_price(coin_ids),
-                timeout=8.0
-            )
-        except Exception:
-            cg_data = {}
+        # Map common names to CoinStats IDs
+        coin_map = {
+            'bitcoin': 'bitcoin', 'ethereum': 'ethereum', 'solana': 'solana',
+            'btc': 'bitcoin', 'eth': 'ethereum', 'sol': 'solana'
+        }
         
-        # Try CoinMarketCap as secondary
-        try:
-            cmc_data = await asyncio.wait_for(
-                self.coinmarketcap.get_latest_quotes(coin_ids),
-                timeout=5.0
-            )
-        except Exception:
-            cmc_data = {}
-        
-        # Aggregate and prioritize (CoinGecko first as it's more reliable)
         for coin_id in coin_ids:
             coin_id_lower = coin_id.lower()
+            cs_id = coin_map.get(coin_id_lower, coin_id_lower)
             
-            # Start with CoinGecko
-            if coin_id_lower in cg_data:
-                result[coin_id_lower] = cg_data[coin_id_lower]
-            # Fallback to CoinMarketCap
-            elif coin_id_lower in cmc_data:
-                result[coin_id_lower] = cmc_data[coin_id_lower]
-            
-            # Add aggregation metadata
-            if coin_id_lower in result:
-                result[coin_id_lower]['data_sources'] = []
-                if coin_id_lower in cg_data:
-                    result[coin_id_lower]['data_sources'].append('coingecko')
-                if coin_id_lower in cmc_data:
-                    result[coin_id_lower]['data_sources'].append('coinmarketcap')
-                
-                result[coin_id_lower]['aggregated'] = True
+            try:
+                data = await coinstats.get_coin_data(cs_id)
+                if data:
+                    coin_data = data.get('result', data)
+                    result[coin_id_lower] = {
+                        'price': coin_data.get('price', 0),
+                        'price_change_24h': coin_data.get('priceChange1d', 0),
+                        'price_change_7d': coin_data.get('priceChange1w', 0),
+                        'market_cap': coin_data.get('marketCap', 0),
+                        'volume_24h': coin_data.get('volume', 0),
+                        'data_sources': ['coinstats'],
+                        'aggregated': True
+                    }
+            except Exception as e:
+                result[coin_id_lower] = {
+                    'price': 0,
+                    'error': str(e),
+                    'data_sources': [],
+                    'aggregated': False
+                }
         
         return result
     
