@@ -302,7 +302,7 @@ class RainbowTrainer:
         self.training_history = []
         
         # Performance tracking
-        self.best_sharpe = float('-inf')
+        self.best_sharpe = -999.0  # Use valid float instead of -inf
         self.best_model_path = None
         
         logger.info("🎓 Rainbow Trainer initialized")
