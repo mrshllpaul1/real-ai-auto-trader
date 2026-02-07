@@ -329,23 +329,13 @@ class SentimentScorer:
             logger.debug(f"Volume sentiment error: {e}")
             return {'score': 0.5, 'confidence': 0, 'available': False}
     
-    async def _get_social_sentiment(self, symbol: str) -> Dict[str, Any]:
-        """
-        Placeholder for social sentiment (Twitter/Reddit).
-        Returns neutral score since APIs are not available.
-        """
-        # Would integrate with Twitter/Reddit APIs here
-        return {
-            'score': 0.5,
-            'confidence': 0,
-            'available': False,
-            'note': 'Social APIs not configured'
-        }
-    
     async def get_market_sentiment(self) -> Dict[str, Any]:
         """
-        Get overall market sentiment across top coins.
+        Get overall market sentiment including Fear & Greed Index.
         """
+        # Get Fear & Greed Index first (market-wide indicator)
+        fear_greed = await self._get_fear_greed_sentiment()
+        
         top_coins = ['BTC', 'ETH', 'SOL', 'XRP', 'ADA']
         
         sentiments = []
@@ -357,6 +347,16 @@ class SentimentScorer:
                 continue
         
         if not sentiments:
+            # Use Fear & Greed as fallback
+            if fear_greed.get('available'):
+                return {
+                    'overall_score': fear_greed['score'],
+                    'signal': fear_greed.get('signal', 'NEUTRAL'),
+                    'fear_greed_index': fear_greed.get('value'),
+                    'fear_greed_classification': fear_greed.get('classification'),
+                    'coins_analyzed': 0,
+                    'updated_at': datetime.now().isoformat()
+                }
             return {
                 'overall_score': 0.5,
                 'signal': 'NEUTRAL',
@@ -372,12 +372,21 @@ class SentimentScorer:
         else:
             signal = "NEUTRAL"
         
-        return {
+        result = {
             'overall_score': round(avg_score, 3),
             'signal': signal,
             'coins_analyzed': len(sentiments),
             'breakdown': {s['symbol']: s['signal'] for s in sentiments},
             'updated_at': datetime.now().isoformat()
+        }
+        
+        # Add Fear & Greed Index data
+        if fear_greed.get('available'):
+            result['fear_greed_index'] = fear_greed.get('value')
+            result['fear_greed_classification'] = fear_greed.get('classification')
+            result['fear_greed_recommendation'] = fear_greed.get('recommendation', {}).get('action')
+        
+        return result
         }
     
     def get_trading_recommendation(
