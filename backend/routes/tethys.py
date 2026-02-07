@@ -408,3 +408,31 @@ async def get_sentiment_recommendation(
         "sentiment": sentiment,
         "recommendation": recommendation
     }
+
+
+
+@router.get("/fear-greed")
+async def get_fear_greed_index():
+    """
+    Get the current Fear & Greed Index.
+    
+    Values:
+    - 0-24: Extreme Fear (historically good buying opportunity)
+    - 25-49: Fear
+    - 50: Neutral
+    - 51-74: Greed
+    - 75-100: Extreme Greed (historically good selling opportunity)
+    """
+    from services.fear_greed_service import get_fear_greed_service
+    service = get_fear_greed_service()
+    return await service.get_current_index()
+
+
+@router.get("/fear-greed/history")
+async def get_fear_greed_history(days: int = 7):
+    """
+    Get historical Fear & Greed Index data.
+    """
+    from services.fear_greed_service import get_fear_greed_service
+    service = get_fear_greed_service()
+    return await service.get_historical(days)
