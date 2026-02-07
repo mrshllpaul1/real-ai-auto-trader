@@ -128,6 +128,39 @@ class SentimentScorer:
         
         return result
     
+    async def _get_fear_greed_sentiment(self) -> Dict[str, Any]:
+        """Get sentiment from Fear & Greed Index (primary source)"""
+        try:
+            from services.fear_greed_service import get_fear_greed_service
+            service = get_fear_greed_service()
+            
+            data = await service.get_current_index()
+            
+            if not data or data.get('value') is None:
+                return {'score': 0.5, 'confidence': 0, 'available': False}
+            
+            # Convert 0-100 index to 0-1 score
+            # Fear (0-49) = bearish, Greed (51-100) = bullish
+            value = data['value']
+            score = value / 100  # Direct mapping: 0=extreme fear, 100=extreme greed
+            
+            # Determine signal
+            signal = data.get('signal', 'NEUTRAL')
+            
+            return {
+                'score': score,
+                'confidence': 0.85,  # High confidence - reliable indicator
+                'available': True,
+                'value': value,
+                'classification': data.get('classification'),
+                'signal': signal,
+                'recommendation': data.get('recommendation', {})
+            }
+            
+        except Exception as e:
+            logger.debug(f"Fear & Greed sentiment error: {e}")
+            return {'score': 0.5, 'confidence': 0, 'available': False}
+    
     async def _get_news_sentiment(self, symbol: str) -> Dict[str, Any]:
         """Get sentiment from news sources"""
         try:
