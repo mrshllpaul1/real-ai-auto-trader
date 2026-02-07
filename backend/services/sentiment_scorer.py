@@ -66,9 +66,9 @@ class SentimentScorer:
         # Collect sentiment from sources
         sources = {}
         
-        # News sentiment
-        news_score = await self._get_news_sentiment(cache_key)
-        sources['news'] = news_score
+        # Fear & Greed Index (primary source - always available)
+        fear_greed_score = await self._get_fear_greed_sentiment()
+        sources['fear_greed'] = fear_greed_score
         
         # Technical sentiment (RSI, MACD based)
         tech_score = await self._get_technical_sentiment(cache_key)
@@ -78,9 +78,9 @@ class SentimentScorer:
         volume_score = await self._get_volume_sentiment(cache_key)
         sources['volume'] = volume_score
         
-        # Social sentiment (placeholder - would need API)
-        social_score = await self._get_social_sentiment(cache_key)
-        sources['social'] = social_score
+        # News sentiment (CryptoPanic - may be unavailable)
+        news_score = await self._get_news_sentiment(cache_key)
+        sources['news'] = news_score
         
         # Calculate weighted score
         total_score = 0
