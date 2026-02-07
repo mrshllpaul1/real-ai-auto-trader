@@ -29,7 +29,7 @@ const TethysDashboard = () => {
         fetch(`${API_URL}/api/tethys/dashboard`).then(r => r.json()),
         fetch(`${API_URL}/api/tethys-trading/dashboard`).then(r => r.json()),
         fetch(`${API_URL}/api/tethys-train/dashboard`).then(r => r.json()),
-        fetch(`${API_URL}/api/cryptopanic/news?limit=5`).then(r => r.json()).catch(() => ({ news: [] }))
+        fetch(`${API_URL}/api/news/trending?limit=5`).then(r => r.json()).catch(() => ({ news: [] }))
       ]);
       
       setDashboardData(dashboard);
