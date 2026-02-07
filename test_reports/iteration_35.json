@@ -1,0 +1,66 @@
+{
+  "summary": "Full portfolio regression test completed. All 14 backend API tests pass. All major frontend pages load correctly with proper data display. Tethys Dashboard shows Fear & Greed Index (6 - Extreme Fear), CoinStats news feed, and all 4 tabs (Overview, AI, Risk, Train) working.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_tethys_portfolio_regression.py",
+    "/app/test_reports/pytest/pytest_tethys_portfolio.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "✓ All 14 backend API tests pass (100% success rate)",
+    "✓ /api/health returns healthy status with database connected",
+    "✓ /api/trading/kraken/portfolio returns $1,160.82 with 13 assets",
+    "✓ /api/tethys/sentiment returns overall_score (0.221), signal (BEARISH), fear_greed_index (6), fear_greed_classification (Extreme Fear)",
+    "✓ /api/tethys/fear-greed returns value (6), classification (Extreme Fear), recommendation (STRONG_BUY)",
+    "✓ /api/tethys/news returns 5 news articles from CoinStats with sentiment analysis",
+    "✓ /api/tethys-train/status returns training status (idle)",
+    "✓ /api/tethys-trading/dashboard returns trading loop status",
+    "✓ Main Dashboard loads with Kraken portfolio ($1,158.95), Global Crypto Market data, and all holdings",
+    "✓ Tethys Dashboard Overview tab shows Fear & Greed Index (6 - Extreme Fear), Combined Score (22% BEARISH), and CoinStats news",
+    "✓ Tethys Dashboard AI tab shows Rainbow DQN Status (C51 + Transformer, 168 timesteps, 51 atoms)",
+    "✓ Tethys Dashboard Risk tab shows Risk Limits (Max Position 25%, Max Daily Loss 5%, Circuit Breaker 10%)",
+    "✓ Tethys Dashboard Train tab shows Training Status (Idle), Model Registry (tethys_rainbow_dqn)",
+    "✓ Command Hub floating button opens with Commands, Ask AI, Strategy tabs",
+    "✓ Scanner page loads with Hidden Gem Scanner, 63 coins monitored, MATIC in watch list",
+    "✓ Portfolio Dashboard loads (shows No Budget Allocated - expected)",
+    "✓ Settings page loads with API Credentials, Risk Management, Notifications tabs"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_tethys_portfolio_regression.py"
+  ],
+  "success_rate": {
+    "backend": "100% - All 14 API tests pass",
+    "frontend": "100% - All pages load correctly with proper data"
+  },
+  "seed_data_creation": "None required - using live Kraken portfolio data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Full regression test completed. All features working: Kraken portfolio integration, Fear & Greed Index (currently 6 - Extreme Fear), CoinStats news feed, Tethys AI dashboard with all 4 tabs, Command Hub, Scanner, Portfolio Dashboard, Settings. CryptoPanic API quota exceeded but CoinStats is working as primary news source.",
+  "features_tested": {
+    "Main Dashboard loads with Kraken portfolio data": "PASS - Shows $1,158.95 with 13 assets (BT, USD, ETH, SOL, DOT, UNI, AAVE, SUI, APT, RP, LM, BABY, USDG)",
+    "Tethys Dashboard - Overview tab with Fear & Greed Index and news": "PASS - Fear & Greed Index 6 (Extreme Fear), STRONG_BUY recommendation, CoinStats news visible",
+    "Tethys Dashboard - AI tab with Rainbow DQN status": "PASS - Shows C51 + Transformer, 168 timesteps, 51 atoms, 3 N-Step",
+    "Tethys Dashboard - Risk tab with safety parameters": "PASS - Max Position 25%, Max Daily Loss 5%, Circuit Breaker 10%, Max Drawdown 15%",
+    "Tethys Dashboard - Train tab with MLflow registry": "PASS - Training Status Idle, Experiment tethys_rainbow_dqn, Start Training button",
+    "Command Hub floating button with Commands, Ask AI, Strategy tabs": "PASS - Opens with all 3 tabs and quick action buttons",
+    "Sidebar navigation to all major pages": "PASS - All navigation items visible and clickable",
+    "API: /api/health - Health check": "PASS - Returns healthy status",
+    "API: /api/trading/kraken/portfolio - Kraken portfolio": "PASS - Returns $1,160.82 with 13 holdings",
+    "API: /api/tethys/sentiment - Market sentiment with Fear & Greed": "PASS - Returns overall_score 0.221, BEARISH signal, fear_greed_index 6",
+    "API: /api/tethys/news - CoinStats news feed": "PASS - Returns 5 news articles with sentiment",
+    "API: /api/tethys/fear-greed - Fear & Greed Index": "PASS - Returns value 6, Extreme Fear, STRONG_BUY recommendation",
+    "API: /api/tethys-train/status - Training status": "PASS - Returns is_training false, idle status",
+    "API: /api/tethys-trading/dashboard - Trading dashboard": "PASS - Returns agent Tethys, trading loop status",
+    "Scanner page loads and displays gem opportunities": "PASS - Shows 63 coins monitored, MATIC in watch list",
+    "Portfolio Dashboard shows holdings": "PASS - Loads correctly (shows No Budget Allocated - expected)",
+    "Settings page accessible": "PASS - Shows API Credentials, Risk Management, Notifications tabs"
+  }
+}
