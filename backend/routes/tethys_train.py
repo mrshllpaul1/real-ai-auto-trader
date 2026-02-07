@@ -2,12 +2,14 @@
 Tethys Training & Monitoring API Routes
 ========================================
 Endpoints for model training, MLflow registry, and live monitoring.
+Includes WebSocket for real-time training progress.
 """
 
 import logging
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+import json
+from fastapi import APIRouter, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Set
 import asyncio
 
 logger = logging.getLogger(__name__)
@@ -16,10 +18,30 @@ router = APIRouter(prefix="/tethys-train", tags=["Tethys Training"])
 
 _db = None
 
+# WebSocket connections for training progress
+_training_connections: Set[WebSocket] = set()
+
 
 def set_db(db):
     global _db
     _db = db
+
+
+async def broadcast_training_update(data: dict):
+    """Broadcast training progress to all connected clients"""
+    if not _training_connections:
+        return
+    
+    message = json.dumps(data)
+    disconnected = set()
+    
+    for ws in _training_connections:
+        try:
+            await ws.send_text(message)
+        except Exception:
+            disconnected.add(ws)
+    
+    _training_connections.difference_update(disconnected)
 
 
 class TrainConfig(BaseModel):
@@ -27,6 +49,44 @@ class TrainConfig(BaseModel):
     symbol: str = "BTC/USD"
     save_every: int = 10
     early_stopping_patience: int = 20
+
+
+# =============================================================================
+# WEBSOCKET ENDPOINT FOR REAL-TIME TRAINING
+# =============================================================================
+
+@router.websocket("/ws/progress")
+async def training_progress_websocket(websocket: WebSocket):
+    """WebSocket endpoint for real-time training progress updates"""
+    await websocket.accept()
+    _training_connections.add(websocket)
+    
+    try:
+        # Send initial status
+        from services.tethys_training import get_trainer
+        trainer = get_trainer(_db)
+        await websocket.send_json({
+            "type": "initial",
+            "data": trainer.get_training_status()
+        })
+        
+        # Keep connection alive and handle messages
+        while True:
+            try:
+                # Wait for ping/pong or client messages
+                data = await asyncio.wait_for(websocket.receive_text(), timeout=30)
+                if data == "ping":
+                    await websocket.send_text("pong")
+            except asyncio.TimeoutError:
+                # Send status update every 30 seconds
+                await websocket.send_json({
+                    "type": "status",
+                    "data": trainer.get_training_status()
+                })
+    except WebSocketDisconnect:
+        pass
+    finally:
+        _training_connections.discard(websocket)
 
 
 # =============================================================================
