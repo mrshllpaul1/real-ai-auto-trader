@@ -423,10 +423,32 @@ const TethysDashboard = () => {
                   />
                 </>
               )}
+
+              {/* Live Training Chart */}
+              {trainingData?.training?.recent_history?.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-xs text-slate-500 mb-2">Episode Rewards</p>
+                  <div className="h-20 flex items-end gap-0.5">
+                    {trainingData.training.recent_history.slice(-20).map((h, i) => {
+                      const reward = h.episode_reward || 0;
+                      const maxReward = Math.max(...trainingData.training.recent_history.map(x => Math.abs(x.episode_reward || 0)), 1);
+                      const height = Math.abs(reward) / maxReward * 100;
+                      return (
+                        <div
+                          key={i}
+                          className={`flex-1 rounded-t ${reward >= 0 ? 'bg-green-500/60' : 'bg-red-500/60'}`}
+                          style={{ height: `${Math.max(height, 5)}%` }}
+                          title={`Episode ${h.episode || i}: ${reward.toFixed(4)}`}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* MLflow Registry */}
+          {/* MLflow Registry with Promotion */}
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader className="py-3 px-4">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -442,6 +464,47 @@ const TethysDashboard = () => {
                 label="Registered Models" 
                 value={trainingData?.registry?.registered_models?.length || 0} 
               />
+              
+              {/* Model Versions List */}
+              {trainingData?.registry?.registered_models?.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <p className="text-xs text-slate-500">Model Versions</p>
+                  {trainingData.registry.registered_models.slice(0, 3).map((model, i) => (
+                    <div key={i} className="flex items-center justify-between p-2 rounded bg-slate-900/50">
+                      <div>
+                        <span className="text-xs text-white">v{model.version}</span>
+                        <Badge className={`ml-2 text-[10px] ${
+                          model.stage === 'Production' ? 'bg-green-500/20 text-green-400' :
+                          model.stage === 'Staging' ? 'bg-yellow-500/20 text-yellow-400' :
+                          'bg-slate-700 text-slate-400'
+                        }`}>
+                          {model.stage || 'None'}
+                        </Badge>
+                      </div>
+                      {model.stage !== 'Production' && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 text-[10px] text-cyan-400 hover:text-cyan-300"
+                          onClick={async () => {
+                            try {
+                              await fetch(`${API_URL}/api/tethys-train/registry/promote?model_name=tethys_rainbow_dqn&version=${model.version}&stage=Production`, {
+                                method: 'POST'
+                              });
+                              toast.success(`Model v${model.version} promoted to Production`);
+                              fetchData();
+                            } catch (e) {
+                              toast.error('Failed to promote model');
+                            }
+                          }}
+                        >
+                          Promote
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
