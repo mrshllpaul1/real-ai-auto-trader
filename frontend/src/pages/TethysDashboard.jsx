@@ -356,29 +356,74 @@ const TethysDashboard = () => {
             expanded={expandedCard === 'sentiment'}
             onToggle={() => setExpandedCard(expandedCard === 'sentiment' ? null : 'sentiment')}
           >
-            <div className="space-y-2">
-              {sentimentData?.news?.slice(0, 4).map((item, i) => (
-                <div key={i} className="flex items-start gap-2 pb-2 border-b border-slate-700/50 last:border-0">
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                    item.kind === 'news' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'
-                  }`}>
-                    {item.kind || 'news'}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-slate-300 line-clamp-2">{item.title}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      {item.currencies?.slice(0, 2).map((c, j) => (
-                        <span key={j} className="text-[10px] text-cyan-400">{c.code}</span>
-                      ))}
-                      <span className="text-[10px] text-slate-500">
-                        {new Date(item.published_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                      </span>
-                    </div>
+            <div className="space-y-3">
+              {/* Aggregated Sentiment Score */}
+              {marketSentiment && (
+                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-900/50">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2.5 h-2.5 rounded-full ${
+                      marketSentiment.signal === 'BULLISH' ? 'bg-green-400' :
+                      marketSentiment.signal === 'BEARISH' ? 'bg-red-400' : 'bg-yellow-400'
+                    }`} />
+                    <span className="text-xs text-slate-400">Overall Market</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm font-mono ${
+                      marketSentiment.signal === 'BULLISH' ? 'text-green-400' :
+                      marketSentiment.signal === 'BEARISH' ? 'text-red-400' : 'text-yellow-400'
+                    }`}>
+                      {(marketSentiment.overall_score * 100).toFixed(0)}%
+                    </span>
+                    <Badge className={`text-[10px] ${
+                      marketSentiment.signal === 'BULLISH' ? 'bg-green-500/20 text-green-400' :
+                      marketSentiment.signal === 'BEARISH' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'
+                    }`}>
+                      {marketSentiment.signal}
+                    </Badge>
                   </div>
                 </div>
-              )) || (
-                <p className="text-xs text-slate-500">No recent news</p>
               )}
+
+              {/* Coin Breakdown */}
+              {marketSentiment?.breakdown && (
+                <div className="flex flex-wrap gap-1.5">
+                  {Object.entries(marketSentiment.breakdown).map(([coin, signal]) => (
+                    <span key={coin} className={`text-[10px] px-2 py-1 rounded-full ${
+                      signal === 'BULLISH' ? 'bg-green-500/10 text-green-400' :
+                      signal === 'BEARISH' ? 'bg-red-500/10 text-red-400' : 'bg-slate-700 text-slate-400'
+                    }`}>
+                      {coin}: {signal.charAt(0)}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* News Feed */}
+              <div className="space-y-2 pt-2 border-t border-slate-700/50">
+                <p className="text-[10px] text-slate-500 uppercase">Latest News</p>
+                {sentimentData?.news?.slice(0, 3).map((item, i) => (
+                  <div key={i} className="flex items-start gap-2 pb-2 border-b border-slate-700/50 last:border-0">
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                      item.kind === 'news' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'
+                    }`}>
+                      {item.kind || 'news'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-slate-300 line-clamp-2">{item.title}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        {item.currencies?.slice(0, 2).map((c, j) => (
+                          <span key={j} className="text-[10px] text-cyan-400">{c.code}</span>
+                        ))}
+                        <span className="text-[10px] text-slate-500">
+                          {new Date(item.published_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )) || (
+                  <p className="text-xs text-slate-500">No recent news</p>
+                )}
+              </div>
             </div>
           </ExpandableCard>
         </TabsContent>
