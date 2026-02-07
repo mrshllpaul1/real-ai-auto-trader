@@ -357,3 +357,54 @@ async def get_dashboard_data():
         "audit": _safety_system.audit_trail.get_session_summary(),
         "uncertainty": _safety_system.uncertainty.get_uncertainty_report()
     }
+
+
+
+# =============================================================================
+# SENTIMENT ENDPOINTS
+# =============================================================================
+
+@router.get("/sentiment/{symbol}")
+async def get_coin_sentiment(symbol: str, include_sources: bool = False):
+    """
+    Get sentiment analysis for a specific coin.
+    
+    Returns aggregated sentiment from news, technical indicators, and volume.
+    """
+    from services.sentiment_scorer import get_sentiment_scorer
+    scorer = get_sentiment_scorer(_db)
+    return await scorer.get_coin_sentiment(symbol, include_sources)
+
+
+@router.get("/sentiment")
+async def get_market_sentiment():
+    """
+    Get overall market sentiment across top coins.
+    """
+    from services.sentiment_scorer import get_sentiment_scorer
+    scorer = get_sentiment_scorer(_db)
+    return await scorer.get_market_sentiment()
+
+
+@router.post("/sentiment/recommendation")
+async def get_sentiment_recommendation(
+    symbol: str,
+    current_position: float = 0
+):
+    """
+    Get trading recommendation based on sentiment analysis.
+    """
+    from services.sentiment_scorer import get_sentiment_scorer
+    scorer = get_sentiment_scorer(_db)
+    
+    sentiment = await scorer.get_coin_sentiment(symbol)
+    recommendation = scorer.get_trading_recommendation(
+        sentiment['score'],
+        current_position
+    )
+    
+    return {
+        "symbol": symbol,
+        "sentiment": sentiment,
+        "recommendation": recommendation
+    }
