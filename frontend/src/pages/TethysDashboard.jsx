@@ -171,6 +171,14 @@ const TethysDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* WebSocket Status */}
+            <div className="flex items-center gap-1" title={wsConnected ? 'Live updates connected' : 'Reconnecting...'}>
+              {wsConnected ? (
+                <Wifi className="w-3.5 h-3.5 text-green-400" />
+              ) : (
+                <WifiOff className="w-3.5 h-3.5 text-slate-500" />
+              )}
+            </div>
             <Badge 
               variant={isTrading ? "default" : "secondary"}
               className={`text-xs ${isTrading ? 'bg-green-500/20 text-green-400 border-green-500/50' : 'bg-slate-700'}`}
