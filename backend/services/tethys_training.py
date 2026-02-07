@@ -423,6 +423,7 @@ class RainbowTrainer:
                 
                 # Log metrics
                 metrics = {
+                    'episode': episode + 1,
                     'episode_reward': episode_reward,
                     'portfolio_value': portfolio_value,
                     'trades': episode_trades,
@@ -432,6 +433,24 @@ class RainbowTrainer:
                 
                 self.registry.log_metrics(metrics, step=episode)
                 self.training_history.append(metrics)
+                
+                # Broadcast progress via WebSocket
+                try:
+                    from routes.tethys_train import broadcast_training_update
+                    import asyncio
+                    asyncio.create_task(broadcast_training_update({
+                        "type": "episode",
+                        "data": {
+                            "episode": episode + 1,
+                            "total": episodes,
+                            "progress_pct": ((episode + 1) / episodes) * 100,
+                            "reward": episode_reward,
+                            "sharpe": sharpe,
+                            "portfolio_value": portfolio_value
+                        }
+                    }))
+                except Exception:
+                    pass  # WebSocket broadcast is best-effort
                 
                 # Check for improvement
                 if sharpe > self.best_sharpe:
