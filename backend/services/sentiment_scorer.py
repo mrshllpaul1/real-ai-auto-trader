@@ -387,7 +387,6 @@ class SentimentScorer:
             result['fear_greed_recommendation'] = fear_greed.get('recommendation', {}).get('action')
         
         return result
-        }
     
     def get_trading_recommendation(
         self,
