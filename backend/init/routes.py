@@ -47,6 +47,7 @@ def register_routes(api_router: APIRouter):
     from routes import rainbow as rainbow_routes
     from routes import tethys as tethys_routes
     from routes import tethys_trading as tethys_trading_routes
+    from routes import tethys_train as tethys_train_routes
     
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
