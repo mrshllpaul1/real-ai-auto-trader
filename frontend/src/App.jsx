@@ -108,7 +108,6 @@ function App() {
                 <Route path="/training" element={<TrainingDashboard />} />
                 <Route path="/spot" element={<SpotTrading />} />
                 <Route path="/models" element={<ModelPerformanceDashboard />} />
-                <Route path="/srddqn" element={<SRDDQNDashboard />} />
                 <Route path="/tethys" element={<TethysDashboard />} />
                 <Route path="/guide" element={<Guide />} />
                 <Route path="/setup" element={<Setup />} />
