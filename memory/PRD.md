@@ -27,13 +27,47 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 | Build Success | ❌ Never completed | ✅ 100% |
 | Hot Reload | N/A (broken) | ✅ Working |
 
-**Files Modified:**
-- `/app/frontend/vite.config.js` - NEW: Vite configuration
-- `/app/frontend/package.json` - Updated build scripts
-- `/app/frontend/index.html` - Moved from public/, added module entry
-- `/app/frontend/src/**/*.jsx` - All .js files with JSX renamed
+---
 
-**Testing:** 100% frontend tests passed (Dashboard, Scanner, Portfolio, Settings)
+### ✅ Unified Command Hub (Floating Button)
+
+**What was built:**
+- Combined Ask AI, Strategy Builder & Command Center into single floating button
+- 3 color-coded tabs: Commands (cyan), Ask AI (purple), Strategy (pink)
+- Removed separate sidebar entries for these features
+
+**Files:**
+- `/app/frontend/src/components/FloatingCommandHub.jsx` - NEW unified component
+
+---
+
+### ✅ Deprecated Code Cleanup
+
+**Removed Files:**
+- `/app/backend/services/srddqn_agent.py`
+- `/app/backend/services/srddqn_trading_integration.py`
+- `/app/backend/services/srddqn_training_pipeline.py`
+- `/app/backend/services/deep_learning_ai.py`
+- `/app/backend/routes/srddqn.py`
+- `/app/backend/routes/srddqn_pipeline.py`
+- `/app/backend/routes/srddqn_trading.py`
+- `/app/frontend/src/pages/SRDDQNDashboard.jsx`
+- `/app/frontend/src/pages/DeepLearningAI.jsx`
+
+**Routes Removed:** All `/api/srddqn/*` and `/api/deep_learning/*` endpoints now return 404
+
+---
+
+### ✅ Enhanced Tethys Dashboard
+
+**New Features Added:**
+| Feature | Description |
+|---------|-------------|
+| Market Sentiment | CryptoPanic news feed in Overview tab |
+| Live Training Charts | Bar chart showing episode rewards in Train tab |
+| MLflow Model Promotion | UI to promote models to Production stage |
+
+**API Fix:** Changed frontend `/api/cryptopanic/news` → `/api/news/trending`
 
 ---
 
@@ -47,7 +81,7 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 **Features:**
 | Tab | Functionality |
 |-----|---------------|
-| Overview | Latest decision, model confidence, genetic evolution |
+| Overview | Latest decision, model confidence, genetic evolution, **market sentiment** |
 | AI | Rainbow DQN status, C51 + Transformer info, session stats |
 | Risk | Risk limits, circuit breaker status, loss streak tracker |
 | Train | Training status, MLflow registry, start training button |
