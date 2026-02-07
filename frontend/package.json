@@ -61,9 +61,10 @@
   "scripts": {
     "start": "serve -s build -l 3000",
     "prebuild": "rm -rf build 2>/dev/null || true",
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' craco build",
-    "build:dev": "NODE_OPTIONS='--max-old-space-size=4096' GENERATE_SOURCEMAP=false craco build",
-    "test": "craco test"
+    "build": "vite build",
+    "build:dev": "vite build",
+    "dev": "vite",
+    "test": "vitest"
   },
   "browserslist": {
     "production": [
