@@ -26,62 +26,49 @@ The user's goal is to build a real money AI crypto auto trading app designed for
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a highly advanced, full-stack AI trading platform. The backend is a sophisticated FastAPI application featuring multiple interconnected AI services, and the frontend is a React application for monitoring and control.
-
--   **AI Stack (Tethys):**
-    -   **Rainbow DQN Agent ():** A production-grade agent implementing the full Rainbow feature set (DDQN, Dueling, PER, C51, Noisy Nets, N-step).
-    -   **Transformer Encoder:** Integrated within the Rainbow network to process time-series market data.
-    -   **Live Data Integration ():** A persistent WebSocket connection streams live L2 order book data from Kraken, which is used to construct the agent's state.
-    -   **Production Safety System ():** Provides a pre-trade risk gateway, audit logging to MongoDB, and uncertainty-based position sizing.
-    -   **Integrated Trading Loop ():** A master service that orchestrates the entire process: fetching live state, getting an action from Rainbow DQN, generating a SHAP explanation, evaluating the trade against the safety gateway, and logging the entire event.
-    -   **Genetic Hyperparameter Evolution:** An automated system using DEAP and Optuna to evolve optimal risk and reward parameters for the safety gateway.
--   **Frontend:**
-    -   The structure for a new mobile-first  has been created but is not yet implemented or integrated into the main application.
-    -   Older dashboards (, ) for previous AI models exist but are now secondary to the new Tethys system.
--   **Backend Infrastructure:**
-    -   The backend successfully starts and all services, including the new Tethys-related ones, are initialized.
-    -   API endpoints are in place for controlling and monitoring the trading loop, the order book, and the genetic algorithm.
+The backend is a sophisticated and functional FastAPI application featuring the advanced Tethys AI trading system. The frontend is a React application that is currently **un-buildable**, which blocks all UI development. File skeletons for the next set of features (, ) exist but are not implemented.
 
 **Last working item**:
--   **Last item agent was working:** The agent was beginning the implementation of the user's latest requests: creating a dedicated training service for the Tethys (Rainbow DQN) agent with MLflow integration, and building a mobile-optimized dashboard () for a Galaxy S22. The agent created the necessary files (, , ) and installed  but has not yet implemented the core logic or integrated the new UI page.
--   **Status:** IN PROGRESS
+-   **Last item agent was working:** Following a direct user request, the agent prioritized fixing the recurring frontend build instability over planned feature development. The agent identified and fixed numerous critical linting errors but was unable to resolve the core build issue.
+-   **Status:** BLOCKED
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** both
-    -   **Backend:** Use  to test the new training endpoints () and verify that training runs are logged to MLflow.
-    -   **Frontend:** Use the  tool to verify the layout and functionality of the new  page on a mobile viewport.
+-   **Which testing method agent to use?** Frontend testing agent. The immediate task is to get a successful build. Once the build succeeds, a comprehensive frontend test is needed to ensure the lint fixes did not introduce regressions and that the app is stable.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Frontend Build Instability (P0, Recurring)**
-    -   **Description:** The frontend build process has been fragile, historically causing memory-related crashes. A workaround was implemented by creating yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. which increases the Node.js memory limit.
-    -   **Attempted fixes:** A  script with  was created.
+-   **Issue 1: Frontend Build Failure (P0, Recurring, BLOCKER)**
+    -   **Description:** The frontend build process (yarn run v1.22.22
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. or direct ) consistently times out after 300 seconds. This leaves the  directory in an incomplete state and prevents the application from being served or tested.
+    -   **Attempted fixes:**
+        1.  Increased Node.js memory limit to 8GB via .
+        2.  Disabled source map generation ().
+        3.  Identified and fixed ~28 critical linting errors across 7 files (e.g., unterminated JSX, unescaped characters).
+        4.  Attempted builds using yarn run v1.22.22
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command., background processes, and a direct custom shell script (). All attempts failed with a 300-second timeout.
     -   **Next debug checklist:**
-        1.  Use the yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. script for all future frontend builds.
-        2.  Monitor build times and memory usage. If crashes persist, investigate the craco config and dependency tree for potential bloat.
-    -   **Why fix this issue and what will be achieved with the fix?** A stable build is critical for any frontend development, including the implementation of the new .
-    -   **Status:** IN PROGRESS (Workaround applied, but long-term stability is unverified).
+        1.  **Run build with verbose logging:** Execute  to capture detailed output and identify the specific file or process where it hangs.
+        2.  **Dependency Audit:** The  directory is large (732M). Investigate for bloated or conflicting dependencies. Review  for potential misconfigurations.
+        3.  **Incremental Build:** Systematically comment out pages in  (starting with the most complex ones) and attempt to build after each change to isolate the problematic component.
+        4.  **Clean Reinstall:** Remove  and , then run yarn install v1.22.22
+[1/4] Resolving packages...
+[2/4] Fetching packages...
+[3/4] Linking dependencies...
+[4/4] Building fresh packages...
+success Saved lockfile.
+Done in 0.04s. to ensure there are no corrupted packages.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a hard blocker for all frontend development. Fixing it will unblock the implementation of the  and any other future UI work.
+    -   **Status:** BLOCKED
     -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** Frontend.
-    -   **Blocked on other issue:** None.
+    -   **Should Test frontend/backend/both after fix?** Frontend
+    -   **Blocked on other issue:** None. This is the root blocker.
 
 **In progress Task List**:
 -   **Task 1: Implement and Integrate Tethys Training & Dashboard (P0)**
-    -   **Description:** The file skeletons for the training service and dashboard were created, but they are empty. The core logic needs to be implemented and tested.
-    -   **Where to resume:**
-        1.  **Backend:**
-            -   Implement the  in . It should be able to fetch historical data and run the Rainbow DQN training loop.
-            -   Integrate  to log parameters, metrics, and models for each training run.
-            -   Flesh out the API endpoints in  to start/stop training and query status.
-        2.  **Frontend:**
-            -   Implement the UI in . Design it mobile-first for a Galaxy S22 (1080x2340). It should display key metrics from the  endpoint.
-            -   Add a route for  in .
-            -   Add a link to the new dashboard in .
+    -   **Where to resume:** This task cannot be started until the frontend build is fixed.
     -   **What will be achieved with this?** This will complete the user's request for a dedicated training and monitoring system for the live agent.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** Both.
-    -   **Blocked on something:** None.
+    -   **Status:** BLOCKED
+    -   **Should Test frontend/backend/both after fix?** Both
+    -   **Blocked on something:** Issue 1: Frontend Build Failure
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
@@ -95,108 +82,91 @@ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this comm
     -   Cleanup/removal of deprecated AI services (, , etc.).
 
 **Completed work in this session**
--   **Bug Fix:** Resolved multiple critical bugs in the  related to TensorFlow/Keras compatibility, state dimension mismatches, and database context in background tasks.
--   **Feature: Advanced DRL Agent Hardening:** Implemented several P0 fixes from the agent's audit report into the SRDDQN agent, including a CVaR penalty in the reward function, Noisy Networks for exploration, and a Prioritized Experience Replay buffer.
--   **Feature: Rainbow DQN + Transformer Agent:** Implemented a new, state-of-the-art  service that includes a C51 distributional head and a Transformer Encoder for state processing.
--   **Feature: Live Kraken WebSocket Integration:** Created  to connect to Kraken's WebSocket and stream real-time L2 order book data.
--   **Feature: Tethys Production Safety Systems:**
-    -   Implemented  to provide a pre-trade risk gateway.
-    -   Created an audit trail that logs all trade decisions to a  MongoDB collection.
-    -   Implemented uncertainty quantification to dynamically adjust position sizes based on model confidence.
--   **Feature: Integrated Trading Loop with Explainability:** Created , which orchestrates the entire live trading cycle and uses **SHAP** to generate human-readable explanations for each decision.
--   **Feature: Genetic Algorithm for Hyperparameter Evolution:** Implemented a service using **DEAP** and **Optuna** to automatically evolve and optimize risk parameters for the safety gateway.
+-   **Code Quality:** Fixed approximately 28 critical linting errors in the frontend codebase across the following files:
+    -   
+    -   
+    -   
+    -   
+    -   
+    -   
+    -   
 
 **Earlier issues found/mentioned but not fixed**
--   None. The agent has been diligent in addressing issues as they arise.
+-   None.
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork:** Frontend build instability due to memory limits.
 -   **Recurrence count:** High.
--   **Status:** IN PROGRESS. A workaround ( with increased memory) has been implemented, but the root cause has not been eliminated. This remains a significant risk for future frontend work.
+-   **Status:** BLOCKED. The issue has recurred and is more severe than previously thought, as memory increases are no longer a sufficient workaround.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Rainbow DQN:** The new core AI, combining 7 key DRL improvements (DDQN, Dueling, PER, C51, Noisy Nets, N-step learning).
--   **Transformer Encoder:** Used within the Rainbow network to process sequences of market data, superior to LSTMs for capturing long-range dependencies.
--   **C51 Distributional RL:** The agent predicts a full distribution of future returns, not just the mean, allowing for more nuanced risk assessment.
+-   **Rainbow DQN:** The new core AI, combining 7 key DRL improvements.
+-   **Transformer Encoder:** Used within the Rainbow network to process sequences of market data.
+-   **C51 Distributional RL:** The agent predicts a full distribution of future returns, not just the mean.
 -   **WebSocket:** Used for a persistent, low-latency connection to Kraken for real-time order book data.
--   **SHAP (SHapley Additive exPlanations):** A game-theoretic approach to explain the output of any machine learning model, used here to justify trade decisions.
--   **Genetic Algorithms (DEAP/Optuna):** Used to perform evolutionary optimization on the trading system's hyperparameters.
--   **MLflow:** A platform for managing the ML lifecycle, including experiment tracking, reproducibility, and deployment. To be implemented.
+-   **SHAP (SHapley Additive exPlanations):** Used to justify trade decisions.
+-   **Genetic Algorithms (DEAP/Optuna):** Used to perform evolutionary optimization.
+-   **MLflow:** To be implemented for ML lifecycle management.
+-   **Craco:** The configuration layer over Create React App, used for the frontend build. **This is a key area to investigate for the build failure.**
 
 **key DB schema**
 -   **tethys_audit_log:** 
 
 **All files of reference**
--   **/app/backend/services/tethys_trading.py**: The central orchestration service for the live trading loop.
--   **/app/backend/services/rainbow_dqn.py**: The core Rainbow DQN agent with its Transformer architecture.
--   **/app/backend/services/tethys_safety.py**: The production risk management and audit trail system.
--   **/app/backend/services/kraken_orderbook_ws.py**: The real-time data connection to the exchange.
--   **/app/frontend/src/pages/TethysDashboard.js**: The destination for the new mobile-optimized UI.
--   **/app/backend/docs/SRDDQN_AUDIT_REPORT.md**: A detailed audit of the previous agent, which informed many of the new architectural decisions.
+-   **/app/frontend/package.json**: Contains the build scripts that are failing.
+-   **/app/frontend/craco.config.js**: Configuration for the build process; a likely source of the issue.
+-   **/app/frontend/src/App.js**: Main router for the frontend application.
+-   **/app/frontend/build_frontend.sh**: A new script created to attempt a direct build.
 
 **Areas that need refactoring**:
--   The old AI services (, , ) are now fully obsolete and should be scheduled for deletion.
--   The legacy  and  should eventually be deprecated or merged into the new Tethys dashboard.
+-   The old AI services (, ) are obsolete and should be scheduled for deletion.
+-   Legacy dashboards (, ) should be deprecated after  is complete.
 
 **key api endpoints**
--   : Executes one full trading decision loop.
--   : Gets the full status of all integrated systems.
--   : Kicks off the genetic algorithm for hyperparameter tuning.
--   : Starts the Kraken WebSocket connection.
--   : Checks the status of the WebSocket.
--   : Gets the status of the Tethys safety agent.
--   : (To be implemented) Starts a new training run.
+-   
+-   
+-   
+-   : (To be implemented)
 
 **Critical Info for New Agent**
--   **The Agent is Named Tethys:** All new systems are part of the Tethys ecosystem. This name is used in services, routes, and logs.
--   **Focus on Mobile UI:** The next task is explicitly to build a mobile-first UI for a Galaxy S22. Pay close attention to responsive design principles and the specified resolution (1080x2340).
--   **Implement, Then Integrate:** The files for the next task are just skeletons. You will need to write the core logic for the training service ( with MLflow) and the React component () before you can integrate them.
--   **Use the Build Script:** Always use yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. to build the frontend to avoid memory-related crashes.
+-   **The frontend build is the only priority.** Do not attempt any feature work until the frontend can be successfully built. The issue is a hard 300-second timeout that persists despite memory increases and linting fixes.
+-   A new debugging strategy is required. Focus on verbose logging, dependency analysis, and incrementally disabling components to isolate the cause of the hang.
+-   The user's last instruction was to fix this instability. All other tasks are secondary.
 
 **documents and test reports created in this job**
--   
+-   None.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  ****: PENDING - This is the current task.
-2.  ****: COMPLETE - Agent implemented the Tethys trading loop, SHAP, and genetic algorithm.
-3.  ****: COMPLETE - User confirmed to build the production safety systems (risk gateway, audit trail).
-4.  **User was asked for 'Anything else' after a big implementation**
-5.  ****: COMPLETE - User was provided with a list of production-level considerations.
-6.  ****: COMPLETE - Agent provided a summary of the Rainbow/Transformer implementation.
-7.  ****: COMPLETE - User confirmed the next upgrades: Rainbow DQN and a WebSocket-based world model using real data.
-8.  **User was asked about which architectural upgrades to implement first.**
-9.  ****: COMPLETE - User was provided a list of potential advanced upgrades.
-10. ****: COMPLETE - User confirmed to proceed with the audit and critical fixes.
+1.  ****: PENDING - The agent attempted to fix this but was unsuccessful. The build remains broken.
 
 **Project Health Check:**
--   **Broken:** The frontend build process remains a potential point of failure, although a workaround is in place.
--   **Mocked:** None. All systems are wired for live data and execution.
+-   **Broken:** The entire frontend build pipeline. The application's UI cannot be compiled or served.
+-   **Mocked:** None.
 
 **3rd Party Integrations**
--   **stable-baselines3**: Active (used in older agents).
+-   **stable-baselines3**: Active.
 -   **gymnasium**: Active.
--   **Kraken API**: Active (portfolio, trading, execution).
--   **CoinGecko / CoinDesk**: Active (market data).
--   **TensorFlow/Keras**: Active (core ML libraries).
--   **websockets**: **NEW** - For live Kraken order book data.
--   **shap**: **NEW** - For model explainability.
--   **deap**: **NEW** - For genetic algorithms.
--   **optuna**: **NEW** - For hyperparameter optimization.
--   **mlflow**: **NEW** - Installed for experiment tracking (implementation pending).
+-   **Kraken API**: Active.
+-   **CoinGecko / CoinDesk**: Active.
+-   **TensorFlow/Keras**: Active.
+-   **websockets**: Active.
+-   **shap**: Active.
+-   **deap**: Active.
+-   **optuna**: Active.
+-   **mlflow**: Installed (implementation pending).
+-   **craco**: Active (used for frontend build, potential issue source).
 
 **Testing status**
 -   **Testing agent used after significant changes:** NO
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** None
--   **Known regressions:** None.
+-   **Known regressions:** The state of the frontend is unknown as it cannot be built.
 
 **Credentials to test flow:**
--   All credentials for Kraken and other services are located in the  files and should be used as-is.
+-   All credentials are in  files.
 
 **What agent forgot to execute**
--   The agent created the files for the final task (, , ) but did not implement the functionality within them before finishing the session. This is the main handoff point.
--   A minor linting error () in  was noted but not fixed.</analysis>
+-   The agent was unable to solve the root cause of the build failure. It entered a loop of attempting to build, timing out, and slightly modifying the build command without a deeper diagnosis of *why* the timeout was occurring. It also missed an early clue () which may have pointed to a path or installation issue, though this error did not consistently appear.</analysis>
