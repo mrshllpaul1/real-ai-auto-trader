@@ -2,6 +2,7 @@
 Sentiment Scoring Service
 =========================
 Aggregates sentiment from multiple sources and provides scores for AI trading decisions.
+Now includes Fear & Greed Index as primary sentiment source.
 """
 
 import logging
@@ -18,12 +19,12 @@ class SentimentScorer:
     Aggregates sentiment data and provides normalized scores for trading decisions.
     """
     
-    # Sentiment weight factors
+    # Sentiment weight factors (updated with fear_greed)
     WEIGHTS = {
-        'news': 0.4,      # CryptoPanic news sentiment
-        'technical': 0.3,  # Technical indicators (RSI, MACD)
-        'volume': 0.2,     # Volume analysis
-        'social': 0.1      # Social mentions (if available)
+        'fear_greed': 0.35,  # Fear & Greed Index (primary)
+        'technical': 0.30,   # Technical indicators (RSI, MACD)
+        'volume': 0.20,      # Volume analysis
+        'news': 0.15         # CryptoPanic news sentiment (when available)
     }
     
     # Sentiment thresholds
@@ -35,6 +36,7 @@ class SentimentScorer:
         self.sentiment_cache = {}
         self.cache_ttl = timedelta(minutes=5)
         self._last_update = {}
+        self._fear_greed_cache = None
         logger.info("📊 Sentiment Scorer initialized")
     
     async def get_coin_sentiment(
