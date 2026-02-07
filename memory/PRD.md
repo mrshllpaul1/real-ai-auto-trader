@@ -58,6 +58,32 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ---
 
+### ✅ Future Enhancements Completed (Feb 7, 2026)
+
+**1. Sentiment Scoring System**
+- Created `/app/backend/services/sentiment_scorer.py`
+- Aggregates sentiment from news, technical indicators (RSI), and volume
+- Provides trading recommendations based on sentiment
+- API endpoints:
+  - `GET /api/tethys/sentiment` - Overall market sentiment
+  - `GET /api/tethys/sentiment/{symbol}` - Individual coin sentiment
+  - `POST /api/tethys/sentiment/recommendation` - Trading recommendations
+
+**2. Real-time WebSocket for Training**
+- Added WebSocket endpoint `/api/tethys-train/ws/progress`
+- Broadcasts episode completion, reward, and sharpe ratio in real-time
+- Frontend auto-reconnects if disconnected
+- Status indicator in header (green Wifi icon when connected)
+
+**3. Enhanced Market Sentiment UI**
+- Overall market score with color-coded badge (Bullish/Neutral/Bearish)
+- Coin breakdown badges (BTC:N, ETH:N, SOL:N, XRP:N, ADA:N)
+- Integrated with news feed section
+
+**Note:** CryptoPanic API quota exceeded - sentiment scoring falls back to technical indicators.
+
+---
+
 ### ✅ Enhanced Tethys Dashboard
 
 **New Features Added:**
