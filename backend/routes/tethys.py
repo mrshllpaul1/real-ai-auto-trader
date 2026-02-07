@@ -436,3 +436,41 @@ async def get_fear_greed_history(days: int = 7):
     from services.fear_greed_service import get_fear_greed_service
     service = get_fear_greed_service()
     return await service.get_historical(days)
+
+
+
+@router.get("/news")
+async def get_crypto_news(limit: int = 10, coin: str = None):
+    """
+    Get latest crypto news from CoinStats.
+    
+    Args:
+        limit: Number of news items (max 20)
+        coin: Optional coin filter (e.g., 'bitcoin', 'ethereum')
+    """
+    from services.coinstats_service import get_coinstats_service
+    service = get_coinstats_service()
+    
+    if not service.initialized:
+        return {"news": [], "message": "News service not configured"}
+    
+    news = await service.get_news(limit=limit, coin=coin)
+    return {
+        "news": news,
+        "count": len(news),
+        "source": "coinstats"
+    }
+
+
+@router.get("/news/sentiment")
+async def get_news_sentiment():
+    """
+    Get aggregated sentiment from recent news.
+    """
+    from services.coinstats_service import get_coinstats_service
+    service = get_coinstats_service()
+    
+    if not service.initialized:
+        return {"score": 0.5, "signal": "NEUTRAL", "available": False}
+    
+    return await service.get_news_sentiment(limit=15)
