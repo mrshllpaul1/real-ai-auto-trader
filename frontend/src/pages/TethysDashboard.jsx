@@ -81,18 +81,18 @@ const TethysDashboard = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      const [dashboard, trading, training, sentiment, mktSentiment] = await Promise.all([
+      const [dashboard, trading, training, newsData, mktSentiment] = await Promise.all([
         fetch(`${API_URL}/api/tethys/dashboard`).then(r => r.json()),
         fetch(`${API_URL}/api/tethys-trading/dashboard`).then(r => r.json()),
         fetch(`${API_URL}/api/tethys-train/dashboard`).then(r => r.json()),
-        fetch(`${API_URL}/api/news/trending?limit=5`).then(r => r.json()).catch(() => ({ news: [] })),
+        fetch(`${API_URL}/api/tethys/news?limit=5`).then(r => r.json()).catch(() => ({ news: [] })),
         fetch(`${API_URL}/api/tethys/sentiment`).then(r => r.json()).catch(() => null)
       ]);
       
       setDashboardData(dashboard);
       setTradingData(trading);
       setTrainingData(training);
-      setSentimentData(sentiment);
+      setSentimentData(newsData);
       setMarketSentiment(mktSentiment);
     } catch (error) {
       console.error('Fetch error:', error);
