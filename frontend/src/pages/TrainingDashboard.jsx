@@ -270,21 +270,34 @@ const TrainingDashboard = () => {
     };
   }, []);
 
-  // Fetch all statuses
+  // Fetch all statuses with timeout
+  const fetchWithTimeout = async (url, timeout = 8000) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (e) {
+      clearTimeout(timeoutId);
+      return { ok: false };
+    }
+  };
+
   const fetchStatuses = useCallback(async () => {
     try {
       const [servicesRes, rlRes, transformerRes, tasksRes, historyRes, statsRes, schedulesRes, presetsRes, learningRes, recsRes, autoSpotRes] = await Promise.all([
-        fetch(`${API_URL}/api/predictions/status`),
-        fetch(`${API_URL}/api/predictions/rl-agent/training-status`),
-        fetch(`${API_URL}/api/predictions/transformer/status`),
-        fetch(`${API_URL}/api/tasks/active`).catch(() => ({ ok: false })),
-        fetch(`${API_URL}/api/training-history/recent`).catch(() => ({ ok: false })),
-        fetch(`${API_URL}/api/training-history/stats`).catch(() => ({ ok: false })),
-        fetch(`${API_URL}/api/training-scheduler/`).catch(() => ({ ok: false })),
-        fetch(`${API_URL}/api/training-scheduler/presets/list`).catch(() => ({ ok: false })),
-        fetch(`${API_URL}/api/learning/status`).catch(() => ({ ok: false })),
-        fetch(`${API_URL}/api/learning/recommendations`).catch(() => ({ ok: false })),
-        fetch(`${API_URL}/api/training-scheduler/auto-spot-scan/status`).catch(() => ({ ok: false }))
+        fetchWithTimeout(`${API_URL}/api/predictions/status`),
+        fetchWithTimeout(`${API_URL}/api/predictions/rl-agent/training-status`),
+        fetchWithTimeout(`${API_URL}/api/predictions/transformer/status`),
+        fetchWithTimeout(`${API_URL}/api/tasks/active`),
+        fetchWithTimeout(`${API_URL}/api/training-history/recent`),
+        fetchWithTimeout(`${API_URL}/api/training-history/stats`),
+        fetchWithTimeout(`${API_URL}/api/training-scheduler/`),
+        fetchWithTimeout(`${API_URL}/api/training-scheduler/presets/list`),
+        fetchWithTimeout(`${API_URL}/api/learning/status`),
+        fetchWithTimeout(`${API_URL}/api/learning/recommendations`),
+        fetchWithTimeout(`${API_URL}/api/training-scheduler/auto-spot-scan/status`)
       ]);
 
       if (servicesRes.ok) {
