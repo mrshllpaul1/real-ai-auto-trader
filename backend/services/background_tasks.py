@@ -251,7 +251,8 @@ class BackgroundTaskManager:
         active = []
         for task_id, status in self.task_status.items():
             if status["status"] in [TaskStatus.PENDING.value, TaskStatus.RUNNING.value]:
-                active.append({k: v for k, v in status.items() if k != "_id"})
+                task_data = {k: v for k, v in status.items() if k != "_id"}
+                active.append(convert_numpy_types(task_data))
         return active
     
     async def get_task_history(self, task_type: TaskType = None, limit: int = 20) -> list:
