@@ -553,18 +553,6 @@ async def _init_phase7_wire_dependencies(db):
     from routes import sb3_agents as sb3_agents_routes
     sb3_agents_routes.set_dependencies(db, _services.get('sb3_manager'))
     
-    # Wire SRDDQN routes
-    from routes import srddqn as srddqn_routes
-    srddqn_routes.set_dependencies(db, _services.get('srddqn_manager'))
-    
-    # Wire SRDDQN Pipeline routes
-    from routes import srddqn_pipeline as srddqn_pipeline_routes
-    srddqn_pipeline_routes.set_dependencies(db)
-    
-    # Wire SRDDQN Trading Integration routes
-    from routes import srddqn_trading as srddqn_trading_routes
-    srddqn_trading_routes.set_dependencies(db)
-    
     # Wire Kraken Execution routes
     from routes import kraken_exec as kraken_exec_routes
     kraken_exec_routes.set_dependencies(db)
