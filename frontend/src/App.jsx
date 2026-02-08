@@ -111,6 +111,7 @@ function App() {
                 <Route path="/models" element={<ModelPerformanceDashboard />} />
                 <Route path="/tethys" element={<TethysDashboard />} />
                 <Route path="/advanced-ai" element={<AdvancedAI />} />
+                <Route path="/master" element={<MasterDashboard />} />
                 <Route path="/guide" element={<Guide />} />
                 <Route path="/setup" element={<Setup />} />
                 <Route path="/settings" element={<Settings />} />
