@@ -8,9 +8,6 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 
-// Use env variable for backend URL
-const API = process.env.REACT_APP_BACKEND_URL;
-
 // Progress bar component
 const ProgressBar = ({ progress, message }) => (
   <div className="w-full">
