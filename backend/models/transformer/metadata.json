@@ -1,6 +1,6 @@
 {
   "model_type": "transformer",
-  "saved_at": "2026-02-04T20:13:54.284454+00:00",
+  "saved_at": "2026-02-08T20:13:10.762682+00:00",
   "format": "keras",
   "is_trained": true,
   "config": {
@@ -13,5 +13,5 @@
     "dropout": 0.1,
     "num_classes": 3
   },
-  "last_trained": "2026-02-04 20:13:54.179063"
+  "last_trained": "2026-02-08 20:13:10.464777"
 }
