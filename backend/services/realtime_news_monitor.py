@@ -480,7 +480,7 @@ class RealTimeNewsMonitor:
         self.ws_clients -= disconnected
     
     async def _broadcast_alert(self, alert: Dict):
-        """Broadcast alert to WebSocket clients"""
+        """Broadcast alert to WebSocket clients and send notification"""
         message = json.dumps({
             "type": "alert",
             "data": alert
@@ -502,6 +502,31 @@ class RealTimeNewsMonitor:
                     **alert,
                     "created_at": datetime.now(timezone.utc)
                 })
+                
+                # Also create notification for the alert
+                event = alert.get("event", {})
+                suggested = alert.get("suggested_trigger", {})
+                urgency = alert.get("urgency", "medium")
+                
+                notification = {
+                    "id": str(datetime.now(timezone.utc).timestamp()),
+                    "title": f"📰 Trending: {event.get('title', 'Breaking News')[:50]}",
+                    "body": f"Score: {event.get('trending_score', 0):.0f} | Coins: {', '.join(event.get('coins', [])[:3])} | Suggested: {suggested.get('action', 'alert').upper()}",
+                    "data": {
+                        "type": "news_alert",
+                        "event": event,
+                        "suggested_trigger": suggested
+                    },
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "read": False,
+                    "priority": "high" if urgency == "high" else "normal",
+                    "vibrate": urgency == "high",
+                    "vibration_pattern": [200, 100, 200, 100, 400] if urgency == "high" else [200, 100, 200]
+                }
+                
+                await self.db.notifications.insert_one(notification)
+                logger.info(f"🔔 News alert notification sent: {event.get('title', '')[:30]}")
+                
             except Exception as e:
                 logger.error(f"Failed to store alert: {e}")
     
