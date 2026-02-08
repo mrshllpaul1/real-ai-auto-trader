@@ -465,7 +465,7 @@ async def _init_phase6_scheduling(db):
 
 async def _init_phase7_wire_dependencies(db):
     """Phase 7: Wire up route dependencies and start schedulers"""
-    from routes import ai_universe, sentiment, cryptopanic, ai_discovery, deep_learning
+    from routes import ai_universe, sentiment, cryptopanic, ai_discovery
     from routes import ai_chat, ai_universe_expand, gem_predictor, simulation, ensemble
     from routes import coindesk, historical_data, ai_learning_loop, events, event_triggers
     from routes import kraken_universe, coindesk_universe, adaptive_strategy, performance
@@ -487,7 +487,6 @@ async def _init_phase7_wire_dependencies(db):
     sentiment.set_dependencies(_services['ai_sentiment'])
     cryptopanic.set_dependencies(_services['cryptopanic'], _services['news'])
     ai_discovery.set_dependencies(_services['discovery'])
-    deep_learning.set_dependencies(db, _services['market'])
     ai_chat.set_dependencies(db, _services['chat'])
     ai_chat.set_kraken_service(_services['kraken'])
     ai_chat.set_gem_predictor(_services['gem_predictor'])
