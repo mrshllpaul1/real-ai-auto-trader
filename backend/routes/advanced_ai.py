@@ -394,9 +394,20 @@ async def evolve_strategies(
     generations: int = 10,
     background_tasks: BackgroundTasks = None
 ):
-    """Start genetic algorithm strategy evolution"""
-    # This would integrate with the existing genetic algorithm service
-    # For now, return a placeholder
+    """Start genetic algorithm for network architecture evolution"""
+    from services.genetic_architecture import get_architecture_evolver
+    
+    evolver = get_architecture_evolver(_db)
+    
+    if evolver.is_running:
+        return {"status": "already_running", "current": evolver.get_status()}
+    
+    # Run evolution in background
+    async def run_evolution():
+        await evolver.evolve(population_size, generations)
+    
+    background_tasks.add_task(run_evolution)
+    
     return {
         "status": "started",
         "population_size": population_size,
@@ -408,9 +419,202 @@ async def evolve_strategies(
 @router.get("/genetic/status")
 async def get_genetic_status():
     """Get genetic algorithm evolution status"""
+    from services.genetic_architecture import get_architecture_evolver
+    
+    evolver = get_architecture_evolver(_db)
+    status = evolver.get_status()
+    
     return {
-        "status": "idle",
-        "best_fitness": None,
-        "generations_completed": 0,
-        "message": "Configure genetic algorithm parameters to start"
+        **status,
+        "best_architecture": evolver.get_best_architecture(),
+        "history": evolver.evolution_history[-10:] if evolver.evolution_history else []
     }
+
+
+@router.post("/genetic/stop")
+async def stop_evolution():
+    """Stop genetic algorithm evolution"""
+    from services.genetic_architecture import get_architecture_evolver
+    
+    evolver = get_architecture_evolver(_db)
+    evolver.stop()
+    return {"status": "stopped"}
+
+
+# =============================================================================
+# MLFLOW MODEL REGISTRY
+# =============================================================================
+
+@router.get("/mlflow/status")
+async def get_mlflow_status():
+    """Get MLflow registry status"""
+    from services.mlflow_registry import get_mlflow_registry
+    
+    registry = get_mlflow_registry(_db)
+    return registry.get_status()
+
+
+@router.post("/mlflow/log-run")
+async def log_training_run(
+    model_name: str,
+    params: Dict[str, Any],
+    metrics: Dict[str, Any],
+    tags: Optional[Dict[str, str]] = None
+):
+    """Log a training run to MLflow"""
+    from services.mlflow_registry import get_mlflow_registry
+    
+    registry = get_mlflow_registry(_db)
+    run_id = registry.log_training_run(model_name, params, metrics, tags=tags)
+    
+    if run_id:
+        return {"status": "logged", "run_id": run_id}
+    return {"status": "failed", "error": "Could not log run"}
+
+
+@router.post("/mlflow/promote")
+async def promote_model(
+    model_name: str,
+    version: str,
+    stage: str = "Production"
+):
+    """Promote a model version to a stage"""
+    from services.mlflow_registry import get_mlflow_registry
+    
+    registry = get_mlflow_registry(_db)
+    success = registry.promote_model(model_name, version, stage)
+    
+    if success:
+        return {"status": "promoted", "model": model_name, "version": version, "stage": stage}
+    return {"status": "failed"}
+
+
+@router.get("/mlflow/models/{model_name}")
+async def get_model_info(model_name: str, stage: str = "Production"):
+    """Get latest model version info"""
+    from services.mlflow_registry import get_mlflow_registry
+    
+    registry = get_mlflow_registry(_db)
+    model = registry.get_latest_model(model_name, stage)
+    
+    if model:
+        return model
+    raise HTTPException(status_code=404, detail=f"Model {model_name} not found")
+
+
+@router.get("/mlflow/runs")
+async def get_experiment_runs(limit: int = 20):
+    """Get recent experiment runs"""
+    from services.mlflow_registry import get_mlflow_registry
+    
+    registry = get_mlflow_registry(_db)
+    return {"runs": registry.get_experiment_runs(limit)}
+
+
+# =============================================================================
+# RLHF WITH PPO
+# =============================================================================
+
+@router.get("/rlhf-ppo/status")
+async def get_rlhf_ppo_status():
+    """Get RLHF PPO trainer status"""
+    from services.rlhf_ppo import get_rlhf_ppo_trainer
+    
+    trainer = get_rlhf_ppo_trainer(_db)
+    return trainer.get_stats()
+
+
+@router.post("/rlhf-ppo/add-feedback")
+async def add_ppo_feedback(
+    trade_features: Dict[str, float],
+    rating: float
+):
+    """Add human feedback for PPO training"""
+    from services.rlhf_ppo import get_rlhf_ppo_trainer
+    
+    trainer = get_rlhf_ppo_trainer(_db)
+    trainer.add_feedback(trade_features, rating)
+    
+    return {
+        "status": "added",
+        "total_feedback": trainer.stats["total_feedback"]
+    }
+
+
+@router.post("/rlhf-ppo/train-reward")
+async def train_reward_model(epochs: int = 10):
+    """Train the reward model on collected feedback"""
+    from services.rlhf_ppo import get_rlhf_ppo_trainer
+    
+    trainer = get_rlhf_ppo_trainer(_db)
+    result = await trainer.train_reward_model(epochs=epochs)
+    return result
+
+
+@router.post("/rlhf-ppo/train-ppo")
+async def train_ppo(num_updates: int = 10):
+    """Train PPO on collected experience"""
+    from services.rlhf_ppo import get_rlhf_ppo_trainer
+    
+    trainer = get_rlhf_ppo_trainer(_db)
+    result = await trainer.train_ppo(num_updates=num_updates)
+    return result
+
+
+@router.post("/rlhf-ppo/full-training")
+async def full_rlhf_training(
+    reward_epochs: int = 10,
+    ppo_updates: int = 10,
+    iterations: int = 5,
+    background_tasks: BackgroundTasks = None
+):
+    """Run full RLHF training loop"""
+    from services.rlhf_ppo import get_rlhf_ppo_trainer
+    
+    trainer = get_rlhf_ppo_trainer(_db)
+    
+    async def run_training():
+        await trainer.full_training_loop(reward_epochs, ppo_updates, iterations)
+    
+    background_tasks.add_task(run_training)
+    
+    return {
+        "status": "started",
+        "iterations": iterations,
+        "message": "RLHF training started in background"
+    }
+
+
+@router.post("/rlhf-ppo/get-action")
+async def get_ppo_action(state: List[float]):
+    """Get action from trained PPO policy"""
+    from services.rlhf_ppo import get_rlhf_ppo_trainer
+    import numpy as np
+    
+    trainer = get_rlhf_ppo_trainer(_db)
+    action, info = trainer.get_action(np.array(state))
+    
+    return {
+        "action": action,
+        **info
+    }
+
+
+@router.post("/rlhf-ppo/save-models")
+async def save_ppo_models():
+    """Save trained models"""
+    from services.rlhf_ppo import get_rlhf_ppo_trainer
+    
+    trainer = get_rlhf_ppo_trainer(_db)
+    trainer.save_models()
+    return {"status": "saved"}
+
+
+@router.post("/rlhf-ppo/load-models")
+async def load_ppo_models():
+    """Load trained models"""
+    from services.rlhf_ppo import get_rlhf_ppo_trainer
+    
+    trainer = get_rlhf_ppo_trainer(_db)
+    trainer.load_models()
+    return {"status": "loaded"}
