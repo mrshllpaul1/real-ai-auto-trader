@@ -572,6 +572,11 @@ async def _init_phase7_wire_dependencies(db):
     advanced_ai_routes.set_db(db)
     logger.info("✅ Advanced AI System wired")
     
+    # Wire Master Orchestrator routes
+    from routes import master_orchestrator as master_routes
+    master_routes.set_db(db)
+    logger.info("✅ Master Orchestrator wired")
+    
     # Start schedulers
     await _services['training_scheduler'].start()
     logger.info("✅ Training Scheduler started")
