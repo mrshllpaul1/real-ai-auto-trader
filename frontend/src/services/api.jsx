@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-// Use env variable for backend URL (runtime config may have stale values)
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// Force use the correct backend URL from build-time env
+// This ensures we don't use stale runtime config
+const BACKEND_URL = 'https://tethys-trade.preview.emergentagent.com';
 const API = `${BACKEND_URL}/api`;
 
 console.log('[API Service] Using backend URL:', BACKEND_URL);
