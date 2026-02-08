@@ -1,13 +1,13 @@
 import React, { useEffect, lazy, Suspense } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
 import Sidebar from "./components/Sidebar";
 import FloatingCommandHub from "./components/FloatingCommandHub";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "framer-motion";
 import { TradingModeProvider } from "./context/TradingModeContext";
 
+const Dashboard = lazy(() => import("./pages/Dashboard"));
 const StrategySelector = lazy(() => import("./pages/StrategySelector"));
 const TradingView = lazy(() => import("./pages/TradingView"));
 const Analytics = lazy(() => import("./pages/Analytics"));
@@ -42,6 +42,31 @@ const SpotTrading = lazy(() => import("./pages/SpotTrading"));
 const ModelPerformanceDashboard = lazy(() => import("./pages/ModelPerformanceDashboard"));
 const TethysDashboard = lazy(() => import("./pages/TethysDashboard"));
 
+const IDLE_CALLBACK_TIMEOUT = 2000;
+const SERVICE_WORKER_FALLBACK_DELAY = 1000;
+
+const addLinkIfMissing = (rel, href, crossOrigin = false) => {
+  const existing = Array.from(document.head.querySelectorAll('link')).some(
+    (link) => link.rel === rel && link.href === href
+  );
+  if (existing) {
+    return;
+  }
+  const link = document.createElement('link');
+  link.rel = rel;
+  link.href = href;
+  if (crossOrigin) {
+    link.crossOrigin = '';
+  }
+  document.head.appendChild(link);
+};
+
+const registerServiceWorker = () => {
+  navigator.serviceWorker.register('/service-worker.js')
+    .then(() => console.log('Service Worker registered'))
+    .catch((err) => console.error('Service Worker registration failed:', err));
+};
+
 function App() {
   useEffect(() => {
     // Initialize user session
@@ -55,37 +80,19 @@ function App() {
     if (backendUrl) {
       try {
         const backendOrigin = new URL(backendUrl).origin;
-        const ensureLink = (rel, href, crossOrigin = false) => {
-          if (document.head.querySelector(`link[rel="${rel}"][href="${href}"]`)) {
-            return;
-          }
-          const link = document.createElement('link');
-          link.rel = rel;
-          link.href = href;
-          if (crossOrigin) {
-            link.crossOrigin = '';
-          }
-          document.head.appendChild(link);
-        };
-        ensureLink('preconnect', backendOrigin, true);
-        ensureLink('dns-prefetch', backendOrigin);
+        addLinkIfMissing('preconnect', backendOrigin, true);
+        addLinkIfMissing('dns-prefetch', backendOrigin);
       } catch (error) {
-        // Ignore malformed runtime config
+        console.warn('Failed to parse backend URL:', error);
       }
     }
 
     // Register service worker for background execution
     if ('serviceWorker' in navigator) {
-      const registerServiceWorker = () => {
-        navigator.serviceWorker.register('/service-worker.js')
-          .then(() => console.log('Service Worker registered'))
-          .catch((err) => console.error('Service Worker registration failed:', err));
-      };
-
       if ('requestIdleCallback' in window) {
-        window.requestIdleCallback(registerServiceWorker, { timeout: 2000 });
+        window.requestIdleCallback(registerServiceWorker, { timeout: IDLE_CALLBACK_TIMEOUT });
       } else {
-        setTimeout(registerServiceWorker, 1000);
+        setTimeout(registerServiceWorker, SERVICE_WORKER_FALLBACK_DELAY);
       }
     }
 
