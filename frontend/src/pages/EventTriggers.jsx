@@ -243,7 +243,16 @@ const EventTriggers = () => {
             Automated trading based on real-time news events
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button
+            onClick={() => setShowManualEventModal(true)}
+            variant="outline"
+            className="border-[#FFB800] text-[#FFB800] hover:bg-[#FFB800]/10"
+            data-testid="add-event-btn"
+          >
+            <PenLine size={16} className="mr-2" />
+            Add Event
+          </Button>
           <Button
             onClick={handleCheckNow}
             className="bg-[#9D00FF] hover:bg-[#9D00FF]/80"
