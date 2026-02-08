@@ -282,6 +282,85 @@ async def check_events_now():
     }
 
 
+@router.post("/manual-event")
+async def process_manual_event(request: ManualEventRequest):
+    """
+    Manually add an event that may have been missed by news feeds.
+    
+    Use this when you notice breaking news that wasn't picked up automatically.
+    The event will be checked against all enabled triggers.
+    
+    Example:
+    {
+        "title": "BlackRock begins tokenizing its assets",
+        "body": "BlackRock announced today that they will tokenize $10B worth of assets on Ethereum",
+        "sentiment": "POSITIVE",
+        "source": "twitter"
+    }
+    
+    Sentiment options: POSITIVE, NEGATIVE, NEUTRAL
+    """
+    if not _trigger_service:
+        raise HTTPException(status_code=503, detail="Trigger service not initialized")
+    
+    from datetime import timezone
+    
+    # Create event data structure
+    event_data = {
+        "title": request.title,
+        "body": request.body or "",
+        "sentiment": request.sentiment.upper() if request.sentiment else "NEUTRAL",
+        "categories": [],
+        "published_at": datetime.now(timezone.utc).isoformat(),
+        "url": request.url,
+        "source": request.source or "manual"
+    }
+    
+    # Get all enabled triggers
+    triggers_data = await _trigger_service.list_triggers(enabled_only=True)
+    
+    from services.event_triggers import EventTrigger
+    triggers = [EventTrigger.from_dict(t) for t in triggers_data]
+    
+    executions = []
+    matched_triggers = []
+    
+    # Check each trigger against this manual event
+    for trigger in triggers:
+        match_result = _trigger_service.check_event_matches_trigger(trigger, event_data)
+        
+        if match_result["matches"]:
+            matched_triggers.append({
+                "trigger_id": trigger.trigger_id,
+                "name": trigger.name,
+                "action": trigger.action,
+                "confidence": match_result.get("confidence", 0),
+                "keyword_matches": match_result.get("keyword_matches", [])
+            })
+            
+            # Execute the trigger
+            execution = await _trigger_service.execute_trigger(trigger, event_data, match_result)
+            executions.append(execution)
+    
+    # Store the manual event in history
+    if _db:
+        await _db.manual_events.insert_one({
+            "event": event_data,
+            "matched_triggers": [t["trigger_id"] for t in matched_triggers],
+            "executions_count": len(executions),
+            "created_at": datetime.now(timezone.utc)
+        })
+    
+    return {
+        "status": "processed",
+        "event": event_data,
+        "triggers_checked": len(triggers),
+        "triggers_matched": len(matched_triggers),
+        "matched_triggers": matched_triggers,
+        "executions": executions
+    }
+
+
 @router.get("/history/all")
 async def get_all_execution_history(limit: int = 50):
     """Get execution history for all triggers"""
