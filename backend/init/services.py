@@ -74,7 +74,9 @@ async def _init_phase1_core(db):
     kraken_api_secret = os.getenv('KRAKEN_API_SECRET')
     if kraken_api_key and kraken_api_secret:
         kraken_auth = KrakenAuthenticator(kraken_api_key, kraken_api_secret)
-        _services['kraken'] = KrakenTradeService(kraken_auth)
+        kraken_service = KrakenTradeService(kraken_auth)
+        _services['kraken'] = kraken_service
+        set_kraken_service(kraken_service)  # Set singleton
         logger.info("✅ Kraken service initialized")
     else:
         _services['kraken'] = None
