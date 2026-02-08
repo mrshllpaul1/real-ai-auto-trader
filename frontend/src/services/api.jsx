@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Force use the correct backend URL from build-time env
 // This ensures we don't use stale runtime config
-const BACKEND_URL = 'https://tethys-trade.preview.emergentagent.com';
+const BACKEND_URL = 'https://ai-trader-85.preview.emergentagent.com';
 const API = `${BACKEND_URL}/api`;
 
 console.log('[API Service] Using backend URL:', BACKEND_URL);
