@@ -103,7 +103,8 @@ const NotificationCenter = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="fixed top-16 left-4 sm:left-auto sm:right-4 w-80 max-w-[calc(100vw-2rem)] bg-[#0A0A0A] border border-[#1F1F1F] rounded-lg shadow-xl z-[100] overflow-hidden"
+            className="absolute top-full left-0 mt-2 w-80 max-w-[calc(100vw-1rem)] bg-[#0A0A0A] border border-[#1F1F1F] rounded-lg shadow-xl z-[100] overflow-hidden"
+            style={{ minWidth: '300px' }}
           >
             <div className="flex items-center justify-between p-3 border-b border-[#1F1F1F]">
               <span className="font-bold text-white">Notifications</span>
