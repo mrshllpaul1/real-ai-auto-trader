@@ -59,6 +59,15 @@ class UpdateTriggerRequest(BaseModel):
     enabled: Optional[bool] = None
 
 
+class ManualEventRequest(BaseModel):
+    """Request model for manually adding a missed event"""
+    title: str
+    body: Optional[str] = ""
+    sentiment: Optional[str] = "NEUTRAL"  # POSITIVE, NEGATIVE, NEUTRAL
+    source: Optional[str] = "manual"
+    url: Optional[str] = None
+
+
 @router.get("/status")
 async def get_trigger_service_status():
     """Get event trigger service status and statistics"""
