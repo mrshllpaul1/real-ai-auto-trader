@@ -15,17 +15,19 @@ import re
 KEYWORD_SYNONYMS = {
     # Institutional buyers
     "microstrategy": ["mstr", "michael saylor", "saylor", "strategy"],
-    "blackrock": ["ibit", "larry fink", "ishares", "blk"],
+    "blackrock": ["ibit", "larry fink", "ishares", "blk", "buidl", "tokenize", "tokenization"],
     "grayscale": ["gbtc", "ethe", "barry silbert", "dcg", "digital currency group"],
     "tesla": ["elon musk", "tsla", "spacex"],
     "fidelity": ["fbtc", "wise origin", "fidelity digital"],
+    "vanguard": ["vanguard group", "vanguard fund"],
+    "ark": ["ark invest", "cathie wood", "arkb"],
     
     # Regulatory bodies & people
     "sec": ["securities", "gensler", "enforcement", "regulatory", "securities exchange"],
     "cftc": ["commodities", "commodity futures"],
-    "trump": ["white house", "administration", "president", "executive order"],
+    "trump": ["white house", "administration", "president", "executive order", "trump administration"],
     "etf": ["exchange traded fund", "spot etf", "bitcoin etf", "eth etf", "crypto etf"],
-    "fomc": ["federal reserve", "fed", "powell", "interest rate", "rate decision", "fed meeting"],
+    "fomc": ["federal reserve", "fed", "powell", "interest rate", "rate decision", "fed meeting", "rate cut", "rate hike"],
     
     # Market events
     "crash": ["plunge", "dump", "collapse", "tank", "tumble", "freefall", "bloodbath", "selloff", "sell-off"],
@@ -43,6 +45,7 @@ KEYWORD_SYNONYMS = {
     "binance": ["cz", "changpeng zhao", "bnb", "binance.us"],
     "coinbase": ["brian armstrong", "coin", "base"],
     "kraken": ["jesse powell", "payward"],
+    "ftx": ["sam bankman-fried", "sbf", "alameda"],
     
     # Whale movements
     "whale": ["large holder", "big transfer", "massive", "huge", "giant", "major holder"],
@@ -54,26 +57,40 @@ KEYWORD_SYNONYMS = {
     "atl": ["all-time low", "all time low", "record low", "lowest"],
     
     # Network events
-    "upgrade": ["fork", "update", "hardfork", "hard fork", "softfork", "improvement"],
+    "upgrade": ["fork", "update", "hardfork", "hard fork", "softfork", "improvement", "v2", "v3", "mainnet"],
     "outage": ["down", "halted", "congestion", "offline", "degraded", "network issue"],
     
     # Investment types
-    "institutional": ["institution", "hedge fund", "pension", "endowment", "fund"],
-    "purchase": ["buy", "bought", "acquire", "acquired", "accumulate", "add"],
+    "institutional": ["institution", "hedge fund", "pension", "endowment", "fund", "asset manager"],
+    "purchase": ["buy", "bought", "acquire", "acquired", "accumulate", "add", "accumulating"],
     "sold": ["sell", "selling", "liquidate", "dump", "offload"],
     
     # DeFi & Crypto specific
-    "defi": ["decentralized finance", "yield", "liquidity", "protocol"],
+    "defi": ["decentralized finance", "yield", "liquidity", "protocol", "tvl"],
     "nft": ["non-fungible", "collectible", "digital art"],
     "staking": ["stake", "validator", "delegation", "proof of stake"],
-    "layer": ["l1", "l2", "layer 1", "layer 2", "scaling"],
+    "layer": ["l1", "l2", "layer 1", "layer 2", "scaling", "rollup"],
+    "rwa": ["real world assets", "tokenization", "tokenize", "tokenized"],
     
     # Sentiment indicators
     "positive": ["bullish", "optimistic", "growth", "gains", "profit"],
     "negative": ["bearish", "pessimistic", "loss", "losses", "risk"],
     
     # AI & Tech
-    "ai": ["artificial intelligence", "machine learning", "ml", "gpt", "llm"],
+    "ai": ["artificial intelligence", "machine learning", "ml", "gpt", "llm", "chatgpt", "nvidia", "gpu"],
+    
+    # Stablecoins
+    "stablecoin": ["usdt", "usdc", "dai", "busd", "tusd", "paxos"],
+    "depeg": ["depegged", "lost peg", "peg", "pegged"],
+    
+    # Countries/Regions
+    "china": ["chinese", "beijing", "prc"],
+    "usa": ["united states", "american", "us government"],
+    "el salvador": ["nayib bukele", "bukele"],
+    
+    # New entrants
+    "partnership": ["partners", "collaboration", "integration", "deal", "agreement", "joins"],
+    "adoption": ["adopts", "accepts", "embraces", "integrates"],
 }
 
 # Confidence score adjustments
