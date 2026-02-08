@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Use runtime config if available, fallback to env variable
-const BACKEND_URL = window.__RUNTIME_CONFIG__?.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+// Use env variable for backend URL (runtime config may have stale values)
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 console.log('[API Service] Using backend URL:', BACKEND_URL);
