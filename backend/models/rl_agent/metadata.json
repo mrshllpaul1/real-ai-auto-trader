@@ -1,8 +1,8 @@
 {
   "model_type": "rl_agent",
-  "saved_at": "2026-02-08T20:37:20.887737+00:00",
+  "saved_at": "2026-02-08T20:39:17.230920+00:00",
   "format": "keras",
   "is_trained": true,
   "epsilon": 0.00998645168764533,
-  "memory_size": 995
+  "memory_size": 245
 }
