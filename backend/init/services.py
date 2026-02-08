@@ -494,7 +494,7 @@ async def _init_phase7_wire_dependencies(db):
     gem_predictor.set_dependencies(db, _services['gem_predictor'])
     gem_predictor_routes.set_backtester(_services['gem_backtester'])
     simulation.set_dependencies(db, _services['market'])
-    ensemble.set_dependencies(db, _services['market'], _services['ensemble'], _services['universe_optimizer'], _services['deep_ai'])
+    ensemble.set_dependencies(db, _services['market'], _services['ensemble'], _services['universe_optimizer'], _services['rainbow_agent'])
     coindesk.set_dependencies(_services['coindesk'])
     historical_data.set_dependencies(db, _services['historical_downloader'], _services['cryptocompare'])
     ai_learning_loop.set_dependencies(db, _services['learning_loop'])
