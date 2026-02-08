@@ -1,11 +1,13 @@
-name: Pylint
+name: Python Syntax Check
 
 on:
   push:
   pull_request:
 
 jobs:
-  lint:
+  syntax-check:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
