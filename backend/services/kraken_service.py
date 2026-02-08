@@ -268,6 +268,7 @@ class KrakenMarketService:
             data = response.json()
             if data.get("error"):
                 raise Exception(f"Kraken API error: {data['error']}")
+            return data.get("result", {})
 
 
 # Singleton instance for Kraken Trade Service
@@ -283,5 +284,3 @@ def set_kraken_service(service: KrakenTradeService):
     """Set the singleton Kraken Trade Service instance"""
     global _kraken_service
     _kraken_service = service
-
-            return data.get("result", {})
