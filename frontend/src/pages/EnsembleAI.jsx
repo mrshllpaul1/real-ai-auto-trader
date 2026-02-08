@@ -72,8 +72,7 @@ const EnsembleAI = () => {
   // Fetch optimal universe
   const fetchUniverse = async () => {
     try {
-      const res = await fetch(`${API}/api/ensemble/optimal-universe`);
-      const data = await res.json();
+      const { data } = await api.get('/ensemble/optimal-universe');
       setUniverse(data);
     } catch (err) {
       console.error('Error fetching universe:', err);
@@ -83,8 +82,7 @@ const EnsembleAI = () => {
   // Fetch comparison
   const fetchComparison = async () => {
     try {
-      const res = await fetch(`${API}/api/ensemble/comparison`);
-      const data = await res.json();
+      const { data } = await api.get('/ensemble/comparison');
       setComparison(data);
     } catch (err) {
       console.error('Error fetching comparison:', err);
@@ -94,8 +92,7 @@ const EnsembleAI = () => {
   // Fetch hidden gems
   const fetchHiddenGems = async () => {
     try {
-      const res = await fetch(`${API}/api/ensemble/hidden-gems`);
-      const data = await res.json();
+      const { data } = await api.get('/ensemble/hidden-gems');
       setHiddenGems(data);
     } catch (err) {
       console.error('Error fetching hidden gems:', err);
@@ -105,8 +102,7 @@ const EnsembleAI = () => {
   // Fetch build status - must be defined before fetchStatus
   const fetchBuildStatus = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/api/ensemble/build-status`);
-      const data = await res.json();
+      const { data } = await api.get('/ensemble/build-status');
       setBuildStatus(data);
       
       // Stop polling if complete
@@ -129,8 +125,7 @@ const EnsembleAI = () => {
   // Fetch ensemble status
   const fetchStatus = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/api/ensemble/status`);
-      const data = await res.json();
+      const { data } = await api.get('/ensemble/status');
       setStatus(data);
       setBuildStatus(data.universe_rebuild_status);
     } catch (err) {
@@ -142,12 +137,10 @@ const EnsembleAI = () => {
   const startRebuild = async () => {
     setRebuilding(true);
     try {
-      const res = await fetch(`${API}/api/ensemble/rebuild-universe`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target_size: targetSize, analyze_count: analyzeCount })
+      const { data } = await api.post('/ensemble/rebuild-universe', {
+        target_size: targetSize,
+        analyze_count: analyzeCount
       });
-      const data = await res.json();
       
       if (data.status === 'started') {
         toast.info(`Analyzing ${analyzeCount} coins... This may take a few minutes.`);
