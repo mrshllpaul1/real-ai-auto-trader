@@ -184,7 +184,7 @@ async def get_training_feedback(model: Optional[str] = None):
 @router.get("/predictions/unverified")
 async def get_unverified_predictions(limit: int = 50):
     """Get predictions that haven't been verified yet"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=503, detail="Database not available")
     
     predictions = await _db.ai_predictions.find(
@@ -206,7 +206,7 @@ async def get_unverified_predictions(limit: int = 50):
 @router.get("/predictions/recent")
 async def get_recent_predictions(limit: int = 50, verified_only: bool = False):
     """Get recent predictions"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=503, detail="Database not available")
     
     query = {"verified": True} if verified_only else {}
