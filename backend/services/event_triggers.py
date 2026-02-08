@@ -235,6 +235,115 @@ TRIGGER_TEMPLATES = {
         "sentiment_filter": "any",
         "cooldown_hours": 4,
         "description": "Alert on large crypto movements"
+    },
+    # NEW TEMPLATES
+    "blackrock_tokenization": {
+        "name": "BlackRock Tokenization News",
+        "keywords": ["blackrock", "tokenize", "tokenization", "tokenizing", "rwa", "real world assets", "buidl"],
+        "coins": ["ETH", "ONDO", "LINK"],
+        "action": "buy",
+        "sentiment_filter": "positive",
+        "cooldown_hours": 24,
+        "description": "Buy when BlackRock announces tokenization initiatives"
+    },
+    "fed_rate_decision": {
+        "name": "Fed Interest Rate Decision",
+        "keywords": ["federal reserve", "fomc", "interest rate", "rate cut", "rate hike", "powell", "fed meeting"],
+        "coins": ["BTC", "ETH"],
+        "action": "alert",
+        "sentiment_filter": "any",
+        "cooldown_hours": 6,
+        "description": "Alert on Federal Reserve rate decisions"
+    },
+    "major_partnership": {
+        "name": "Major Partnership Announcement",
+        "keywords": ["partnership", "partners", "collaboration", "integration", "deal", "agreement"],
+        "coins": ["BTC", "ETH", "SOL", "LINK"],
+        "action": "buy",
+        "sentiment_filter": "positive",
+        "cooldown_hours": 12,
+        "description": "Buy on major crypto partnership news"
+    },
+    "protocol_upgrade": {
+        "name": "Protocol Upgrade News",
+        "keywords": ["upgrade", "fork", "hardfork", "update", "improvement", "v2", "v3", "mainnet"],
+        "coins": ["ETH", "SOL", "ADA"],
+        "action": "buy",
+        "sentiment_filter": "positive",
+        "cooldown_hours": 24,
+        "description": "Buy on major protocol upgrades"
+    },
+    "trump_crypto": {
+        "name": "Trump Crypto Policy",
+        "keywords": ["trump", "administration", "executive order", "crypto policy", "strategic reserve"],
+        "coins": ["BTC", "ETH"],
+        "action": "buy",
+        "sentiment_filter": "positive",
+        "cooldown_hours": 24,
+        "description": "Buy on positive Trump administration crypto news"
+    },
+    "defi_exploit": {
+        "name": "DeFi Exploit Alert",
+        "keywords": ["exploit", "rug pull", "rugpull", "flash loan", "drained", "vulnerability", "smart contract"],
+        "coins": ["ETH", "BNB"],
+        "action": "sell",
+        "sentiment_filter": "negative",
+        "cooldown_hours": 6,
+        "description": "Sell on DeFi exploit news"
+    },
+    "stablecoin_depeg": {
+        "name": "Stablecoin Depeg Alert",
+        "keywords": ["depeg", "depegged", "lost peg", "stablecoin", "usdt", "usdc", "usdd", "collapse"],
+        "coins": ["BTC", "ETH"],
+        "action": "sell",
+        "sentiment_filter": "negative",
+        "cooldown_hours": 4,
+        "description": "Sell on stablecoin depeg news"
+    },
+    "sovereign_adoption": {
+        "name": "Sovereign/Nation Adoption",
+        "keywords": ["legal tender", "national currency", "el salvador", "country", "nation", "government adopts", "cbdc"],
+        "coins": ["BTC"],
+        "action": "buy",
+        "sentiment_filter": "positive",
+        "cooldown_hours": 48,
+        "description": "Buy on nation-level crypto adoption news"
+    },
+    "grayscale_flows": {
+        "name": "Grayscale Fund Flows",
+        "keywords": ["grayscale", "gbtc", "ethe", "inflows", "outflows", "fund flows"],
+        "coins": ["BTC", "ETH"],
+        "action": "alert",
+        "sentiment_filter": "any",
+        "cooldown_hours": 12,
+        "description": "Alert on significant Grayscale fund flow news"
+    },
+    "ai_crypto": {
+        "name": "AI & Crypto Integration",
+        "keywords": ["ai", "artificial intelligence", "machine learning", "chatgpt", "openai", "nvidia", "gpu"],
+        "coins": ["RNDR", "FET", "AGIX", "TAO"],
+        "action": "buy",
+        "sentiment_filter": "positive",
+        "cooldown_hours": 12,
+        "description": "Buy AI-related tokens on positive AI+crypto news"
+    },
+    "layer2_launch": {
+        "name": "Layer 2 Launch/News",
+        "keywords": ["layer 2", "l2", "rollup", "optimism", "arbitrum", "zksync", "polygon", "base"],
+        "coins": ["ETH", "OP", "ARB", "MATIC"],
+        "action": "buy",
+        "sentiment_filter": "positive",
+        "cooldown_hours": 24,
+        "description": "Buy on Layer 2 scaling solution news"
+    },
+    "halving_event": {
+        "name": "Bitcoin Halving",
+        "keywords": ["halving", "halvening", "block reward", "mining reward", "bitcoin halving"],
+        "coins": ["BTC"],
+        "action": "buy",
+        "sentiment_filter": "any",
+        "cooldown_hours": 72,
+        "description": "Buy around Bitcoin halving events"
     }
 }
 
