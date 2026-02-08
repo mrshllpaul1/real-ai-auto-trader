@@ -104,7 +104,7 @@ pydantic_core==2.41.5
 pyflakes==3.4.0
 Pygments==2.19.2
 PyJWT==2.10.1
-pymongo==4.5.0
+pymongo==4.6.3
 pyparsing==3.3.1
 pyproject_hooks==1.2.0
 pytest==9.0.2
