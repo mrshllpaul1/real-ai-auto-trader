@@ -5,6 +5,49 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 ---
 
+## Session 37 - COMPLETE (Feb 8, 2026)
+
+### ✅ Enhanced Event Triggers System
+
+**New Features Added:**
+
+| Feature | Description |
+|---------|-------------|
+| **12 New Templates** | blackrock_tokenization, fed_rate_decision, major_partnership, trump_crypto, defi_exploit, stablecoin_depeg, sovereign_adoption, grayscale_flows, ai_crypto, layer2_launch, halving_event, protocol_upgrade |
+| **Manual Event Feature** | Add missed news events that weren't picked up automatically |
+| **Expanded Keywords** | Added 30+ new keyword synonym mappings for better trigger matching |
+
+**API Endpoint Added:**
+- `POST /api/triggers/manual-event` - Process custom events against all enabled triggers
+
+**Templates Now Available (20 total):**
+- elon_doge, elon_btc, sec_regulatory, etf_approval, exchange_hack, china_ban, institutional_buy, whale_alert
+- **NEW:** blackrock_tokenization, fed_rate_decision, major_partnership, protocol_upgrade, trump_crypto, defi_exploit, stablecoin_depeg, sovereign_adoption, grayscale_flows, ai_crypto, layer2_launch, halving_event
+
+---
+
+### ✅ Ensemble AI Page Fix
+
+**Problem:** "Start Rebuild" button showed "Failed to start rebuild" error.
+
+**Root Cause:** EnsembleAI.jsx was using `fetch()` with undefined `API` constant instead of the shared api service.
+
+**Fix:** Replaced all direct `fetch()` calls with `api.get()` and `api.post()` from the shared api service.
+
+---
+
+### ✅ Notification Panel Visibility Fix
+
+**Problem:** Notification panel was cut off on laptop screens (1366x768).
+
+**Root Cause:** Panel used `fixed right-4` positioning which placed it outside viewport on smaller screens.
+
+**Fix:** Changed to `absolute top-full left-0 mt-2` positioning relative to the bell button.
+
+**Verification:** Panel now displays at x=195, y=69 with height=476, fully within viewport.
+
+---
+
 ## Full Portfolio Test Results (Feb 7, 2026)
 
 ### ✅ 100% Test Success Rate
