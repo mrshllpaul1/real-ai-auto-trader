@@ -174,6 +174,30 @@ const EventTriggers = () => {
     }
   };
 
+  const handleSubmitManualEvent = async () => {
+    if (!manualEvent.title) {
+      toast.error('Please enter an event title');
+      return;
+    }
+    try {
+      toast.info('Processing event...');
+      const response = await api.post('/triggers/manual-event', manualEvent);
+      const result = response.data;
+      
+      if (result.triggers_matched > 0) {
+        toast.success(`Event matched ${result.triggers_matched} trigger(s)!`);
+      } else {
+        toast.info('Event processed - no triggers matched');
+      }
+      
+      setShowManualEventModal(false);
+      setManualEvent({ title: '', body: '', sentiment: 'NEUTRAL' });
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to process event');
+    }
+  };
+
   const getActionIcon = (action) => {
     switch (action) {
       case 'buy': return <TrendingUp className="text-[#00FF94]" size={16} />;
