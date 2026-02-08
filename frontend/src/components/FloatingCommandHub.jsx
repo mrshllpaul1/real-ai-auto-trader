@@ -158,7 +158,7 @@ const FloatingCommandHub = () => {
     setGeneratedStrategy(null);
     
     try {
-      const response = await fetch(`${API_URL}/api/strategy-builder/generate`, {
+      const response = await fetch(`${API_URL}/api/strategy-builder/from-description`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ description: strategyInput })
