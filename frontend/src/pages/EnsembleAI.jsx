@@ -8,8 +8,8 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 
-// Use same backend URL as api service
-const API = (window.__RUNTIME_CONFIG__?.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL);
+// Use env variable for backend URL
+const API = process.env.REACT_APP_BACKEND_URL;
 
 // Progress bar component
 const ProgressBar = ({ progress, message }) => (
