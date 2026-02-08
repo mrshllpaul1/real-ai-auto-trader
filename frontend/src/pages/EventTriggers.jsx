@@ -801,6 +801,81 @@ const EventTriggers = () => {
         </div>
       )}
 
+      {/* Manual Event Modal */}
+      {showManualEventModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowManualEventModal(false)}>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-[#0A0A0A] border border-[#1F1F1F] rounded-2xl p-6 w-full max-w-lg"
+            onClick={(e) => e.stopPropagation()}
+            data-testid="manual-event-modal"
+          >
+            <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+              <PenLine className="text-[#FFB800]" />
+              Add Missed Event
+            </h2>
+            <p className="text-sm text-[#A1A1AA] mb-4">
+              Manually enter breaking news that wasn't picked up automatically.
+              This event will be checked against all your enabled triggers.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm text-[#A1A1AA] mb-2 block">Event Title *</label>
+                <Input
+                  placeholder="e.g., BlackRock begins tokenizing its assets"
+                  value={manualEvent.title}
+                  onChange={(e) => setManualEvent({ ...manualEvent, title: e.target.value })}
+                  className="bg-[#121212] border-[#1F1F1F]"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-[#A1A1AA] mb-2 block">Details (optional)</label>
+                <Textarea
+                  placeholder="Additional context about the event..."
+                  value={manualEvent.body}
+                  onChange={(e) => setManualEvent({ ...manualEvent, body: e.target.value })}
+                  className="bg-[#121212] border-[#1F1F1F] min-h-[80px]"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-[#A1A1AA] mb-2 block">Sentiment</label>
+                <Select value={manualEvent.sentiment} onValueChange={(v) => setManualEvent({ ...manualEvent, sentiment: v })}>
+                  <SelectTrigger className="bg-[#121212] border-[#1F1F1F]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#121212] border-[#1F1F1F]">
+                    <SelectItem value="POSITIVE">🟢 Positive / Bullish</SelectItem>
+                    <SelectItem value="NEUTRAL">⚪ Neutral</SelectItem>
+                    <SelectItem value="NEGATIVE">🔴 Negative / Bearish</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button
+                onClick={handleSubmitManualEvent}
+                className="w-full bg-[#FFB800] hover:bg-[#FFB800]/80 text-black"
+                data-testid="submit-event-btn"
+              >
+                <Zap size={16} className="mr-2" />
+                Process Event Against Triggers
+              </Button>
+
+              <Button
+                variant="outline"
+                className="w-full border-[#1F1F1F]"
+                onClick={() => setShowManualEventModal(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {/* Safety Warning */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
