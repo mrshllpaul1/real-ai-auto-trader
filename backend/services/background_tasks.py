@@ -230,11 +230,12 @@ class BackgroundTaskManager:
         """Get current status of a task"""
         # Check memory first
         if task_id in self.task_status:
-            return {k: v for k, v in self.task_status[task_id].items() if k != "_id"}
+            status = {k: v for k, v in self.task_status[task_id].items() if k != "_id"}
+            return convert_numpy_types(status)
         
         # Check database
         doc = await self._collection.find_one({"task_id": task_id}, {"_id": 0})
-        return doc
+        return convert_numpy_types(doc) if doc else None
     
     async def cancel_task(self, task_id: str) -> bool:
         """Cancel a running task"""
