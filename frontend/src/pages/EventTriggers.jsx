@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Zap, Bell, TrendingUp, TrendingDown, AlertTriangle, Clock,
   Plus, Trash2, Play, Pause, History, Target, RefreshCw,
-  Check, X, DollarSign, Filter, Search, Settings2, Sparkles
+  Check, X, DollarSign, Filter, Search, Settings2, Sparkles, PenLine
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../services/api';
