@@ -130,7 +130,6 @@ async def _init_phase3_ai(db):
     from services.weekly_simulation import WeeklySimulationRunner
     from services.gem_finder import HiddenGemFinder
     from services.ai_weekly_trainer import AIWeeklyTrainer
-    from services.deep_learning_ai import get_deep_learning_ai
     from services.ensemble_ai import get_ensemble_predictor, get_universe_optimizer
     from services.regime_predictor import get_regime_predictor
     from services.performance_tracker import get_performance_tracker
@@ -152,13 +151,13 @@ async def _init_phase3_ai(db):
     _services['gem_finder'] = HiddenGemFinder(db)
     _services['ai_trainer'] = AIWeeklyTrainer(db)
     
-    # Deep Learning
-    deep_ai = get_deep_learning_ai(db)
-    _services['deep_ai'] = deep_ai
+    # Ensemble & Optimizer (use Rainbow DQN from Tethys instead of deprecated deep_learning)
+    from services.rainbow_dqn import get_rainbow_agent
+    rainbow_agent = get_rainbow_agent()
+    _services['rainbow_agent'] = rainbow_agent
     
-    # Ensemble & Optimizer
-    ensemble_predictor = get_ensemble_predictor(db, market, deep_ai)
-    universe_optimizer = get_universe_optimizer(db, market, ensemble_predictor, deep_ai)
+    ensemble_predictor = get_ensemble_predictor(db, market, rainbow_agent)
+    universe_optimizer = get_universe_optimizer(db, market, ensemble_predictor, rainbow_agent)
     _services['ensemble'] = ensemble_predictor
     _services['universe_optimizer'] = universe_optimizer
     
