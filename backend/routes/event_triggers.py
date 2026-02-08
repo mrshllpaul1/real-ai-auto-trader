@@ -343,7 +343,7 @@ async def process_manual_event(request: ManualEventRequest):
             executions.append(execution)
     
     # Store the manual event in history
-    if _db:
+    if _db is not None:
         await _db.manual_events.insert_one({
             "event": event_data,
             "matched_triggers": [t["trigger_id"] for t in matched_triggers],
