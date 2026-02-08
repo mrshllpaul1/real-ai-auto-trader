@@ -23,7 +23,13 @@ const EventTriggers = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('triggers');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showManualEventModal, setShowManualEventModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [manualEvent, setManualEvent] = useState({
+    title: '',
+    body: '',
+    sentiment: 'NEUTRAL'
+  });
   const [newTrigger, setNewTrigger] = useState({
     trigger_id: '',
     name: '',
