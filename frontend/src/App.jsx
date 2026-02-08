@@ -15,6 +15,7 @@ import GemScanner from "./pages/GemScanner";
 import AutoExecution from "./pages/AutoExecution";
 import AdvancedFeatures from "./pages/AdvancedFeatures";
 import AdvancedAI from "./pages/AdvancedAI";
+import MasterDashboard from "./pages/MasterDashboard";
 import Guide from "./pages/Guide";
 import Setup from "./pages/Setup";
 import GrowthDashboard from "./pages/GrowthDashboard";
