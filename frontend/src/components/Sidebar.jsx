@@ -190,6 +190,7 @@ const Sidebar = () => {
     { path: '/training', icon: GraduationCap, label: 'AI Training', highlight: true },
     { path: '/models', icon: Cpu, label: 'Model Performance', highlight: true },
     { path: '/tethys', icon: Waves, label: 'Tethys AI', highlight: true },
+    { path: '/advanced-ai', icon: Brain, label: 'Advanced AI', highlight: true },
     { path: '/event-timeline', icon: Calendar, label: 'Event Timeline', highlight: true },
     { path: '/journal', icon: BookOpen, label: 'Journal' },
     { path: '/scanner', icon: Radar, label: 'Gem Scanner', highlight: true },
