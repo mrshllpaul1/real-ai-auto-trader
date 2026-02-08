@@ -59,7 +59,7 @@ async def _init_phase1_core(db):
     """Phase 1: Core services (no dependencies)"""
     from services.market_data_service import MarketDataService
     from services.news_service import CryptoNewsAggregator
-    from services.kraken_service import KrakenAuthenticator, KrakenTradeService
+    from services.kraken_service import KrakenAuthenticator, KrakenTradeService, set_kraken_service
     from services.dynamic_coin_universe import DynamicCoinUniverseManager, set_universe_manager
     from services.ai_news_sentiment import AINewsSentimentService, set_sentiment_service
     from services.cryptopanic_service import CryptoPanicService, set_cryptopanic_service
