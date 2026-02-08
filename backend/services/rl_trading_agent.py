@@ -553,10 +553,13 @@ class RLTradingAgent:
                 episode_rewards = []
                 episode_returns = []
                 
+                # Use shorter episodes for faster training (50 steps instead of 200)
+                episode_length = 50
+                
                 for episode in range(train_episodes):
                     # Random starting point
-                    start_idx = random.randint(0, len(prices) - 200)
-                    episode_prices = prices[start_idx:start_idx + 200]
+                    start_idx = random.randint(0, len(prices) - episode_length - 1)
+                    episode_prices = prices[start_idx:start_idx + episode_length]
                     
                     state = self.env.reset(episode_prices[0])
                     total_reward = 0
@@ -576,8 +579,8 @@ class RLTradingAgent:
                         # Store experience
                         self.agent.remember(state, action, reward, next_state, done)
                         
-                        # Train
-                        if len(self.agent.memory) >= self.agent.batch_size:
+                        # Train less frequently for speed (every 10 steps instead of every step)
+                        if len(self.agent.memory) >= self.agent.batch_size and i % 10 == 0:
                             self.agent.replay()
                         
                         state = next_state
