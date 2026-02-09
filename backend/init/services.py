@@ -367,8 +367,8 @@ async def _init_phase6_scheduling(db):
     alerts = _services['alerts']
     stop_loss = _services['stop_loss']
     regime = _services['regime']
-    transformer = _services['transformer']
-    rl_agent = _services['rl_agent']
+    transformer = _services['transformer']  # May be None (deferred)
+    rl_agent = _services['rl_agent']  # May be None (deferred)
     kraken = _services['kraken']
     historical_trainer = _services['historical_trainer']
     enhanced_trainer = _services['enhanced_trainer']
@@ -387,31 +387,41 @@ async def _init_phase6_scheduling(db):
     training_history = get_training_history_service(db)
     await training_history.ensure_indexes()
     _services['training_history'] = training_history
-    rl_agent.set_history_service(training_history)
+    # RL agent deferred - skip setting history service at startup
     
     # Training Scheduler
     training_scheduler = get_training_scheduler(db)
     _services['training_scheduler'] = training_scheduler
     
-    # Register trainers for schedulable models
+    # Register trainers for schedulable models (use lazy-loading wrappers)
     async def train_rl(episodes=100, **kwargs):
-        return await rl_agent.train_background(episodes=episodes)
+        from services.rl_trading_agent import get_rl_agent
+        agent = get_rl_agent(db)
+        if agent:
+            return await agent.train_background(episodes=episodes)
+        return {"error": "RL agent not available"}
     
     async def train_transformer(**kwargs):
-        return await transformer.train()
+        from services.transformer_predictor import get_transformer_predictor
+        trans = get_transformer_predictor(db)
+        if trans:
+            return await trans.train()
+        return {"error": "Transformer not available"}
     
     async def train_regime(**kwargs):
-        return await regime.train_models()
+        if regime:
+            return await regime.train_models()
+        return {"error": "Regime predictor not available"}
     
     training_scheduler.register_trainer("rl_agent", train_rl)
     training_scheduler.register_trainer("transformer", train_transformer)
     training_scheduler.register_trainer("regime", train_regime)
     
-    # Learning Service
+    # Learning Service - pass None for deferred services
     learning_service = init_learning_service(
         db,
-        transformer_predictor=transformer,
-        rl_agent=rl_agent,
+        transformer_predictor=None,
+        rl_agent=None,
         regime_predictor=regime,
         model_persistence=None
     )
