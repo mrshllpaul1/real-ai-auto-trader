@@ -111,9 +111,9 @@ if TF_AVAILABLE:
 # CAUSAL TRANSFORMER ENCODER (168 timesteps)
 # =============================================================================
 
-# All TensorFlow-dependent classes are only defined if TF is available
 if TF_AVAILABLE:
-    class PositionalEncoding(layers.Layer):
+
+class PositionalEncoding(layers.Layer):
     """Sinusoidal positional encoding for transformer"""
     
     def __init__(self, max_len: int = 168, d_model: int = 128, **kwargs):
