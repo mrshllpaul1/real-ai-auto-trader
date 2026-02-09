@@ -117,8 +117,21 @@ class TradingEngine:
         user_id: str,
         current_prices: Dict[str, float]
     ) -> Dict[str, Any]:
-        """Calculate portfolio performance"""
-        trades = await self.get_trade_history(user_id)
+        """Calculate portfolio performance using aggregation for better efficiency"""
+        # Use aggregation to calculate metrics efficiently
+        pipeline = [
+            {"$match": {"user_id": user_id}},
+            {"$sort": {"created_at": -1}},
+            {"$limit": 500},  # Increased to 500 for better accuracy
+            {"$project": {
+                "action": 1,
+                "amount": 1,
+                "price": 1,
+                "coin_pair": 1
+            }}
+        ]
+        
+        trades = await self.db.trades.aggregate(pipeline).to_list(500)
         
         total_invested = 0
         current_value = 0
