@@ -294,7 +294,7 @@ const CommandCenter = () => {
         tradingAPI.getKrakenPortfolio(),
         marketAPI.getPrices('bitcoin,ethereum,solana'),
         api.get('/growth/status'),
-        api.get('/master-orchestrator/status'),
+        api.get('/master/status'),
         api.get('/upgrades/status')
       ]);
 
@@ -333,13 +333,13 @@ const CommandCenter = () => {
 
   const toggleOrchestrator = async () => {
     try {
-      if (orchestratorStatus?.is_running) {
-        await api.post('/master-orchestrator/stop');
+      if (orchestratorStatus?.is_active) {
+        await api.post('/master/stop');
       } else {
-        await api.post('/master-orchestrator/start');
+        await api.post('/master/start');
       }
       fetchData();
-      toast.success(orchestratorStatus?.is_running ? 'Orchestrator stopped' : 'Orchestrator started');
+      toast.success(orchestratorStatus?.is_active ? 'Orchestrator stopped' : 'Orchestrator started');
     } catch (error) {
       toast.error('Failed to toggle orchestrator');
     }
