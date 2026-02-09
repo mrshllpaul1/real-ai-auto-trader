@@ -16,10 +16,9 @@ class BinanceCredentials(BaseModel):
     api_key: str
     api_secret: str
 
-class KuCoinCredentials(BaseModel):
+class CryptoComCredentials(BaseModel):
     api_key: str
     api_secret: str
-    passphrase: str
 
 class CredentialsResponse(BaseModel):
     message: str
