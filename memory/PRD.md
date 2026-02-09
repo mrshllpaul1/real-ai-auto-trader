@@ -16,6 +16,7 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 | **Yield Farming** | 10 DeFi protocols with APY tracking | ✅ Complete |
 | **Perpetual Futures** | Leverage trading up to 100x, 6 markets | ✅ Complete |
 | **News Sentiment** | AI-powered market sentiment analysis | ✅ Complete |
+| **Portfolio Risk Analyzer** | Unified risk dashboard with VaR & stress tests | ✅ Complete |
 
 ---
 
@@ -84,6 +85,23 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 - `GET /api/sentiment/market` - Market sentiment
 - `GET /api/sentiment/coin/{coin_id}` - Coin-specific analysis
 - `GET /api/sentiment/trending` - Trending news
+
+---
+
+### Portfolio Risk Analyzer (`/risk-analyzer`) ⭐ NEW
+- **Unified Risk Score**: 0-100 score combining all position types
+- **Risk Breakdown**: Perpetuals (leverage, liquidation), Yield (IL, protocol risk), Options (Greeks)
+- **Value at Risk (VaR)**: 95% and 99% VaR with Expected Shortfall
+- **Stress Testing**: Market Crash, Flash Crash, Bull Run, Black Swan scenarios
+- **Exposure Analysis**: By asset and position type with concentration alerts
+- **Smart Recommendations**: AI-powered risk reduction suggestions
+
+**API Endpoints:**
+- `GET /api/risk-analyzer/overview` - Full risk analysis
+- `GET /api/risk-analyzer/exposure` - Exposure breakdown
+- `GET /api/risk-analyzer/var` - Value at Risk calculation
+- `POST /api/risk-analyzer/stress-test` - Run stress scenarios
+- `GET /api/risk-analyzer/correlations` - Asset correlation matrix
 
 ---
 
@@ -227,6 +245,8 @@ Sidebar:
 | `/app/frontend/src/pages/YieldFarming.jsx` | Yield farming dashboard |
 | `/app/frontend/src/pages/PerpetualFutures.jsx` | Perpetuals trading UI |
 | `/app/frontend/src/pages/NewsSentiment.jsx` | News sentiment dashboard |
+| `/app/backend/routes/risk_analyzer.py` | Portfolio risk analyzer API |
+| `/app/frontend/src/pages/RiskAnalyzer.jsx` | Risk analyzer dashboard |
 
 ---
 
