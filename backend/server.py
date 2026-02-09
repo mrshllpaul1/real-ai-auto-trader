@@ -7,6 +7,18 @@ from fastapi import FastAPI, APIRouter, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import asyncio
+import os
+
+# Validate environment variables at startup
+if os.getenv('SKIP_ENV_VALIDATION') != 'true':
+    try:
+        from validate_env import validate_environment
+        if not validate_environment(strict_mode=False):
+            logger = logging.getLogger(__name__)
+            logger.warning("⚠️ Environment validation failed - server starting anyway. Check logs above.")
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.warning(f"⚠️ Could not run environment validation: {e}")
 
 # Configuration imports
 from config.app_config import APP_TITLE, APP_DESCRIPTION, APP_VERSION, CORS_ORIGINS, LOG_FORMAT, LOG_LEVEL

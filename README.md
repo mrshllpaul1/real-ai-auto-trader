@@ -134,11 +134,53 @@ Navigate to **AI Strategies**:
 
 ## 🔐 Security
 
-- **API Credentials**: Encrypted with Fernet before storage
-- **Environment Variables**: Sensitive data in .env files
-- **No Client-Side Keys**: API keys never exposed to frontend
-- **Rate Limiting**: Prevents API abuse
+### Best Practices
+- **API Credentials**: Encrypted with Fernet before storage in database
+- **Environment Variables**: All sensitive data in `.env` files (never committed)
+- **No Client-Side Keys**: API keys never exposed to frontend or logs
+- **Rate Limiting**: Prevents API abuse and protects against attacks
 - **Input Validation**: Pydantic models validate all inputs
+- **Secret Scanning**: Automated CI/CD checks prevent accidental secret commits
+- **Pre-commit Hooks**: Local validation before pushing code
+
+### Setup Security
+
+1. **Copy the environment template:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Fill in your credentials securely:**
+   - Use a password manager for API keys
+   - Generate strong encryption keys
+   - Never share or commit `.env` files
+
+3. **Install pre-commit hooks (recommended):**
+   ```bash
+   pip install pre-commit
+   pre-commit install
+   ```
+
+4. **Read the security guide:**
+   See [SECURITY.md](./SECURITY.md) for comprehensive security guidelines including:
+   - API key management
+   - Credential rotation procedures
+   - Incident response
+   - Exchange security settings
+
+### Critical Security Requirements
+
+⚠️ **ENCRYPTION_KEY**: Must be set and consistent to preserve stored credentials
+```bash
+# Generate once and keep secure
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+⚠️ **Kraken API Permissions**: NEVER enable "Withdraw" permission on API keys
+
+⚠️ **Production CORS**: Set `CORS_ORIGINS` to your domain(s), not `*`
+
+For detailed security information, see [SECURITY.md](./SECURITY.md)
 
 ## 🎯 Trading Modes
 
