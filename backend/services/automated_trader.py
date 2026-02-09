@@ -1627,6 +1627,17 @@ Exit: ${exit_price:.4f}
             Trade execution result
         """
         logger.info(f"\n🔄 SPOT TRADE: {side.upper()} {symbol}")
+
+        # Hard safety lock for real trading
+        if not paper_trade:
+            real_flag = os.getenv("ENABLE_REAL_TRADING", "").lower()
+            if real_flag not in ("1", "true", "yes", "on"):
+                return {
+                    'success': False,
+                    'error': "Real trading disabled. Set ENABLE_REAL_TRADING=true to proceed.",
+                    'safety_lock': True,
+                    'paper_trade': False
+                }
         
         # Get Kraken symbol
         from routes.spot_trading import TRADING_PAIRS
@@ -1885,5 +1896,4 @@ Exit: ${exit_price:.4f}
                 )
             except Exception as e:
                 logger.warning(f"Failed to send spot trade notification: {e}")
-
 
