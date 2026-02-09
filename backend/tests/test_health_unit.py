@@ -78,25 +78,14 @@ def test_health_endpoint_returns_503_when_unhealthy(monkeypatch):
     assert "error" in data["database"]
 
 
-def test_health_endpoint_handles_unknown_status(monkeypatch, caplog):
+@pytest.mark.parametrize("endpoint", ["/health", "/api/health"])
+def test_health_endpoints_handle_unknown_status(monkeypatch, caplog, endpoint):
     async def fake_check(_client):
         return {"status": "weird", "database": "n/a"}
 
     monkeypatch.setattr(server, "check_database_connection", fake_check)
     client = TestClient(server.app)
     with caplog.at_level("WARNING"):
-        resp = client.get("/health")
-    assert resp.status_code == 503
-    assert "unexpected health status" in caplog.text.lower()
-
-
-def test_api_health_endpoint_handles_unknown_status(monkeypatch, caplog):
-    async def fake_check(_client):
-        return {"status": "weird", "database": "n/a"}
-
-    monkeypatch.setattr(server, "check_database_connection", fake_check)
-    client = TestClient(server.app)
-    with caplog.at_level("WARNING"):
-        resp = client.get("/api/health")
+        resp = client.get(endpoint)
     assert resp.status_code == 503
     assert "unexpected health status" in caplog.text.lower()
