@@ -94,7 +94,11 @@ class MarketDataService:
                 )
             except asyncio.TimeoutError:
                 logger.warning(f"CoinGecko API timeout for {coin_ids}")
-                return self._get_fallback_prices(coin_ids)
+                # Set rate limit on consecutive timeouts (API likely overloaded)
+                self._set_rate_limited(30)  # 30 second cooldown on timeout
+                fallback = self._get_fallback_prices(coin_ids)
+                self._set_cache(cache_key, fallback)  # Cache the fallback
+                return fallback
             
             # Check for rate limit error in response
             if isinstance(data, dict) and 'status' in data:
