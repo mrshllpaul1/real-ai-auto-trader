@@ -252,14 +252,47 @@ async def get_alerts():
 @router.get("/dashboard")
 async def get_full_dashboard():
     """Get complete training and monitoring dashboard"""
-    from services.tethys_training import get_trainer, get_registry, get_monitor
-    
-    trainer = get_trainer(_db)
-    registry = get_registry()
-    monitor = get_monitor(_db)
-    
-    return {
-        "training": trainer.get_training_status(),
-        "registry": registry.get_registry_status(),
-        "monitoring": monitor.get_monitoring_status()
-    }
+    try:
+        from services.tethys_training import get_trainer, get_registry, get_monitor
+        
+        trainer = get_trainer(_db)
+        registry = get_registry()
+        monitor = get_monitor(_db)
+        
+        # Get training status
+        training_status = trainer.get_training_status()
+        
+        # Build response with expected fields for frontend
+        return {
+            "training": {
+                "episode": training_status.get('episode', 0),
+                "reward": training_status.get('reward', 0.0),
+                "epsilon": training_status.get('epsilon', 1.0),
+                "loss": training_status.get('loss', 0.0),
+                "progress": training_status.get('progress', 0),
+                "status": training_status.get('status', 'idle'),
+                **training_status  # Include all other fields
+            },
+            "registry": registry.get_registry_status(),
+            "monitoring": monitor.get_monitoring_status()
+        }
+    except Exception as e:
+        logger.error(f"Error getting Tethys training dashboard: {e}")
+        # Return mock data as fallback
+        return {
+            "training": {
+                "episode": 0,
+                "reward": 0.0,
+                "epsilon": 1.0,
+                "loss": 0.0,
+                "progress": 0,
+                "status": "idle"
+            },
+            "registry": {
+                "status": "unavailable",
+                "models": []
+            },
+            "monitoring": {
+                "status": "unavailable"
+            }
+        }

@@ -216,20 +216,40 @@ const AITraining = () => {
   const fetchTethysData = useCallback(async () => {
     try {
       const [dashboard, trading, training, newsData, mktSentiment] = await Promise.all([
-        fetch(`${API_URL}/api/tethys/dashboard`).then(r => r.json()),
-        fetch(`${API_URL}/api/tethys-trading/dashboard`).then(r => r.json()),
-        fetch(`${API_URL}/api/tethys-train/dashboard`).then(r => r.json()),
-        fetch(`${API_URL}/api/tethys/news?limit=5`).then(r => r.json()).catch(() => ({ news: [] })),
-        fetch(`${API_URL}/api/tethys/sentiment`).then(r => r.json()).catch(() => null)
+        fetch(`${API_URL}/api/tethys/dashboard`)
+          .then(r => r.ok ? r.json() : Promise.reject('Dashboard unavailable'))
+          .catch((e) => { 
+            console.warn('Tethys dashboard unavailable:', e);
+            return { agent: { status: 'unavailable' } }; 
+          }),
+        fetch(`${API_URL}/api/tethys-trading/dashboard`)
+          .then(r => r.ok ? r.json() : Promise.reject('Trading unavailable'))
+          .catch((e) => { 
+            console.warn('Tethys trading unavailable:', e);
+            return { status: 'inactive', total_trades: 0, win_rate: 0, total_pnl: 0, total_profit: 0, active_positions: 0, trades_24h: 0 }; 
+          }),
+        fetch(`${API_URL}/api/tethys-train/dashboard`)
+          .then(r => r.ok ? r.json() : Promise.reject('Training unavailable'))
+          .catch((e) => { 
+            console.warn('Tethys training unavailable:', e);
+            return { training: { episode: 0, reward: 0, epsilon: 1.0, loss: 0, progress: 0, status: 'idle' } }; 
+          }),
+        fetch(`${API_URL}/api/tethys/news?limit=5`)
+          .then(r => r.ok ? r.json() : Promise.reject('News unavailable'))
+          .catch(() => ({ news: [] })),
+        fetch(`${API_URL}/api/tethys/sentiment`)
+          .then(r => r.ok ? r.json() : Promise.reject('Sentiment unavailable'))
+          .catch(() => null)
       ]);
       
-      setDashboardData(dashboard);
+      setDashboardData(trading);  // Use trading data as main dashboard
       setTradingData(trading);
       setTrainingData(training);
       setSentimentData(newsData);
       setMarketSentiment(mktSentiment);
     } catch (error) {
-      console.error('Fetch error:', error);
+      console.error('Tethys fetch error:', error);
+      toast.error('Some Tethys features are unavailable');
     } finally {
       setTethysLoading(false);
     }
@@ -654,34 +674,50 @@ const AITraining = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {dashboardData && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="space-y-1">
-                        <p className="text-sm text-[#A1A1AA]">Status</p>
-                        <Badge variant={dashboardData.status === 'active' ? 'success' : 'secondary'}>
-                          {dashboardData.status || 'unknown'}
-                        </Badge>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-sm text-[#A1A1AA]">Total Trades</p>
-                        <p className="text-lg font-data font-bold">
-                          {dashboardData.total_trades || 0}
+                  {dashboardData ? (
+                    dashboardData.status === 'inactive' || dashboardData.status === 'unavailable' ? (
+                      <div className="text-center py-8 space-y-3">
+                        <AlertTriangle className="w-12 h-12 mx-auto text-[#FFB800]" />
+                        <p className="text-[#A1A1AA]">
+                          Tethys trading system is currently {dashboardData.status}.
+                        </p>
+                        <p className="text-sm text-[#A1A1AA]">
+                          Start the system to begin automated trading.
                         </p>
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-sm text-[#A1A1AA]">Win Rate</p>
-                        <p className="text-lg font-data font-bold text-[#00FF94]">
-                          {dashboardData.win_rate?.toFixed(1) || 0}%
-                        </p>
+                    ) : (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="space-y-1">
+                          <p className="text-sm text-[#A1A1AA]">Status</p>
+                          <Badge variant={dashboardData.status === 'active' ? 'success' : 'secondary'}>
+                            {dashboardData.status || 'unknown'}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-[#A1A1AA]">Total Trades</p>
+                          <p className="text-lg font-data font-bold">
+                            {dashboardData.total_trades || 0}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-[#A1A1AA]">Win Rate</p>
+                          <p className="text-lg font-data font-bold text-[#00FF94]">
+                            {dashboardData.win_rate?.toFixed(1) || 0}%
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-[#A1A1AA]">Total P&L</p>
+                          <p className={`text-lg font-data font-bold ${
+                            (dashboardData.total_pnl || 0) >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'
+                          }`}>
+                            ${dashboardData.total_pnl?.toFixed(2) || 0}
+                          </p>
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-sm text-[#A1A1AA]">Total P&L</p>
-                        <p className={`text-lg font-data font-bold ${
-                          (dashboardData.total_pnl || 0) >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'
-                        }`}>
-                          ${dashboardData.total_pnl?.toFixed(2) || 0}
-                        </p>
-                      </div>
+                    )
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-[#A1A1AA]">Loading Tethys status...</p>
                     </div>
                   )}
                 </CardContent>

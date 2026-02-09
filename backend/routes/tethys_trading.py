@@ -386,26 +386,64 @@ async def get_full_dashboard():
     """Get complete Tethys trading dashboard"""
     global _trading_loop, _evolver, _db
     
-    from services.tethys_trading import get_trading_loop
-    _trading_loop = get_trading_loop(_db)
-    
-    dashboard = {
-        'agent': 'Tethys',
-        'trading_loop': _trading_loop.get_status() if _trading_loop else {'status': 'not_initialized'}
-    }
-    
-    # Add explainer summary
-    if _trading_loop and _trading_loop._explainer:
-        dashboard['explainability'] = _trading_loop._explainer.get_feature_importance_summary()
-    
-    # Add evolution status
-    if _evolver:
-        dashboard['evolution'] = _evolver.get_best_params()
-    else:
-        dashboard['evolution'] = {'status': 'not_started'}
-    
-    # Add safety status
-    if _trading_loop and _trading_loop._safety:
-        dashboard['safety'] = _trading_loop._safety.get_full_status()
-    
-    return dashboard
+    try:
+        from services.tethys_trading import get_trading_loop
+        _trading_loop = get_trading_loop(_db)
+        
+        # Get basic status
+        loop_status = _trading_loop.get_status() if _trading_loop else {}
+        
+        # Build dashboard with expected fields for frontend
+        dashboard = {
+            'agent': 'Tethys',
+            'status': loop_status.get('status', 'inactive'),
+            'total_trades': loop_status.get('total_trades', 0),
+            'win_rate': loop_status.get('win_rate', 0.0),
+            'total_pnl': loop_status.get('total_pnl', 0.0),
+            'total_profit': loop_status.get('total_profit', 0.0),
+            'active_positions': loop_status.get('active_positions', 0),
+            'trades_24h': loop_status.get('trades_24h', 0),
+            'trading_loop': loop_status
+        }
+        
+        # Add explainer summary
+        if _trading_loop and hasattr(_trading_loop, '_explainer') and _trading_loop._explainer:
+            try:
+                dashboard['explainability'] = _trading_loop._explainer.get_feature_importance_summary()
+            except Exception:
+                dashboard['explainability'] = {'status': 'unavailable'}
+        
+        # Add evolution status
+        if _evolver:
+            try:
+                dashboard['evolution'] = _evolver.get_best_params()
+            except Exception:
+                dashboard['evolution'] = {'status': 'not_started'}
+        else:
+            dashboard['evolution'] = {'status': 'not_started'}
+        
+        # Add safety status
+        if _trading_loop and hasattr(_trading_loop, '_safety') and _trading_loop._safety:
+            try:
+                dashboard['safety'] = _trading_loop._safety.get_full_status()
+            except Exception:
+                dashboard['safety'] = {'status': 'unavailable'}
+        
+        return dashboard
+    except Exception as e:
+        logger.error(f"Error getting Tethys trading dashboard: {e}")
+        # Return mock data as fallback
+        return {
+            'agent': 'Tethys',
+            'status': 'inactive',
+            'total_trades': 0,
+            'win_rate': 0.0,
+            'total_pnl': 0.0,
+            'total_profit': 0.0,
+            'active_positions': 0,
+            'trades_24h': 0,
+            'trading_loop': {'status': 'not_initialized'},
+            'explainability': {'status': 'unavailable'},
+            'evolution': {'status': 'not_started'},
+            'safety': {'status': 'unavailable'}
+        }
