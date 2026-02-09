@@ -152,34 +152,41 @@ def _get_positional_encoding_class():
     
     class PositionalEncoding(layers.Layer):
         """Sinusoidal positional encoding for transformer"""
+        
+        def __init__(self, max_len: int = 168, d_model: int = 128, **kwargs):
+            super().__init__(**kwargs)
+            self.max_len = max_len
+            self.d_model = d_model
+            
+        def build(self, input_shape):
+            position = np.arange(self.max_len)[:, np.newaxis]
+            div_term = np.exp(np.arange(0, self.d_model, 2) * (-np.log(10000.0) / self.d_model))
+            
+            pe = np.zeros((self.max_len, self.d_model), dtype=np.float32)
+            pe[:, 0::2] = np.sin(position * div_term)
+            pe[:, 1::2] = np.cos(position * div_term)
+            
+            # Use add_weight instead of tf.constant for proper graph scoping
+            self.pe = self.add_weight(
+                name='positional_encoding',
+                shape=(self.max_len, self.d_model),
+                initializer=tf.keras.initializers.Constant(pe),
+                trainable=False
+            )
+            
+        def call(self, x):
+            seq_len = tf.shape(x)[1]
+            return x + self.pe[:seq_len, :]
     
-    def __init__(self, max_len: int = 168, d_model: int = 128, **kwargs):
-        super().__init__(**kwargs)
-        self.max_len = max_len
-        self.d_model = d_model
-        
-    def build(self, input_shape):
-        position = np.arange(self.max_len)[:, np.newaxis]
-        div_term = np.exp(np.arange(0, self.d_model, 2) * (-np.log(10000.0) / self.d_model))
-        
-        pe = np.zeros((self.max_len, self.d_model), dtype=np.float32)
-        pe[:, 0::2] = np.sin(position * div_term)
-        pe[:, 1::2] = np.cos(position * div_term)
-        
-        # Use add_weight instead of tf.constant for proper graph scoping
-        self.pe = self.add_weight(
-            name='positional_encoding',
-            shape=(self.max_len, self.d_model),
-            initializer=tf.keras.initializers.Constant(pe),
-            trainable=False
-        )
-        
-    def call(self, x):
-        seq_len = tf.shape(x)[1]
-        return x + self.pe[:seq_len, :]
+    return PositionalEncoding
 
 
-class CausalTransformerBlock(layers.Layer):
+def _get_causal_transformer_block_class():
+    """Create CausalTransformerBlock class if TensorFlow is available"""
+    if not _ensure_tf():
+        return None
+
+    class CausalTransformerBlock(layers.Layer):
     """Single causal transformer block with masked self-attention"""
     
     def __init__(
