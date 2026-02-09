@@ -27,8 +27,89 @@ def get_service(name: str):
 logging.basicConfig(level=getattr(logging, LOG_LEVEL), format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
 
-# Create the main app
-app = FastAPI(title=APP_TITLE, description=APP_DESCRIPTION, version=APP_VERSION)
+# Create the main app with enhanced API documentation
+app = FastAPI(
+    title=APP_TITLE,
+    description=f"""{APP_DESCRIPTION}
+
+## Authentication
+
+Most endpoints require API key authentication. Include your API key in the header:
+
+```
+X-API-Key: your_api_key_here
+```
+
+## Rate Limiting
+
+API requests are rate-limited based on your subscription tier:
+- **Free**: 100 requests/day
+- **Pro**: 10,000 requests/day  
+- **Enterprise**: Unlimited
+
+## Endpoints
+
+All trading endpoints are prefixed with `/api`. See below for full documentation.
+
+## Support
+
+- Documentation: https://docs.yourapp.com
+- Support: support@yourapp.com
+- Status: https://status.yourapp.com
+    """,
+    version=APP_VERSION,
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
+    contact={
+        "name": "API Support",
+        "email": "support@emergentagent.com",
+    },
+    license_info={
+        "name": "Proprietary",
+        "url": "https://emergentagent.com/terms",
+    },
+    servers=[
+        {
+            "url": "https://deploy-rescue-43.preview.emergentagent.com",
+            "description": "Production server"
+        },
+        {
+            "url": "http://localhost:8001",
+            "description": "Development server"
+        }
+    ],
+    tags_metadata=[
+        {
+            "name": "health",
+            "description": "Health check endpoints for monitoring"
+        },
+        {
+            "name": "tethys",
+            "description": "Tethys AI trading engine operations"
+        },
+        {
+            "name": "triggers",
+            "description": "Event-driven trigger management"
+        },
+        {
+            "name": "portfolio",
+            "description": "Portfolio management and analytics"
+        },
+        {
+            "name": "trading",
+            "description": "Trading operations and execution"
+        },
+        {
+            "name": "ai",
+            "description": "AI model operations and training"
+        },
+        {
+            "name": "auth",
+            "description": "Authentication and API key management"
+        },
+    ]
+)
 
 # WebSocket manager
 ws_manager = ConnectionManager()
