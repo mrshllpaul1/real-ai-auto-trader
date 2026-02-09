@@ -198,11 +198,11 @@ class NewsAggregator:
         try:
             # Try ISO format first
             return datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
-        except:
+        except (ValueError, AttributeError):
             try:
                 # Try common formats
                 return datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-            except:
+            except (ValueError, TypeError):
                 return datetime.now(timezone.utc)
     
     def _get_coin_name(self, symbol: str) -> str:

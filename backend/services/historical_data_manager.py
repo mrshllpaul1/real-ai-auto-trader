@@ -205,15 +205,17 @@ class HistoricalDataManager:
         """Convert Kraken format to standard OHLCV format"""
         data = []
         prices = kraken_data.get("prices", [])
+        volumes = kraken_data.get("total_volumes", [])
         
-        for item in prices:
+        for i, item in enumerate(prices):
+            volume = volumes[i][1] if i < len(volumes) else 0
             data.append({
                 "timestamp": item[0] // 1000,  # Convert ms to seconds
                 "open": item[1],
                 "high": item[1],  # Kraken historical doesn't provide OHLC
                 "low": item[1],
                 "close": item[1],
-                "volume": kraken_data.get("total_volumes", [[0, 0]])[0][1] if "total_volumes" in kraken_data else 0
+                "volume": volume
             })
         
         return data
