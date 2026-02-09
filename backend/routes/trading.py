@@ -310,6 +310,7 @@ def _use_cached_portfolio(reason: str):
         "total_value_usd": 0,
         "holdings_count": 0,
         "stale": True,
+        "message": reason,
         "error": reason,
     }
 
@@ -359,10 +360,10 @@ async def get_kraken_portfolio():
             )
         except asyncio.TimeoutError:
             logger.warning("Kraken balance request timed out")
-            return _use_cached_portfolio("balance timeout")
+            return _use_cached_portfolio("Kraken balance request timed out")
         except Exception as e:
             logger.warning(f"Kraken balance error: {e}")
-            return _use_cached_portfolio("balance fetch error")
+            return _use_cached_portfolio("Failed to fetch balance from Kraken")
         
         if not balances:
             return {"holdings": [], "total_value_usd": 0, "message": "No balances found"}
@@ -443,10 +444,10 @@ async def get_kraken_portfolio():
                         price_data_missing = True
             except asyncio.TimeoutError:
                 logger.warning("Kraken price batch timed out")
-                return _use_cached_portfolio("price timeout")
+                return _use_cached_portfolio("Kraken price request timed out")
             except Exception as e:
                 logger.error(f"Error fetching Kraken prices: {e}")
-                return _use_cached_portfolio("price fetch error")
+                return _use_cached_portfolio("Failed to fetch prices from Kraken")
         
         # Build portfolio
         holdings = []
