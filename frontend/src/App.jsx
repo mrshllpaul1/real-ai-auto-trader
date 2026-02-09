@@ -161,6 +161,7 @@ function App() {
         <Toaster position="top-center" richColors />
       </div>
     </TradingModeProvider>
+    </ErrorBoundary>
   );
 }
 
