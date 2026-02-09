@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import ErrorBoundary, { PageErrorBoundary } from "./components/ErrorBoundary";
 import StrategySelector from "./pages/StrategySelector";
 import TradingView from "./pages/TradingView";
 import Analytics from "./pages/Analytics";
