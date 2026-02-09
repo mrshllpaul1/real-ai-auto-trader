@@ -37,6 +37,8 @@ import StrategyBuilder from "./pages/StrategyBuilder";
 import SpotTrading from "./pages/SpotTrading";
 import ModelPerformanceDashboard from "./pages/ModelPerformanceDashboard";
 import TethysDashboard from "./pages/TethysDashboard";
+import CommandCenter from "./pages/CommandCenter";
+import AICommandCenter from "./pages/AICommandCenter";
 import Sidebar from "./components/Sidebar";
 import FloatingCommandHub from "./components/FloatingCommandHub";
 import { Toaster } from "./components/ui/sonner";
