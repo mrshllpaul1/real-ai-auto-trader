@@ -368,6 +368,173 @@ const AISignalCard = ({ signal }) => {
   );
 };
 
+// Enhanced AI Recommendation Card Component
+const EnhancedRecommendationCard = ({ rec, onClick }) => {
+  const getActionColor = (actionColor) => {
+    switch(actionColor) {
+      case 'success': return { bg: 'bg-[#00FF94]/20', text: 'text-[#00FF94]', border: 'border-[#00FF94]/30' };
+      case 'danger': return { bg: 'bg-[#FF4444]/20', text: 'text-[#FF4444]', border: 'border-[#FF4444]/30' };
+      default: return { bg: 'bg-[#FFB800]/20', text: 'text-[#FFB800]', border: 'border-[#FFB800]/30' };
+    }
+  };
+  
+  const colors = getActionColor(rec.action_color);
+  const [expanded, setExpanded] = useState(false);
+  
+  return (
+    <div 
+      className="p-3 bg-[#1a1a1a] rounded-lg border border-[#222] hover:border-[#444] transition-all cursor-pointer"
+      onClick={() => onClick && onClick(rec.symbol)}
+    >
+      {/* Header Row */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-[#222] flex items-center justify-center text-xs font-bold text-white">
+            {rec.symbol.slice(0, 2)}
+          </div>
+          <div>
+            <div className="font-bold text-white flex items-center gap-2">
+              {rec.symbol}
+              {rec.rank && rec.rank <= 3 && (
+                <span className="text-[10px] bg-[#FFB800]/20 text-[#FFB800] px-1.5 py-0.5 rounded">
+                  #{rec.rank}
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-[#666]">${rec.price?.toFixed(2)}</div>
+          </div>
+        </div>
+        
+        <div className="flex flex-col items-end gap-1">
+          <div className={`px-2 py-1 rounded text-xs font-medium ${colors.bg} ${colors.text}`}>
+            {rec.action}
+          </div>
+          {rec.historical_accuracy && (
+            <div className="flex items-center gap-1 text-[10px] text-[#888]">
+              <CheckCircle size={10} />
+              {(rec.historical_accuracy * 100).toFixed(0)}% acc
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Confidence and Score Bars */}
+      <div className="space-y-2 mb-3">
+        {/* Confidence Bar */}
+        <div>
+          <div className="flex justify-between text-[10px] text-[#888] mb-1">
+            <span>Confidence</span>
+            <span className="text-white font-medium">{(rec.confidence * 100).toFixed(0)}%</span>
+          </div>
+          <div className="h-1.5 bg-[#222] rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-[#9D00FF] rounded-full transition-all"
+              style={{ width: `${rec.confidence * 100}%` }}
+            />
+          </div>
+        </div>
+        
+        {/* Trend Strength */}
+        {rec.trend_strength !== undefined && (
+          <div>
+            <div className="flex justify-between text-[10px] text-[#888] mb-1">
+              <span>Trend Strength</span>
+              <span className="text-white font-medium">{(rec.trend_strength * 100).toFixed(0)}%</span>
+            </div>
+            <div className="h-1.5 bg-[#222] rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-[#00FF94] to-[#FFB800] rounded-full transition-all"
+                style={{ width: `${rec.trend_strength * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Key Metrics Row */}
+      <div className="grid grid-cols-3 gap-2 mb-2">
+        {rec.potential_return !== undefined && (
+          <div className="text-center p-1.5 bg-[#111] rounded">
+            <div className="text-[10px] text-[#666]">Potential</div>
+            <div className="text-xs text-[#00FF94] font-medium">+{rec.potential_return}%</div>
+          </div>
+        )}
+        {rec.risk_reward_ratio !== undefined && (
+          <div className="text-center p-1.5 bg-[#111] rounded">
+            <div className="text-[10px] text-[#666]">R/R</div>
+            <div className="text-xs text-white font-medium">{rec.risk_reward_ratio}x</div>
+          </div>
+        )}
+        {rec.change_24h !== undefined && (
+          <div className="text-center p-1.5 bg-[#111] rounded">
+            <div className="text-[10px] text-[#666]">24h</div>
+            <div className={`text-xs font-medium ${rec.change_24h >= 0 ? 'text-[#00FF94]' : 'text-[#FF4444]'}`}>
+              {rec.change_24h >= 0 ? '+' : ''}{rec.change_24h.toFixed(1)}%
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Expandable Details */}
+      <button
+        onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+        className="w-full flex items-center justify-between text-xs text-[#888] hover:text-white transition-colors"
+      >
+        <span>{rec.recommendation}</span>
+        {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+      </button>
+      
+      {expanded && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          className="mt-3 pt-3 border-t border-[#222] space-y-2"
+        >
+          {/* Price Targets */}
+          {(rec.price_target || rec.stop_loss) && (
+            <div className="grid grid-cols-2 gap-2">
+              {rec.price_target && (
+                <div className="p-2 bg-[#00FF94]/10 border border-[#00FF94]/30 rounded">
+                  <div className="text-[10px] text-[#888]">Target</div>
+                  <div className="text-sm text-[#00FF94] font-medium">${rec.price_target}</div>
+                </div>
+              )}
+              {rec.stop_loss && (
+                <div className="p-2 bg-[#FF4444]/10 border border-[#FF4444]/30 rounded">
+                  <div className="text-[10px] text-[#888]">Stop Loss</div>
+                  <div className="text-sm text-[#FF4444] font-medium">${rec.stop_loss}</div>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Component Signals */}
+          {rec.components && Object.keys(rec.components).length > 0 && (
+            <div>
+              <div className="text-[10px] text-[#888] mb-1">Component Signals</div>
+              <div className="grid grid-cols-2 gap-1">
+                {Object.entries(rec.components).map(([key, value]) => (
+                  <div key={key} className="flex justify-between text-[10px] p-1 bg-[#111] rounded">
+                    <span className="text-[#666] capitalize">{key.replace(/_/g, ' ')}</span>
+                    <span className={
+                      typeof value === 'object' && value.score 
+                        ? (value.score > 0 ? 'text-[#00FF94]' : value.score < 0 ? 'text-[#FF4444]' : 'text-[#888]')
+                        : 'text-[#888]'
+                    }>
+                      {typeof value === 'object' && value.score ? value.score.toFixed(2) : '-'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </motion.div>
+      )}
+    </div>
+  );
+};
+
 // Holdings Table
 const HoldingsTable = ({ holdings }) => {
   if (!holdings || holdings.length === 0) {
@@ -411,12 +578,14 @@ const SpotTrading = () => {
   const [pairDetails, setPairDetails] = useState(null);
   const [balance, setBalance] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
+  const [recommendationsSummary, setRecommendationsSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [orderResult, setOrderResult] = useState(null);
   const [showOrderResult, setShowOrderResult] = useState(false);
   const [tradingStatus, setTradingStatus] = useState(null);
   const [showRecommendations, setShowRecommendations] = useState(false);
+  const [recFilter, setRecFilter] = useState('all'); // all, bullish, bearish, high_confidence
   
   // Fetch trading status
   const fetchStatus = useCallback(async () => {
@@ -470,10 +639,11 @@ const SpotTrading = () => {
   // Fetch AI recommendations
   const fetchRecommendations = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/api/spot/ai-recommendations`);
+      const res = await fetch(`${API_URL}/api/spot/ai-recommendations?min_confidence=0.5&limit=15`);
       if (res.ok) {
         const data = await res.json();
         setRecommendations(data.recommendations || []);
+        setRecommendationsSummary(data.summary || null);
       }
     } catch (err) {
       console.error('Recommendations error:', err);
@@ -539,6 +709,14 @@ const SpotTrading = () => {
     p.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  
+  // Filter recommendations
+  const filteredRecommendations = recommendations.filter(rec => {
+    if (recFilter === 'bullish') return rec.score > 0.2;
+    if (recFilter === 'bearish') return rec.score < -0.2;
+    if (recFilter === 'high_confidence') return rec.confidence > 0.7;
+    return true; // 'all'
+  });
   
   if (loading) {
     return (
@@ -799,9 +977,9 @@ const SpotTrading = () => {
               <div className="flex items-center gap-2">
                 <Brain size={18} className="text-[#9D00FF]" />
                 <span className="text-white font-bold">AI Recommendations</span>
-                {recommendations.length > 0 && (
+                {recommendationsSummary && (
                   <span className="text-xs text-[#888] bg-[#222] px-2 py-1 rounded-full">
-                    {recommendations.length}
+                    {recommendationsSummary.high_confidence_count} high confidence
                   </span>
                 )}
               </div>
@@ -816,39 +994,104 @@ const SpotTrading = () => {
                   exit={{ height: 0, opacity: 0 }}
                   className="border-t border-[#222]"
                 >
-                  <div className="p-4 max-h-[400px] overflow-y-auto space-y-2">
-                    {recommendations.map((rec, idx) => (
-                      <div 
-                        key={idx}
-                        onClick={() => setSelectedSymbol(rec.symbol)}
-                        className="p-3 bg-[#1a1a1a] rounded-lg cursor-pointer hover:bg-[#222] transition-colors"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-white">{rec.symbol}</span>
-                            <span className="text-xs text-[#666]">${rec.price?.toFixed(2)}</span>
-                          </div>
-                          <div className={`px-2 py-1 rounded text-xs font-medium ${
-                            rec.score > 0.3 ? 'bg-[#00FF94]/20 text-[#00FF94]' :
-                            rec.score < -0.3 ? 'bg-[#FF4444]/20 text-[#FF4444]' :
-                            'bg-[#FFB800]/20 text-[#FFB800]'
-                          }`}>
-                            {rec.signal?.toUpperCase()}
+                  {/* Summary Stats */}
+                  {recommendationsSummary && (
+                    <div className="p-4 bg-[#1a1a1a] border-b border-[#222]">
+                      <div className="grid grid-cols-3 gap-3 text-center">
+                        <div>
+                          <div className="text-xs text-[#888]">Bullish</div>
+                          <div className="text-lg font-bold text-[#00FF94]">
+                            {recommendationsSummary.bullish_count}
                           </div>
                         </div>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-[#888]">{rec.recommendation}</span>
-                          <span className={rec.score >= 0 ? 'text-[#00FF94]' : 'text-[#FF4444]'}>
-                            Score: {rec.score?.toFixed(3)}
-                          </span>
+                        <div>
+                          <div className="text-xs text-[#888]">Neutral</div>
+                          <div className="text-lg font-bold text-[#FFB800]">
+                            {recommendationsSummary.neutral_count}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-[#888]">Bearish</div>
+                          <div className="text-lg font-bold text-[#FF4444]">
+                            {recommendationsSummary.bearish_count}
+                          </div>
                         </div>
                       </div>
+                      <div className="mt-3 flex items-center justify-between text-xs">
+                        <span className="text-[#666]">Avg Confidence</span>
+                        <span className="text-white font-medium">
+                          {(recommendationsSummary.avg_confidence * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Filter Buttons */}
+                  <div className="p-4 border-b border-[#222] flex gap-2 flex-wrap">
+                    <button
+                      onClick={() => setRecFilter('all')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        recFilter === 'all'
+                          ? 'bg-[#9D00FF] text-white'
+                          : 'bg-[#222] text-[#888] hover:bg-[#333]'
+                      }`}
+                    >
+                      All ({recommendations.length})
+                    </button>
+                    <button
+                      onClick={() => setRecFilter('bullish')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        recFilter === 'bullish'
+                          ? 'bg-[#00FF94] text-black'
+                          : 'bg-[#222] text-[#888] hover:bg-[#333]'
+                      }`}
+                    >
+                      Bullish ({recommendations.filter(r => r.score > 0.2).length})
+                    </button>
+                    <button
+                      onClick={() => setRecFilter('bearish')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        recFilter === 'bearish'
+                          ? 'bg-[#FF4444] text-white'
+                          : 'bg-[#222] text-[#888] hover:bg-[#333]'
+                      }`}
+                    >
+                      Bearish ({recommendations.filter(r => r.score < -0.2).length})
+                    </button>
+                    <button
+                      onClick={() => setRecFilter('high_confidence')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        recFilter === 'high_confidence'
+                          ? 'bg-[#FFB800] text-black'
+                          : 'bg-[#222] text-[#888] hover:bg-[#333]'
+                      }`}
+                    >
+                      High Confidence ({recommendations.filter(r => r.confidence > 0.7).length})
+                    </button>
+                  </div>
+                  
+                  {/* Recommendations List */}
+                  <div className="p-4 max-h-[500px] overflow-y-auto space-y-2">
+                    {filteredRecommendations.map((rec, idx) => (
+                      <EnhancedRecommendationCard
+                        key={idx}
+                        rec={rec}
+                        onClick={(symbol) => setSelectedSymbol(symbol)}
+                      />
                     ))}
+                    
+                    {filteredRecommendations.length === 0 && (
+                      <div className="text-center py-8 text-[#666]">
+                        <Brain size={32} className="mx-auto mb-2 opacity-50" />
+                        <p>No recommendations match this filter</p>
+                      </div>
+                    )}
                     
                     {recommendations.length === 0 && (
                       <div className="text-center py-8 text-[#666]">
                         <Brain size={32} className="mx-auto mb-2 opacity-50" />
                         <p>No recommendations available</p>
+                        <p className="text-xs mt-2">Enable AI features to see recommendations</p>
                       </div>
                     )}
                   </div>

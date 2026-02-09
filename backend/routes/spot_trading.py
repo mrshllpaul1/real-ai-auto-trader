@@ -564,52 +564,179 @@ async def quick_sell(request: QuickSellRequest):
 
 
 @router.get("/ai-recommendations")
-async def get_ai_recommendations():
-    """Get AI trading recommendations for all supported pairs"""
+async def get_ai_recommendations(
+    min_confidence: float = Query(0.5, ge=0, le=1, description="Minimum confidence filter"),
+    limit: int = Query(15, ge=1, le=50, description="Number of recommendations")
+):
+    """
+    Get enhanced AI trading recommendations for all supported pairs.
+    
+    Returns comprehensive analysis including:
+    - Multi-signal composite scoring
+    - Confidence levels and accuracy tracking
+    - Price targets and risk metrics
+    - Trend analysis and momentum
+    - Historical performance data
+    """
     if _automated_trader is None:
         raise HTTPException(status_code=503, detail="Auto trader not initialized")
     
     recommendations = []
     
-    for symbol in list(TRADING_PAIRS.keys())[:10]:  # Top 10 pairs
+    for symbol in list(TRADING_PAIRS.keys())[:limit]:  # Top N pairs
         try:
             signals = await _automated_trader.get_prediction_signals(symbol)
             
-            if signals:
-                pair_info = TRADING_PAIRS[symbol]
+            if not signals:
+                continue
                 
-                # Get current price
-                price = 0
-                if _kraken_service:
-                    try:
-                        ticker = await _kraken_service.get_ticker(pair_info['pair'])
-                        if ticker:
-                            price = float(ticker.get("c", [0])[0]) if ticker.get("c") else 0
-                    except:
-                        pass
-                
-                recommendations.append({
-                    "symbol": symbol,
-                    "name": pair_info['name'],
-                    "price": price,
-                    "signal": signals.get('composite_signal', 'neutral'),
-                    "score": round(signals.get('composite_score', 0), 3),
-                    "confidence": signals.get('confidence', 0),
-                    "recommendation": signals.get('recommendation', 'Hold'),
-                    "components": {
-                        k: v for k, v in signals.items() 
-                        if k in ['order_book', 'on_chain', 'social', 'transformer', 'rl_agent', 'technical']
-                    }
-                })
+            # Filter by confidence
+            confidence = signals.get('confidence', 0)
+            if confidence < min_confidence:
+                continue
+            
+            pair_info = TRADING_PAIRS[symbol]
+            
+            # Get current price and market data
+            price = 0
+            volume_24h = 0
+            change_24h = 0
+            high_24h = 0
+            low_24h = 0
+            
+            if _kraken_service:
+                try:
+                    ticker = await _kraken_service.get_ticker(pair_info['pair'])
+                    if ticker:
+                        price = float(ticker.get("c", [0])[0]) if ticker.get("c") else 0
+                        volume_24h = float(ticker.get("v", [0, 0])[1]) if ticker.get("v") else 0
+                        low_24h = float(ticker.get("l", [0, 0])[1]) if ticker.get("l") else 0
+                        high_24h = float(ticker.get("h", [0, 0])[1]) if ticker.get("h") else 0
+                        open_24h = float(ticker.get("o", 0)) if ticker.get("o") else price
+                        change_24h = ((price - open_24h) / open_24h * 100) if open_24h else 0
+                except:
+                    pass
+            
+            # Calculate signal strength and action
+            composite_score = signals.get('composite_score', 0)
+            signal_type = signals.get('composite_signal', 'neutral')
+            
+            # Determine action recommendation
+            if composite_score > 0.5:
+                action = "Strong Buy"
+                action_color = "success"
+            elif composite_score > 0.2:
+                action = "Buy"
+                action_color = "success"
+            elif composite_score < -0.5:
+                action = "Strong Sell"
+                action_color = "danger"
+            elif composite_score < -0.2:
+                action = "Sell"
+                action_color = "danger"
+            else:
+                action = "Hold"
+                action_color = "neutral"
+            
+            # Calculate price targets (basic estimate based on signal strength)
+            if price > 0:
+                target_percent = abs(composite_score) * 10  # Up to 10% move
+                if composite_score > 0:
+                    price_target = price * (1 + target_percent / 100)
+                    stop_loss = price * 0.95  # 5% stop loss
+                else:
+                    price_target = price * (1 - target_percent / 100)
+                    stop_loss = price * 1.05  # 5% stop loss above
+            else:
+                price_target = None
+                stop_loss = None
+            
+            # Extract component scores
+            components = {}
+            for key in ['order_book', 'on_chain', 'social', 'transformer', 'rl_agent', 'technical']:
+                if key in signals:
+                    val = signals[key]
+                    if isinstance(val, dict):
+                        components[key] = {
+                            'score': val.get('score', 0),
+                            'signal': val.get('signal', 'neutral')
+                        }
+                    else:
+                        components[key] = {'score': val, 'signal': 'neutral'}
+            
+            # Calculate trend strength (based on consistency of signals)
+            if components:
+                bullish_count = sum(1 for c in components.values() if isinstance(c, dict) and c.get('score', 0) > 0)
+                bearish_count = sum(1 for c in components.values() if isinstance(c, dict) and c.get('score', 0) < 0)
+                total = len(components)
+                trend_strength = max(bullish_count, bearish_count) / total if total > 0 else 0
+            else:
+                trend_strength = 0
+            
+            # Get historical accuracy from DB if available
+            historical_accuracy = None
+            if _db:
+                try:
+                    # Query recent predictions for this symbol
+                    recent_predictions = await _db.ai_predictions.find(
+                        {"symbol": symbol},
+                        {"_id": 0, "accuracy": 1}
+                    ).sort("timestamp", -1).limit(10).to_list(10)
+                    
+                    if recent_predictions:
+                        accuracies = [p.get('accuracy', 0) for p in recent_predictions if 'accuracy' in p]
+                        if accuracies:
+                            historical_accuracy = sum(accuracies) / len(accuracies)
+                except:
+                    pass
+            
+            recommendations.append({
+                "symbol": symbol,
+                "name": pair_info['name'],
+                "price": price,
+                "change_24h": round(change_24h, 2),
+                "volume_24h": volume_24h,
+                "high_24h": high_24h,
+                "low_24h": low_24h,
+                "signal": signal_type,
+                "score": round(composite_score, 3),
+                "confidence": round(confidence, 2),
+                "action": action,
+                "action_color": action_color,
+                "recommendation": signals.get('recommendation', 'Hold position'),
+                "price_target": round(price_target, 2) if price_target else None,
+                "stop_loss": round(stop_loss, 2) if stop_loss else None,
+                "trend_strength": round(trend_strength, 2),
+                "potential_return": round(target_percent, 1) if price > 0 else 0,
+                "risk_reward_ratio": round(abs(target_percent) / 5, 2) if price > 0 else 0,  # vs 5% stop
+                "components": components,
+                "historical_accuracy": round(historical_accuracy, 2) if historical_accuracy else None,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
         except Exception as e:
             logger.warning(f"AI recommendation error for {symbol}: {e}")
     
-    # Sort by absolute score (strongest signals first)
-    recommendations.sort(key=lambda x: abs(x['score']), reverse=True)
+    # Sort by confidence-weighted score
+    recommendations.sort(key=lambda x: abs(x['score']) * x['confidence'], reverse=True)
+    
+    # Add ranking
+    for idx, rec in enumerate(recommendations):
+        rec['rank'] = idx + 1
     
     return {
         "recommendations": recommendations,
         "count": len(recommendations),
+        "filters": {
+            "min_confidence": min_confidence,
+            "limit": limit
+        },
+        "summary": {
+            "bullish_count": sum(1 for r in recommendations if r['score'] > 0.2),
+            "bearish_count": sum(1 for r in recommendations if r['score'] < -0.2),
+            "neutral_count": sum(1 for r in recommendations if -0.2 <= r['score'] <= 0.2),
+            "avg_confidence": round(sum(r['confidence'] for r in recommendations) / len(recommendations), 2) if recommendations else 0,
+            "high_confidence_count": sum(1 for r in recommendations if r['confidence'] > 0.7)
+        },
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
