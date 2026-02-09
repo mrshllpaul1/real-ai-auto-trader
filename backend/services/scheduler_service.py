@@ -712,7 +712,22 @@ class SchedulerService:
         Execute gem predictor deep historical retraining.
         Uses historical gem data (2009-2026) to update prediction model.
         Scheduled weekly at 2 AM MST (9 AM UTC).
+        
+        Respects ML_LIGHTWEIGHT_MODE and ENABLE_ML_TRAINING environment flags.
         """
+        import os
+        lightweight_mode = os.getenv('ML_LIGHTWEIGHT_MODE', 'false').lower() == 'true'
+        enable_training = os.getenv('ENABLE_ML_TRAINING', 'true').lower() == 'true'
+        
+        if lightweight_mode or not enable_training:
+            logger.info("🚀 ML Lightweight mode - skipping gem predictor retrain")
+            return {
+                'success': True,
+                'status': 'skipped',
+                'reason': 'lightweight_mode_enabled',
+                'message': 'ML training disabled for deployment efficiency'
+            }
+        
         timestamp = datetime.utcnow()
         logger.info(f"💎 [{timestamp.strftime('%H:%M')}] Running gem predictor deep retraining...")
         
