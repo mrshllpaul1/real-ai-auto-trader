@@ -868,6 +868,369 @@ const CreateTrailingStopForm = ({ onCreated }) => {
   );
 };
 
+// Sentiment Analysis Tab (P1)
+const SentimentTab = () => {
+  const [status, setStatus] = useState(null);
+  const [trending, setTrending] = useState([]);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCoin, setSelectedCoin] = useState('');
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [statusRes, trendingRes, postsRes] = await Promise.all([
+        api.get('/upgrades/sentiment/status'),
+        api.get('/upgrades/sentiment/trending?limit=10'),
+        api.get('/upgrades/sentiment/posts?limit=30')
+      ]);
+      setStatus(statusRes.data);
+      setTrending(trendingRes.data);
+      setPosts(postsRes.data);
+    } catch (error) {
+      console.error('Failed to fetch sentiment data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleMonitoring = async () => {
+    try {
+      if (status?.is_monitoring) {
+        await api.post('/upgrades/sentiment/stop');
+      } else {
+        await api.post('/upgrades/sentiment/start');
+      }
+      fetchData();
+    } catch (error) {
+      console.error('Failed to toggle monitoring:', error);
+    }
+  };
+
+  const getSentimentColor = (label) => {
+    if (label === 'bullish') return 'text-green-400';
+    if (label === 'bearish') return 'text-red-400';
+    return 'text-gray-400';
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Control Panel */}
+      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-medium text-white flex items-center gap-2">
+              <MessageCircle className="w-5 h-5 text-purple-400" />
+              Reddit Sentiment Analysis
+            </h3>
+            <p className="text-gray-400 text-sm">
+              {status?.total_posts || 0} posts • {status?.coins_tracked || 0} coins tracked
+            </p>
+          </div>
+          <button
+            onClick={toggleMonitoring}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${
+              status?.is_monitoring
+                ? 'bg-red-600 hover:bg-red-700 text-white'
+                : 'bg-green-600 hover:bg-green-700 text-white'
+            }`}
+          >
+            {status?.is_monitoring ? <><Square className="w-4 h-4" /> Stop</> : <><Play className="w-4 h-4" /> Start</>}
+          </button>
+        </div>
+      </div>
+
+      {/* Trending Coins */}
+      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+        <h3 className="text-lg font-medium text-white mb-4">Trending by Sentiment</h3>
+        {trending.length === 0 ? (
+          <div className="text-center py-8 text-gray-400">
+            {status?.is_monitoring ? 'Analyzing sentiment...' : 'Start monitoring to see trends'}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {trending.map((coin, idx) => (
+              <div key={idx} className="p-3 bg-gray-700/30 rounded-lg text-center">
+                <div className="text-white font-bold text-lg">{coin.coin}</div>
+                <div className={`text-sm ${getSentimentColor(coin.sentiment_label)}`}>
+                  {coin.sentiment_label?.toUpperCase()}
+                </div>
+                <div className="text-gray-400 text-xs">{coin.total_mentions} mentions</div>
+                <div className="mt-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-green-400">🐂 {coin.bullish_count}</span>
+                    <span className="text-red-400">🐻 {coin.bearish_count}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Recent Posts */}
+      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+        <h3 className="text-lg font-medium text-white mb-4">Recent Sentiment Posts</h3>
+        {posts.length === 0 ? (
+          <div className="text-center py-8 text-gray-400">No posts yet</div>
+        ) : (
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {posts.map((post, idx) => (
+              <div key={idx} className={`p-3 rounded-lg border-l-4 ${
+                post.sentiment_label === 'bullish' ? 'bg-green-500/10 border-green-500' :
+                post.sentiment_label === 'bearish' ? 'bg-red-500/10 border-red-500' :
+                'bg-gray-700/30 border-gray-500'
+              }`}>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <a href={post.url} target="_blank" rel="noopener noreferrer" className="text-white hover:text-cyan-400 font-medium text-sm line-clamp-1">
+                      {post.title}
+                    </a>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
+                      <span>r/{post.subreddit}</span>
+                      <span>•</span>
+                      <span>⬆️ {post.score}</span>
+                      <span>•</span>
+                      <span>💬 {post.comments}</span>
+                      <span>•</span>
+                      <span>{post.coins_mentioned?.join(', ')}</span>
+                    </div>
+                  </div>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    post.sentiment_label === 'bullish' ? 'bg-green-500/20 text-green-400' :
+                    post.sentiment_label === 'bearish' ? 'bg-red-500/20 text-red-400' :
+                    'bg-gray-600/20 text-gray-400'
+                  }`}>
+                    {(post.sentiment_score * 100).toFixed(0)}%
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Backtest Simulator Tab (P1)
+const BacktestTab = () => {
+  const [strategies, setStrategies] = useState({});
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState(false);
+  const [selectedResult, setSelectedResult] = useState(null);
+  const [formData, setFormData] = useState({
+    strategy: 'sma_crossover',
+    symbol: 'BTC',
+    start_date: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    end_date: new Date().toISOString().split('T')[0],
+    initial_capital: 10000
+  });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [strategiesRes, resultsRes] = await Promise.all([
+        api.get('/upgrades/backtest/strategies'),
+        api.get('/upgrades/backtest/results?limit=10')
+      ]);
+      setStrategies(strategiesRes.data);
+      setResults(resultsRes.data);
+    } catch (error) {
+      console.error('Failed to fetch backtest data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const runBacktest = async (e) => {
+    e.preventDefault();
+    setRunning(true);
+    try {
+      const res = await api.post('/upgrades/backtest/run', {
+        ...formData,
+        start_date: formData.start_date + 'T00:00:00Z',
+        end_date: formData.end_date + 'T23:59:59Z'
+      });
+      if (res.data.status === 'success') {
+        setSelectedResult(res.data.result);
+        fetchData();
+      } else {
+        alert(res.data.message || 'Backtest failed');
+      }
+    } catch (error) {
+      alert('Failed to run backtest');
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Backtest Form */}
+      <form onSubmit={runBacktest} className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+        <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+          <LineChart className="w-5 h-5 text-cyan-400" />
+          Strategy Backtest Simulator
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+          <div>
+            <label className="block text-gray-400 text-sm mb-1">Strategy</label>
+            <select
+              value={formData.strategy}
+              onChange={e => setFormData({...formData, strategy: e.target.value})}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+            >
+              {Object.entries(strategies).map(([key, name]) => (
+                <option key={key} value={key}>{name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-gray-400 text-sm mb-1">Symbol</label>
+            <select
+              value={formData.symbol}
+              onChange={e => setFormData({...formData, symbol: e.target.value})}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+            >
+              {['BTC', 'ETH', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT', 'AVAX'].map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-gray-400 text-sm mb-1">Start Date</label>
+            <input
+              type="date"
+              value={formData.start_date}
+              onChange={e => setFormData({...formData, start_date: e.target.value})}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+            />
+          </div>
+          <div>
+            <label className="block text-gray-400 text-sm mb-1">End Date</label>
+            <input
+              type="date"
+              value={formData.end_date}
+              onChange={e => setFormData({...formData, end_date: e.target.value})}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+            />
+          </div>
+          <div>
+            <label className="block text-gray-400 text-sm mb-1">Capital ($)</label>
+            <input
+              type="number"
+              value={formData.initial_capital}
+              onChange={e => setFormData({...formData, initial_capital: parseFloat(e.target.value)})}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+            />
+          </div>
+          <div className="flex items-end">
+            <button
+              type="submit"
+              disabled={running}
+              className="w-full px-4 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 text-white rounded-lg font-medium"
+            >
+              {running ? 'Running...' : 'Run Backtest'}
+            </button>
+          </div>
+        </div>
+      </form>
+
+      {/* Results Display */}
+      {selectedResult && (
+        <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+          <h3 className="text-lg font-medium text-white mb-4">Backtest Results: {selectedResult.strategy_name}</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="p-3 bg-gray-700/30 rounded-lg">
+              <div className="text-gray-400 text-sm">Total Return</div>
+              <div className={`text-2xl font-bold ${selectedResult.total_return >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {selectedResult.total_return_pct?.toFixed(2)}%
+              </div>
+            </div>
+            <div className="p-3 bg-gray-700/30 rounded-lg">
+              <div className="text-gray-400 text-sm">Final Capital</div>
+              <div className="text-2xl font-bold text-white">${selectedResult.final_capital?.toFixed(2)}</div>
+            </div>
+            <div className="p-3 bg-gray-700/30 rounded-lg">
+              <div className="text-gray-400 text-sm">Win Rate</div>
+              <div className="text-2xl font-bold text-cyan-400">{selectedResult.win_rate?.toFixed(1)}%</div>
+            </div>
+            <div className="p-3 bg-gray-700/30 rounded-lg">
+              <div className="text-gray-400 text-sm">Sharpe Ratio</div>
+              <div className="text-2xl font-bold text-purple-400">{selectedResult.sharpe_ratio?.toFixed(2)}</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-gray-400 text-sm">Max Drawdown</div>
+              <div className="text-red-400 font-medium">{selectedResult.max_drawdown?.toFixed(2)}%</div>
+            </div>
+            <div className="text-center">
+              <div className="text-gray-400 text-sm">Total Trades</div>
+              <div className="text-white font-medium">{selectedResult.total_trades}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-gray-400 text-sm">Winning</div>
+              <div className="text-green-400 font-medium">{selectedResult.winning_trades}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-gray-400 text-sm">Losing</div>
+              <div className="text-red-400 font-medium">{selectedResult.losing_trades}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recent Results */}
+      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+        <h3 className="text-lg font-medium text-white mb-4">Recent Backtests</h3>
+        {results.length === 0 ? (
+          <div className="text-center py-8 text-gray-400">No backtests yet</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-gray-400 border-b border-gray-700">
+                  <th className="text-left py-2">Strategy</th>
+                  <th className="text-left py-2">Symbol</th>
+                  <th className="text-right py-2">Return %</th>
+                  <th className="text-right py-2">Win Rate</th>
+                  <th className="text-right py-2">Sharpe</th>
+                  <th className="text-right py-2">Trades</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.map((r, idx) => (
+                  <tr key={idx} className="border-b border-gray-700/50 hover:bg-gray-700/20 cursor-pointer" onClick={() => setSelectedResult(r)}>
+                    <td className="py-2 text-white">{r.strategy_name}</td>
+                    <td className="py-2 text-gray-300">{r.symbol}</td>
+                    <td className={`py-2 text-right font-medium ${r.total_return_pct >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {r.total_return_pct?.toFixed(2)}%
+                    </td>
+                    <td className="py-2 text-right text-cyan-400">{r.win_rate?.toFixed(1)}%</td>
+                    <td className="py-2 text-right text-purple-400">{r.sharpe_ratio?.toFixed(2)}</td>
+                    <td className="py-2 text-right text-gray-300">{r.total_trades}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Whale Tracking Tab
 const WhaleTab = () => {
   const [status, setStatus] = useState(null);
