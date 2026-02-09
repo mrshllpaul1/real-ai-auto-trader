@@ -1,8 +1,7 @@
 import axios from 'axios';
 import { getApiBaseUrl, getBackendUrl } from './backendUrl';
 
-// Force use the correct backend URL from build-time env
-// This ensures we don't use stale runtime config
+// Resolve backend URL from runtime config/env with local fallback
 const BACKEND_URL = getBackendUrl();
 const API = getApiBaseUrl();
 
