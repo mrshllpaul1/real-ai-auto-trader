@@ -49,7 +49,7 @@ const Settings = () => {
   useEffect(() => {
     checkCredentials();
     checkBinanceCredentials();
-    checkKucoinCredentials();
+    checkCryptoComCredentials();
     loadRiskSettings();
     loadNotificationSettings();
   }, []);
