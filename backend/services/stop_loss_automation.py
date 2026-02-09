@@ -640,23 +640,21 @@ class StopLossAutomation:
         
         # Alert for stop-losses
         for sl in results['stop_loss_triggered']:
-            await self.alert_service.send_alert({
-                'type': 'STOP_LOSS_TRIGGERED',
-                'coin': sl['coin_id'],
-                'pnl_usd': sl['pnl_usd'],
-                'pnl_pct': sl['pnl_pct'],
-                'message': f"🔴 Stop-loss hit for {sl['coin_id'].upper()}: {sl['pnl_pct']:+.2f}% (${sl['pnl_usd']:+.2f})"
-            })
+            await self.alert_service.send_alert(
+                title="🔴 Stop-Loss Triggered",
+                message=f"Stop-loss hit for {sl['coin_id'].upper()}: {sl['pnl_pct']:+.2f}% (${sl['pnl_usd']:+.2f})",
+                alert_type="stop_loss",
+                priority="high"
+            )
         
         # Alert for take-profits
         for tp in results['take_profit_triggered']:
-            await self.alert_service.send_alert({
-                'type': 'TAKE_PROFIT_TRIGGERED',
-                'coin': tp['coin_id'],
-                'pnl_usd': tp['pnl_usd'],
-                'pnl_pct': tp['pnl_pct'],
-                'message': f"🟢 Take-profit hit for {tp['coin_id'].upper()}: {tp['pnl_pct']:+.2f}% (${tp['pnl_usd']:+.2f})"
-            })
+            await self.alert_service.send_alert(
+                title="🟢 Take-Profit Triggered",
+                message=f"Take-profit hit for {tp['coin_id'].upper()}: {tp['pnl_pct']:+.2f}% (${tp['pnl_usd']:+.2f})",
+                alert_type="take_profit",
+                priority="high"
+            )
     
     def get_stats(self) -> Dict[str, Any]:
         """Get automation statistics"""
