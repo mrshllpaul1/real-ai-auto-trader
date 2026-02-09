@@ -3,6 +3,7 @@ from typing import Dict, Any, List
 from datetime import datetime, timedelta
 import json
 import os
+from services.ml_cache import cache_features, cache_prediction, FeatureCache
 
 class AILearningEngine:
     """
