@@ -31,7 +31,7 @@ const DashboardCustomization = lazy(() => import('./pages/DashboardCustomization
 const OptionsTrading = lazy(() => import('./pages/OptionsTrading'));
 const BacktestEngine = lazy(() => import('./pages/BacktestEngine'));
 const AutoTrading = lazy(() => import("./pages/AutoTrading"));
-const GemScanner = lazy(() => import("./pages/GemScanner"));
+const GemAnalysis = lazy(() => import("./pages/GemAnalysis"));
 const AutoExecution = lazy(() => import("./pages/AutoExecution"));
 const AdvancedAI = lazy(() => import("./pages/AdvancedAI"));
 const Guide = lazy(() => import("./pages/Guide"));
@@ -40,13 +40,13 @@ const TradingJournal = lazy(() => import("./pages/TradingJournal"));
 const AIChat = lazy(() => import("./pages/AIChat"));
 const EnsembleAI = lazy(() => import("./pages/EnsembleAI"));
 const EventTriggers = lazy(() => import("./pages/EventTriggers"));
-const GemBacktester = lazy(() => import("./pages/GemBacktester"));
+
 const EventTimeline = lazy(() => import("./pages/EventTimeline"));
 const TradingBudget = lazy(() => import("./pages/TradingBudget"));
 const TriggerPerformance = lazy(() => import("./pages/TriggerPerformance"));
 const AdaptiveStrategy = lazy(() => import("./pages/AdaptiveStrategy"));
 const PositionManagement = lazy(() => import("./pages/PositionManagement"));
-const GemMLDLComparison = lazy(() => import("./pages/GemMLDLComparison"));
+
 const PortfolioDashboard = lazy(() => import("./pages/PortfolioDashboard"));
 const StrategyBuilder = lazy(() => import("./pages/StrategyBuilder"));
 const SpotTrading = lazy(() => import("./pages/SpotTrading"));
@@ -109,7 +109,9 @@ function App() {
                   <Route path="/training" element={<AITraining />} />
                   <Route path="/ensemble" element={<EnsembleAI />} />
                   <Route path="/triggers" element={<EventTriggers />} />
-                <Route path="/gem-backtest" element={<GemBacktester />} />
+                <Route path="/gem-backtest" element={<GemAnalysis />} />
+                <Route path="/scanner" element={<GemAnalysis />} />
+                <Route path="/gem-ml-dl" element={<GemAnalysis />} />
                 <Route path="/event-timeline" element={<EventTimeline />} />
                 <Route path="/ai-chat" element={<AIChat />} />
                 <Route path="/news" element={<NewsAndIntelligence />} />
@@ -120,7 +122,7 @@ function App() {
                 <Route path="/options-trading" element={<OptionsTrading />} />
                 <Route path="/backtest-engine" element={<BacktestEngine />} />
                 <Route path="/auto-trading" element={<AutoTrading />} />
-                <Route path="/scanner" element={<GemScanner />} />
+
                 <Route path="/auto-exec" element={<AutoExecution />} />
                 <Route path="/advanced" element={<AdvancedAI />} />
                 <Route path="/advanced-ai" element={<AdvancedAI />} />
@@ -128,7 +130,7 @@ function App() {
                 <Route path="/trigger-performance" element={<TriggerPerformance />} />
                 <Route path="/adaptive" element={<AdaptiveStrategy />} />
                 <Route path="/positions" element={<PositionManagement />} />
-                <Route path="/gem-ml-dl" element={<GemMLDLComparison />} />
+
                 <Route path="/portfolio-dashboard" element={<PortfolioDashboard />} />
                 <Route path="/strategy-builder" element={<StrategyBuilder />} />
 
