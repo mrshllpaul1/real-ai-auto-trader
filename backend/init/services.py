@@ -322,18 +322,17 @@ async def _init_phase5_predictions(db):
     _services['order_book'] = order_book
     _services['on_chain'] = on_chain
     _services['social_pipeline'] = social_sentiment
-    _services['transformer'] = transformer
-    _services['rl_agent'] = rl_agent
+    # transformer and rl_agent already set to None above (deferred)
     _services['cross_asset'] = cross_asset
     _services['advanced_ta'] = advanced_ta
     
-    # Bundle prediction services
+    # Bundle prediction services (some may be None/deferred)
     _services['prediction_services'] = {
         'order_book': order_book,
         'on_chain': on_chain,
         'social': social_sentiment,
-        'transformer': transformer,
-        'rl_agent': rl_agent,
+        'transformer': None,  # Deferred
+        'rl_agent': None,  # Deferred
         'cross_asset': cross_asset,
         'advanced_ta': advanced_ta
     }
@@ -342,7 +341,7 @@ async def _init_phase5_predictions(db):
     auto_trader = _services['auto_trader']
     auto_trader.prediction_services = _services['prediction_services']
     
-    logger.info("✅ Phase 5: Prediction Enhancement services initialized (8 models)")
+    logger.info("✅ Phase 5: Prediction Enhancement services initialized (TF services deferred)")
 
 
 async def _init_phase6_scheduling(db):
