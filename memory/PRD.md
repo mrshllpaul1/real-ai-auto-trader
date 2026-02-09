@@ -1,108 +1,104 @@
-# AI Crypto Trading Platform - Product Requirements Document
+# AI Crypto Trading Platform - PRD
 
 ## Original Problem Statement
-Build a real money AI crypto auto trading app that learns and develops optimal weekly trading strategies. Ultimate goal: Turn $500 into $100,000.
+Build a real money AI crypto auto trading app with aggressive growth strategy. Turn $500 into $100,000.
 
 ---
 
-## Session 40 - COMPLETE (Feb 8, 2026)
+## Session 41 - Upgrades Implementation (Feb 9, 2026)
 
-### ✅ Master Trading Orchestrator - FULLY IMPLEMENTED
+### ✅ Completed Features
 
-**Core Implementation:**
+#### P0 - High Impact (4/4)
+| Feature | Status | Description |
+|---------|--------|-------------|
+| **Push Notifications** | ✅ Live | Web Push API for trade alerts, stop-loss, arbitrage |
+| **Multi-Exchange Arbitrage** | ✅ Live | Kraken + Binance + Coinbase price comparison |
+| **Portfolio Rebalancer** | ✅ Live | Auto-rebalance with templates (conservative, balanced, aggressive) |
+| **Trailing Stop-Loss** | ✅ Live | Dynamic stop-loss that follows price up |
 
-| Component | Status | Description |
-|-----------|--------|-------------|
-| **Master Orchestrator Service** | ✅ Live | Central AI controller coordinating all trading systems |
-| **Hybrid Auto-Trading Mode** | ✅ Live | Small trades auto-execute, large trades require confirmation |
-| **Risk Management System** | ✅ Live | Max position, daily loss, drawdown limits enforced |
-| **4-Phase Signal Collection** | ✅ Live | News → Specialist Agents → Rainbow DQN → Risk Check |
-| **MasterDashboard UI** | ✅ Live | Optimized for Chromebook 315 (1366x768 resolution) |
+#### P1 - AI Enhancement (Framework Ready)
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Sentiment Dashboard | 🔄 Framework | Twitter/Reddit integration planned |
+| Whale Tracking | 🔄 Framework | On-chain monitoring planned |
+| Backtest Simulator | 🔄 Framework | Historical testing planned |
+| AI A/B Testing | 🔄 Framework | Model comparison planned |
 
----
+#### PWA - Mobile App
+| Feature | Status | Description |
+|---------|--------|-------------|
+| **PWA Support** | ✅ Live | Installable on Chromebook/mobile |
 
-### Backend Implementation
-
-**Service:** `/app/backend/services/master_orchestrator.py`
-- `MasterTradingOrchestrator` class - Central AI controller
-- `RiskManager` class - Safety limits enforcement
-- `TradingSignal` class - Signal processing
-- Trading modes: MANUAL, AUTO_SMALL (hybrid), FULL_AUTO
-- Signal sources: News Monitor, Specialist Agents, Rainbow DQN
-
-**API Routes:** `/app/backend/routes/master_orchestrator.py`
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/master/status` | GET | Orchestrator status with all metrics |
-| `/api/master/start` | POST | Start orchestrator in background |
-| `/api/master/stop` | POST | Stop orchestrator |
-| `/api/master/set-mode` | POST | Change trading mode |
-| `/api/master/set-limits` | POST | Update risk limits |
-| `/api/master/dashboard` | GET | Comprehensive dashboard data |
-| `/api/master/pending` | GET | Signals awaiting confirmation |
-| `/api/master/confirm/{id}` | POST | Confirm and execute signal |
-| `/api/master/reject/{id}` | POST | Reject pending signal |
-| `/api/master/risk` | GET | Risk status with limits |
-| `/api/master/history` | GET | Trade history |
-| `/api/master/reset-daily` | POST | Reset daily risk counters |
+#### P3 - Advanced (Coming Soon)
+| Feature | Status | Description |
+|---------|--------|-------------|
+| DeFi Yield Farming | 📋 Planned | Auto-stake in DeFi |
+| Options Trading | 📋 Planned | Crypto options |
+| Copy Trading | 📋 Planned | Follow strategies |
+| Market Maker Mode | 📋 Planned | Provide liquidity |
 
 ---
 
-### Frontend Implementation
+### New API Endpoints
 
-**Page:** `/app/frontend/src/pages/MasterDashboard.jsx`
-- Optimized for 1366x768 (Chromebook 315)
-- Compact stat cards (Portfolio, Daily P&L, Trades, Win Rate, Drawdown)
-- Pending Confirmations panel with Confirm/Reject buttons
-- AI Systems status (News Monitor, Market Regime, Signals)
-- Recent Trades history
-- Risk Limits display
-- Mode dropdown (Manual, Hybrid, Full Auto)
-- Start/Stop controls
+```
+# Push Notifications
+POST /api/upgrades/notifications/subscribe
+POST /api/upgrades/notifications/unsubscribe
+GET  /api/upgrades/notifications/pending
+GET  /api/upgrades/notifications/history
+POST /api/upgrades/notifications/preferences
+
+# Arbitrage
+GET  /api/upgrades/arbitrage/status
+POST /api/upgrades/arbitrage/start
+POST /api/upgrades/arbitrage/stop
+GET  /api/upgrades/arbitrage/prices
+GET  /api/upgrades/arbitrage/opportunities
+POST /api/upgrades/arbitrage/execute/{id}
+
+# Rebalancer
+GET  /api/upgrades/rebalancer/status
+GET  /api/upgrades/rebalancer/allocations
+POST /api/upgrades/rebalancer/allocations
+POST /api/upgrades/rebalancer/template/{name}
+GET  /api/upgrades/rebalancer/analyze
+POST /api/upgrades/rebalancer/execute
+
+# Trailing Stops
+GET  /api/upgrades/trailing-stops/status
+POST /api/upgrades/trailing-stops/create
+PUT  /api/upgrades/trailing-stops/{id}
+DELETE /api/upgrades/trailing-stops/{id}
+GET  /api/upgrades/trailing-stops/active
+POST /api/upgrades/trailing-stops/start
+POST /api/upgrades/trailing-stops/stop
+
+# Combined Status
+GET  /api/upgrades/status
+```
 
 ---
 
-### Risk Management Defaults
+### New Files Created
 
-| Limit | Value | Description |
-|-------|-------|-------------|
-| Max Position | 10% | Single asset exposure |
-| Max Daily Loss | 5% | Triggers caution mode |
-| Max Drawdown | 15% | From peak portfolio |
-| Min Confidence | 60% | Required for trade execution |
-| Small Trade Threshold | $100 | Below = auto-execute in hybrid mode |
+**Backend Services:**
+- `/app/backend/services/push_notifications.py` - Web Push service
+- `/app/backend/services/arbitrage_service.py` - Multi-exchange arbitrage
+- `/app/backend/services/trailing_stop_service.py` - Trailing stop-loss
+- `/app/backend/routes/upgrades.py` - All upgrade routes
 
----
-
-### Testing Results
-
-| Category | Result |
-|----------|--------|
-| Backend API Tests | 31/31 PASS (100%) |
-| Frontend UI Tests | All elements functional |
-| Resolution Test | 1366x768 - All visible without scrolling |
+**Frontend:**
+- `/app/frontend/src/pages/UpgradesDashboard.jsx` - Upgrades UI
 
 ---
 
-## Previous Session Highlights
-
-### Session 39 - Advanced AI Implementation
-- MLflow Model Registry
-- Genetic Algorithm Evolution (NSGA-II)
-- Full RLHF with PPO
-- News → Notifications automation
-
-### Session 38 - Major Feature Implementation
-- Real-Time News Monitor
-- Specialist Agents Ensemble
-- Causal Feature Selection
-- Multi-Exchange Support framework
-
-### Session 36 - Build System Migration
-- Migrated from CRA/Craco to Vite
-- Build time: 300+ sec → 11 seconds
-- Permanent fix for frontend stability
+### Deployment Fixes Applied
+1. ✅ Removed hardcoded backend URL
+2. ✅ Fixed .gitignore blocking .env files
+3. ✅ Deferred TensorFlow loading for faster health checks
+4. ✅ Health endpoint responds in <100ms
 
 ---
 
@@ -110,48 +106,31 @@ Build a real money AI crypto auto trading app that learns and develops optimal w
 
 | Component | Status |
 |-----------|--------|
-| **Master Orchestrator** | ✅ Live - Hybrid auto-trading |
-| **Budget** | $500 allocated (isolated) |
-| **Real Trading** | Enabled via Kraken |
-| **Models Saved** | Transformer, RL Agent (persisted) |
-| **Regime Models** | 8 ML/DL models trained |
-| **All Services** | Operational |
+| Backend | ✅ Running |
+| Frontend | ✅ Running |
+| MongoDB | ✅ Connected |
+| Kraken | ✅ Connected ($1,158.43) |
+| Push Notifications | ✅ Active |
+| Arbitrage | ⏸️ Ready |
+| Rebalancer | ✅ Active |
+| Trailing Stops | ⏸️ Ready |
 
 ---
 
-## Upcoming Tasks (P1)
+## Next Steps
 
-1. **Complete RLHF Training Loop with PPO** - Implement full PPO training in `rlhf_ppo.py`
-2. **Complete MLflow Model Registry Integration** - Connect to MLflow for model versioning
-3. **Implement Causal Feature Selection** - Build actual causal discovery algorithms
+1. **P1 Implementation:**
+   - Integrate sentiment analysis (Reddit API)
+   - Add whale tracking (Etherscan API)
+   - Build backtest simulator
+   - Implement AI A/B testing
 
----
+2. **P3 Implementation:**
+   - DeFi yield farming integration
+   - Options trading framework
+   - Copy trading system
+   - Market maker mode
 
-## Future/Backlog (P2-P3)
-
-- Automated News-to-Trigger Creation
-- Train Specialist Agents (Bull, Bear, Range)
-- Full Multi-Exchange Integration (Binance, Coinbase)
-- Model version control with rollbacks
-- Push notifications (Web Push API)
-
----
-
-## Key Technical Notes
-
-1. **API URL Fix**: Frontend's `api.jsx` is hardcoded to use the correct backend URL. Do not revert.
-2. **Kraken Singleton**: Use `get_kraken_service()` to access Kraken service from any module.
-3. **Vite Build**: Frontend uses Vite, not CRA/Craco. Hot reload works automatically.
-4. **Target Device**: Optimize all new UI for 1366x768 (Chromebook 315).
-
----
-
-## File References
-
-| File | Purpose |
-|------|---------|
-| `/app/backend/services/master_orchestrator.py` | Master Orchestrator service |
-| `/app/backend/routes/master_orchestrator.py` | API routes |
-| `/app/frontend/src/pages/MasterDashboard.jsx` | Dashboard UI |
-| `/app/frontend/src/services/api.jsx` | API client (hardcoded URL) |
-| `/app/backend/init/services.py` | Service initialization |
+3. **Testing:**
+   - Full integration testing for all upgrade features
+   - Performance testing under load
