@@ -25,7 +25,14 @@ from collections import deque
 import random
 import os
 import json
+import hashlib
 from concurrent.futures import ThreadPoolExecutor
+
+# Import ML caching
+from services.ml_cache import (
+    cache_features, cache_prediction, ml_cache,
+    FeatureCache, PredictionCache
+)
 
 logger = logging.getLogger(__name__)
 
