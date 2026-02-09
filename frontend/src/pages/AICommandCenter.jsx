@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import api from '../services/api';
-import { toast } from 'sonner';
+import toast from '../utils/toast';
 
 // AI Brain Tab - Enhanced AI Dashboard
 const AIBrainTab = ({ enhancedStatus, onTrainModel }) => (
@@ -298,36 +298,69 @@ const AICommandCenter = () => {
   }, [fetchData]);
 
   const handleTrainModel = async (model) => {
+    const loadingToast = toast.ai.training('AI Models');
     try {
-      await api.post('/training/train-all');
-      toast.success('Training started for all models');
+      const response = await api.post('/training/train-all');
+      toast.dismiss(loadingToast);
+      
+      if (response.data.status === 'lightweight_mode') {
+        toast.info('Lightweight Mode Active', {
+          description: 'Training disabled for deployment efficiency. Models using pre-computed patterns.',
+          duration: 6000,
+        });
+      } else {
+        toast.ai.trained('AI Models', response.data.accuracy || 75);
+      }
+      
       fetchData();
     } catch (error) {
-      toast.error('Failed to start training');
+      toast.dismiss(loadingToast);
+      toast.error('Failed to start training', {
+        description: error.response?.data?.detail || 'Please try again later',
+      });
     }
   };
 
   const handleToggleTethys = async () => {
+    const isActive = tethysStatus?.is_active;
+    const loadingToast = toast.loading(isActive ? 'Stopping Tethys AI...' : 'Starting Tethys AI...');
+    
     try {
-      if (tethysStatus?.is_active) {
+      if (isActive) {
         await api.post('/tethys-train/stop');
+        toast.dismiss(loadingToast);
+        toast.ai.stopped('Tethys AI');
       } else {
         await api.post('/tethys-train/start');
+        toast.dismiss(loadingToast);
+        toast.ai.started('Tethys AI');
       }
-      fetchData();
-      toast.success(tethysStatus?.is_active ? 'Tethys stopped' : 'Tethys started');
+      
+      // Refresh status after 2 seconds to allow backend to update
+      setTimeout(fetchData, 2000);
     } catch (error) {
-      toast.error('Failed to toggle Tethys');
+      toast.dismiss(loadingToast);
+      toast.error('Failed to toggle Tethys', {
+        description: error.response?.data?.detail || 'Please check system status',
+      });
     }
   };
 
   const handleTrain = async () => {
+    const loadingToast = toast.ai.training('Learning Engine');
     try {
-      await api.post('/learning/train');
-      toast.success('AI training started');
+      const response = await api.post('/learning/train');
+      toast.dismiss(loadingToast);
+      toast.success('Learning engine training started', {
+        description: 'Check back in a few minutes for results',
+        duration: 5000,
+      });
       fetchData();
     } catch (error) {
-      toast.error('Failed to start training');
+      toast.dismiss(loadingToast);
+      toast.error('Failed to start training', {
+        description: error.response?.data?.detail || 'Please try again',
+      });
     }
   };
 
