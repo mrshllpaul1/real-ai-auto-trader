@@ -719,7 +719,17 @@ class GemPredictionEngine:
         return results
     
     def _prepare_sequences(self, X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """Prepare sequences for DL models"""
+        """Prepare sequences for DL models with caching"""
+        # Generate cache key from data hash
+        data_hash = hashlib.md5(str(X.tobytes()).encode()).hexdigest()[:12]
+        cache_key = f"gem_sequences:{data_hash}:{self.sequence_length}"
+        
+        # Check cache
+        cached = ml_cache.get(cache_key)
+        if cached is not None:
+            logger.debug(f"Cache hit for gem sequences")
+            return cached
+        
         sequences = []
         labels = []
         
@@ -727,7 +737,13 @@ class GemPredictionEngine:
             sequences.append(X[i-self.sequence_length:i])
             labels.append(y[i])
         
-        return np.array(sequences), np.array(labels)
+        result = (np.array(sequences), np.array(labels))
+        
+        # Cache sequences for 30 minutes
+        ml_cache.set(cache_key, result, ttl=1800)
+        logger.debug(f"Cached gem sequences: {cache_key}")
+        
+        return result
     
     async def predict_gem(self, coin_id: str, symbol: str = None) -> Dict[str, Any]:
         """
