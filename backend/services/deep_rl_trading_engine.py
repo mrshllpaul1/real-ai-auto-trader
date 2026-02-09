@@ -246,21 +246,40 @@ class LSTMTimeSeriesPredictor:
         
         return np.column_stack(features)
     
-    def predict(self, recent_data: np.ndarray) -> Dict[str, Any]:
-        """Predict next 5 time steps"""
+    def predict(self, recent_data: np.ndarray, batch_size: int = 1) -> Dict[str, Any]:
+        """
+        Predict next 5 time steps.
+        
+        Args:
+            recent_data: Recent data for prediction
+            batch_size: Number of predictions to make at once (for batching optimization)
+        """
         if not self.is_trained or self.model is None:
             return {"error": "Model not trained"}
         
         if self.scaler:
             recent_data = self.scaler.transform(recent_data)
         
-        X = recent_data[-self.sequence_length:].reshape(1, self.sequence_length, -1)
-        predictions = self.model.predict(X, verbose=0)[0]
+        # Support batch predictions for better GPU utilization
+        if batch_size > 1:
+            # Prepare multiple samples if available
+            X_list = []
+            for i in range(min(batch_size, len(recent_data) - self.sequence_length + 1)):
+                X_list.append(recent_data[i:i+self.sequence_length])
+            X = np.array(X_list)
+        else:
+            X = recent_data[-self.sequence_length:].reshape(1, self.sequence_length, -1)
+        
+        predictions = self.model.predict(X, verbose=0)
+        
+        # Return the latest prediction (last batch item)
+        pred = predictions[-1] if batch_size > 1 else predictions[0]
         
         return {
-            "predictions": predictions.tolist(),
-            "direction": "bullish" if predictions[-1] > predictions[0] else "bearish",
-            "confidence": float(abs(predictions[-1] - predictions[0]) / (predictions[0] + 1e-8))
+            "predictions": pred.tolist(),
+            "direction": "bullish" if pred[-1] > pred[0] else "bearish",
+            "confidence": float(abs(pred[-1] - pred[0]) / (pred[0] + 1e-8)),
+            "batch_size": len(predictions)
         }
 
 

@@ -127,6 +127,12 @@ class RegimePredictionEngine:
         self.sequence_length = 14  # Days of history for DL models
         self.model_path = "/app/backend/models/regime"
         
+        # Caching for performance optimization
+        self._feature_cache = {}  # Cache computed features by symbol
+        self._scaler_cache = {}   # Cache fitted scalers by symbol
+        self._cache_ttl = 300     # Cache TTL in seconds (5 minutes)
+        self._cache_timestamps = {}  # Track when cache entries were created
+        
         # Ensure model directory exists
         os.makedirs(self.model_path, exist_ok=True)
         
@@ -220,6 +226,35 @@ class RegimePredictionEngine:
         except Exception as e:
             logger.error(f"Failed to save regime models: {e}")
             return False
+    
+    def _is_cache_valid(self, cache_key: str) -> bool:
+        """Check if a cache entry is still valid"""
+        if cache_key not in self._cache_timestamps:
+            return False
+        age = (datetime.now(timezone.utc).timestamp() - self._cache_timestamps[cache_key])
+        return age < self._cache_ttl
+    
+    def _get_cached_features(self, cache_key: str) -> Optional[np.ndarray]:
+        """Get cached features if valid"""
+        if self._is_cache_valid(cache_key) and cache_key in self._feature_cache:
+            return self._feature_cache[cache_key]
+        return None
+    
+    def _cache_features(self, cache_key: str, features: np.ndarray):
+        """Cache computed features"""
+        self._feature_cache[cache_key] = features
+        self._cache_timestamps[cache_key] = datetime.now(timezone.utc).timestamp()
+    
+    def _get_cached_scaler(self, cache_key: str) -> Optional[StandardScaler]:
+        """Get cached scaler if valid"""
+        if self._is_cache_valid(cache_key) and cache_key in self._scaler_cache:
+            return self._scaler_cache[cache_key]
+        return None
+    
+    def _cache_scaler(self, cache_key: str, scaler: StandardScaler):
+        """Cache fitted scaler"""
+        self._scaler_cache[cache_key] = scaler
+        self._cache_timestamps[cache_key] = datetime.now(timezone.utc).timestamp()
     
     def _init_ml_models(self):
         """Initialize machine learning models"""
@@ -645,16 +680,32 @@ class RegimePredictionEngine:
         if len(ohlcv_data) < 100:
             return {'error': f'Insufficient data: {len(ohlcv_data)} records (need 100+)'}
         
-        # Prepare features
-        X = await self._prepare_features(ohlcv_data)
-        if X is None or len(X) < 50:
-            return {'error': 'Could not prepare enough features'}
+        # Check feature cache
+        cache_key = f"features_{symbol}"
+        X = self._get_cached_features(cache_key)
+        
+        if X is None:
+            # Prepare features
+            X = await self._prepare_features(ohlcv_data)
+            if X is None or len(X) < 50:
+                return {'error': 'Could not prepare enough features'}
+            # Cache for future use
+            self._cache_features(cache_key, X)
         
         # Create labels
         y = np.array([self._determine_regime_label(row) for row in X])
         
-        # Scale features for ML models
-        X_scaled = self.scaler.fit_transform(X)
+        # Check scaler cache
+        scaler_key = f"scaler_{symbol}"
+        cached_scaler = self._get_cached_scaler(scaler_key)
+        
+        if cached_scaler is not None:
+            X_scaled = cached_scaler.transform(X)
+        else:
+            # Scale features for ML models
+            X_scaled = self.scaler.fit_transform(X)
+            # Cache the fitted scaler
+            self._cache_scaler(scaler_key, self.scaler)
         
         # Split data (80/20)
         split_idx = int(len(X_scaled) * 0.8)
@@ -839,14 +890,28 @@ class RegimePredictionEngine:
         if len(ohlcv_data) < 35:
             return {'error': 'Insufficient recent data'}
         
-        # Prepare features
-        X = await self._prepare_features(ohlcv_data)
-        if X is None or len(X) == 0:
-            return {'error': 'Could not prepare features'}
+        # Check feature cache for prediction
+        cache_key = f"features_{symbol}_predict"
+        X = self._get_cached_features(cache_key)
+        
+        if X is None:
+            # Prepare features
+            X = await self._prepare_features(ohlcv_data)
+            if X is None or len(X) == 0:
+                return {'error': 'Could not prepare features'}
+            # Cache for future predictions
+            self._cache_features(cache_key, X)
         
         # Use latest features
         X_latest = X[-1:] if len(X) > 0 else X
-        X_scaled = self.scaler.transform(X_latest)
+        
+        # Use cached scaler if available
+        scaler_key = f"scaler_{symbol}"
+        cached_scaler = self._get_cached_scaler(scaler_key)
+        if cached_scaler is not None:
+            X_scaled = cached_scaler.transform(X_latest)
+        else:
+            X_scaled = self.scaler.transform(X_latest)
         
         # Select model
         model_name = use_model if use_model and use_model in self.models else self.best_model
