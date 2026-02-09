@@ -35,7 +35,7 @@ def test_use_cached_portfolio_with_data():
     assert result["stale"] is True
     assert result["holdings_count"] == 1
     assert result["total_value_usd"] == 100
-    assert "timeout" in result.get("message", "")
+    assert result.get("error") == "timeout"
 
 
 def test_use_cached_portfolio_without_data():

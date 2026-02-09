@@ -301,7 +301,8 @@ def _use_cached_portfolio(reason: str):
         cache_ts = _kraken_portfolio_cache.get("timestamp")
         if cache_ts is not None:
             response["cache_age"] = round(time.time() - cache_ts, 2)
-        response["message"] = f"Using cached Kraken portfolio ({reason})"
+        response["error"] = reason
+        response["message"] = "Serving cached Kraken portfolio data"
         return response
 
     # No cache available - return empty but structured response
@@ -310,7 +311,7 @@ def _use_cached_portfolio(reason: str):
         "total_value_usd": 0,
         "holdings_count": 0,
         "stale": True,
-        "message": reason,
+        "message": "Kraken portfolio unavailable; returning empty response",
         "error": reason,
     }
 
