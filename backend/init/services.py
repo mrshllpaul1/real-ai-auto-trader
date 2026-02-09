@@ -133,7 +133,7 @@ async def _init_phase3_ai(db):
     from services.gem_finder import HiddenGemFinder
     from services.ai_weekly_trainer import AIWeeklyTrainer
     from services.ensemble_ai import get_ensemble_predictor, get_universe_optimizer
-    from services.regime_predictor import get_regime_predictor
+    # regime_predictor import deferred - loads TensorFlow which is slow
     from services.performance_tracker import get_performance_tracker
     from services.enhanced_ai_engine import get_enhanced_ai
     from services.ai_chat_service import AIChatService
