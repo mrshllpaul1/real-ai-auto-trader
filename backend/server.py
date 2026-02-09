@@ -119,8 +119,7 @@ _services_initialized = False
 def _apply_health_status(response: Response, status: str):
     """Set HTTP status code based on health status string (expected: 'healthy' or 'unhealthy')."""
     if status not in {"healthy", "unhealthy"}:
-        response.status_code = 503
-        return
+        logger.warning("Unexpected health status value: %s", status)
     response.status_code = 200 if status == "healthy" else 503
 
 
