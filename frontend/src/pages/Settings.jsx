@@ -415,23 +415,23 @@ const Settings = () => {
               </CardContent>
             </Card>
 
-            {/* KuCoin - Best for Arbitrage */}
-            <Card className="bg-[#0A0A0A] border-[#00FF94]/30" data-testid="kucoin-credentials-card">
+            {/* Crypto.com - Best for Arbitrage (US Friendly) */}
+            <Card className="bg-[#0A0A0A] border-[#00FF94]/30" data-testid="crypto-com-credentials-card">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-[#00FF94]/20 flex items-center justify-center">
-                    <span className="text-lg font-bold text-[#00FF94]">KC</span>
+                    <span className="text-lg font-bold text-[#00FF94]">C</span>
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <CardTitle className="text-xl font-heading">KuCoin Exchange</CardTitle>
+                      <CardTitle className="text-xl font-heading">Crypto.com Exchange</CardTitle>
                       <span className="px-2 py-0.5 text-xs font-bold bg-[#00FF94]/20 text-[#00FF94] rounded-full border border-[#00FF94]/30">
                         Best for Arbitrage
                       </span>
                     </div>
                     <CardDescription>
-                      Excellent liquidity and low fees for cross-exchange arbitrage
-                      {hasKucoinCredentials && (
+                      US-friendly exchange with excellent liquidity for cross-exchange arbitrage
+                      {hasCryptoComCredentials && (
                         <span className="text-[#00FF94] ml-2">✓ Connected</span>
                       )}
                     </CardDescription>
@@ -442,63 +442,52 @@ const Settings = () => {
                 <div className="bg-[#00FF94]/10 border border-[#00FF94]/30 rounded-lg p-4">
                   <p className="text-sm text-[#A1A1AA]">
                     <strong className="text-[#00FF94]">How to get your API keys:</strong><br />
-                    1. Log into your KuCoin account<br />
-                    2. Go to Account → API Management<br />
-                    3. Create a new API key with a passphrase<br />
-                    4. Enable: Spot Trading, General permissions<br />
+                    1. Log into your Crypto.com Exchange account<br />
+                    2. Go to Settings → API Keys<br />
+                    3. Create a new API key<br />
+                    4. Enable: Spot Trading, Read permissions<br />
                     5. <span className="text-[#FF0055]">Never enable Withdrawals</span>
                   </p>
                   <div className="mt-3 p-2 bg-[#9D00FF]/10 border border-[#9D00FF]/30 rounded">
                     <p className="text-xs text-[#9D00FF]">
-                      💡 <strong>Why KuCoin for Arbitrage?</strong> Low fees (0.1%), fast transfers, 
-                      1400+ trading pairs, and often has price discrepancies vs larger exchanges.
+                      💡 <strong>Why Crypto.com for Arbitrage?</strong> US-compliant, competitive fees (0.075%), 
+                      250+ trading pairs, and frequent price discrepancies vs Kraken/Binance.
                     </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-[#A1A1AA]">API Key</Label>
                     <Input
                       type="text"
-                      value={kucoinApiKey}
-                      onChange={(e) => setKucoinApiKey(e.target.value)}
-                      placeholder="Enter your KuCoin API key"
+                      value={cryptoComApiKey}
+                      onChange={(e) => setCryptoComApiKey(e.target.value)}
+                      placeholder="Enter your Crypto.com API key"
                       className="bg-[#121212] border-[#1F1F1F] font-data mt-1"
-                      data-testid="kucoin-api-key-input"
+                      data-testid="crypto-com-api-key-input"
                     />
                   </div>
                   <div>
                     <Label className="text-[#A1A1AA]">API Secret</Label>
                     <Input
                       type="password"
-                      value={kucoinApiSecret}
-                      onChange={(e) => setKucoinApiSecret(e.target.value)}
-                      placeholder="Enter your KuCoin API secret"
+                      value={cryptoComApiSecret}
+                      onChange={(e) => setCryptoComApiSecret(e.target.value)}
+                      placeholder="Enter your Crypto.com API secret"
                       className="bg-[#121212] border-[#1F1F1F] font-data mt-1"
-                      data-testid="kucoin-api-secret-input"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-[#A1A1AA]">API Passphrase</Label>
-                    <Input
-                      type="password"
-                      value={kucoinPassphrase}
-                      onChange={(e) => setKucoinPassphrase(e.target.value)}
-                      placeholder="Enter your KuCoin passphrase"
-                      className="bg-[#121212] border-[#1F1F1F] font-data mt-1"
-                      data-testid="kucoin-passphrase-input"
+                      data-testid="crypto-com-api-secret-input"
                     />
                   </div>
                 </div>
 
                 <Button
-                  onClick={saveKucoinCredentials}
+                  onClick={saveCryptoComCredentials}
                   className="w-full bg-[#00FF94] hover:bg-[#00CC76] text-black font-bold rounded-full glow-profit"
                   disabled={loading}
-                  data-testid="save-kucoin-credentials-btn"
+                  data-testid="save-crypto-com-credentials-btn"
                 >
-                  {loading ? 'Saving...' : hasKucoinCredentials ? 'Update KuCoin Credentials' : 'Save KuCoin Credentials'}
+                  {loading ? 'Saving...' : hasCryptoComCredentials ? 'Update Crypto.com Credentials' : 'Save Crypto.com Credentials'}
                 </Button>
               </CardContent>
             </Card>
