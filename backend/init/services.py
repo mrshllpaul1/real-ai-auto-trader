@@ -578,6 +578,14 @@ async def _init_phase7_wire_dependencies(db):
     from routes import kraken_exec as kraken_exec_routes
     kraken_exec_routes.set_dependencies(db)
     
+    # Wire Perpetuals routes with AI predictions
+    from routes import perpetuals as perpetuals_routes
+    perpetuals_routes.set_dependencies(
+        db, 
+        automated_trader=_services['auto_trader'],
+        prediction_services=_services['prediction_services']
+    )
+    
     # Wire Tethys Safety routes
     from routes import tethys as tethys_routes
     tethys_routes.set_db(db)

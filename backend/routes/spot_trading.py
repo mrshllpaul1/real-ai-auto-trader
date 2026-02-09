@@ -853,3 +853,380 @@ async def cancel_order(order_id: str):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Cancel order error: {str(e)}")
+
+
+# =============================================================================
+# ENHANCED SPOT TRADING PREDICTIONS
+# =============================================================================
+
+class EnhancedSpotPredictionRequest(BaseModel):
+    symbol: str
+    target_hold_days: Optional[int] = 7  # How long planning to hold
+    capital_pct: Optional[float] = 10.0  # What % of capital to deploy
+    
+
+@router.post("/ai-enhanced-prediction")
+async def get_enhanced_spot_prediction(request: EnhancedSpotPredictionRequest):
+    """
+    Get enhanced AI prediction for spot trading with:
+    - Entry timing optimization (DCA vs lump sum)
+    - Multi-timeframe signal confluence
+    - Volatility-adjusted position sizing
+    - Dynamic stop-loss and take-profit zones
+    - Hold duration recommendations
+    - Market regime context
+    """
+    symbol = request.symbol
+    
+    if not _automated_trader:
+        raise HTTPException(
+            status_code=503,
+            detail="Prediction services not available"
+        )
+    
+    if symbol not in TRADING_PAIRS:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Symbol {symbol} not supported"
+        )
+    
+    try:
+        # Get base predictions
+        signals = await _automated_trader.get_prediction_signals(symbol)
+        pair_info = TRADING_PAIRS[symbol]
+        
+        # Get current price
+        price = 0
+        volume_24h = 0
+        change_24h = 0
+        
+        if _kraken_service:
+            try:
+                ticker = await _kraken_service.get_ticker(pair_info['pair'])
+                if ticker:
+                    price = float(ticker.get("c", [0])[0]) if ticker.get("c") else 0
+                    volume_24h = float(ticker.get("v", [0, 0])[1]) if ticker.get("v") else 0
+                    open_24h = float(ticker.get("o", 0)) if ticker.get("o") else price
+                    change_24h = ((price - open_24h) / open_24h * 100) if open_24h else 0
+            except:
+                pass
+        
+        if price == 0:
+            raise HTTPException(status_code=500, detail="Unable to fetch current price")
+        
+        # Extract composite signal
+        composite = signals.get('composite', {})
+        score = composite.get('score', 50)
+        confidence = composite.get('confidence', 0)
+        signal = composite.get('signal', 'hold')
+        
+        # Normalize score to -1 to +1 range
+        normalized_score = (score - 50) / 50
+        signal_strength = abs(normalized_score)
+        
+        # === VOLATILITY ANALYSIS ===
+        volatility_regime = "normal"
+        volatility_factor = 1.0
+        
+        if 'advanced_ta' in signals.get('components', {}):
+            volatility_regime = signals['components']['advanced_ta'].get('volatility_regime', 'normal')
+            if volatility_regime == 'high':
+                volatility_factor = 0.7  # Reduce size by 30%
+            elif volatility_regime == 'extreme':
+                volatility_factor = 0.5  # Reduce size by 50%
+            elif volatility_regime == 'low':
+                volatility_factor = 1.3  # Can size up 30%
+        
+        # === MULTI-TIMEFRAME CONFLUENCE ===
+        # Check if signals align across different timeframes
+        timeframe_scores = {}
+        components = signals.get('components', {})
+        
+        # Map components to "timeframes" (different analysis types act as proxies)
+        if 'transformer' in components:  # Long-term trend
+            timeframe_scores['long_term'] = components['transformer'].get('score', 50)
+        if 'rl_agent' in components:  # Medium-term
+            timeframe_scores['medium_term'] = components['rl_agent'].get('score', 50)
+        if 'advanced_ta' in components:  # Short-term
+            timeframe_scores['short_term'] = components['advanced_ta'].get('score', 50)
+        
+        # Calculate confluence (agreement across timeframes)
+        if timeframe_scores:
+            bullish_tfs = sum(1 for s in timeframe_scores.values() if s > 60)
+            bearish_tfs = sum(1 for s in timeframe_scores.values() if s < 40)
+            total_tfs = len(timeframe_scores)
+            
+            if bullish_tfs == total_tfs:
+                confluence = "strong_bullish"
+                confluence_score = 100
+            elif bearish_tfs == total_tfs:
+                confluence = "strong_bearish"
+                confluence_score = 100
+            elif bullish_tfs > bearish_tfs:
+                confluence = "bullish"
+                confluence_score = bullish_tfs / total_tfs * 100
+            elif bearish_tfs > bullish_tfs:
+                confluence = "bearish"
+                confluence_score = bearish_tfs / total_tfs * 100
+            else:
+                confluence = "mixed"
+                confluence_score = 50
+        else:
+            confluence = "unknown"
+            confluence_score = 0
+        
+        # === ENTRY TIMING OPTIMIZATION ===
+        # DCA (Dollar Cost Averaging) vs Lump Sum recommendation
+        
+        if signal_strength > 0.6 and confidence > 75:
+            entry_strategy = "LUMP_SUM"
+            entry_detail = "Strong signal with high confidence - enter full position now"
+            dca_splits = 1
+        elif signal_strength > 0.3 and confidence > 60:
+            entry_strategy = "SPLIT_2"
+            entry_detail = "Moderate signal - split entry into 2 parts (60% now, 40% on dip)"
+            dca_splits = 2
+        elif volatility_regime in ['high', 'extreme']:
+            entry_strategy = "DCA_4"
+            entry_detail = "High volatility - use 4-part DCA over next 48 hours"
+            dca_splits = 4
+        else:
+            entry_strategy = "DCA_3"
+            entry_detail = "Conservative approach - use 3-part DCA over next 72 hours"
+            dca_splits = 3
+        
+        # Calculate DCA entry prices
+        if normalized_score > 0:  # Bullish
+            dca_prices = [
+                round(price * (1 - 0.01 * i), 2) 
+                for i in range(dca_splits)
+            ]
+        else:  # Bearish or neutral
+            dca_prices = [
+                round(price * (1 + 0.01 * i), 2) 
+                for i in range(dca_splits)
+            ]
+        
+        # === POSITION SIZING ===
+        recommended_position_pct = request.capital_pct * volatility_factor
+        
+        # Adjust based on confidence
+        if confidence > 80:
+            recommended_position_pct *= 1.3
+        elif confidence < 50:
+            recommended_position_pct *= 0.6
+        
+        recommended_position_pct = min(recommended_position_pct, 20.0)  # Cap at 20%
+        
+        # === DYNAMIC STOP-LOSS CALCULATION ===
+        # Base stop-loss on volatility and timeframe
+        
+        if volatility_regime == 'extreme':
+            stop_loss_pct = 15.0  # Wider stop for volatile markets
+        elif volatility_regime == 'high':
+            stop_loss_pct = 10.0
+        elif volatility_regime == 'low':
+            stop_loss_pct = 5.0  # Tighter stop for stable markets
+        else:
+            stop_loss_pct = 7.5  # Normal
+        
+        # Adjust for hold duration
+        if request.target_hold_days <= 3:
+            stop_loss_pct *= 0.7  # Tighter for short holds
+        elif request.target_hold_days >= 14:
+            stop_loss_pct *= 1.3  # Wider for long holds
+        
+        if normalized_score > 0:
+            stop_loss = round(price * (1 - stop_loss_pct / 100), 2)
+        else:
+            stop_loss = round(price * (1 + stop_loss_pct / 100), 2)
+        
+        # === DYNAMIC TAKE-PROFIT ZONES ===
+        # Calculate multiple TP levels based on signal strength and timeframe
+        
+        base_tp_pct = signal_strength * 20  # 0-20% based on signal
+        
+        if request.target_hold_days <= 3:
+            # Short hold - conservative targets
+            tp_multipliers = [0.5, 1.0, 1.5]
+        elif request.target_hold_days <= 7:
+            # Medium hold - moderate targets
+            tp_multipliers = [0.7, 1.3, 2.0]
+        else:
+            # Long hold - aggressive targets
+            tp_multipliers = [1.0, 2.0, 3.0]
+        
+        if normalized_score > 0:
+            take_profit_zones = [
+                {
+                    "level": i + 1,
+                    "price": round(price * (1 + base_tp_pct * mult / 100), 2),
+                    "gain_pct": round(base_tp_pct * mult, 2),
+                    "recommended_exit_pct": [30, 40, 30][i]  # Exit % at each level
+                }
+                for i, mult in enumerate(tp_multipliers)
+            ]
+        else:
+            take_profit_zones = [
+                {
+                    "level": i + 1,
+                    "price": round(price * (1 - base_tp_pct * mult / 100), 2),
+                    "gain_pct": round(base_tp_pct * mult, 2),
+                    "recommended_exit_pct": [30, 40, 30][i]
+                }
+                for i, mult in enumerate(tp_multipliers)
+            ]
+        
+        # === HOLD DURATION RECOMMENDATION ===
+        # Based on signal type and market regime
+        
+        if signal in ['strong_buy', 'strong_sell']:
+            if request.target_hold_days < 7:
+                hold_recommendation = "EXTEND"
+                hold_detail = "Strong signal suggests holding for at least 7-14 days"
+                optimal_hold_days = 14
+            else:
+                hold_recommendation = "GOOD"
+                hold_detail = f"Your {request.target_hold_days}-day timeframe aligns with signal"
+                optimal_hold_days = request.target_hold_days
+        elif signal in ['buy', 'sell']:
+            optimal_hold_days = max(request.target_hold_days, 5)
+            hold_recommendation = "MODERATE"
+            hold_detail = f"Moderate signal - recommend {optimal_hold_days}-day hold minimum"
+        else:
+            optimal_hold_days = request.target_hold_days
+            hold_recommendation = "WAIT"
+            hold_detail = "Weak signal - consider waiting for better setup"
+        
+        # === RISK/REWARD ANALYSIS ===
+        main_target = take_profit_zones[1]['price']  # Use middle TP
+        risk = abs(price - stop_loss)
+        reward = abs(main_target - price)
+        risk_reward_ratio = round(reward / risk, 2) if risk > 0 else 0
+        
+        # Expected value calculation
+        win_probability = confidence / 100 * 0.8  # Discount confidence slightly
+        expected_value = (win_probability * reward - (1 - win_probability) * risk) / price * 100
+        
+        # === MARKET REGIME CONTEXT ===
+        market_regime = "unknown"
+        regime_confidence = 0
+        
+        if 'cross_asset' in components:
+            regime_data = components['cross_asset']
+            if isinstance(regime_data, dict):
+                market_regime = regime_data.get('risk_regime', 'unknown')
+        
+        # === TRADING RECOMMENDATION ===
+        if signal in ['strong_buy', 'strong_sell']:
+            if confidence > 75 and confluence_score > 75 and risk_reward_ratio > 2:
+                action = "STRONG_ENTER"
+                action_detail = f"Excellent setup - {signal.replace('_', ' ')} with {confluence} confluence"
+            else:
+                action = "ENTER"
+                action_detail = f"Good setup - {signal.replace('_', ' ')}"
+        elif signal in ['buy', 'sell']:
+            if confluence_score > 60:
+                action = "CONSIDER"
+                action_detail = f"Consider {signal}ing with reduced size"
+            else:
+                action = "WAIT_CONFIRM"
+                action_detail = "Wait for stronger confirmation"
+        else:
+            action = "WAIT"
+            action_detail = "No clear edge - wait for better setup"
+        
+        # Adjust for poor risk/reward
+        if risk_reward_ratio < 1.5 and action != "WAIT":
+            action = "WAIT_BETTER_ENTRY"
+            action_detail += " (Poor risk/reward - wait for better entry price)"
+        
+        # Compile response
+        return {
+            "symbol": symbol,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            
+            # Core Signal
+            "signal": {
+                "direction": signal,
+                "score": score,
+                "confidence": confidence,
+                "strength": round(signal_strength, 2),
+                "side": "long" if normalized_score > 0 else "short"
+            },
+            
+            # Trading Recommendation
+            "recommendation": {
+                "action": action,
+                "detail": action_detail
+            },
+            
+            # Multi-Timeframe Analysis
+            "timeframe_analysis": {
+                "confluence": confluence,
+                "confluence_score": round(confluence_score, 1),
+                "timeframe_breakdown": timeframe_scores,
+                "assessment": "Strong agreement" if confluence_score > 75 else 
+                             "Moderate agreement" if confluence_score > 50 else 
+                             "Mixed signals"
+            },
+            
+            # Entry Strategy
+            "entry_strategy": {
+                "method": entry_strategy,
+                "detail": entry_detail,
+                "dca_splits": dca_splits,
+                "dca_prices": dca_prices,
+                "current_price": price
+            },
+            
+            # Position Sizing
+            "position_sizing": {
+                "recommended_capital_pct": round(recommended_position_pct, 1),
+                "original_capital_pct": request.capital_pct,
+                "volatility_factor": round(volatility_factor, 2),
+                "volatility_regime": volatility_regime,
+                "explanation": f"Adjusted for {volatility_regime} volatility and {int(confidence)}% confidence"
+            },
+            
+            # Risk Management
+            "risk_management": {
+                "stop_loss": {
+                    "price": stop_loss,
+                    "percent": round(stop_loss_pct, 2),
+                    "distance_from_entry": round(abs(price - stop_loss) / price * 100, 2)
+                },
+                "take_profit_zones": take_profit_zones,
+                "risk_reward_ratio": risk_reward_ratio,
+                "expected_value_pct": round(expected_value, 2)
+            },
+            
+            # Hold Duration
+            "hold_duration": {
+                "target_days": request.target_hold_days,
+                "optimal_days": optimal_hold_days,
+                "recommendation": hold_recommendation,
+                "detail": hold_detail
+            },
+            
+            # Market Context
+            "market_context": {
+                "current_price": price,
+                "24h_change_pct": round(change_24h, 2),
+                "volume_24h": volume_24h,
+                "volatility_regime": volatility_regime,
+                "market_regime": market_regime
+            },
+            
+            # Component Signals
+            "component_signals": components
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Enhanced spot prediction error: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Prediction failed: {str(e)}"
+        )
