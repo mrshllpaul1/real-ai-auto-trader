@@ -457,12 +457,13 @@ class BackendTester:
 
     async def run_all_tests(self):
         """Run all test suites"""
-        print(f"🚀 Starting Backend API Tests")
+        print(f"🚀 Starting Backend API Tests - 8 ENHANCEMENTS VERIFICATION")
         print(f"📡 Testing Backend URL: {BASE_URL}")
         print(f"👤 User ID: {USER_ID}")
         print("=" * 60)
         
-        # Run test suites
+        # Run test suites - prioritize 8 enhancements verification
+        await self.test_8_enhancements_verification()
         await self.test_health_endpoints()
         await self.test_tethys_trading_engine()
         await self.test_event_triggers_system()
