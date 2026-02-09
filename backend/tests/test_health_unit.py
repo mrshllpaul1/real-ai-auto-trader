@@ -12,7 +12,7 @@ from health import check_database_connection
 
 
 class DummyAdmin:
-    def __init__(self, should_raise: bool = False, expected_command: str | None = "ping"):
+    def __init__(self, should_raise: bool = False, expected_command: str = "ping"):
         self.should_raise = should_raise
         self.expected_command = expected_command
 
