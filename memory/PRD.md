@@ -287,24 +287,25 @@ Sidebar:
 | `/app/backend/routes/defi_wallet.py` | DeFi wallet integration API |
 | `/app/backend/routes/yield_farming.py` | Yield farming API |
 | `/app/backend/routes/perpetual_futures.py` | Perpetual futures trading API |
+| `/app/backend/routes/risk_analyzer.py` | Portfolio risk analyzer API |
+| `/app/backend/routes/telegram_notifications.py` | Telegram bot integration |
+| `/app/backend/routes/portfolio_rebalance.py` | Portfolio rebalancing API |
 | `/app/frontend/src/pages/AdvancedOrders.jsx` | Advanced orders UI |
 | `/app/frontend/src/pages/DeFiWallet.jsx` | DeFi wallet UI with MetaMask |
 | `/app/frontend/src/pages/YieldFarming.jsx` | Yield farming dashboard |
 | `/app/frontend/src/pages/PerpetualFutures.jsx` | Perpetuals trading UI |
 | `/app/frontend/src/pages/NewsSentiment.jsx` | News sentiment dashboard |
-| `/app/backend/routes/risk_analyzer.py` | Portfolio risk analyzer API |
 | `/app/frontend/src/pages/RiskAnalyzer.jsx` | Risk analyzer dashboard |
+| `/app/frontend/src/pages/TelegramNotifications.jsx` | Telegram setup & alerts |
+| `/app/frontend/src/pages/PortfolioRebalance.jsx` | Rebalancing dashboard |
 
 ---
 
 ## Future Tasks (Remaining)
 
-### P1 - Upcoming
-- Telegram Notifications Bot
+### P2+ - Backlog
 - Mobile PWA
 - Real exchange API connections (replace mock data)
-
-### P2+ - Backlog
 - Strategy marketplace
 - Subscription tiers & referral program
 - Social trading features
