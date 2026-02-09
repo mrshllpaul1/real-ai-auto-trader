@@ -40,7 +40,9 @@ def test_learning_rate_decays_with_more_feedback():
     model.update_from_feedback(features, human_rating=5)
     first_lr = model.last_effective_lr
 
-    for _ in range(25):
+    min_decay_iterations = 5  # prevents zero-iteration edge cases in the test
+    decay_test_iterations = max(min_decay_iterations, int(1 / model.decay_rate))  # ensures we see a noticeable LR decay step
+    for _ in range(decay_test_iterations):
         model.update_from_feedback(features, human_rating=4)
 
     later_lr = model.last_effective_lr
@@ -49,5 +51,5 @@ def test_learning_rate_decays_with_more_feedback():
     assert later_lr >= model.min_learning_rate
 
     signal = model.get_training_signal()
-    assert signal["samples"] == 26
+    assert signal["samples"] == decay_test_iterations + 1
     assert signal["last_update_at"] is not None
