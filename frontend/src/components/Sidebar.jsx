@@ -194,6 +194,8 @@ const Sidebar = () => {
     { path: '/perpetuals', icon: LineChart, label: 'Perpetuals', highlight: true },
     { path: '/news-sentiment', icon: Newspaper, label: 'News Sentiment', highlight: true },
     { path: '/risk-analyzer', icon: Shield, label: 'Risk Analyzer', highlight: true },
+    { path: '/rebalance', icon: PieChart, label: 'Rebalance', highlight: true },
+    { path: '/telegram', icon: MessageCircle, label: 'Telegram', highlight: true },
     { path: '/triggers', icon: Target, label: 'Event Triggers', highlight: true },
     { path: '/trigger-performance', icon: Award, label: 'Trigger Stats', highlight: true },
     { path: '/adaptive', icon: Gauge, label: 'Adaptive AI', highlight: true },

@@ -60,6 +60,8 @@ def register_routes(api_router: APIRouter):
     from routes import yield_farming as yield_farming_routes
     from routes import perpetual_futures as perpetual_futures_routes
     from routes import risk_analyzer as risk_analyzer_routes
+    from routes import telegram_notifications as telegram_routes
+    from routes import portfolio_rebalance as rebalance_routes
     
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
@@ -146,6 +148,8 @@ def register_routes(api_router: APIRouter):
     api_router.include_router(yield_farming_routes.router, tags=["Yield Farming"])
     api_router.include_router(perpetual_futures_routes.router, tags=["Perpetual Futures"])
     api_router.include_router(risk_analyzer_routes.router, tags=["Risk Analyzer"])
+    api_router.include_router(telegram_routes.router, tags=["Telegram Notifications"])
+    api_router.include_router(rebalance_routes.router, tags=["Portfolio Rebalancing"])
     
     logger.info("✅ All routes registered")
     

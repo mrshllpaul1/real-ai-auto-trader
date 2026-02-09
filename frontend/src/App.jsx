@@ -20,6 +20,8 @@ import YieldFarming from './pages/YieldFarming';
 import PerpetualFutures from './pages/PerpetualFutures';
 import NewsSentiment from './pages/NewsSentiment';
 import RiskAnalyzer from './pages/RiskAnalyzer';
+import TelegramNotifications from './pages/TelegramNotifications';
+import PortfolioRebalance from './pages/PortfolioRebalance';
 import AutoTrading from "./pages/AutoTrading";
 import GemScanner from "./pages/GemScanner";
 import AutoExecution from "./pages/AutoExecution";
@@ -120,6 +122,8 @@ function App() {
                 <Route path="/perpetuals" element={<PerpetualFutures />} />
                 <Route path="/news-sentiment" element={<NewsSentiment />} />
                 <Route path="/risk-analyzer" element={<RiskAnalyzer />} />
+                <Route path="/telegram" element={<TelegramNotifications />} />
+                <Route path="/rebalance" element={<PortfolioRebalance />} />
                 <Route path="/auto-trading" element={<AutoTrading />} />
                 <Route path="/scanner" element={<GemScanner />} />
                 <Route path="/auto-exec" element={<AutoExecution />} />
