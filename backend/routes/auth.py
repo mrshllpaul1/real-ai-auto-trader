@@ -148,60 +148,58 @@ async def delete_binance_credentials(user_id: str = "default_user", db = Depends
 
 
 # =============================================================================
-# KUCOIN EXCHANGE CREDENTIALS (Best for Arbitrage)
+# CRYPTO.COM EXCHANGE CREDENTIALS (Best for Arbitrage - US Friendly)
 # =============================================================================
 
-@router.post("/kucoin/store")
-async def store_kucoin_credentials(
-    credentials: KuCoinCredentials,
+@router.post("/crypto-com/store")
+async def store_crypto_com_credentials(
+    credentials: CryptoComCredentials,
     user_id: str = "default_user",
     db = Depends(get_database)
 ):
-    """Store encrypted KuCoin API credentials (includes passphrase)"""
+    """Store encrypted Crypto.com API credentials"""
     try:
         encrypted_key = cipher.encrypt(credentials.api_key.encode()).decode()
         encrypted_secret = cipher.encrypt(credentials.api_secret.encode()).decode()
-        encrypted_passphrase = cipher.encrypt(credentials.passphrase.encode()).decode()
         
         stored = {
             "user_id": user_id,
-            "exchange": "kucoin",
+            "exchange": "crypto_com",
             "encrypted_key": encrypted_key,
             "encrypted_secret": encrypted_secret,
-            "encrypted_passphrase": encrypted_passphrase,
             "created_at": datetime.now().isoformat(),
             "updated_at": datetime.now().isoformat()
         }
         
         await db.exchange_credentials.replace_one(
-            {"user_id": user_id, "exchange": "kucoin"},
+            {"user_id": user_id, "exchange": "crypto_com"},
             stored,
             upsert=True
         )
         
-        return {"message": "KuCoin credentials stored successfully", "has_credentials": True}
+        return {"message": "Crypto.com credentials stored successfully", "has_credentials": True}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/kucoin/check")
-async def check_kucoin_credentials(user_id: str = "default_user", db = Depends(get_database)):
-    """Check if user has stored KuCoin credentials"""
-    stored = await db.exchange_credentials.find_one({"user_id": user_id, "exchange": "kucoin"})
+@router.get("/crypto-com/check")
+async def check_crypto_com_credentials(user_id: str = "default_user", db = Depends(get_database)):
+    """Check if user has stored Crypto.com credentials"""
+    stored = await db.exchange_credentials.find_one({"user_id": user_id, "exchange": "crypto_com"})
     return {
         "has_credentials": stored is not None,
-        "exchange": "kucoin",
-        "message": "KuCoin credentials found" if stored else "No KuCoin credentials stored"
+        "exchange": "crypto_com",
+        "message": "Crypto.com credentials found" if stored else "No Crypto.com credentials stored"
     }
 
 
-@router.delete("/kucoin/delete")
-async def delete_kucoin_credentials(user_id: str = "default_user", db = Depends(get_database)):
-    """Delete stored KuCoin credentials"""
-    result = await db.exchange_credentials.delete_one({"user_id": user_id, "exchange": "kucoin"})
+@router.delete("/crypto-com/delete")
+async def delete_crypto_com_credentials(user_id: str = "default_user", db = Depends(get_database)):
+    """Delete stored Crypto.com credentials"""
+    result = await db.exchange_credentials.delete_one({"user_id": user_id, "exchange": "crypto_com"})
     if result.deleted_count > 0:
-        return {"message": "KuCoin credentials deleted successfully"}
-    raise HTTPException(status_code=404, detail="No KuCoin credentials found")
+        return {"message": "Crypto.com credentials deleted successfully"}
+    raise HTTPException(status_code=404, detail="No Crypto.com credentials found")
 
 
 # =============================================================================
