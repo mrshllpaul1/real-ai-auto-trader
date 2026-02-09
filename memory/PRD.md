@@ -7,7 +7,7 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ## Session Update - Feb 9, 2026 (Latest)
 
-### ✅ P0 Features COMPLETED This Session
+### ✅ P0 Features COMPLETED
 
 | Feature | Description | Status |
 |---------|-------------|--------|
@@ -17,6 +17,13 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 | **Perpetual Futures** | Leverage trading up to 100x, 6 markets | ✅ Complete |
 | **News Sentiment** | AI-powered market sentiment analysis | ✅ Complete |
 | **Portfolio Risk Analyzer** | Unified risk dashboard with VaR & stress tests | ✅ Complete |
+
+### ✅ P1 Features COMPLETED
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Telegram Notifications** | Trading alerts via Telegram bot | ✅ Complete |
+| **Portfolio Rebalancing** | AI-powered allocation suggestions with 7 templates | ✅ Complete |
 
 ---
 
