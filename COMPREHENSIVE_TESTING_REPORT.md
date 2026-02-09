@@ -372,8 +372,8 @@ nginx-code-proxy RUNNING   pid 45
 - All environment variables set ✅
 
 **URL:**
-- Deployment: https://cryptointel-ml.preview.emergentagent.com ✅
-- Backend API: https://cryptointel-ml.preview.emergentagent.com/api ✅
+- Deployment: https://test-complete-5.preview.emergentagent.com ✅
+- Backend API: https://test-complete-5.preview.emergentagent.com/api ✅
 
 ---
 

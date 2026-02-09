@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 
 # Backend URL from frontend environment
-BASE_URL = "https://cryptointel-ml.preview.emergentagent.com/api"
+BASE_URL = "https://test-complete-5.preview.emergentagent.com/api"
 USER_ID = "demo_user_test123"
 
 class BackendTester:
