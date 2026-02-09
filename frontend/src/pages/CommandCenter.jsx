@@ -26,10 +26,10 @@ const DashboardTab = ({ portfolio, krakenPortfolio, prices }) => (
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-white">
-            ${krakenPortfolio?.total_usd?.toFixed(2) || '0.00'}
+            ${krakenPortfolio?.total_value_usd?.toFixed(2) || '0.00'}
           </div>
           <div className="text-sm text-gray-400">
-            {krakenPortfolio?.holdings?.length || 0} assets
+            {krakenPortfolio?.holdings_count || krakenPortfolio?.holdings?.length || 0} assets
           </div>
         </CardContent>
       </Card>

@@ -100,3 +100,85 @@ async def get_execution_history(limit: int = 10):
     ).sort('timestamp', -1).limit(limit).to_list(limit)
     
     return {'history': history}
+
+
+@router.get("/status")
+async def get_growth_status():
+    """Get growth engine status including autopilot state"""
+    if growth_engine is None:
+        # Return basic status when engine not initialized
+        return {
+            'autopilot_active': False,
+            'current_value': 500.0,
+            'initial_value': 500.0,
+            'total_pnl': 0.0,
+            'total_pnl_pct': 0.0,
+            'target_value': 100000.0,
+            'progress_pct': 0.5,
+            'positions_count': 0,
+            'engine_initialized': False
+        }
+    
+    try:
+        # Get portfolio value
+        portfolio = await growth_engine.get_current_portfolio_value()
+        stats = await growth_engine.get_growth_stats()
+        
+        current_value = portfolio.get('total_value', 500.0)
+        initial_value = 500.0
+        total_pnl = current_value - initial_value
+        total_pnl_pct = ((current_value / initial_value) - 1) * 100 if initial_value > 0 else 0
+        target_value = 100000.0
+        progress_pct = (current_value / target_value) * 100
+        
+        return {
+            'autopilot_active': getattr(growth_engine, 'autopilot_active', False),
+            'current_value': current_value,
+            'initial_value': initial_value,
+            'total_pnl': total_pnl,
+            'total_pnl_pct': total_pnl_pct,
+            'target_value': target_value,
+            'progress_pct': progress_pct,
+            'positions_count': stats.get('open_positions', 0),
+            'trades_executed': stats.get('total_trades', 0),
+            'engine_initialized': True
+        }
+    except Exception as e:
+        return {
+            'autopilot_active': False,
+            'current_value': 500.0,
+            'initial_value': 500.0,
+            'total_pnl': 0.0,
+            'total_pnl_pct': 0.0,
+            'target_value': 100000.0,
+            'progress_pct': 0.5,
+            'positions_count': 0,
+            'engine_initialized': False,
+            'error': str(e)
+        }
+
+
+@router.post("/start")
+async def start_autopilot():
+    """Start the growth engine autopilot"""
+    if growth_engine is None:
+        raise HTTPException(status_code=500, detail="Growth engine not initialized")
+    
+    try:
+        growth_engine.autopilot_active = True
+        return {'success': True, 'message': 'Autopilot started', 'autopilot_active': True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/stop")
+async def stop_autopilot():
+    """Stop the growth engine autopilot"""
+    if growth_engine is None:
+        raise HTTPException(status_code=500, detail="Growth engine not initialized")
+    
+    try:
+        growth_engine.autopilot_active = False
+        return {'success': True, 'message': 'Autopilot stopped', 'autopilot_active': False}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
