@@ -134,6 +134,74 @@ const Settings = () => {
     }
   };
 
+  const saveBinanceCredentials = async () => {
+    if (!binanceApiKey || !binanceApiSecret) {
+      toast.error('Missing Binance credentials', {
+        description: 'Please enter both API key and secret',
+      });
+      return;
+    }
+
+    const loadingToast = toast.loading('Saving Binance credentials...');
+    try {
+      setLoading(true);
+      await api.post('/auth/binance/store', {
+        api_key: binanceApiKey,
+        api_secret: binanceApiSecret
+      });
+      toast.dismiss(loadingToast);
+      toast.success('Binance credentials saved!', {
+        description: 'Your Binance exchange is now connected',
+        duration: 5000,
+      });
+      setHasBinanceCredentials(true);
+      setBinanceApiKey('');
+      setBinanceApiSecret('');
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error('Failed to save Binance credentials', {
+        description: error.response?.data?.detail || 'Please check your API key and secret',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveKucoinCredentials = async () => {
+    if (!kucoinApiKey || !kucoinApiSecret || !kucoinPassphrase) {
+      toast.error('Missing KuCoin credentials', {
+        description: 'Please enter API key, secret, and passphrase',
+      });
+      return;
+    }
+
+    const loadingToast = toast.loading('Saving KuCoin credentials...');
+    try {
+      setLoading(true);
+      await api.post('/auth/kucoin/store', {
+        api_key: kucoinApiKey,
+        api_secret: kucoinApiSecret,
+        passphrase: kucoinPassphrase
+      });
+      toast.dismiss(loadingToast);
+      toast.success('KuCoin credentials saved!', {
+        description: 'Your KuCoin exchange is now connected for arbitrage',
+        duration: 5000,
+      });
+      setHasKucoinCredentials(true);
+      setKucoinApiKey('');
+      setKucoinApiSecret('');
+      setKucoinPassphrase('');
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error('Failed to save KuCoin credentials', {
+        description: error.response?.data?.detail || 'Please check your credentials',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const saveRiskSettings = async () => {
     const loadingToast = toast.loading('Updating risk settings...');
     try {
