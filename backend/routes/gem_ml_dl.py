@@ -28,9 +28,22 @@ def get_gem_engine():
         try:
             from services.gem_ml_dl_predictor import get_gem_prediction_engine
             _gem_engine = get_gem_prediction_engine(_db)
+            print(f"✅ Gem engine initialized: {_gem_engine}")
         except Exception as e:
-            print(f"Failed to initialize gem engine: {e}")
+            import traceback
+            print(f"❌ Failed to initialize gem engine: {e}")
+            traceback.print_exc()
     return _gem_engine
+
+
+@router.get("/debug")
+async def debug_status():
+    """Debug endpoint to check initialization state"""
+    return {
+        "db_available": _db is not None,
+        "engine_available": _gem_engine is not None,
+        "engine_from_lazy": get_gem_engine() is not None
+    }
 
 
 class TrainRequest(BaseModel):
