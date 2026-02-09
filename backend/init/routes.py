@@ -47,6 +47,7 @@ def register_routes(api_router: APIRouter):
     from routes import tethys_train as tethys_train_routes
     from routes import advanced_ai as advanced_ai_routes
     from routes import master_orchestrator as master_routes
+    from routes import upgrades as upgrades_routes
     
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
