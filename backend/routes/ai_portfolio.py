@@ -9,8 +9,12 @@ from datetime import datetime
 
 router = APIRouter()
 
-# Will be set by server.py
-ai_portfolio_manager = None
+
+def get_ai_portfolio_manager():
+    """Get the AI Portfolio Manager service"""
+    from init.services import get_service
+    return get_service('ai_portfolio')
+
 
 class InitializePortfolioRequest(BaseModel):
     user_id: str = "default"
@@ -25,6 +29,7 @@ async def initialize_ai_portfolio(request: InitializePortfolioRequest):
     Initialize AI-managed portfolio with allocated capital.
     The AI will develop its own trading strategy and manage this capital.
     """
+    ai_portfolio_manager = get_ai_portfolio_manager()
     if not ai_portfolio_manager:
         raise HTTPException(status_code=500, detail="AI Portfolio Manager not initialized")
     
@@ -48,6 +53,7 @@ async def develop_strategy(request: RebalanceRequest):
     Trigger AI to develop/update portfolio strategy.
     AI analyzes market conditions, news sentiment, and historical data.
     """
+    ai_portfolio_manager = get_ai_portfolio_manager()
     if not ai_portfolio_manager:
         raise HTTPException(status_code=500, detail="AI Portfolio Manager not initialized")
     
