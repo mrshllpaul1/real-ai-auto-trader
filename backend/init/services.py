@@ -289,7 +289,7 @@ async def _init_phase4_automation(db):
 
 
 async def _init_phase5_predictions(db):
-    """Phase 5: Deep RL Trading Engine + Prediction Services"""
+    """Phase 5: Prediction Services (ML/DL services DEFERRED)"""
     from services.order_book_analyzer import get_order_book_analyzer
     from services.on_chain_analytics import get_on_chain_analytics
     from services.social_sentiment_pipeline import get_social_sentiment
@@ -297,40 +297,26 @@ async def _init_phase5_predictions(db):
     from services.rl_trading_agent import get_rl_agent
     from services.cross_asset_correlation import get_cross_asset_correlation
     from services.advanced_technical_analysis import get_advanced_ta
-    from services.deep_rl_trading_engine import get_drl_engine, initialize_drl_engine
-    from services.trading_intelligence_engine import initialize_trading_intelligence
+    # DEFERRED: deep_rl_trading_engine - imported on-demand to avoid TF loading
+    # DEFERRED: trading_intelligence_engine - imported on-demand
     
     task_manager = _services['task_manager']
     
-    # Initialize Deep RL Trading Engine (replaces traditional ML)
-    drl_engine = await initialize_drl_engine(db)
-    _services['drl_engine'] = drl_engine
-    logger.info("✅ Deep RL Trading Engine initialized")
+    # DEFERRED: Deep RL Trading Engine - will be lazy-loaded
+    _services['drl_engine'] = None
+    logger.info("⏳ Deep RL Trading Engine (deferred)")
     
-    # Initialize Trading Intelligence Engine (XGBoost/LightGBM + FinRL)
-    trading_intelligence = await initialize_trading_intelligence(db)
-    _services['trading_intelligence'] = trading_intelligence
-    logger.info("✅ Trading Intelligence Engine initialized")
+    # DEFERRED: Trading Intelligence Engine - will be lazy-loaded
+    _services['trading_intelligence'] = None
+    logger.info("⏳ Trading Intelligence Engine (deferred)")
     
-    # Initialize SB3 Trading Agent Manager (Stable-Baselines3)
-    try:
-        from services.sb3_trading_agents import initialize_sb3_manager
-        sb3_manager = await initialize_sb3_manager(db)
-        _services['sb3_manager'] = sb3_manager
-        logger.info("✅ SB3 Trading Agent Manager initialized")
-    except Exception as e:
-        logger.warning(f"⚠️ SB3 Manager initialization failed: {e}")
-        _services['sb3_manager'] = None
+    # DEFERRED: SB3 Trading Agent Manager
+    _services['sb3_manager'] = None
+    logger.info("⏳ SB3 Trading Agent Manager (deferred)")
     
-    # Initialize SRDDQN Manager (Self-Rewarding Double DQN)
-    try:
-        from services.srddqn_agent import initialize_srddqn_manager
-        srddqn_manager = await initialize_srddqn_manager(db)
-        _services['srddqn_manager'] = srddqn_manager
-        logger.info("✅ SRDDQN Manager initialized")
-    except Exception as e:
-        logger.warning(f"⚠️ SRDDQN Manager initialization failed: {e}")
-        _services['srddqn_manager'] = None
+    # DEFERRED: SRDDQN Manager
+    _services['srddqn_manager'] = None
+    logger.info("⏳ SRDDQN Manager (deferred)")
     
     order_book = get_order_book_analyzer(db)
     on_chain = get_on_chain_analytics(db)
