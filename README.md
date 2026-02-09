@@ -178,6 +178,23 @@ Navigate to **AI Strategies**:
 4. **Monitor Performance**: Track your trades regularly
 5. **Start Small**: Begin with small amounts when going live
 
+## 🚢 Deployment & Health Verification
+
+1) Set required environment variables for the target environment (at minimum):
+- `REACT_APP_BACKEND_URL` (frontend + tests)
+- `KRAKEN_API_KEY`, `KRAKEN_API_SECRET` (if enabling real trading)
+- Database connection string (MongoDB URI)
+
+2) Build and serve:
+- Backend: `uvicorn server:app --host 0.0.0.0 --port 8000`
+- Frontend: `cd frontend && npm install && npm run build && npm run start`
+
+3) Post-deploy health checks (with `REACT_APP_BACKEND_URL` pointing to the deployed backend):
+- Basic smoke: `pytest backend/tests/test_health_smoke.py -q`
+- Complex latency-capped checks: `pytest backend/tests/test_health_complex.py -q`
+
+Both suites skip automatically if `REACT_APP_BACKEND_URL` is not set.
+
 ## 🔄 Weekly Strategy Updates
 
 The AI generates new strategies weekly based on:
