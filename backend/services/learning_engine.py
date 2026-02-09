@@ -53,19 +53,29 @@ class AILearningEngine:
         return weighted_score
     
     async def _update_strategy_learning_metrics(self, strategy_id: str):
-        """Update learning metrics for a strategy"""
-        outcomes = await self.db.learning_outcomes.find(
-            {"strategy_id": strategy_id},
-            {"_id": 0, "was_correct": 1, "profit_loss": 1, "performance_score": 1}
-        ).to_list(1000)
+        """Update learning metrics for a strategy using aggregation pipeline"""
+        # Use MongoDB aggregation for efficient computation
+        pipeline = [
+            {"$match": {"strategy_id": strategy_id}},
+            {"$group": {
+                "_id": None,
+                "total": {"$sum": 1},
+                "correct": {"$sum": {"$cond": ["$was_correct", 1, 0]}},
+                "total_profit": {"$sum": "$profit_loss"},
+                "avg_performance": {"$avg": "$performance_score"}
+            }}
+        ]
         
-        if not outcomes:
+        result = await self.db.learning_outcomes.aggregate(pipeline).to_list(1)
+        
+        if not result:
             return
         
-        total = len(outcomes)
-        correct = sum(1 for o in outcomes if o.get('was_correct', False))
-        total_profit = sum(o.get('profit_loss', 0) for o in outcomes)
-        avg_performance = sum(o.get('performance_score', 0) for o in outcomes) / total if total > 0 else 0
+        data = result[0]
+        total = data.get('total', 0)
+        correct = data.get('correct', 0)
+        total_profit = data.get('total_profit', 0)
+        avg_performance = data.get('avg_performance', 0)
         
         metrics = {
             "strategy_id": strategy_id,
