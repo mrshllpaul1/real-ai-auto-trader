@@ -3,7 +3,8 @@ import {
   Bell, TrendingUp, RefreshCw, Target, Activity, 
   Play, Square, Settings, DollarSign, Percent,
   AlertTriangle, CheckCircle, XCircle, Zap,
-  PieChart, ArrowUpDown, Shield, Smartphone
+  PieChart, ArrowUpDown, Shield, Smartphone, Waves,
+  ExternalLink, Copy
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -37,10 +38,11 @@ const UpgradesDashboard = () => {
   // Tabs configuration
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Activity },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'whale', label: 'Whale Tracker', icon: Waves },
     { id: 'arbitrage', label: 'Arbitrage', icon: Zap },
     { id: 'rebalancer', label: 'Rebalancer', icon: PieChart },
     { id: 'trailing', label: 'Trailing Stops', icon: Target },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
   ];
 
   if (loading) {
