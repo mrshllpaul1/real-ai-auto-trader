@@ -132,6 +132,8 @@ def _create_tf_classes():
             return tf.matmul(inputs, w) + b
     
     _NoisyDense = NoisyDense
+    _PositionalEncoding = _get_positional_encoding_class()
+    _CausalTransformerEncoder = _get_causal_transformer_encoder_class()
     return True
 
 
