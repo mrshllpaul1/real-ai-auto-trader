@@ -47,11 +47,23 @@ def _ensure_tf():
         Model = keras.Model
         optimizers = keras.optimizers
         TF_AVAILABLE = True
-        logger.info("TensorFlow loaded successfully")
+        logger.info("TensorFlow loaded successfully for Rainbow DQN")
     except ImportError:
         TF_AVAILABLE = False
         logger.warning("TensorFlow not available")
     return TF_AVAILABLE
+
+
+# Placeholder class for lazy loading - actual implementations created after TF loads
+class _LazyLayerBase:
+    """Placeholder base class before TensorFlow loads"""
+    pass
+
+
+# This will be replaced when TF loads
+class _PlaceholderLayer(_LazyLayerBase):
+    def __init__(self, *args, **kwargs):
+        pass
 
 
 # =============================================================================
