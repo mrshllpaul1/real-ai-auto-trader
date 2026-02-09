@@ -33,6 +33,7 @@ def register_routes(api_router: APIRouter):
     from routes import prediction_enhancements
     from routes import strategy_builder as strategy_builder_routes
     from routes import ohlcv_data as ohlcv_routes
+    from routes import api_keys  # API Key Management
     from routes import training_history as training_history_routes
     from routes import training_scheduler as training_scheduler_routes
     from routes import model_persistence as model_persistence_routes
