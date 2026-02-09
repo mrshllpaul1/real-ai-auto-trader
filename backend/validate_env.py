@@ -56,18 +56,21 @@ def validate_env_var(var_name: str, required: bool = True, min_length: int = 10)
     return True, f"✅ {var_name} is properly set"
 
 
-def validate_encryption_key() -> Tuple[bool, str]:
+def validate_encryption_key(strict: bool = False) -> Tuple[bool, str]:
     """Validate the ENCRYPTION_KEY for Fernet encryption."""
     key = os.getenv("ENCRYPTION_KEY")
     
     if not key:
-        return False, "❌ ENCRYPTION_KEY is CRITICAL but not set - credentials will be lost on restart!"
+        if strict:
+            return False, "❌ ENCRYPTION_KEY is CRITICAL but not set - credentials will be lost on restart!"
+        else:
+            return True, "⚠️  ENCRYPTION_KEY not set - will auto-generate (OK for dev, NOT for production)"
     
     try:
-        # Try to create a Fernet cipher with the key
+        # Try to create a Fernet cipher with the key (validation only)
         if isinstance(key, str):
             key = key.encode()
-        cipher = Fernet(key)
+        Fernet(key)  # Will raise exception if invalid
         return True, "✅ ENCRYPTION_KEY is valid Fernet key"
     except Exception as e:
         return False, f"❌ ENCRYPTION_KEY is invalid: {e}"
@@ -111,13 +114,13 @@ def validate_environment(strict_mode: bool = False) -> bool:
     warnings: List[str] = []
     success: List[str] = []
     
-    # Critical variables (MUST be set)
+    # Critical variables (MUST be set for production)
     critical_vars = [
         ("ENCRYPTION_KEY", validate_encryption_key),
     ]
     
-    # Required variables for production
-    required_vars = [
+    # Important variables (should be set but can fallback)
+    important_vars = [
         "EMERGENT_LLM_KEY",
         "MONGO_URL",
     ]
@@ -134,20 +137,11 @@ def validate_environment(strict_mode: bool = False) -> bool:
     
     print(f"{Colors.BOLD}Critical Variables:{Colors.RESET}")
     for var_name, validator in critical_vars:
-        is_valid, message = validator()
-        if is_valid:
-            print(f"  {Colors.GREEN}{message}{Colors.RESET}")
-            success.append(message)
+        # Pass strict_mode to validator if it supports it
+        if var_name == "ENCRYPTION_KEY":
+            is_valid, message = validator(strict=strict_mode)
         else:
-            print(f"  {Colors.RED}{message}{Colors.RESET}")
-            errors.append(message)
-    
-    print(f"\n{Colors.BOLD}Required Variables:{Colors.RESET}")
-    for var_name in required_vars:
-        if var_name == "MONGO_URL":
-            is_valid, message = validate_mongodb_url()
-        else:
-            is_valid, message = validate_env_var(var_name, required=True)
+            is_valid, message = validator()
         
         if is_valid:
             if "⚠️" in message:
@@ -159,6 +153,24 @@ def validate_environment(strict_mode: bool = False) -> bool:
         else:
             print(f"  {Colors.RED}{message}{Colors.RESET}")
             errors.append(message)
+    
+    print(f"\n{Colors.BOLD}Important Variables:{Colors.RESET}")
+    for var_name in important_vars:
+        if var_name == "MONGO_URL":
+            is_valid, message = validate_mongodb_url()
+        else:
+            is_valid, message = validate_env_var(var_name, required=False)
+        
+        if is_valid:
+            if "⚠️" in message:
+                print(f"  {Colors.YELLOW}{message}{Colors.RESET}")
+                warnings.append(message)
+            else:
+                print(f"  {Colors.GREEN}{message}{Colors.RESET}")
+                success.append(message)
+        else:
+            print(f"  {Colors.RED}{message}{Colors.RESET}")
+            warnings.append(message)  # Downgrade to warning instead of error
     
     print(f"\n{Colors.BOLD}Optional Variables:{Colors.RESET}")
     for var_name in optional_vars:

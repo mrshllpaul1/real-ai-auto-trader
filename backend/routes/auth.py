@@ -5,8 +5,10 @@ from datetime import datetime
 from cryptography.fernet import Fernet
 import os
 import base64
+import logging
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 class KrakenCredentials(BaseModel):
     api_key: str
@@ -28,8 +30,6 @@ if not encryption_key:
     os.environ["ENCRYPTION_KEY"] = encryption_key
     # ⚠️ WARNING: Auto-generated encryption key - this will change on restart!
     # Set ENCRYPTION_KEY in .env to persist credentials across restarts.
-    import logging
-    logger = logging.getLogger(__name__)
     logger.warning(
         "⚠️ ENCRYPTION_KEY not set! Auto-generated temporary key. "
         "Stored credentials will be unrecoverable after restart. "
@@ -42,8 +42,6 @@ try:
     cipher = Fernet(ENCRYPTION_KEY)
 except ValueError as e:
     # If key is invalid, log error and generate a new one
-    import logging
-    logger = logging.getLogger(__name__)
     logger.error(f"Invalid ENCRYPTION_KEY format: {e}. Generating new key.")
     encryption_key = Fernet.generate_key().decode()
     ENCRYPTION_KEY = encryption_key.encode()
