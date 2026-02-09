@@ -18,16 +18,39 @@ logger = logging.getLogger(__name__)
 # Thread pool for CPU-bound TensorFlow operations
 _training_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="rl_train")
 
-# TensorFlow imports
-try:
-    import tensorflow as tf
-    from tensorflow.keras.models import Sequential, Model
-    from tensorflow.keras.layers import Dense, Input, Concatenate
-    from tensorflow.keras.optimizers import Adam
-    TF_AVAILABLE = True
-except ImportError:
-    TF_AVAILABLE = False
-    logger.warning("TensorFlow not available for RL agent")
+# TensorFlow imports - DEFERRED to speed up startup
+TF_AVAILABLE = False
+tf = None
+Sequential = None
+Model = None
+Dense = None
+Input = None
+Concatenate = None
+Adam = None
+
+def _ensure_tf():
+    """Lazy-load TensorFlow when needed"""
+    global TF_AVAILABLE, tf, Sequential, Model, Dense, Input, Concatenate, Adam
+    if tf is not None:
+        return TF_AVAILABLE
+    try:
+        import tensorflow as _tf
+        from tensorflow.keras.models import Sequential as _Sequential, Model as _Model
+        from tensorflow.keras.layers import Dense as _Dense, Input as _Input, Concatenate as _Concat
+        from tensorflow.keras.optimizers import Adam as _Adam
+        tf = _tf
+        Sequential = _Sequential
+        Model = _Model
+        Dense = _Dense
+        Input = _Input
+        Concatenate = _Concat
+        Adam = _Adam
+        TF_AVAILABLE = True
+        logger.info("✅ TensorFlow loaded for RL agent")
+    except ImportError:
+        TF_AVAILABLE = False
+        logger.warning("TensorFlow not available for RL agent")
+    return TF_AVAILABLE
 
 
 class TradingEnvironment:
