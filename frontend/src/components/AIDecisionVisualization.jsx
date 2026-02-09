@@ -9,8 +9,9 @@ import {
   ChevronDown, ChevronUp, Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getBackendUrl } from '../services/backendUrl';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = getBackendUrl();
 
 /**
  * AI Decision Visualization Component

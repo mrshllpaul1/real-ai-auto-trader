@@ -20,8 +20,9 @@ import AIDiscoveryPanel from '../components/AIDiscoveryPanel';
 import MarketSentimentPanel from '../components/MarketSentimentPanel';
 import CryptoNewsFeed from '../components/CryptoNewsFeed';
 import { useTradingMode } from '../context/TradingModeContext';
+import { getBackendUrl } from '../services/backendUrl';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = getBackendUrl();
 
 const GrowthDashboard = () => {
   // Use global trading mode context
