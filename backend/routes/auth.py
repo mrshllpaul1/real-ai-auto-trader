@@ -235,7 +235,7 @@ async def get_all_exchange_status(user_id: str = "default_user", db = Depends(ge
     """Get connection status for all supported exchanges"""
     kraken = await db.credentials.find_one({"user_id": user_id})
     binance = await db.exchange_credentials.find_one({"user_id": user_id, "exchange": "binance"})
-    kucoin = await db.exchange_credentials.find_one({"user_id": user_id, "exchange": "kucoin"})
+    crypto_com = await db.exchange_credentials.find_one({"user_id": user_id, "exchange": "crypto_com"})
     
     return {
         "exchanges": {
@@ -247,15 +247,15 @@ async def get_all_exchange_status(user_id: str = "default_user", db = Depends(ge
                 "connected": binance is not None,
                 "description": "World's largest exchange by volume"
             },
-            "kucoin": {
-                "connected": kucoin is not None,
-                "description": "Best for cross-exchange arbitrage"
+            "crypto_com": {
+                "connected": crypto_com is not None,
+                "description": "Best for cross-exchange arbitrage (US friendly)"
             }
         },
         "total_connected": sum([
             kraken is not None,
             binance is not None,
-            kucoin is not None
+            crypto_com is not None
         ]),
-        "arbitrage_ready": (kraken is not None or binance is not None) and kucoin is not None
+        "arbitrage_ready": (kraken is not None or binance is not None) and crypto_com is not None
     }
