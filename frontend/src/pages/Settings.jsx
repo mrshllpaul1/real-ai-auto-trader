@@ -120,10 +120,6 @@ const Settings = () => {
       setLoading(false);
     }
   };
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const saveNotificationSettings = async () => {
     try {
