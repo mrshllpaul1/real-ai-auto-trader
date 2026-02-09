@@ -456,6 +456,15 @@ class RegimePredictionEngine:
         if input_shape is None:
             input_shape = (self.sequence_length, 10)
         
+        Model = self._Model
+        Input = self._keras_layers['Input']
+        Dense = self._keras_layers['Dense']
+        Dropout = self._keras_layers['Dropout']
+        LayerNormalization = self._keras_layers['LayerNormalization']
+        MultiHeadAttention = self._keras_layers['MultiHeadAttention']
+        GlobalAveragePooling1D = self._keras_layers['GlobalAveragePooling1D']
+        Adam = self._Adam
+        
         inputs = Input(shape=input_shape)
         
         # Initial projection
