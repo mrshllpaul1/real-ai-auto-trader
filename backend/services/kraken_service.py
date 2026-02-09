@@ -221,38 +221,47 @@ class KrakenTradeService:
             return {}
         
         params = {"pair": ",".join(pairs)}
-        async with AsyncClient() as client:
-            response = await client.get(
-                f"{self.api_url}/0/public/Ticker",
-                params=params,
-                headers={"User-Agent": "CryptoTradingBot/1.0"}
-            )
-            data = response.json()
-            # Kraken returns partial results even with errors for some pairs
-            # Only fail completely if no results at all
-            result = data.get("result", {})
-            if data.get("error") and not result:
-                print(f"Kraken batch ticker error: {data['error']}")
-                return {}
-            return result
+        try:
+            async with AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    f"{self.api_url}/0/public/Ticker",
+                    params=params,
+                    headers={"User-Agent": "CryptoTradingBot/1.0"}
+                )
+                data = response.json()
+                # Kraken returns partial results even with errors for some pairs
+                # Only fail completely if no results at all
+                result = data.get("result", {})
+                if data.get("error") and not result:
+                    print(f"Kraken batch ticker error: {data['error']}")
+                    return {}
+                return result
+        except Exception as e:
+            print(f"Kraken batch ticker timeout/error: {e}")
+            return {}
 
 class KrakenMarketService:
     def __init__(self):
         self.api_url = "https://api.kraken.com"
+        self._api_timeout = 10.0
     
     async def get_ticker(self, pairs: list) -> Dict[str, Any]:
         """Get ticker information for specified trading pairs"""
         params = {"pair": ",".join(pairs)}
-        async with AsyncClient() as client:
-            response = await client.get(
-                f"{self.api_url}/0/public/Ticker",
-                params=params,
-                headers={"User-Agent": "CryptoTradingBot/1.0"}
-            )
-            data = response.json()
-            if data.get("error"):
-                raise Exception(f"Kraken API error: {data['error']}")
-            return data.get("result", {})
+        try:
+            async with AsyncClient(timeout=self._api_timeout) as client:
+                response = await client.get(
+                    f"{self.api_url}/0/public/Ticker",
+                    params=params,
+                    headers={"User-Agent": "CryptoTradingBot/1.0"}
+                )
+                data = response.json()
+                if data.get("error"):
+                    raise Exception(f"Kraken API error: {data['error']}")
+                return data.get("result", {})
+        except Exception as e:
+            print(f"Kraken ticker error: {e}")
+            return {}
     
     async def get_ohlc(
         self,
@@ -264,16 +273,20 @@ class KrakenMarketService:
             "pair": pair,
             "interval": interval
         }
-        async with AsyncClient() as client:
-            response = await client.get(
-                f"{self.api_url}/0/public/OHLC",
-                params=params,
-                headers={"User-Agent": "CryptoTradingBot/1.0"}
-            )
-            data = response.json()
-            if data.get("error"):
-                raise Exception(f"Kraken API error: {data['error']}")
-            return data.get("result", {})
+        try:
+            async with AsyncClient(timeout=self._api_timeout) as client:
+                response = await client.get(
+                    f"{self.api_url}/0/public/OHLC",
+                    params=params,
+                    headers={"User-Agent": "CryptoTradingBot/1.0"}
+                )
+                data = response.json()
+                if data.get("error"):
+                    raise Exception(f"Kraken API error: {data['error']}")
+                return data.get("result", {})
+        except Exception as e:
+            print(f"Kraken OHLC error: {e}")
+            return {}
 
 
 # Singleton instance for Kraken Trade Service
