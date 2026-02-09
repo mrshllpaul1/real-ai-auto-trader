@@ -153,13 +153,12 @@ async def _init_phase3_ai(db):
     _services['gem_finder'] = HiddenGemFinder(db)
     _services['ai_trainer'] = AIWeeklyTrainer(db)
     
-    # Ensemble & Optimizer (use Rainbow DQN from Tethys instead of deprecated deep_learning)
-    from services.rainbow_dqn import get_rainbow_agent
-    rainbow_agent = get_rainbow_agent()
-    _services['rainbow_agent'] = rainbow_agent
+    # Ensemble & Optimizer - Rainbow DQN will be lazy-loaded when needed
+    # Don't initialize it at startup to avoid TensorFlow blocking health checks
+    _services['rainbow_agent'] = None  # Will be lazy-loaded
     
-    ensemble_predictor = get_ensemble_predictor(db, market, rainbow_agent)
-    universe_optimizer = get_universe_optimizer(db, market, ensemble_predictor, rainbow_agent)
+    ensemble_predictor = get_ensemble_predictor(db, market, None)  # Pass None, will lazy-load
+    universe_optimizer = get_universe_optimizer(db, market, ensemble_predictor, None)
     _services['ensemble'] = ensemble_predictor
     _services['universe_optimizer'] = universe_optimizer
     
