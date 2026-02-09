@@ -121,7 +121,7 @@ async def startup_event():
 
 async def delayed_init():
     """Initialize services after startup completes"""
-    await asyncio.sleep(2)  # Let health check pass first
+    await asyncio.sleep(5)  # Give health checks more time to pass
     
     from init.services import initialize_all_services
     await initialize_all_services(db)
