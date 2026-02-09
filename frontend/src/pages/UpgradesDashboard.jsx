@@ -41,6 +41,7 @@ const UpgradesDashboard = () => {
     { id: 'whale', label: 'Whale Tracker', icon: Waves },
     { id: 'sentiment', label: 'Sentiment', icon: MessageCircle },
     { id: 'backtest', label: 'Backtest', icon: LineChart },
+    { id: 'abtesting', label: 'A/B Testing', icon: FlaskConical },
     { id: 'arbitrage', label: 'Arbitrage', icon: Zap },
     { id: 'rebalancer', label: 'Rebalancer', icon: PieChart },
     { id: 'trailing', label: 'Trailing Stops', icon: Target },
