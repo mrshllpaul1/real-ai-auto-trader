@@ -21,6 +21,18 @@ def set_dependencies(db, gem_engine):
     _gem_engine = gem_engine
 
 
+def get_gem_engine():
+    """Get or lazy-load the gem prediction engine"""
+    global _gem_engine, _db
+    if _gem_engine is None and _db is not None:
+        try:
+            from services.gem_ml_dl_predictor import get_gem_prediction_engine
+            _gem_engine = get_gem_prediction_engine(_db)
+        except Exception as e:
+            print(f"Failed to initialize gem engine: {e}")
+    return _gem_engine
+
+
 class TrainRequest(BaseModel):
     symbols: Optional[List[str]] = None
 
