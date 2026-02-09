@@ -679,6 +679,8 @@ async def get_all_upgrades_status():
     from services.portfolio_rebalancer import get_rebalancer
     from services.trailing_stop_service import get_trailing_stop_service
     from services.whale_tracking import get_whale_service
+    from services.sentiment_analysis import get_sentiment_service
+    from services.backtest_service import get_backtest_service
     
     status = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -704,5 +706,13 @@ async def get_all_upgrades_status():
     # Whale tracking
     whale = get_whale_service()
     status["features"]["whale_tracking"] = await whale.get_status() if whale else {"is_monitoring": False}
+    
+    # Sentiment Analysis (P1)
+    sentiment = get_sentiment_service()
+    status["features"]["sentiment"] = await sentiment.get_status() if sentiment else {"is_monitoring": False}
+    
+    # Backtest Simulator (P1)
+    backtest = get_backtest_service()
+    status["features"]["backtest"] = {"available": backtest is not None, "strategies": len(backtest.STRATEGIES) if backtest else 0}
     
     return status
