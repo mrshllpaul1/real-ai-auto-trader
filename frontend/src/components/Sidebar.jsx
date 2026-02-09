@@ -5,7 +5,7 @@ import {
   Brain, Newspaper, Zap, Radar, Bot, FlaskConical, BookOpen,
   Menu, X, ChevronLeft, Key, Wallet, TestTube, Cpu, MessageCircle, Layers,
   Target, Gem, Calendar, Shield, Award, Gauge, Briefcase, PieChart, Wand2, GraduationCap, Waves,
-  Users, Activity, Layout
+  Users, Activity, Layout, Sprout, LineChart, DollarSign
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NotificationCenter from './NotificationCenter';
@@ -188,6 +188,11 @@ const Sidebar = () => {
     { path: '/market-maker', icon: Activity, label: 'Market Maker', highlight: true },
     { path: '/options-trading', icon: Target, label: 'Options', highlight: true },
     { path: '/backtest-engine', icon: BarChart3, label: 'Backtest Engine', highlight: true },
+    { path: '/advanced-orders', icon: Layers, label: 'Advanced Orders', highlight: true },
+    { path: '/defi-wallet', icon: Wallet, label: 'DeFi Wallet', highlight: true },
+    { path: '/yield-farming', icon: Sprout, label: 'Yield Farming', highlight: true },
+    { path: '/perpetuals', icon: LineChart, label: 'Perpetuals', highlight: true },
+    { path: '/news-sentiment', icon: Newspaper, label: 'News Sentiment', highlight: true },
     { path: '/triggers', icon: Target, label: 'Event Triggers', highlight: true },
     { path: '/trigger-performance', icon: Award, label: 'Trigger Stats', highlight: true },
     { path: '/adaptive', icon: Gauge, label: 'Adaptive AI', highlight: true },

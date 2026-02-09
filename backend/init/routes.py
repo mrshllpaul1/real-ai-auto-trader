@@ -55,6 +55,10 @@ def register_routes(api_router: APIRouter):
     from routes import dashboard_customization as dashboard_routes
     from routes import options_trading as options_routes
     from routes import backtest_engine as backtest_engine_routes
+    from routes import advanced_orders as advanced_orders_routes
+    from routes import defi_wallet as defi_wallet_routes
+    from routes import yield_farming as yield_farming_routes
+    from routes import perpetual_futures as perpetual_futures_routes
     
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
@@ -136,6 +140,10 @@ def register_routes(api_router: APIRouter):
     api_router.include_router(dashboard_routes.router, tags=["Dashboard Customization"])
     api_router.include_router(options_routes.router, tags=["Options Trading"])
     api_router.include_router(backtest_engine_routes.router, tags=["Backtesting Engine"])
+    api_router.include_router(advanced_orders_routes.router, tags=["Advanced Orders"])
+    api_router.include_router(defi_wallet_routes.router, tags=["DeFi Wallet"])
+    api_router.include_router(yield_farming_routes.router, tags=["Yield Farming"])
+    api_router.include_router(perpetual_futures_routes.router, tags=["Perpetual Futures"])
     
     logger.info("✅ All routes registered")
     
