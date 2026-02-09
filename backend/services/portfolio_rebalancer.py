@@ -240,3 +240,15 @@ class PortfolioRebalancer:
             }
         
         return config
+
+
+# Singleton
+_rebalancer = None
+
+def get_rebalancer(db=None, kraken=None, market=None):
+    """Get or create the rebalancer service"""
+    global _rebalancer
+    if _rebalancer is None and db is not None:
+        _rebalancer = PortfolioRebalancer(db)
+    return _rebalancer
+
