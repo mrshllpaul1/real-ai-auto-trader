@@ -95,7 +95,7 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ---
 
-### Portfolio Risk Analyzer (`/risk-analyzer`) ⭐ NEW
+### Portfolio Risk Analyzer (`/risk-analyzer`)
 - **Unified Risk Score**: 0-100 score combining all position types
 - **Risk Breakdown**: Perpetuals (leverage, liquidation), Yield (IL, protocol risk), Options (Greeks)
 - **Value at Risk (VaR)**: 95% and 99% VaR with Expected Shortfall
@@ -109,6 +109,41 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 - `GET /api/risk-analyzer/var` - Value at Risk calculation
 - `POST /api/risk-analyzer/stress-test` - Run stress scenarios
 - `GET /api/risk-analyzer/correlations` - Asset correlation matrix
+
+---
+
+### Telegram Notifications (`/telegram`) ⭐ P1
+- **Bot Integration**: Connect Telegram bot for real-time alerts
+- **Alert Types**: Trade executions, price alerts, risk warnings, portfolio updates
+- **Price Alerts**: Create alerts when price goes above/below target
+- **Daily Summary**: Automated daily trading summary reports
+- **Notification History**: Track all sent notifications
+
+**API Endpoints:**
+- `GET /api/telegram/status` - Integration status
+- `POST /api/telegram/config` - Save notification preferences
+- `POST /api/telegram/test` - Test connection
+- `POST /api/telegram/price-alert/create` - Create price alert
+- `GET /api/telegram/price-alerts` - List price alerts
+- `POST /api/telegram/notify/daily-summary` - Send daily summary
+
+**Note:** Requires `TELEGRAM_BOT_TOKEN` environment variable
+
+---
+
+### Portfolio Rebalancing (`/rebalance`) ⭐ P1
+- **Current Analysis**: Pie chart showing allocation breakdown
+- **AI Suggestions**: Risk-based automatic allocation recommendations
+- **7 Templates**: Conservative, Balanced, Growth, BTC Maximalist, ETH Focused, DeFi Yield, Alt Season
+- **Drift Detection**: Alert when portfolio drifts from target
+- **Execute Trades**: One-click rebalancing execution
+
+**API Endpoints:**
+- `GET /api/rebalance/analyze` - Current portfolio analysis
+- `POST /api/rebalance/suggest` - AI-powered suggestions
+- `GET /api/rebalance/templates` - Allocation templates
+- `GET /api/rebalance/drift` - Check portfolio drift
+- `POST /api/rebalance/execute` - Execute rebalancing trades
 
 ---
 
