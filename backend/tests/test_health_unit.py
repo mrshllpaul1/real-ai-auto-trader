@@ -53,3 +53,16 @@ def test_health_endpoint_uses_database_status(monkeypatch):
     data = resp.json()
     assert data["status"] == "healthy"
     assert data["database"] == "connected"
+
+
+def test_health_endpoint_returns_503_when_unhealthy(monkeypatch):
+    async def fake_check(_client):
+        return {"status": "unhealthy", "database": "error: ping failed"}
+
+    monkeypatch.setattr(server, "check_database_connection", fake_check)
+    client = TestClient(server.app)
+    resp = client.get("/health")
+    assert resp.status_code == 503
+    data = resp.json()
+    assert data["status"] == "unhealthy"
+    assert "error" in data["database"]

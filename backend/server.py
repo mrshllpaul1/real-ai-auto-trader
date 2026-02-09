@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Response
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi.middleware.cors import CORSMiddleware
@@ -33,9 +33,10 @@ logger = logging.getLogger(__name__)
 
 # Health check endpoints - Must respond fast
 @app.get("/health")
-async def health_check():
+async def health_check(response: Response):
     """Health check endpoint for deployment"""
     db_status = await check_database_connection(client)
+    response.status_code = 200 if db_status["status"] == "healthy" else 503
     return {"status": db_status["status"], "database": db_status["database"], "version": "1.0.0"}
 
 @app.get("/")
@@ -47,9 +48,10 @@ async def root_health():
 api_router = APIRouter(prefix="/api")
 
 @api_router.get("/health")
-async def api_health_check():
+async def api_health_check(response: Response):
     """API health check endpoint"""
     db_status = await check_database_connection(client)
+    response.status_code = 200 if db_status["status"] == "healthy" else 503
     return {"status": db_status["status"], "database": db_status["database"], "version": "1.0.0"}
 
 @api_router.get("/")
