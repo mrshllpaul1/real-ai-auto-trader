@@ -1,8 +1,10 @@
 import os
 import sys
+import numpy as np
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
+from backend.services import rlhf_trainer
 from backend.services.rlhf_trainer import RewardModel
 
 
@@ -53,3 +55,35 @@ def test_learning_rate_decays_with_more_feedback():
     signal = model.get_training_signal()
     assert signal["samples"] == decay_test_iterations + 1
     assert signal["last_update_at"] is not None
+
+
+def test_feature_normalization_and_cached_lr():
+    model = RewardModel()
+    
+    # Feature-specific clamping/normalization
+    assert model._normalize_feature_value("profit_pct", 500) == model._normalize_feature_value("profit_pct", 200)  # clamped to max
+    assert model._normalize_feature_value("hold_time_hours", -10) == 0  # clamped to min 0
+    assert model._normalize_feature_value("entry_timing_score", 1.5) <= 1  # capped at 1
+    assert model._normalize_feature_value("risk_reward_ratio", 0) == 0  # safe default
+    
+    # Invalid scale falls back to default normalization scale
+    rlhf_trainer.FEATURE_RULES["tmp_bad_scale"] = {"scale": 0}
+    try:
+        fallback_val = model._normalize_feature_value("tmp_bad_scale", 5)
+        expected = float(np.tanh(5 / model.normalization_scale))
+        assert fallback_val == expected
+    finally:
+        rlhf_trainer.FEATURE_RULES.pop("tmp_bad_scale", None)
+    
+    # Learning rate caching with stable sample_count
+    lr1 = model._get_effective_learning_rate()
+    cache_count = model._lr_cache_count
+    lr2 = model._get_effective_learning_rate()
+    assert lr1 == lr2
+    assert cache_count == model._lr_cache_count
+    
+    # When sample_count changes, cache updates
+    model.sample_count = 3
+    lr3 = model._get_effective_learning_rate()
+    assert lr3 <= lr1
+    assert model._lr_cache_count == model.sample_count

@@ -19,6 +19,16 @@ MOMENTUM_BETA = 0.9         # Smooth gradients across noisy feedback
 NORMALIZATION_SCALE = 10.0  # Compresses typical 0-10 inputs to ~[-0.8, 0.8] via tanh to prevent gradient spikes
 DECAY_RATE = 0.05           # Per-sample decay for adaptive LR
 
+# Feature-specific normalization/validation rules
+FEATURE_RULES = {
+    "profit_pct": {"min": -200, "max": 200, "scale": 50.0},
+    "hold_time_hours": {"min": 0, "max": 168, "scale": 48.0},
+    "entry_timing_score": {"min": 0, "max": 1, "scale": 1.0},
+    "exit_timing_score": {"min": 0, "max": 1, "scale": 1.0},
+    "risk_reward_ratio": {"min": 0, "max": 10, "scale": 5.0},
+    "position_size_score": {"min": 0, "max": 1, "scale": 1.0},
+}
+
 logger = logging.getLogger(__name__)
 
 
@@ -84,11 +94,12 @@ class RewardModel:
         self.last_update_at = None
         self.normalization_scale = NORMALIZATION_SCALE
         self.decay_rate = DECAY_RATE
+        self._lr_cache_count = -1
         
     def predict_reward(self, trade_features: Dict) -> float:
         """Predict human rating for a trade"""
         normalized_features = {
-            feature: self._normalize_feature_value(trade_features.get(feature, 0))
+            feature: self._normalize_feature_value(feature, trade_features.get(feature, 0))
             for feature in self.feature_weights
         }
         return self._predict_from_normalized_features(normalized_features)
@@ -96,7 +107,7 @@ class RewardModel:
     def update_from_feedback(self, trade_features: Dict, human_rating: float):
         """Update model based on human feedback"""
         normalized_features = {
-            feature: self._normalize_feature_value(value)
+            feature: self._normalize_feature_value(feature, value)
             for feature, value in trade_features.items()
         }
         self.training_data.append((normalized_features, human_rating))
@@ -131,14 +142,32 @@ class RewardModel:
             for feature in self.feature_weights
         }
     
-    def _normalize_feature_value(self, value: float) -> float:
-        """Scale feature values with tanh to keep updates stable without feature-specific ranges"""
-        return float(np.tanh(value / self.normalization_scale))
+    def _normalize_feature_value(self, feature: str, value: float) -> float:
+        """Scale feature values with tanh to keep updates stable; clamps per-feature ranges first"""
+        rules = FEATURE_RULES.get(feature, {})
+        safe_val = 0 if value is None else value
+        if isinstance(safe_val, (float, np.floating)) and np.isnan(safe_val):
+            safe_val = 0
+        min_val = rules.get("min")
+        max_val = rules.get("max")
+        if min_val is not None:
+            safe_val = max(min_val, safe_val)
+        if max_val is not None:
+            safe_val = min(max_val, safe_val)
+        
+        scale = rules.get("scale", self.normalization_scale)
+        if scale <= 0:
+            scale = self.normalization_scale
+        
+        return float(np.tanh(safe_val / scale))
     
     def _get_effective_learning_rate(self) -> float:
         """Use a decaying learning rate with a safety floor to stabilize training"""
+        if self.sample_count == self._lr_cache_count and self.last_effective_lr is not None:
+            return self.last_effective_lr
         decay = 1 / (1 + self.decay_rate * self.sample_count)
         self.last_effective_lr = max(self.min_learning_rate, self.base_learning_rate * decay)
+        self._lr_cache_count = self.sample_count
         return self.last_effective_lr
     
     def _predict_from_normalized_features(self, normalized_features: Dict) -> float:
