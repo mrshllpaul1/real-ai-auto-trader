@@ -1,7 +1,15 @@
 import axios from 'axios';
 
 // Use environment variable for backend URL (required for deployment)
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || window.location.origin;
+// Priority: Runtime config > Vite env > window.location.origin
+const getRuntimeConfig = () => {
+  if (window.__RUNTIME_CONFIG__?.REACT_APP_BACKEND_URL) {
+    return window.__RUNTIME_CONFIG__.REACT_APP_BACKEND_URL;
+  }
+  return null;
+};
+
+const BACKEND_URL = getRuntimeConfig() || import.meta.env.VITE_BACKEND_URL || window.location.origin;
 const API = `${BACKEND_URL}/api`;
 
 console.log('[API Service] Using backend URL:', BACKEND_URL);
