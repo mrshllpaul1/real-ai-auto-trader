@@ -416,6 +416,8 @@ async def get_kraken_portfolio():
                             price = float(data['c'][0]) if data['c'] else 0
                             kraken_prices[pair] = price
                     logger.info(f"Fetched {len(kraken_prices)} Kraken prices")
+                else:
+                    logger.warning("Kraken returned no ticker data; using cached prices if available")
             except Exception as e:
                 logger.error(f"Error fetching Kraken prices: {e}")
                 return _use_cached_portfolio("price timeout/error")
