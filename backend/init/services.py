@@ -197,7 +197,7 @@ async def _init_phase4_automation(db):
     from services.automated_trader import AutomatedWeeklyTrader
     from services.growth_engine import AggressiveGrowthEngine
     from services.stop_loss_automation import get_stop_loss_automation
-    from services.gem_ml_dl_predictor import get_gem_prediction_engine
+    # gem_ml_dl_predictor deferred to avoid TensorFlow loading at startup
     from services.background_tasks import get_task_manager
     from services.paper_trading_simulator import get_paper_trader
     from services.adaptive_strategy import get_adaptive_strategy
@@ -243,10 +243,8 @@ async def _init_phase4_automation(db):
     )
     _services['stop_loss'] = stop_loss
     
-    # ML/DL Gem Predictor
-    gem_ml_dl = get_gem_prediction_engine(db)
-    _services['gem_ml_dl'] = gem_ml_dl
-    automated_trader.gem_ml_dl = gem_ml_dl
+    # ML/DL Gem Predictor - DEFERRED to avoid TensorFlow loading
+    _services['gem_ml_dl'] = None  # Will be lazy-loaded when needed
     
     # Paper Trader
     paper_trader = get_paper_trader(db, enhanced_ai, regime)
