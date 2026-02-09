@@ -161,7 +161,7 @@ const ModelPerformanceDashboard = () => {
               Refresh
             </Button>
             <Button 
-              onClick={() => handleTrain('intelligence')}
+              onClick={() => handleTrain('all')}
               disabled={training}
               className="bg-gradient-to-r from-cyan-500 to-blue-500"
             >
