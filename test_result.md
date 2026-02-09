@@ -529,6 +529,18 @@ frontend:
         - agent: "testing"
         - comment: "✅ WORKING PERFECTLY: Error handling excellent - 404 pages redirect to home, no console errors detected, form validation working, loading states proper. Performance outstanding - 2.61s page load time (Good), smooth transitions, no infinite loading spinners, no black screens. All error scenarios handled gracefully."
 
+  - task: "Toast Notification System"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/utils/toast.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "✅ IMPLEMENTED: Enhanced toast notification system across application. AI Command Center (Tethys start/stop with loading→success toasts, Train All Models with lightweight mode info), Event Triggers (Check Now, Create Trigger, Toggle/Delete with specific messages), Portfolio Dashboard (refresh and snapshot creation toasts), Settings (API credentials and risk settings save confirmations). Features: Loading spinners, success/error states, descriptive messages, proper duration, top-right positioning, smooth animations. NEEDS COMPREHENSIVE TESTING."
+
 ### Technical Issues Found:
 1. **TensorFlow Import Error**: AttributeError in rainbow_dqn.py - 'NoneType' object has no attribute 'Layer'
 2. **Market Data Parameter Requirements**: GET /api/market/prices requires coin_ids parameter
