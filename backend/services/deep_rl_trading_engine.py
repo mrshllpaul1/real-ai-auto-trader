@@ -1008,7 +1008,14 @@ class DeepRLTradingEngine:
         logger.info("✅ Deep RL Trading Engine initialized")
     
     async def get_trading_signal(self, symbol: str, market_data: Dict) -> Dict[str, Any]:
-        """Generate comprehensive trading signal"""
+        """Generate comprehensive trading signal with caching"""
+        
+        # Check signal cache first (1-minute TTL for trading signals)
+        cache_key = f"trading_signal:{symbol}:{datetime.utcnow().strftime('%Y%m%d%H%M')}"
+        cached_signal = ml_cache.get(cache_key)
+        if cached_signal is not None:
+            logger.debug(f"Cache hit for trading signal: {symbol}")
+            return cached_signal
         
         # 1. Time series prediction
         price_prediction = {"direction": "neutral", "confidence": 0.5}
@@ -1034,7 +1041,7 @@ class DeepRLTradingEngine:
         # Combine signals
         signal_strength = (q_values[action] - np.mean(q_values)) / (np.std(q_values) + 1e-8)
         
-        return {
+        result = {
             "symbol": symbol,
             "timestamp": datetime.utcnow().isoformat(),
             "action": action_map[action],
@@ -1047,6 +1054,12 @@ class DeepRLTradingEngine:
             "live_approved": live_approved,
             "execution_ready": live_approved and action in [0, 1, 3, 4]  # Not hold
         }
+        
+        # Cache the signal (1-minute TTL for fresh signals)
+        ml_cache.set(cache_key, result, ttl=60)
+        logger.debug(f"Cached trading signal: {symbol}")
+        
+        return result
     
     def _build_state(self, market_data: Dict) -> np.ndarray:
         """Build state vector from market data"""
