@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../services/api';
-import { toast } from 'sonner';
+import toast from '../utils/toast';
 
 const COLORS = ['#9D00FF', '#00FF94', '#FFB800', '#FF0055', '#007AFF', '#FF6B00', '#00D4FF', '#FF00FF'];
 
@@ -42,13 +42,20 @@ const PortfolioDashboard = () => {
       setHistory(histRes.data);
       setTopPerformers(topRes.data?.top_performers || []);
       setWorstPerformers(worstRes.data?.worst_performers || []);
+      
+      // Show success toast only if manually refreshed (not on initial load or interval)
+      if (!loading && sumRes.data) {
+        toast.portfolio.updated();
+      }
     } catch (error) {
       console.error('Error loading data:', error);
-      toast.error('Failed to load portfolio data');
+      toast.error('Failed to load portfolio data', {
+        description: 'Please check your connection and try again',
+      });
     } finally {
       setLoading(false);
     }
-  }, [selectedRange]);
+  }, [selectedRange, loading]);
 
   useEffect(() => {
     loadData();
@@ -57,12 +64,20 @@ const PortfolioDashboard = () => {
   }, [loadData]);
 
   const handleCreateSnapshot = async () => {
+    const loadingToast = toast.loading('Creating portfolio snapshot...');
     try {
       await api.post('/portfolio/visualization/snapshot');
-      toast.success('Portfolio snapshot created');
+      toast.dismiss(loadingToast);
+      toast.success('Portfolio snapshot saved', {
+        description: 'Snapshot created successfully',
+        duration: 4000,
+      });
       loadData();
     } catch (error) {
-      toast.error('Failed to create snapshot');
+      toast.dismiss(loadingToast);
+      toast.error('Failed to create snapshot', {
+        description: error.response?.data?.detail || 'Please try again',
+      });
     }
   };
 
