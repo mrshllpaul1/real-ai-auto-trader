@@ -240,13 +240,9 @@ class NewsMarketCorrelationAnalyzer:
                 p_value = 0.0001
             else:
                 denominator = 1 - correlation**2
-                if denominator <= 0:
-                    t_stat = 0
-                    p_value = 1.0
-                else:
-                    t_stat = correlation * np.sqrt((n - 2) / denominator)
-                    # Approximate p-value (simplified)
-                    p_value = 2 * (1 - self._t_cdf(abs(t_stat), n - 2))
+                t_stat = correlation * np.sqrt((n - 2) / denominator)
+                # Approximate p-value (simplified)
+                p_value = 2 * (1 - self._t_cdf(abs(t_stat), n - 2))
             
             return {
                 "correlation": round(float(correlation), 3) if not np.isnan(correlation) else 0.0,

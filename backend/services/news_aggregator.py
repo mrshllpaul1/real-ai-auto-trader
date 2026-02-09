@@ -187,8 +187,8 @@ class NewsAggregator:
         return (positive - negative) / total
     
     def _generate_news_id(self, text: str) -> str:
-        """Generate unique hash ID for news item"""
-        return hashlib.md5(text.encode()).hexdigest()
+        """Generate unique hash ID for news item using SHA-256"""
+        return hashlib.sha256(text.encode()).hexdigest()
     
     def _parse_timestamp(self, timestamp_str: Optional[str]) -> datetime:
         """Parse various timestamp formats to datetime"""
