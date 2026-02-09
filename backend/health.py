@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Dict
 
 
@@ -16,4 +17,5 @@ async def check_database_connection(db_client: Any) -> Dict[str, Any]:
         await db_client.admin.command("ping")
         return {"status": "healthy", "database": "connected"}
     except Exception as exc:
-        return {"status": "unhealthy", "database": f"error: {exc}"}
+        logging.getLogger(__name__).warning("Database ping failed: %s", exc)
+        return {"status": "unhealthy", "database": "error: database unavailable"}

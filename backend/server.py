@@ -17,11 +17,14 @@ db_name = os.environ.get('DB_NAME', 'crypto_trading_db')
 client = AsyncIOMotorClient(mongo_url)
 db = client[db_name]
 
+# API version constant
+API_VERSION = "1.0.0"
+
 # Create the main app
 app = FastAPI(
     title="AI Crypto Trading API",
     description="Real money AI-powered cryptocurrency auto trading platform",
-    version="1.0.0"
+    version=API_VERSION
 )
 
 # Configure logging
@@ -37,7 +40,7 @@ async def health_check(response: Response):
     """Health check endpoint for deployment"""
     db_status = await check_database_connection(client)
     response.status_code = 200 if db_status["status"] == "healthy" else 503
-    return {"status": db_status["status"], "database": db_status["database"], "version": "1.0.0"}
+    return {"status": db_status["status"], "database": db_status["database"], "version": API_VERSION}
 
 @app.get("/")
 async def root_health():
@@ -52,7 +55,7 @@ async def api_health_check(response: Response):
     """API health check endpoint"""
     db_status = await check_database_connection(client)
     response.status_code = 200 if db_status["status"] == "healthy" else 503
-    return {"status": db_status["status"], "database": db_status["database"], "version": "1.0.0"}
+    return {"status": db_status["status"], "database": db_status["database"], "version": API_VERSION}
 
 @api_router.get("/")
 async def root():
