@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 import time
 import logging
@@ -504,7 +504,7 @@ async def get_kraken_portfolio():
             "holdings": holdings,
             "total_value_usd": round(total_value_usd, 2),
             "holdings_count": len(holdings),
-            "last_updated": datetime.utcnow().isoformat(),
+            "last_updated": datetime.now(timezone.utc).isoformat(),
             "stale": using_cached_prices,
         }
         
