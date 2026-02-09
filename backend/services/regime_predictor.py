@@ -113,11 +113,11 @@ class RegimePredictionEngine:
         # Initialize ML models
         self._init_ml_models()
         
-        # Initialize DL models if TensorFlow available
-        if TF_AVAILABLE:
-            self._init_dl_models()
+        # Initialize DL models lazily - don't load TensorFlow at startup
+        # They will be initialized when first needed
+        self._dl_initialized = False
         
-        # Try to load saved models
+        # Try to load saved ML models (not DL)
         self._load_saved_models()
     
     def _load_saved_models(self):
