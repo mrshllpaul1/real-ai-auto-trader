@@ -156,6 +156,7 @@ CORS_ORIGINS=*
 
 ### 1. Frontend
 - ✅ Fixed start script: Changed from `vite preview` to `vite`
+- ✅ Fixed Vite allowed hosts: Added `allowedHosts: ['all']` to allow deployment hosts
 - ✅ Proper environment variable usage
 
 ### 2. Backend
