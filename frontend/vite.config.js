@@ -21,6 +21,6 @@ export default defineConfig({
   preview: {
     port: 3000,
     host: '0.0.0.0',
-    allowedHosts: ['smarttrade-ai-115.preview.emergentagent.com', 'rainbow-trader.preview.emergentagent.com', '.emergentagent.com', '.sslip.io'],
+    allowedHosts: 'all', // Allow all hosts for deployment
   },
 });
