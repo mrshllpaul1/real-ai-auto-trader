@@ -66,6 +66,16 @@ class _PlaceholderLayer(_LazyLayerBase):
         pass
 
 
+# Create a placeholder module for layers
+class _PlaceholderLayers:
+    """Placeholder for keras.layers before TF loads"""
+    Layer = _PlaceholderLayer
+
+# Use placeholder until TF is loaded
+if layers is None:
+    layers = _PlaceholderLayers()
+
+
 # =============================================================================
 # NOISY LINEAR LAYER (From previous implementation)
 # =============================================================================
