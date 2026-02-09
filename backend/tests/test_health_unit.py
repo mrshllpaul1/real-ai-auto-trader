@@ -1,0 +1,91 @@
+import os
+import sys
+
+import pytest
+from fastapi.testclient import TestClient
+
+# Ensure backend modules can be imported when running from repo root
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from health import check_database_connection
+import server
+
+
+class MockDatabaseAdmin:
+    def __init__(self, should_raise: bool = False, expected_command: str = "ping"):
+        self.should_raise = should_raise
+        self.expected_command = expected_command
+
+    async def command(self, name: str):
+        if self.expected_command:
+            assert name == self.expected_command
+        if self.should_raise:
+            raise RuntimeError("ping failed")
+        return {"ok": 1}
+
+
+class MockDatabaseClient:
+    def __init__(self, should_raise: bool = False):
+        self.admin = MockDatabaseAdmin(should_raise=should_raise)
+
+
+@pytest.mark.asyncio
+async def test_check_database_connection_success():
+    healthy_client = MockDatabaseClient()
+    result = await check_database_connection(healthy_client)
+    assert result["status"] == "healthy"
+    assert result["database"] == "connected"
+
+
+@pytest.mark.asyncio
+async def test_check_database_connection_failure():
+    failing_client = MockDatabaseClient(should_raise=True)
+    result = await check_database_connection(failing_client)
+    assert result["status"] == "unhealthy"
+    assert "error" in result["database"]
+
+
+@pytest.mark.asyncio
+async def test_check_database_connection_without_client():
+    result = await check_database_connection(None)
+    assert result["status"] == "unhealthy"
+    assert "no database client" in result["database"]
+
+
+def test_health_endpoint_uses_database_status(monkeypatch):
+    async def fake_check(_client):
+        return {"status": "healthy", "database": "connected"}
+
+    monkeypatch.setattr(server, "check_database_connection", fake_check)
+    client = TestClient(server.app)
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "healthy"
+    assert data["database"] == "connected"
+
+
+def test_health_endpoint_returns_503_when_unhealthy(monkeypatch):
+    async def fake_check(_client):
+        return {"status": "unhealthy", "database": "error: ping failed"}
+
+    monkeypatch.setattr(server, "check_database_connection", fake_check)
+    client = TestClient(server.app)
+    resp = client.get("/health")
+    assert resp.status_code == 503
+    data = resp.json()
+    assert data["status"] == "unhealthy"
+    assert "error" in data["database"]
+
+
+@pytest.mark.parametrize("endpoint", ["/health", "/api/health"])
+def test_health_endpoints_handle_unknown_status(monkeypatch, caplog, endpoint):
+    async def fake_check(_client):
+        return {"status": "weird", "database": "n/a"}
+
+    monkeypatch.setattr(server, "check_database_connection", fake_check)
+    client = TestClient(server.app)
+    with caplog.at_level("WARNING"):
+        resp = client.get(endpoint)
+    assert resp.status_code == 503
+    assert "unexpected health status" in caplog.text.lower()

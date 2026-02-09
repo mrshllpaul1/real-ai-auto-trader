@@ -1,10 +1,11 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Response
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 import os
 import logging
+from health import check_database_connection
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
@@ -16,11 +17,14 @@ db_name = os.environ.get('DB_NAME', 'crypto_trading_db')
 client = AsyncIOMotorClient(mongo_url)
 db = client[db_name]
 
+# API version constant
+API_VERSION = "1.0.0"
+
 # Create the main app
 app = FastAPI(
     title="AI Crypto Trading API",
     description="Real money AI-powered cryptocurrency auto trading platform",
-    version="1.0.0"
+    version=API_VERSION
 )
 
 # Configure logging
@@ -32,9 +36,11 @@ logger = logging.getLogger(__name__)
 
 # Health check endpoints - Must respond fast
 @app.get("/health")
-async def health_check():
+async def health_check(response: Response):
     """Health check endpoint for deployment"""
-    return {"status": "healthy", "version": "1.0.0"}
+    db_status = await check_database_connection(client)
+    _apply_health_status(response, db_status["status"])
+    return {"status": db_status["status"], "database": db_status["database"], "version": API_VERSION}
 
 @app.get("/")
 async def root_health():
@@ -45,14 +51,11 @@ async def root_health():
 api_router = APIRouter(prefix="/api")
 
 @api_router.get("/health")
-async def api_health_check():
+async def api_health_check(response: Response):
     """API health check endpoint"""
-    try:
-        await client.admin.command('ping')
-        db_status = "connected"
-    except Exception as e:
-        db_status = f"error: {str(e)}"
-    return {"status": "healthy", "database": db_status, "version": "1.0.0"}
+    db_status = await check_database_connection(client)
+    _apply_health_status(response, db_status["status"])
+    return {"status": db_status["status"], "database": db_status["database"], "version": API_VERSION}
 
 @api_router.get("/")
 async def root():
@@ -111,6 +114,13 @@ app.add_middleware(
 
 # Global service references (initialized lazily)
 _services_initialized = False
+
+
+def _apply_health_status(response: Response, status: str):
+    """Set HTTP status code based on health status string (expected: 'healthy' or 'unhealthy')."""
+    if status not in {"healthy", "unhealthy"}:
+        logger.warning('Unexpected health status value: %s (expected "healthy" or "unhealthy")', status)
+    response.status_code = 200 if status == "healthy" else 503
 
 
 async def initialize_services():
