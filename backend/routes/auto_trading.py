@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Any
 
 router = APIRouter()
 
@@ -134,6 +134,82 @@ async def get_auto_trading_status():
         return {
             'initialized': True,
             **status
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/risk-status")
+async def get_risk_status(db = Depends(get_database)):
+    """Get comprehensive risk management status"""
+    try:
+        from services.risk_manager import RiskManager
+        risk_manager = RiskManager(db)
+        
+        status = risk_manager.get_comprehensive_status()
+        
+        return {
+            'success': True,
+            'risk_status': status
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/emergency-stop")
+async def trigger_emergency_stop(
+    reason: str,
+    db = Depends(get_database)
+):
+    """Trigger emergency stop - immediately halts all trading"""
+    try:
+        from services.risk_manager import RiskManager
+        risk_manager = RiskManager(db)
+        
+        risk_manager.trigger_emergency_stop(reason)
+        
+        # Also stop the scheduler if running
+        global scheduler
+        if scheduler and scheduler.is_running:
+            await scheduler.stop()
+        
+        return {
+            'success': True,
+            'message': 'Emergency stop activated',
+            'reason': reason
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/reset-emergency-stop")
+async def reset_emergency_stop(db = Depends(get_database)):
+    """Reset emergency stop (requires manual confirmation)"""
+    try:
+        from services.risk_manager import RiskManager
+        risk_manager = RiskManager(db)
+        
+        risk_manager.reset_emergency_stop()
+        
+        return {
+            'success': True,
+            'message': 'Emergency stop reset - trading can resume'
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/assess-trade-risk")
+async def assess_trade_risk(
+    trade_info: Dict[str, Any],
+    db = Depends(get_database)
+):
+    """Assess risk for a potential trade"""
+    try:
+        from services.risk_manager import RiskManager
+        risk_manager = RiskManager(db)
+        
+        assessment = await risk_manager.assess_trade_risk(trade_info)
+        
+        return {
+            'success': True,
+            'assessment': assessment
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
