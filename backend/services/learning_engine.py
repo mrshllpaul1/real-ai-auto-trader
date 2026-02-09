@@ -286,3 +286,61 @@ class AILearningEngine:
                 state = json.load(f)
                 self.performance_weight = state.get('performance_weight', 0.7)
                 self.accuracy_weight = state.get('accuracy_weight', 0.3)
+
+    async def continuous_learning_update(self):
+        """
+        Perform a continuous learning update cycle.
+        Analyzes recent outcomes and updates weights based on performance.
+        """
+        # Load existing state
+        await self.load_learning_state()
+        
+        # Get recent learning outcomes for analysis
+        recent_outcomes = await self.db.learning_outcomes.find(
+            {},
+            {"_id": 0, "was_correct": 1, "profit_loss": 1, "performance_score": 1}
+        ).sort("recorded_at", -1).limit(100).to_list(100)
+        
+        if not recent_outcomes:
+            return {
+                "status": "no_data",
+                "message": "No learning data available yet. Execute trades to generate learning samples."
+            }
+        
+        # Calculate performance metrics
+        total = len(recent_outcomes)
+        correct = sum(1 for o in recent_outcomes if o.get('was_correct', False))
+        total_profit = sum(o.get('profit_loss', 0) for o in recent_outcomes)
+        avg_performance = sum(o.get('performance_score', 0) for o in recent_outcomes) / total if total > 0 else 0
+        
+        # Adjust weights based on recent performance
+        if avg_performance > 0.2:
+            # Strategies are performing well, increase performance weight
+            self.performance_weight = min(0.9, self.performance_weight + 0.05)
+            self.accuracy_weight = 1 - self.performance_weight
+        elif avg_performance < -0.2:
+            # Performance is poor, shift focus to accuracy
+            self.accuracy_weight = min(0.5, self.accuracy_weight + 0.05)
+            self.performance_weight = 1 - self.accuracy_weight
+        
+        # Save updated state
+        await self.save_learning_state()
+        
+        # Update all strategy metrics
+        strategy_ids = await self.db.learning_outcomes.distinct("strategy_id")
+        for strategy_id in strategy_ids[:50]:  # Limit to 50 to prevent timeout
+            await self._update_strategy_learning_metrics(strategy_id)
+        
+        return {
+            "status": "success",
+            "samples_analyzed": total,
+            "accuracy": (correct / total * 100) if total > 0 else 0,
+            "total_profit_loss": total_profit,
+            "avg_performance_score": avg_performance,
+            "updated_weights": {
+                "performance_weight": self.performance_weight,
+                "accuracy_weight": self.accuracy_weight
+            },
+            "strategies_updated": len(strategy_ids[:50]),
+            "updated_at": datetime.now().isoformat()
+        }
