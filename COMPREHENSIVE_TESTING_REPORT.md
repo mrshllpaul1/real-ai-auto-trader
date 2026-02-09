@@ -372,8 +372,8 @@ nginx-code-proxy RUNNING   pid 45
 - All environment variables set ✅
 
 **URL:**
-- Deployment: https://deploy-rescue-43.preview.emergentagent.com ✅
-- Backend API: https://deploy-rescue-43.preview.emergentagent.com/api ✅
+- Deployment: https://cryptopredict-17.preview.emergentagent.com ✅
+- Backend API: https://cryptopredict-17.preview.emergentagent.com/api ✅
 
 ---
 
