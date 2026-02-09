@@ -3,6 +3,16 @@ from typing import Dict, Any, List
 import httpx
 from datetime import datetime, timedelta
 import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Fallback prices when API is unavailable
+FALLBACK_PRICES = {
+    'bitcoin': {'price_usd': 97000, 'price_change_24h': 0, 'market_cap': 1900000000000, 'volume_24h': 50000000000},
+    'ethereum': {'price_usd': 2700, 'price_change_24h': 0, 'market_cap': 320000000000, 'volume_24h': 20000000000},
+    'solana': {'price_usd': 200, 'price_change_24h': 0, 'market_cap': 90000000000, 'volume_24h': 5000000000},
+}
 
 class MarketDataService:
     def __init__(self):
@@ -10,10 +20,12 @@ class MarketDataService:
         # In-memory cache to reduce API calls and improve performance
         self._cache = {}
         self._cache_ttl = {
-            'price': 60,           # 1 minute for prices
+            'price': 120,          # 2 minutes for prices (increased to reduce rate limits)
             'historical': 600,     # 10 minutes for historical data
             'trending': 300,       # 5 minutes for trending
         }
+        self._api_timeout = 5.0  # 5 second timeout for API calls
+        self._rate_limited_until = None
     
     def _get_cached(self, key: str, cache_type: str = 'price') -> Any:
         """Get item from cache if not expired"""
@@ -29,26 +41,67 @@ class MarketDataService:
         """Set item in cache"""
         self._cache[key] = (value, datetime.now())
     
+    def _is_rate_limited(self) -> bool:
+        """Check if we're currently rate limited"""
+        if self._rate_limited_until and datetime.now() < self._rate_limited_until:
+            return True
+        return False
+    
+    def _set_rate_limited(self, seconds: int = 60):
+        """Set rate limit cooldown"""
+        self._rate_limited_until = datetime.now() + timedelta(seconds=seconds)
+        logger.warning(f"CoinGecko rate limited, cooling down for {seconds}s")
+    
+    def _get_fallback_prices(self, coin_ids: List[str]) -> Dict[str, Any]:
+        """Get fallback prices when API is unavailable"""
+        result = {}
+        for coin_id in coin_ids:
+            if coin_id in FALLBACK_PRICES:
+                result[coin_id] = {
+                    **FALLBACK_PRICES[coin_id],
+                    'last_updated': datetime.now().isoformat(),
+                    'is_fallback': True
+                }
+        return result
+    
     async def get_coin_price(self, coin_ids: List[str]) -> Dict[str, Any]:
-        """Get current price for cryptocurrencies with caching"""
+        """Get current price for cryptocurrencies with caching and timeout"""
         try:
             cache_key = f"price_{','.join(sorted(coin_ids))}"
             cached = self._get_cached(cache_key, 'price')
             if cached:
                 return cached
             
-            # Run synchronous CoinGecko call in thread pool
+            # If rate limited, return fallback
+            if self._is_rate_limited():
+                return self._get_fallback_prices(coin_ids)
+            
+            # Run synchronous CoinGecko call in thread pool with timeout
             loop = asyncio.get_event_loop()
-            data = await loop.run_in_executor(
-                None,
-                lambda: self.cg.get_price(
-                    ids=coin_ids,
-                    vs_currencies='usd',
-                    include_24hr_change=True,
-                    include_market_cap=True,
-                    include_24hr_vol=True
+            try:
+                data = await asyncio.wait_for(
+                    loop.run_in_executor(
+                        None,
+                        lambda: self.cg.get_price(
+                            ids=coin_ids,
+                            vs_currencies='usd',
+                            include_24hr_change=True,
+                            include_market_cap=True,
+                            include_24hr_vol=True
+                        )
+                    ),
+                    timeout=self._api_timeout
                 )
-            )
+            except asyncio.TimeoutError:
+                logger.warning(f"CoinGecko API timeout for {coin_ids}")
+                return self._get_fallback_prices(coin_ids)
+            
+            # Check for rate limit error in response
+            if isinstance(data, dict) and 'status' in data:
+                error_code = data.get('status', {}).get('error_code')
+                if error_code == 429:
+                    self._set_rate_limited(60)
+                    return self._get_fallback_prices(coin_ids)
             
             result = {}
             for coin_id in coin_ids:
@@ -64,9 +117,12 @@ class MarketDataService:
             self._set_cache(cache_key, result)
             return result
         except Exception as e:
-            print(f"Market data error: {str(e)}")
-            # Return empty dict instead of raising to prevent chart failures
-            return {}
+            error_str = str(e)
+            if '429' in error_str or 'Rate Limit' in error_str:
+                self._set_rate_limited(60)
+            logger.warning(f"Market data error: {error_str}")
+            # Return fallback data instead of empty dict
+            return self._get_fallback_prices(coin_ids)
     
     async def get_historical_data(self, coin_id: str, days: int = 30) -> Dict[str, Any]:
         """Get historical price data with caching and fallback"""
