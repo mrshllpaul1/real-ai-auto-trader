@@ -341,8 +341,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Market Data Endpoints Parameter Fix"
-    - "TensorFlow ML Integration Fix"
+    - "Toast Notification System"
   stuck_tasks:
     - "Tethys Execute Trade Endpoint"
     - "Market Data Endpoints"
