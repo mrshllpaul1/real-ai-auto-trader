@@ -20,9 +20,18 @@ import logging
 import numpy as np
 import os
 import json
+import hashlib
 from typing import Dict, List, Any, Optional, Tuple
 from collections import deque
 from datetime import datetime
+
+# Import ML caching
+try:
+    from services.ml_cache import ml_cache, cache_sequences
+    CACHE_AVAILABLE = True
+except ImportError:
+    CACHE_AVAILABLE = False
+    ml_cache = None
 
 logger = logging.getLogger(__name__)
 
