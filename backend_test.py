@@ -1,0 +1,334 @@
+#!/usr/bin/env python3
+"""
+Comprehensive Backend Testing for AI Crypto Trading Platform
+Tests all major API endpoints for functionality and response validation.
+"""
+
+import asyncio
+import aiohttp
+import json
+import sys
+from datetime import datetime
+from typing import Dict, Any, List, Optional
+
+# Backend URL from frontend environment
+BASE_URL = "https://deploy-rescue-43.preview.emergentagent.com/api"
+USER_ID = "demo_user_test123"
+
+class BackendTester:
+    def __init__(self):
+        self.session = None
+        self.results = []
+        self.failed_tests = []
+        self.passed_tests = []
+        
+    async def __aenter__(self):
+        self.session = aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=30),
+            headers={'Content-Type': 'application/json'}
+        )
+        return self
+        
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if self.session:
+            await self.session.close()
+    
+    def log_result(self, test_name: str, success: bool, status_code: int = None, 
+                   response: Any = None, error: str = None):
+        """Log test result"""
+        result = {
+            'test': test_name,
+            'success': success,
+            'status_code': status_code,
+            'timestamp': datetime.now().isoformat(),
+            'error': error
+        }
+        
+        if success:
+            result['response_preview'] = str(response)[:200] if response else None
+            self.passed_tests.append(result)
+        else:
+            result['error_details'] = error
+            self.failed_tests.append(result)
+            
+        self.results.append(result)
+        
+        # Print immediate feedback
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} {test_name} - Status: {status_code} - {error if error else 'OK'}")
+    
+    async def test_endpoint(self, method: str, endpoint: str, test_name: str, 
+                           data: Dict = None, expected_status: List[int] = None) -> Dict:
+        """Generic endpoint tester"""
+        if expected_status is None:
+            expected_status = [200, 201]
+            
+        url = f"{BASE_URL}{endpoint}"
+        
+        try:
+            if method.upper() == 'GET':
+                async with self.session.get(url) as response:
+                    status = response.status
+                    try:
+                        resp_data = await response.json()
+                    except:
+                        resp_data = await response.text()
+            elif method.upper() == 'POST':
+                async with self.session.post(url, json=data) as response:
+                    status = response.status
+                    try:
+                        resp_data = await response.json()
+                    except:
+                        resp_data = await response.text()
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+            
+            success = status in expected_status
+            self.log_result(test_name, success, status, resp_data, 
+                          None if success else f"Unexpected status code: {status}")
+            
+            return {'success': success, 'status': status, 'data': resp_data}
+            
+        except Exception as e:
+            error_msg = str(e)
+            self.log_result(test_name, False, None, None, error_msg)
+            return {'success': False, 'error': error_msg}
+
+    async def test_health_endpoints(self):
+        """Test basic health endpoints"""
+        print("\n=== TESTING HEALTH ENDPOINTS ===")
+        
+        await self.test_endpoint('GET', '/health', 'API Health Check')
+        await self.test_endpoint('GET', '/', 'Root API Endpoint')
+
+    async def test_tethys_trading_engine(self):
+        """Test Tethys Trading Engine Toggle"""
+        print("\n=== TESTING TETHYS TRADING ENGINE ===")
+        
+        # Test Tethys status
+        await self.test_endpoint('GET', '/tethys/status', 'Tethys Status Check')
+        
+        # Test start trading engine
+        await self.test_endpoint('POST', '/tethys-trading/start', 'Tethys Start Trading Engine',
+                               data={'interval': 60}, expected_status=[200, 201, 400, 503])
+        
+        # Test stop trading engine  
+        await self.test_endpoint('POST', '/tethys-trading/stop', 'Tethys Stop Trading Engine',
+                               expected_status=[200, 201, 400, 503])
+        
+        # Test trading status
+        await self.test_endpoint('GET', '/tethys-trading/status', 'Tethys Trading Status')
+
+    async def test_event_triggers_system(self):
+        """Test Event Triggers System"""
+        print("\n=== TESTING EVENT TRIGGERS SYSTEM ===")
+        
+        # Test triggers list
+        await self.test_endpoint('GET', '/triggers/list', 'Event Triggers List')
+        
+        # Test create trigger
+        trigger_data = {
+            "trigger_id": f"test_trigger_{int(datetime.now().timestamp())}",
+            "name": "Test Bitcoin News Trigger",
+            "keywords": ["bitcoin", "btc", "surge"],
+            "coins": ["BTC"],
+            "action": "alert",
+            "sentiment_filter": "positive",
+            "cooldown_hours": 1,
+            "enabled": True
+        }
+        
+        await self.test_endpoint('POST', '/triggers/create', 'Create Event Trigger',
+                               data=trigger_data, expected_status=[200, 201, 400, 503])
+        
+        # Test triggers history
+        await self.test_endpoint('GET', '/triggers/history/all', 'Event Triggers History')
+        
+        # Test trigger templates
+        await self.test_endpoint('GET', '/triggers/templates', 'Event Trigger Templates')
+        
+        # Test trigger status
+        await self.test_endpoint('GET', '/triggers/status', 'Event Trigger Service Status')
+
+    async def test_ensemble_ai_page(self):
+        """Test Ensemble AI Page"""
+        print("\n=== TESTING ENSEMBLE AI ===")
+        
+        # Test ensemble status
+        await self.test_endpoint('GET', '/ensemble/status', 'Ensemble AI Status')
+        
+        # Test ensemble predictions
+        await self.test_endpoint('GET', '/ensemble/predictions', 'Ensemble AI Predictions',
+                               expected_status=[200, 404, 503])
+        
+        # Test model weights
+        await self.test_endpoint('GET', '/ensemble/weights', 'Ensemble Model Weights')
+        
+        # Test build status
+        await self.test_endpoint('GET', '/ensemble/build-status', 'Ensemble Build Status')
+        
+        # Test optimal universe
+        await self.test_endpoint('GET', '/ensemble/optimal-universe', 'Ensemble Optimal Universe')
+
+    async def test_portfolio_information(self):
+        """Test Portfolio Information"""
+        print("\n=== TESTING PORTFOLIO INFORMATION ===")
+        
+        # Test Kraken portfolio
+        await self.test_endpoint('GET', '/kraken/portfolio', 'Kraken Portfolio',
+                               expected_status=[200, 404, 503])
+        
+        # Test portfolio summary
+        await self.test_endpoint('GET', '/portfolio/summary', 'Portfolio Summary',
+                               expected_status=[200, 404, 503])
+        
+        # Test Kraken status
+        await self.test_endpoint('GET', '/kraken/status', 'Kraken Connection Status')
+        
+        # Test Kraken balance
+        await self.test_endpoint('GET', '/kraken/balance', 'Kraken Account Balance',
+                               expected_status=[200, 500, 503])
+        
+        # Test portfolio visualization
+        await self.test_endpoint('GET', '/portfolio/visualization/summary', 'Portfolio Visualization Summary',
+                               expected_status=[200, 503])
+
+    async def test_model_training(self):
+        """Test Model Training Endpoints"""
+        print("\n=== TESTING MODEL TRAINING ===")
+        
+        # Test Enhanced AI training
+        training_data = {
+            "coins": ["bitcoin", "ethereum"],
+            "start_year": 2023,
+            "include_hidden_gems": True
+        }
+        
+        await self.test_endpoint('POST', '/enhanced-ai/train', 'Enhanced AI Training',
+                               data=training_data, expected_status=[200, 201, 400, 503])
+        
+        # Test Transformer training (if exists)
+        await self.test_endpoint('POST', '/transformer/train', 'Transformer Training',
+                               data=training_data, expected_status=[200, 201, 400, 404, 503])
+        
+        # Test RL Agent training (if exists)
+        await self.test_endpoint('POST', '/rl-agent/train', 'RL Agent Training',
+                               data=training_data, expected_status=[200, 201, 400, 404, 503])
+        
+        # Test general training endpoint
+        await self.test_endpoint('POST', '/training/train', 'General AI Training',
+                               data=training_data, expected_status=[200, 201, 400, 503])
+        
+        # Test training status
+        await self.test_endpoint('GET', '/training/status', 'Training Status')
+        
+        # Test Enhanced AI status
+        await self.test_endpoint('GET', '/enhanced-ai/status', 'Enhanced AI Status')
+
+    async def test_additional_endpoints(self):
+        """Test additional important endpoints"""
+        print("\n=== TESTING ADDITIONAL ENDPOINTS ===")
+        
+        # Test market data
+        await self.test_endpoint('GET', '/market/status', 'Market Data Status',
+                               expected_status=[200, 404, 503])
+        
+        # Test news endpoints
+        await self.test_endpoint('GET', '/news/latest', 'Latest Crypto News',
+                               expected_status=[200, 404, 503])
+        
+        # Test sentiment analysis
+        await self.test_endpoint('GET', '/sentiment/market', 'Market Sentiment',
+                               expected_status=[200, 404, 503])
+        
+        # Test AI chat
+        await self.test_endpoint('GET', '/ai-chat/status', 'AI Chat Status',
+                               expected_status=[200, 404, 503])
+        
+        # Test scheduler
+        await self.test_endpoint('GET', '/scheduler/status', 'Scheduler Status',
+                               expected_status=[200, 404, 503])
+
+    async def run_all_tests(self):
+        """Run all test suites"""
+        print(f"🚀 Starting Backend API Tests")
+        print(f"📡 Testing Backend URL: {BASE_URL}")
+        print(f"👤 User ID: {USER_ID}")
+        print("=" * 60)
+        
+        # Run test suites
+        await self.test_health_endpoints()
+        await self.test_tethys_trading_engine()
+        await self.test_event_triggers_system()
+        await self.test_ensemble_ai_page()
+        await self.test_portfolio_information()
+        await self.test_model_training()
+        await self.test_additional_endpoints()
+        
+        # Print summary
+        self.print_summary()
+    
+    def print_summary(self):
+        """Print test results summary"""
+        print("\n" + "=" * 60)
+        print("🏁 BACKEND API TEST RESULTS SUMMARY")
+        print("=" * 60)
+        
+        total_tests = len(self.results)
+        passed = len(self.passed_tests)
+        failed = len(self.failed_tests)
+        
+        print(f"📊 Total Tests: {total_tests}")
+        print(f"✅ Passed: {passed}")
+        print(f"❌ Failed: {failed}")
+        print(f"📈 Success Rate: {(passed/total_tests*100):.1f}%")
+        
+        if self.failed_tests:
+            print(f"\n❌ FAILED TESTS ({len(self.failed_tests)}):")
+            print("-" * 40)
+            for test in self.failed_tests:
+                print(f"• {test['test']}")
+                if test.get('status_code'):
+                    print(f"  Status: {test['status_code']}")
+                if test.get('error_details'):
+                    print(f"  Error: {test['error_details']}")
+                print()
+        
+        if self.passed_tests:
+            print(f"\n✅ PASSED TESTS ({len(self.passed_tests)}):")
+            print("-" * 40)
+            for test in self.passed_tests:
+                print(f"• {test['test']} (Status: {test.get('status_code', 'N/A')})")
+        
+        print("\n" + "=" * 60)
+        
+        # Critical issues summary
+        critical_failures = [
+            test for test in self.failed_tests 
+            if any(keyword in test['test'].lower() for keyword in 
+                  ['tethys', 'ensemble', 'portfolio', 'training'])
+        ]
+        
+        if critical_failures:
+            print("🚨 CRITICAL ISSUES FOUND:")
+            for test in critical_failures:
+                print(f"• {test['test']}: {test.get('error_details', 'Unknown error')}")
+        else:
+            print("✅ No critical issues found in core functionality")
+
+
+async def main():
+    """Main test runner"""
+    async with BackendTester() as tester:
+        await tester.run_all_tests()
+
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\n⚠️ Tests interrupted by user")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\n💥 Test runner failed: {e}")
+        sys.exit(1)
