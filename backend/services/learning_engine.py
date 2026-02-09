@@ -181,6 +181,7 @@ class AILearningEngine:
         else:
             return "needs_improvement"
     
+    @cache_features(ttl=3600)  # Cache for 1 hour
     async def get_best_performing_indicators(self) -> List[Dict[str, Any]]:
         """Analyze which technical indicators perform best using aggregation"""
         # Use aggregation to limit data processing
