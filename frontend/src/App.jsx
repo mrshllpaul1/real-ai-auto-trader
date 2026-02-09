@@ -1,44 +1,58 @@
-import React, { useEffect } from "react";
+import React, { useEffect, lazy, Suspense } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import StrategySelector from "./pages/StrategySelector";
-import TradingView from "./pages/TradingView";
-import Analytics from "./pages/Analytics";
-import Settings from "./pages/Settings";
-import AILearning from "./pages/AILearning";
-import AILearningLoop from "./pages/AILearningLoop";
-import NewsAndIntelligence from "./pages/NewsAndIntelligence";
-import NewsFilters from "./pages/NewsFilters";
-import AutoTrading from "./pages/AutoTrading";
-import GemScanner from "./pages/GemScanner";
-import AutoExecution from "./pages/AutoExecution";
-import AdvancedFeatures from "./pages/AdvancedFeatures";
-import AdvancedAI from "./pages/AdvancedAI";
-import Guide from "./pages/Guide";
-import Setup from "./pages/Setup";
-import TradingJournal from "./pages/TradingJournal";
-import AIChat from "./pages/AIChat";
-import EnsembleAI from "./pages/EnsembleAI";
-import EventTriggers from "./pages/EventTriggers";
-import GemBacktester from "./pages/GemBacktester";
-import EventTimeline from "./pages/EventTimeline";
-import TradingBudget from "./pages/TradingBudget";
-import TriggerPerformance from "./pages/TriggerPerformance";
-import AdaptiveStrategy from "./pages/AdaptiveStrategy";
-import PositionManagement from "./pages/PositionManagement";
-import GemMLDLComparison from "./pages/GemMLDLComparison";
-import PortfolioDashboard from "./pages/PortfolioDashboard";
-import StrategyBuilder from "./pages/StrategyBuilder";
-import SpotTrading from "./pages/SpotTrading";
-import ModelPerformanceDashboard from "./pages/ModelPerformanceDashboard";
-import TethysDashboard from "./pages/TethysDashboard";
-import CommandCenter from "./pages/CommandCenter";
-import AICommandCenter from "./pages/AICommandCenter";
-import Sidebar from "./components/Sidebar";
-import FloatingCommandHub from "./components/FloatingCommandHub";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "framer-motion";
 import { TradingModeProvider } from "./context/TradingModeContext";
+
+// Eager load critical components
+import Sidebar from "./components/Sidebar";
+import FloatingCommandHub from "./components/FloatingCommandHub";
+
+// Lazy load all pages for code splitting
+const CommandCenter = lazy(() => import("./pages/CommandCenter"));
+const AICommandCenter = lazy(() => import("./pages/AICommandCenter"));
+const StrategySelector = lazy(() => import("./pages/StrategySelector"));
+const TradingView = lazy(() => import("./pages/TradingView"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const Settings = lazy(() => import("./pages/Settings"));
+const AILearning = lazy(() => import("./pages/AILearning"));
+const AILearningLoop = lazy(() => import("./pages/AILearningLoop"));
+const NewsAndIntelligence = lazy(() => import("./pages/NewsAndIntelligence"));
+const NewsFilters = lazy(() => import("./pages/NewsFilters"));
+const AutoTrading = lazy(() => import("./pages/AutoTrading"));
+const GemScanner = lazy(() => import("./pages/GemScanner"));
+const AutoExecution = lazy(() => import("./pages/AutoExecution"));
+const AdvancedFeatures = lazy(() => import("./pages/AdvancedFeatures"));
+const AdvancedAI = lazy(() => import("./pages/AdvancedAI"));
+const Guide = lazy(() => import("./pages/Guide"));
+const Setup = lazy(() => import("./pages/Setup"));
+const TradingJournal = lazy(() => import("./pages/TradingJournal"));
+const AIChat = lazy(() => import("./pages/AIChat"));
+const EnsembleAI = lazy(() => import("./pages/EnsembleAI"));
+const EventTriggers = lazy(() => import("./pages/EventTriggers"));
+const GemBacktester = lazy(() => import("./pages/GemBacktester"));
+const EventTimeline = lazy(() => import("./pages/EventTimeline"));
+const TradingBudget = lazy(() => import("./pages/TradingBudget"));
+const TriggerPerformance = lazy(() => import("./pages/TriggerPerformance"));
+const AdaptiveStrategy = lazy(() => import("./pages/AdaptiveStrategy"));
+const PositionManagement = lazy(() => import("./pages/PositionManagement"));
+const GemMLDLComparison = lazy(() => import("./pages/GemMLDLComparison"));
+const PortfolioDashboard = lazy(() => import("./pages/PortfolioDashboard"));
+const StrategyBuilder = lazy(() => import("./pages/StrategyBuilder"));
+const SpotTrading = lazy(() => import("./pages/SpotTrading"));
+const ModelPerformanceDashboard = lazy(() => import("./pages/ModelPerformanceDashboard"));
+const TethysDashboard = lazy(() => import("./pages/TethysDashboard"));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+      <p className="text-muted-foreground animate-pulse">Loading...</p>
+    </div>
+  </div>
+);
 
 function App() {
   useEffect(() => {
@@ -76,50 +90,52 @@ function App() {
               transition={{ duration: 0.3 }}
             >
               <div className="md:hidden h-16" />
-              <Routes>
-                <Route path="/" element={<CommandCenter />} />
-                <Route path="/command" element={<CommandCenter />} />
-                <Route path="/ai-center" element={<AICommandCenter />} />
-                <Route path="/growth" element={<CommandCenter />} />
-                <Route path="/master" element={<CommandCenter />} />
-                <Route path="/upgrades" element={<CommandCenter />} />
-                <Route path="/enhanced-ai" element={<AICommandCenter />} />
-                <Route path="/tethys" element={<AICommandCenter />} />
-                <Route path="/journal" element={<TradingJournal />} />
-                <Route path="/strategies" element={<StrategySelector />} />
-                <Route path="/trading" element={<TradingView />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/learning" element={<AILearning />} />
-                <Route path="/learning-loop" element={<AILearningLoop />} />
-                <Route path="/ensemble" element={<EnsembleAI />} />
-                <Route path="/triggers" element={<EventTriggers />} />
-                <Route path="/gem-backtest" element={<GemBacktester />} />
-                <Route path="/event-timeline" element={<EventTimeline />} />
-                <Route path="/ai-chat" element={<AIChat />} />
-                <Route path="/news" element={<NewsAndIntelligence />} />
-                <Route path="/news-filters" element={<NewsFilters />} />
-                <Route path="/auto-trading" element={<AutoTrading />} />
-                <Route path="/scanner" element={<GemScanner />} />
-                <Route path="/auto-exec" element={<AutoExecution />} />
-                <Route path="/advanced" element={<AdvancedFeatures />} />
-                <Route path="/budget" element={<TradingBudget />} />
-                <Route path="/trigger-performance" element={<TriggerPerformance />} />
-                <Route path="/adaptive" element={<AdaptiveStrategy />} />
-                <Route path="/positions" element={<PositionManagement />} />
-                <Route path="/gem-ml-dl" element={<GemMLDLComparison />} />
-                <Route path="/portfolio-dashboard" element={<PortfolioDashboard />} />
-                <Route path="/strategy-builder" element={<StrategyBuilder />} />
-                <Route path="/training" element={<TethysDashboard />} />
-                <Route path="/spot-trading" element={<SpotTrading />} />
-                <Route path="/spot" element={<SpotTrading />} />
-                <Route path="/models" element={<ModelPerformanceDashboard />} />
-                <Route path="/model-performance" element={<ModelPerformanceDashboard />} />
-                <Route path="/advanced-ai" element={<AdvancedAI />} />
-                <Route path="/guide" element={<Guide />} />
-                <Route path="/setup" element={<Setup />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<CommandCenter />} />
+                  <Route path="/command" element={<CommandCenter />} />
+                  <Route path="/ai-center" element={<AICommandCenter />} />
+                  <Route path="/growth" element={<CommandCenter />} />
+                  <Route path="/master" element={<CommandCenter />} />
+                  <Route path="/upgrades" element={<CommandCenter />} />
+                  <Route path="/enhanced-ai" element={<AICommandCenter />} />
+                  <Route path="/tethys" element={<AICommandCenter />} />
+                  <Route path="/journal" element={<TradingJournal />} />
+                  <Route path="/strategies" element={<StrategySelector />} />
+                  <Route path="/trading" element={<TradingView />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/learning" element={<AILearning />} />
+                  <Route path="/learning-loop" element={<AILearningLoop />} />
+                  <Route path="/ensemble" element={<EnsembleAI />} />
+                  <Route path="/triggers" element={<EventTriggers />} />
+                  <Route path="/gem-backtest" element={<GemBacktester />} />
+                  <Route path="/event-timeline" element={<EventTimeline />} />
+                  <Route path="/ai-chat" element={<AIChat />} />
+                  <Route path="/news" element={<NewsAndIntelligence />} />
+                  <Route path="/news-filters" element={<NewsFilters />} />
+                  <Route path="/auto-trading" element={<AutoTrading />} />
+                  <Route path="/scanner" element={<GemScanner />} />
+                  <Route path="/auto-exec" element={<AutoExecution />} />
+                  <Route path="/advanced" element={<AdvancedFeatures />} />
+                  <Route path="/budget" element={<TradingBudget />} />
+                  <Route path="/trigger-performance" element={<TriggerPerformance />} />
+                  <Route path="/adaptive" element={<AdaptiveStrategy />} />
+                  <Route path="/positions" element={<PositionManagement />} />
+                  <Route path="/gem-ml-dl" element={<GemMLDLComparison />} />
+                  <Route path="/portfolio-dashboard" element={<PortfolioDashboard />} />
+                  <Route path="/strategy-builder" element={<StrategyBuilder />} />
+                  <Route path="/training" element={<TethysDashboard />} />
+                  <Route path="/spot-trading" element={<SpotTrading />} />
+                  <Route path="/spot" element={<SpotTrading />} />
+                  <Route path="/models" element={<ModelPerformanceDashboard />} />
+                  <Route path="/model-performance" element={<ModelPerformanceDashboard />} />
+                  <Route path="/advanced-ai" element={<AdvancedAI />} />
+                  <Route path="/guide" element={<Guide />} />
+                  <Route path="/setup" element={<Setup />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Suspense>
               {/* Floating Command Hub - hidden on AI Chat page */}
               <Routes>
                 <Route path="/ai-chat" element={null} />
