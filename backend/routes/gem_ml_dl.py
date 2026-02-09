@@ -89,7 +89,8 @@ async def train_models(request: TrainRequest, background_tasks: BackgroundTasks)
     """
     global _training_status
     
-    if not _gem_engine:
+    engine = get_gem_engine()
+    if not engine:
         raise HTTPException(status_code=503, detail="Gem prediction engine not initialized")
     
     if _training_status["running"]:
