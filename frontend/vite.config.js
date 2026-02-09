@@ -27,6 +27,12 @@ export default defineConfig({
   preview: {
     port: 3000,
     host: '0.0.0.0',
-    allowedHosts: 'all', // Allow all hosts for deployment
+    allowedHosts: [
+      'deploy-rescue-43.preview.emergentagent.com',
+      '.emergentagent.com',
+      '.preview.emergentagent.com',
+      'localhost',
+      '.sslip.io'
+    ],
   },
 });
