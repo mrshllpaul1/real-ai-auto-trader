@@ -88,3 +88,15 @@ def test_health_endpoint_handles_unknown_status(monkeypatch, caplog):
         resp = client.get("/health")
     assert resp.status_code == 503
     assert "unexpected health status" in caplog.text.lower()
+
+
+def test_api_health_endpoint_handles_unknown_status(monkeypatch, caplog):
+    async def fake_check(_client):
+        return {"status": "weird", "database": "n/a"}
+
+    monkeypatch.setattr(server, "check_database_connection", fake_check)
+    client = TestClient(server.app)
+    with caplog.at_level("WARNING"):
+        resp = client.get("/api/health")
+    assert resp.status_code == 503
+    assert "unexpected health status" in caplog.text.lower()
