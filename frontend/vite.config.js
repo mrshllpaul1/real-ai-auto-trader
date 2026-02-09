@@ -9,6 +9,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  define: {
+    'process.env': {}, // Fix: Define process.env for browser compatibility
+  },
   build: {
     outDir: 'build',
     sourcemap: false,
