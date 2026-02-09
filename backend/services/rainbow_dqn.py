@@ -48,10 +48,29 @@ except ImportError:
 
 
 # =============================================================================
-# NOISY LINEAR LAYER
+# NOISY LINEAR LAYER (From previous implementation)
 # =============================================================================
 
-if TF_AVAILABLE:
+# Deferred class creation - will be populated when TF loads
+_NoisyDense = None
+_PositionalEncoding = None
+_CausalTransformerEncoder = None
+
+def _create_tf_classes():
+    """Create TensorFlow-dependent classes after TF is loaded"""
+    global _NoisyDense, _PositionalEncoding, _CausalTransformerEncoder
+    
+    if not _ensure_tf():
+        return False
+    
+    if _NoisyDense is not None:
+        return True  # Already created
+    
+    from tensorflow.keras.layers import (
+        Dense, Input, LayerNormalization, Dropout,
+        MultiHeadAttention, Add, Reshape, Activation, Softmax
+    )
+    
     class NoisyDense(layers.Layer):
         """Factorized Gaussian Noisy Layer for exploration"""
         
@@ -105,13 +124,20 @@ if TF_AVAILABLE:
                 w = self.w_mu
                 b = self.b_mu
             return tf.matmul(inputs, w) + b
+    
+    _NoisyDense = NoisyDense
+    return True
+
+
+def get_noisy_dense():
+    """Get NoisyDense class, creating it if needed"""
+    _create_tf_classes()
+    return _NoisyDense
 
 
 # =============================================================================
 # CAUSAL TRANSFORMER ENCODER (168 timesteps)
 # =============================================================================
-
-if TF_AVAILABLE:
 
 class PositionalEncoding(layers.Layer):
     """Sinusoidal positional encoding for transformer"""
