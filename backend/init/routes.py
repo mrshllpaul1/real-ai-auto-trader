@@ -129,6 +129,9 @@ def register_routes(api_router: APIRouter):
     api_router.include_router(advanced_ai_routes.router, tags=["Advanced AI"])
     api_router.include_router(master_routes.router, tags=["Master Orchestrator"])
     api_router.include_router(upgrades_routes.router, tags=["Upgrades"])
+    api_router.include_router(copy_trading_routes.router, tags=["Copy Trading"])
+    api_router.include_router(market_maker_routes.router, tags=["Market Maker"])
+    api_router.include_router(dashboard_routes.router, tags=["Dashboard Customization"])
     
     logger.info("✅ All routes registered")
     
