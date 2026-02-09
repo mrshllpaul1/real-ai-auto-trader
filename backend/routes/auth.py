@@ -12,6 +12,15 @@ class KrakenCredentials(BaseModel):
     api_key: str
     api_secret: str
 
+class BinanceCredentials(BaseModel):
+    api_key: str
+    api_secret: str
+
+class KuCoinCredentials(BaseModel):
+    api_key: str
+    api_secret: str
+    passphrase: str
+
 class CredentialsResponse(BaseModel):
     message: str
     has_credentials: bool
