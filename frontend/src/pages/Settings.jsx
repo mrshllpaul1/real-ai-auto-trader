@@ -22,11 +22,10 @@ const Settings = () => {
   const [binanceApiSecret, setBinanceApiSecret] = useState('');
   const [hasBinanceCredentials, setHasBinanceCredentials] = useState(false);
   
-  // KuCoin credentials (best for arbitrage)
-  const [kucoinApiKey, setKucoinApiKey] = useState('');
-  const [kucoinApiSecret, setKucoinApiSecret] = useState('');
-  const [kucoinPassphrase, setKucoinPassphrase] = useState('');
-  const [hasKucoinCredentials, setHasKucoinCredentials] = useState(false);
+  // Crypto.com credentials (best for arbitrage - US friendly)
+  const [cryptoComApiKey, setCryptoComApiKey] = useState('');
+  const [cryptoComApiSecret, setCryptoComApiSecret] = useState('');
+  const [hasCryptoComCredentials, setHasCryptoComCredentials] = useState(false);
   
   const [riskSettings, setRiskSettings] = useState({
     max_investment_per_trade: 1000,
