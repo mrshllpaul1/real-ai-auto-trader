@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 import os
 import logging
+from health import check_database_connection
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
@@ -34,7 +35,8 @@ logger = logging.getLogger(__name__)
 @app.get("/health")
 async def health_check():
     """Health check endpoint for deployment"""
-    return {"status": "healthy", "version": "1.0.0"}
+    db_status = await check_database_connection(client)
+    return {"status": db_status["status"], "database": db_status["database"], "version": "1.0.0"}
 
 @app.get("/")
 async def root_health():
@@ -47,12 +49,8 @@ api_router = APIRouter(prefix="/api")
 @api_router.get("/health")
 async def api_health_check():
     """API health check endpoint"""
-    try:
-        await client.admin.command('ping')
-        db_status = "connected"
-    except Exception as e:
-        db_status = f"error: {str(e)}"
-    return {"status": "healthy", "database": db_status, "version": "1.0.0"}
+    db_status = await check_database_connection(client)
+    return {"status": db_status["status"], "database": db_status["database"], "version": "1.0.0"}
 
 @api_router.get("/")
 async def root():
