@@ -134,6 +134,8 @@ def register_routes(api_router: APIRouter):
     api_router.include_router(copy_trading_routes.router, tags=["Copy Trading"])
     api_router.include_router(market_maker_routes.router, tags=["Market Maker"])
     api_router.include_router(dashboard_routes.router, tags=["Dashboard Customization"])
+    api_router.include_router(options_routes.router, tags=["Options Trading"])
+    api_router.include_router(backtest_engine_routes.router, tags=["Backtesting Engine"])
     
     logger.info("✅ All routes registered")
     
