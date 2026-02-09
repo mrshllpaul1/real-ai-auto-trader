@@ -12,9 +12,22 @@ import toast from '../utils/toast';
 import { Shield, Key, Settings as SettingsIcon, Bell, Smartphone, Vibrate } from 'lucide-react';
 
 const Settings = () => {
+  // Kraken credentials
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
   const [hasCredentials, setHasCredentials] = useState(false);
+  
+  // Binance credentials
+  const [binanceApiKey, setBinanceApiKey] = useState('');
+  const [binanceApiSecret, setBinanceApiSecret] = useState('');
+  const [hasBinanceCredentials, setHasBinanceCredentials] = useState(false);
+  
+  // KuCoin credentials (best for arbitrage)
+  const [kucoinApiKey, setKucoinApiKey] = useState('');
+  const [kucoinApiSecret, setKucoinApiSecret] = useState('');
+  const [kucoinPassphrase, setKucoinPassphrase] = useState('');
+  const [hasKucoinCredentials, setHasKucoinCredentials] = useState(false);
+  
   const [riskSettings, setRiskSettings] = useState({
     max_investment_per_trade: 1000,
     stop_loss_percentage: 5,
