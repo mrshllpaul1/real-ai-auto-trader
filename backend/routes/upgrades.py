@@ -422,6 +422,114 @@ async def get_trailing_stop_history(limit: int = 50):
 
 
 # ============================================================================
+# Whale Tracking Routes
+# ============================================================================
+
+class WalletRequest(BaseModel):
+    address: str
+    label: str
+
+
+@router.get("/whale/status")
+async def get_whale_status():
+    """Get whale tracking service status"""
+    from services.whale_tracking import get_whale_service
+    service = get_whale_service()
+    if not service:
+        return {"is_monitoring": False, "message": "Service not initialized"}
+    
+    return await service.get_status()
+
+
+@router.post("/whale/start")
+async def start_whale_monitoring():
+    """Start whale monitoring"""
+    from services.whale_tracking import get_whale_service
+    service = get_whale_service()
+    if not service:
+        raise HTTPException(500, "Whale service not available")
+    
+    return await service.start_monitoring()
+
+
+@router.post("/whale/stop")
+async def stop_whale_monitoring():
+    """Stop whale monitoring"""
+    from services.whale_tracking import get_whale_service
+    service = get_whale_service()
+    if not service:
+        raise HTTPException(500, "Whale service not available")
+    
+    return await service.stop_monitoring()
+
+
+@router.get("/whale/transactions")
+async def get_whale_transactions(limit: int = 50):
+    """Get recent whale transactions"""
+    from services.whale_tracking import get_whale_service
+    service = get_whale_service()
+    if not service:
+        return []
+    
+    return await service.get_recent_transactions(limit)
+
+
+@router.get("/whale/wallets")
+async def get_watched_wallets():
+    """Get all watched wallets"""
+    from services.whale_tracking import get_whale_service
+    service = get_whale_service()
+    if not service:
+        return []
+    
+    return await service.get_watched_wallets()
+
+
+@router.post("/whale/wallets")
+async def add_watched_wallet(request: WalletRequest):
+    """Add a wallet to watch"""
+    from services.whale_tracking import get_whale_service
+    service = get_whale_service()
+    if not service:
+        raise HTTPException(500, "Whale service not available")
+    
+    return await service.add_wallet(request.address, request.label)
+
+
+@router.delete("/whale/wallets/{address}")
+async def remove_watched_wallet(address: str):
+    """Remove a wallet from watch list"""
+    from services.whale_tracking import get_whale_service
+    service = get_whale_service()
+    if not service:
+        raise HTTPException(500, "Whale service not available")
+    
+    return await service.remove_wallet(address)
+
+
+@router.get("/whale/flows")
+async def get_exchange_flows(hours: int = 24):
+    """Get exchange in/out flows"""
+    from services.whale_tracking import get_whale_service
+    service = get_whale_service()
+    if not service:
+        return {"error": "Service not available"}
+    
+    return await service.get_exchange_flows(hours)
+
+
+@router.get("/whale/history")
+async def get_whale_history(limit: int = 100):
+    """Get whale transaction history"""
+    from services.whale_tracking import get_whale_service
+    service = get_whale_service()
+    if not service:
+        return []
+    
+    return await service.get_history(limit)
+
+
+# ============================================================================
 # Combined Status Endpoint
 # ============================================================================
 
@@ -432,6 +540,7 @@ async def get_all_upgrades_status():
     from services.arbitrage_service import get_arbitrage_service
     from services.portfolio_rebalancer import get_rebalancer
     from services.trailing_stop_service import get_trailing_stop_service
+    from services.whale_tracking import get_whale_service
     
     status = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -453,5 +562,9 @@ async def get_all_upgrades_status():
     # Trailing stops
     trail = get_trailing_stop_service()
     status["features"]["trailing_stops"] = await trail.get_status() if trail else {"is_monitoring": False}
+    
+    # Whale tracking
+    whale = get_whale_service()
+    status["features"]["whale_tracking"] = await whale.get_status() if whale else {"is_monitoring": False}
     
     return status
