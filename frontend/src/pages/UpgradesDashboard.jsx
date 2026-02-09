@@ -1233,6 +1233,298 @@ const BacktestTab = () => {
   );
 };
 
+// A/B Testing Tab (P1)
+const ABTestingTab = () => {
+  const [status, setStatus] = useState(null);
+  const [models, setModels] = useState({});
+  const [tests, setTests] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreate, setShowCreate] = useState(false);
+  const [selectedTest, setSelectedTest] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    model_a: 'ensemble',
+    model_b: 'technical',
+    symbol: 'BTC'
+  });
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [statusRes, modelsRes, testsRes, leaderRes] = await Promise.all([
+        api.get('/upgrades/ab-testing/status'),
+        api.get('/upgrades/ab-testing/models'),
+        api.get('/upgrades/ab-testing/tests'),
+        api.get('/upgrades/ab-testing/leaderboard')
+      ]);
+      setStatus(statusRes.data);
+      setModels(modelsRes.data);
+      setTests(testsRes.data);
+      setLeaderboard(leaderRes.data);
+    } catch (error) {
+      console.error('Failed to fetch A/B testing data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleMonitoring = async () => {
+    try {
+      if (status?.is_monitoring) {
+        await api.post('/upgrades/ab-testing/stop');
+      } else {
+        await api.post('/upgrades/ab-testing/start');
+      }
+      fetchData();
+    } catch (error) {
+      console.error('Failed to toggle monitoring:', error);
+    }
+  };
+
+  const createTest = async (e) => {
+    e.preventDefault();
+    if (!formData.name) return;
+    try {
+      await api.post('/upgrades/ab-testing/create', formData);
+      setShowCreate(false);
+      setFormData({ name: '', model_a: 'ensemble', model_b: 'technical', symbol: 'BTC' });
+      fetchData();
+    } catch (error) {
+      alert('Failed to create test');
+    }
+  };
+
+  const viewResults = async (testId) => {
+    try {
+      const res = await api.get(`/upgrades/ab-testing/tests/${testId}/results`);
+      setSelectedTest(res.data);
+    } catch (error) {
+      console.error('Failed to fetch results:', error);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Control Panel */}
+      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-medium text-white flex items-center gap-2">
+              <FlaskConical className="w-5 h-5 text-orange-400" />
+              AI Model A/B Testing
+            </h3>
+            <p className="text-gray-400 text-sm">
+              {tests.length} active tests • {Object.keys(models).length} models available
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowCreate(!showCreate)}
+              className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg"
+            >
+              + New Test
+            </button>
+            <button
+              onClick={toggleMonitoring}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${
+                status?.is_monitoring
+                  ? 'bg-red-600 hover:bg-red-700 text-white'
+                  : 'bg-green-600 hover:bg-green-700 text-white'
+              }`}
+            >
+              {status?.is_monitoring ? <><Square className="w-4 h-4" /> Stop</> : <><Play className="w-4 h-4" /> Start</>}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Create Test Form */}
+      {showCreate && (
+        <form onSubmit={createTest} className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+          <h3 className="text-lg font-medium text-white mb-4">Create New A/B Test</h3>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div>
+              <label className="block text-gray-400 text-sm mb-1">Test Name</label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={e => setFormData({...formData, name: e.target.value})}
+                placeholder="e.g., Ensemble vs RL"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-400 text-sm mb-1">Model A</label>
+              <select
+                value={formData.model_a}
+                onChange={e => setFormData({...formData, model_a: e.target.value})}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+              >
+                {Object.entries(models).map(([id, name]) => (
+                  <option key={id} value={id}>{name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-gray-400 text-sm mb-1">Model B</label>
+              <select
+                value={formData.model_b}
+                onChange={e => setFormData({...formData, model_b: e.target.value})}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+              >
+                {Object.entries(models).map(([id, name]) => (
+                  <option key={id} value={id}>{name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-gray-400 text-sm mb-1">Symbol</label>
+              <select
+                value={formData.symbol}
+                onChange={e => setFormData({...formData, symbol: e.target.value})}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+              >
+                {['BTC', 'ETH', 'SOL', 'XRP', 'ADA'].map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button type="submit" className="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg">
+                Create Test
+              </button>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* Active Tests */}
+      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+        <h3 className="text-lg font-medium text-white mb-4">Active Tests</h3>
+        {tests.length === 0 ? (
+          <div className="text-center py-8 text-gray-400">No active tests. Create one to start comparing models.</div>
+        ) : (
+          <div className="space-y-3">
+            {tests.map((test, idx) => (
+              <div key={idx} className="flex items-center justify-between p-4 bg-gray-700/30 rounded-lg">
+                <div>
+                  <div className="text-white font-medium">{test.name}</div>
+                  <div className="text-sm text-gray-400">
+                    {models[test.model_a] || test.model_a} vs {models[test.model_b] || test.model_b} • {test.symbol}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`px-2 py-1 rounded text-xs ${
+                    test.status === 'running' ? 'bg-green-500/20 text-green-400' : 'bg-gray-600/20 text-gray-400'
+                  }`}>
+                    {test.status?.toUpperCase()}
+                  </span>
+                  <button
+                    onClick={() => viewResults(test.test_id)}
+                    className="px-3 py-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded text-sm"
+                  >
+                    View Results
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Selected Test Results */}
+      {selectedTest && (
+        <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+          <h3 className="text-lg font-medium text-white mb-4">
+            Results: {selectedTest.name}
+            {selectedTest.winner && (
+              <span className="ml-3 px-2 py-1 bg-green-500/20 text-green-400 rounded text-sm">
+                Winner: {selectedTest.winner_name}
+              </span>
+            )}
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            {['model_a', 'model_b'].map(key => {
+              const model = selectedTest[key];
+              return (
+                <div key={key} className={`p-4 rounded-lg ${
+                  selectedTest.winner === model?.id ? 'bg-green-500/10 border border-green-500' : 'bg-gray-700/30'
+                }`}>
+                  <div className="text-white font-medium text-lg">{model?.name}</div>
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    <div>
+                      <div className="text-gray-400 text-sm">Accuracy</div>
+                      <div className="text-2xl font-bold text-cyan-400">{model?.accuracy?.toFixed(1)}%</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-400 text-sm">P/L</div>
+                      <div className={`text-2xl font-bold ${model?.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {model?.pnl?.toFixed(2)}%
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-gray-400 text-sm">Predictions</div>
+                      <div className="text-white font-medium">{model?.predictions}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-400 text-sm">Correct</div>
+                      <div className="text-white font-medium">{model?.correct}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Model Leaderboard */}
+      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+        <h3 className="text-lg font-medium text-white mb-4">Model Leaderboard</h3>
+        {leaderboard.length === 0 ? (
+          <div className="text-center py-8 text-gray-400">Complete tests to see the leaderboard</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-gray-400 border-b border-gray-700">
+                  <th className="text-left py-2">#</th>
+                  <th className="text-left py-2">Model</th>
+                  <th className="text-right py-2">Accuracy</th>
+                  <th className="text-right py-2">Total P/L</th>
+                  <th className="text-right py-2">Predictions</th>
+                  <th className="text-right py-2">Tests</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leaderboard.map((model, idx) => (
+                  <tr key={idx} className="border-b border-gray-700/50">
+                    <td className="py-2 text-orange-400 font-bold">#{idx + 1}</td>
+                    <td className="py-2 text-white">{model.model_name}</td>
+                    <td className="py-2 text-right text-cyan-400">{model.accuracy?.toFixed(1)}%</td>
+                    <td className={`py-2 text-right font-medium ${model.total_pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {model.total_pnl?.toFixed(2)}%
+                    </td>
+                    <td className="py-2 text-right text-gray-300">{model.total_predictions}</td>
+                    <td className="py-2 text-right text-gray-300">{model.tests_participated}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Whale Tracking Tab
 const WhaleTab = () => {
   const [status, setStatus] = useState(null);
