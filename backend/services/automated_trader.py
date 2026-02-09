@@ -432,6 +432,7 @@ class AutomatedWeeklyTrader:
         if signals['scores']:
             weighted_sum = 0
             total_weight = 0
+            ordered = sorted(signals['scores'], key=lambda x: x[1], reverse=True)
             
             for name, score in signals['scores']:
                 weight = signals['weights'].get(name, 0.1)
@@ -456,7 +457,11 @@ class AutomatedWeeklyTrader:
                 'score': round(composite_score, 2),
                 'signal': overall_signal,
                 'confidence': round(abs(composite_score - 50) * 2, 1),
-                'models_used': len(signals['scores'])
+                'models_used': len(signals['scores']),
+                'top_component': ordered[0][0] if ordered else None,
+                'top_component_score': ordered[0][1] if ordered else None,
+                'weak_component': ordered[-1][0] if ordered else None,
+                'weak_component_score': ordered[-1][1] if ordered else None
             }
         else:
             signals['composite'] = {

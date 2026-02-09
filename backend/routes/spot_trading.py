@@ -606,6 +606,8 @@ async def get_ai_recommendations():
                     "score": round(composite.get('score', signals.get('composite_score', 0)), 3),
                     "confidence": composite.get('confidence', signals.get('confidence', 0)),
                     "models_used": composite.get('models_used'),
+                    "top_component": composite.get('top_component'),
+                    "weak_component": composite.get('weak_component'),
                     "recommendation": signals.get('recommendation', 'Hold'),
                     "composite": composite,
                     "latencies": signals.get('latencies', {}),
