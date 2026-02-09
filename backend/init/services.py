@@ -278,6 +278,13 @@ async def _init_phase4_automation(db):
     _services['trailing_stops'] = get_trailing_stop_service(db, kraken, market)
     _services['whale_tracking'] = get_whale_service(db, etherscan_key)
     
+    # P1 Upgrades Services
+    from services.sentiment_analysis import get_sentiment_service
+    from services.backtest_service import get_backtest_service
+    
+    _services['sentiment_analysis'] = get_sentiment_service(db)
+    _services['backtest_simulator'] = get_backtest_service(db, market)
+    
     logger.info("✅ Phase 4: Automation services initialized")
 
 
