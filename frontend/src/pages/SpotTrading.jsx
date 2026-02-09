@@ -623,6 +623,7 @@ const SpotTrading = () => {
             )}
             
             <button
+              type="button"
               onClick={() => { fetchPairs(); fetchBalance(); }}
               className="px-4 py-2 bg-[#222] rounded-xl text-white flex items-center gap-2 hover:bg-[#333] transition-colors"
               data-testid="refresh-btn"
@@ -792,6 +793,7 @@ const SpotTrading = () => {
           {/* AI Recommendations */}
           <div className="bg-[#111] border border-[#222] rounded-xl overflow-hidden">
             <button
+              type="button"
               onClick={() => setShowRecommendations(!showRecommendations)}
               className="w-full p-4 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors"
               data-testid="toggle-recommendations-btn"

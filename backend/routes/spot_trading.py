@@ -569,6 +569,14 @@ async def get_ai_recommendations():
     if _automated_trader is None:
         raise HTTPException(status_code=503, detail="Auto trader not initialized")
     
+    # Optimization context (market regime and risk settings)
+    adaptive_params = {}
+    try:
+        adaptive_params = await _automated_trader.get_adaptive_params()
+    except Exception as e:
+        logger.warning(f"Adaptive params unavailable: {e}")
+        adaptive_params = {}
+    
     recommendations = []
     
     for symbol in list(TRADING_PAIRS.keys())[:10]:  # Top 10 pairs
@@ -588,14 +596,24 @@ async def get_ai_recommendations():
                     except:
                         pass
                 
+                composite = signals.get('composite', {})
+                
                 recommendations.append({
                     "symbol": symbol,
                     "name": pair_info['name'],
                     "price": price,
-                    "signal": signals.get('composite_signal', 'neutral'),
-                    "score": round(signals.get('composite_score', 0), 3),
-                    "confidence": signals.get('confidence', 0),
+                    "signal": composite.get('signal', signals.get('composite_signal', 'neutral')),
+                    "score": round(composite.get('score', signals.get('composite_score', 0)), 3),
+                    "confidence": composite.get('confidence', signals.get('confidence', 0)),
+                    "models_used": composite.get('models_used'),
+                    "top_component": composite.get('top_component'),
+                    "weak_component": composite.get('weak_component'),
                     "recommendation": signals.get('recommendation', 'Hold'),
+                    "composite": composite,
+                    "latencies": signals.get('latencies', {}),
+                    "total_latency": signals.get('total_latency'),
+                    "cache_hit": signals.get('cache_hit', False),
+                    "stale": signals.get('stale', False),
                     "components": {
                         k: v for k, v in signals.items() 
                         if k in ['order_book', 'on_chain', 'social', 'transformer', 'rl_agent', 'technical']
@@ -610,7 +628,16 @@ async def get_ai_recommendations():
     return {
         "recommendations": recommendations,
         "count": len(recommendations),
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "optimization": {
+            "regime": adaptive_params.get("regime"),
+            "max_position_pct": adaptive_params.get("max_position_pct"),
+            "stop_loss_pct": adaptive_params.get("stop_loss"),
+            "take_profit_pct": adaptive_params.get("take_profit"),
+            "min_confidence": adaptive_params.get("min_confidence"),
+            "max_exposure": adaptive_params.get("max_exposure"),
+            "adaptive": adaptive_params.get("is_adaptive", False),
+        }
     }
 
 
