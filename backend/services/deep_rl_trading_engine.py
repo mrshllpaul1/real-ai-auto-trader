@@ -42,6 +42,24 @@ try:
     )
     from tensorflow.keras.optimizers import Adam
     from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+    
+    # Enable GPU optimization and mixed precision if available
+    try:
+        gpus = tf.config.list_physical_devices('GPU')
+        if gpus:
+            # Enable memory growth to prevent TF from allocating all GPU memory
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+            logger.info(f"Deep RL: GPU acceleration enabled - {len(gpus)} GPU(s) found")
+            
+            # Enable mixed precision for faster training on compatible GPUs
+            tf.keras.mixed_precision.set_global_policy('mixed_float16')
+            logger.info("Deep RL: Mixed precision training enabled (float16)")
+        else:
+            logger.info("Deep RL: No GPU found - using CPU")
+    except Exception as e:
+        logger.warning(f"Deep RL: Could not configure GPU optimization: {e}")
+    
     TF_AVAILABLE = True
 except ImportError:
     TF_AVAILABLE = False
@@ -355,6 +373,8 @@ class DQNTradingAgent:
         target_q = self.target_model.predict(next_states, verbose=0)
         
         current_q = self.model.predict(states, verbose=0)
+        # Pre-compute predicted Q values once for all states (batch optimization)
+        predicted_q = current_q.copy()
         
         for i in range(self.batch_size):
             if dones[i]:
@@ -362,8 +382,8 @@ class DQNTradingAgent:
             else:
                 current_q[i][actions[i]] = rewards[i] + self.gamma * target_q[i][next_actions[i]]
             
-            # Update priority
-            td_error = abs(current_q[i][actions[i]] - self.model.predict(states[i:i+1], verbose=0)[0][actions[i]])
+            # Update priority (vectorized - no redundant predict call)
+            td_error = abs(current_q[i][actions[i]] - predicted_q[i][actions[i]])
             self.priorities[indices[i]] = td_error + 1e-6
         
         loss = self.model.fit(states, current_q, epochs=1, verbose=0).history['loss'][0]

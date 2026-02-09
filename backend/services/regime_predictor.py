@@ -14,6 +14,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 from motor.motor_asyncio import AsyncIOMotorDatabase
 import numpy as np
+import pandas as pd
 from enum import Enum
 import pickle
 import os
@@ -42,6 +43,25 @@ def _ensure_tf():
         import tensorflow as tf
         _tf_module = tf
         TF_AVAILABLE = True
+        
+        # Enable GPU optimization and mixed precision if available
+        try:
+            # Check for GPU availability
+            gpus = tf.config.list_physical_devices('GPU')
+            if gpus:
+                # Enable memory growth to prevent TF from allocating all GPU memory
+                for gpu in gpus:
+                    tf.config.experimental.set_memory_growth(gpu, True)
+                logger.info(f"GPU acceleration enabled - {len(gpus)} GPU(s) found")
+                
+                # Enable mixed precision for faster training on compatible GPUs
+                tf.keras.mixed_precision.set_global_policy('mixed_float16')
+                logger.info("Mixed precision training enabled (float16)")
+            else:
+                logger.info("No GPU found - using CPU for TensorFlow")
+        except Exception as e:
+            logger.warning(f"Could not configure GPU optimization: {e}")
+        
         logging.info("TensorFlow loaded for regime predictor")
     except ImportError:
         TF_AVAILABLE = False
@@ -232,7 +252,8 @@ class RegimePredictionEngine:
             kernel='rbf',
             C=1.0,
             probability=True,
-            random_state=42
+            random_state=42,
+            cache_size=500  # Increase cache for faster training
         )
         self.model_metadata['svm'] = {
             'type': 'ML',
@@ -505,7 +526,7 @@ class RegimePredictionEngine:
     
     async def _prepare_features(self, ohlcv_data: List[Dict]) -> np.ndarray:
         """
-        Prepare feature matrix from OHLCV data.
+        Prepare feature matrix from OHLCV data using vectorized operations.
         
         Features:
         - Price change % (1d, 7d, 14d, 30d)
@@ -530,58 +551,60 @@ class RegimePredictionEngine:
         
         data = sorted(ohlcv_data, key=get_sort_key)
         
-        features = []
+        # Extract all data into arrays (vectorized)
+        closes = np.array([float(d.get('close', 0)) for d in data])
+        volumes = np.array([float(d.get('volume_to', d.get('volume', 0)) or 0) for d in data])
+        highs = np.array([float(d.get('high', 0)) for d in data])
+        lows = np.array([float(d.get('low', 0)) for d in data])
         
-        for i in range(30, len(data)):
-            window = data[i-30:i]
-            current = data[i]
-            
-            closes = [float(d.get('close', 0)) for d in window]
-            volumes = [float(d.get('volume_to', d.get('volume', 0)) or 0) for d in window]
-            highs = [float(d.get('high', 0)) for d in window]
-            lows = [float(d.get('low', 0)) for d in window]
-            
-            # Price changes
-            price_1d = (closes[-1] - closes[-2]) / closes[-2] * 100 if closes[-2] else 0
-            price_7d = (closes[-1] - closes[-8]) / closes[-8] * 100 if closes[-8] else 0
-            price_14d = (closes[-1] - closes[-15]) / closes[-15] * 100 if closes[-15] else 0
-            price_30d = (closes[-1] - closes[0]) / closes[0] * 100 if closes[0] else 0
-            
-            # Volatility
-            returns = [(closes[j] - closes[j-1]) / closes[j-1] * 100 for j in range(1, len(closes)) if closes[j-1]]
-            vol_7d = np.std(returns[-7:]) if len(returns) >= 7 else 0
-            vol_14d = np.std(returns[-14:]) if len(returns) >= 14 else 0
-            
-            # Volume change
-            vol_change = (volumes[-1] - np.mean(volumes[-7:])) / np.mean(volumes[-7:]) * 100 if np.mean(volumes[-7:]) else 0
-            
-            # RSI approximation (simplified)
-            gains = [r for r in returns[-14:] if r > 0]
-            losses = [-r for r in returns[-14:] if r < 0]
-            avg_gain = np.mean(gains) if gains else 0
-            avg_loss = np.mean(losses) if losses else 0.001
-            rsi = 100 - (100 / (1 + avg_gain / avg_loss))
-            
-            # MA ratios
-            ma_7 = np.mean(closes[-7:])
-            ma_30 = np.mean(closes)
-            ma_ratio = (ma_7 / ma_30 - 1) * 100 if ma_30 else 0
-            
-            # High-low range
-            hl_range = (max(highs[-7:]) - min(lows[-7:])) / closes[-1] * 100 if closes[-1] else 0
-            
-            feature_row = [
-                price_1d, price_7d, price_14d, price_30d,
-                vol_7d, vol_14d,
-                vol_change,
-                rsi,
-                ma_ratio,
-                hl_range
-            ]
-            
-            features.append(feature_row)
+        # Create pandas dataframe for efficient rolling operations
+        df = pd.DataFrame({
+            'close': closes,
+            'volume': volumes,
+            'high': highs,
+            'low': lows
+        })
         
-        return np.array(features)
+        # Vectorized returns calculation
+        df['returns'] = df['close'].pct_change() * 100
+        
+        # Vectorized rolling computations
+        df['price_1d'] = df['close'].pct_change(1) * 100
+        df['price_7d'] = df['close'].pct_change(7) * 100
+        df['price_14d'] = df['close'].pct_change(14) * 100
+        df['price_30d'] = df['close'].pct_change(29) * 100
+        
+        df['vol_7d'] = df['returns'].rolling(7).std()
+        df['vol_14d'] = df['returns'].rolling(14).std()
+        
+        df['vol_mean_7d'] = df['volume'].rolling(7).mean()
+        df['vol_change'] = ((df['volume'] - df['vol_mean_7d']) / df['vol_mean_7d']) * 100
+        
+        # RSI approximation (vectorized)
+        df['gain'] = df['returns'].clip(lower=0)
+        df['loss'] = (-df['returns']).clip(lower=0)
+        df['avg_gain'] = df['gain'].rolling(14).mean()
+        df['avg_loss'] = df['loss'].rolling(14).mean()
+        df['rsi'] = 100 - (100 / (1 + df['avg_gain'] / (df['avg_loss'] + 0.001)))
+        
+        # Moving average ratios
+        df['ma_7'] = df['close'].rolling(7).mean()
+        df['ma_30'] = df['close'].rolling(30).mean()
+        df['ma_ratio'] = ((df['ma_7'] / df['ma_30']) - 1) * 100
+        
+        # High-low range
+        df['high_7d'] = df['high'].rolling(7).max()
+        df['low_7d'] = df['low'].rolling(7).min()
+        df['hl_range'] = ((df['high_7d'] - df['low_7d']) / df['close']) * 100
+        
+        # Extract feature columns (skip first 30 rows due to rolling windows)
+        feature_cols = ['price_1d', 'price_7d', 'price_14d', 'price_30d',
+                       'vol_7d', 'vol_14d', 'vol_change', 'rsi', 
+                       'ma_ratio', 'hl_range']
+        
+        features = df[feature_cols].iloc[30:].fillna(0).values
+        
+        return features
     
     def _determine_regime_label(self, features: np.ndarray) -> int:
         """Determine regime label from features"""
@@ -644,13 +667,13 @@ class RegimePredictionEngine:
             'models': {}
         }
         
-        # Train ML models
+        # Train ML models with parallel cross-validation
         for name in ['random_forest', 'gradient_boosting', 'svm']:
             try:
                 model = self.models[name]
                 
-                # Cross-validation on training set
-                cv_scores = cross_val_score(model, X_train, y_train, cv=5)
+                # Cross-validation on training set with parallelization
+                cv_scores = cross_val_score(model, X_train, y_train, cv=5, n_jobs=-1)
                 
                 # Train on full training set
                 model.fit(X_train, y_train)
