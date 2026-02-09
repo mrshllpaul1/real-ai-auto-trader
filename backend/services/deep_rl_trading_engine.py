@@ -277,13 +277,14 @@ class LSTMTimeSeriesPredictor:
         predictions = self.model.predict(X, verbose=0)
         
         # Return the latest prediction (last batch item if multiple predictions)
-        pred = predictions[-1] if len(predictions) > 1 else predictions[0]
+        actual_num_predictions = predictions.shape[0]
+        pred = predictions[-1] if actual_num_predictions > 1 else predictions[0]
         
         return {
             "predictions": pred.tolist(),
             "direction": "bullish" if pred[-1] > pred[0] else "bearish",
             "confidence": float(abs(pred[-1] - pred[0]) / (pred[0] + 1e-8)),
-            "batch_size": len(predictions)
+            "num_predictions": actual_num_predictions
         }
 
 
