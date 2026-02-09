@@ -195,6 +195,16 @@ Navigate to **AI Strategies**:
 
 Both suites skip automatically if `REACT_APP_BACKEND_URL` is not set.
 
+### Quick: print configured backend URL
+
+Use the helper script to see which backend your environment points to:
+
+```bash
+python tools/print_backend_url.py
+```
+
+If nothing prints and the script exits with status 1, set `REACT_APP_BACKEND_URL` for your environment.
+
 ## 🔄 Weekly Strategy Updates
 
 The AI generates new strategies weekly based on:
