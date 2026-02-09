@@ -267,12 +267,16 @@ async def _init_phase4_automation(db):
     from services.arbitrage_service import get_arbitrage_service
     from services.portfolio_rebalancer import get_rebalancer
     from services.trailing_stop_service import get_trailing_stop_service
+    from services.whale_tracking import get_whale_service
     
     market = _services.get('market')
+    etherscan_key = os.getenv('ETHERSCAN_API_KEY', '')
+    
     _services['push_service'] = get_push_service(db)
     _services['arbitrage'] = get_arbitrage_service(db, kraken)
     _services['rebalancer'] = get_rebalancer(db, kraken, market)
     _services['trailing_stops'] = get_trailing_stop_service(db, kraken, market)
+    _services['whale_tracking'] = get_whale_service(db, etherscan_key)
     
     logger.info("✅ Phase 4: Automation services initialized")
 
