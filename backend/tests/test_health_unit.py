@@ -7,8 +7,8 @@ from fastapi.testclient import TestClient
 # Ensure backend modules can be imported when running from repo root
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import server
 from health import check_database_connection
+import server
 
 
 class MockDatabaseAdmin:

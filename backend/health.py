@@ -9,9 +9,10 @@ async def check_database_connection(db_client: Any) -> Dict[str, Any]:
     Args:
         db_client: Object exposing ``admin.command("ping")`` coroutine for connectivity checks.
 
-    Returns a dictionary with:
-      - status: "healthy" when the ping succeeds, otherwise "unhealthy"
-      - database: connection detail string
+    Returns:
+        Dict[str, Any]: Dictionary with:
+            - status: "healthy" when the ping succeeds, otherwise "unhealthy"
+            - database: connection detail string
     """
     if not db_client:
         return {"status": "unhealthy", "database": "error: no database client"}
