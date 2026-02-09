@@ -232,8 +232,12 @@ async def get_market_service():
         market = get_service('market')
         if market:
             return market
-    except Exception:
-        pass
+        else:
+            import logging
+            logging.getLogger(__name__).warning("Market service not found in global services")
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Error getting market service: {e}")
     # Fallback to creating new instance
     from services.market_data_service import MarketDataService
     return MarketDataService()
