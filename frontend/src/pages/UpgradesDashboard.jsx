@@ -4,7 +4,7 @@ import {
   Play, Square, Settings, DollarSign, Percent,
   AlertTriangle, CheckCircle, XCircle, Zap,
   PieChart, ArrowUpDown, Shield, Smartphone, Waves,
-  ExternalLink, Copy, MessageCircle, BarChart3, LineChart
+  ExternalLink, Copy, MessageCircle, BarChart3, LineChart, FlaskConical
 } from 'lucide-react';
 import api from '../services/api';
 
