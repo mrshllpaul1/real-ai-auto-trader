@@ -281,9 +281,11 @@ async def _init_phase4_automation(db):
     # P1 Upgrades Services
     from services.sentiment_analysis import get_sentiment_service
     from services.backtest_service import get_backtest_service
+    from services.ab_testing_service import get_ab_testing_service
     
     _services['sentiment_analysis'] = get_sentiment_service(db)
     _services['backtest_simulator'] = get_backtest_service(db, market)
+    _services['ab_testing'] = get_ab_testing_service(db)
     
     logger.info("✅ Phase 4: Automation services initialized")
 
