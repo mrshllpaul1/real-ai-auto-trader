@@ -1236,18 +1236,28 @@ const BacktestTab = () => {
 // A/B Testing Tab (P1)
 const ABTestingTab = () => {
   const [status, setStatus] = useState(null);
-  const [models, setModels] = useState({});
+  const [models, setModels] = useState([]);
   const [tests, setTests] = useState([]);
-  const [leaderboard, setLeaderboard] = useState([]);
+  const [leaderboard, setLeaderboard] = useState({});
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [selectedTest, setSelectedTest] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    model_a: 'ensemble',
-    model_b: 'technical',
+    model_a: '',
+    model_b: '',
     symbol: 'BTC'
   });
+
+  // Available model options
+  const modelOptions = [
+    { id: 'rainbow_dqn', name: 'Rainbow DQN' },
+    { id: 'transformer', name: 'Transformer Encoder' },
+    { id: 'ensemble', name: 'Ensemble Predictor' },
+    { id: 'regime_ml', name: 'Regime ML Models' },
+    { id: 'technical', name: 'Technical Analysis' },
+    { id: 'sentiment', name: 'Sentiment Based' }
+  ];
 
   useEffect(() => {
     fetchData();
@@ -1264,9 +1274,9 @@ const ABTestingTab = () => {
         api.get('/upgrades/ab-testing/leaderboard')
       ]);
       setStatus(statusRes.data);
-      setModels(modelsRes.data);
-      setTests(testsRes.data);
-      setLeaderboard(leaderRes.data);
+      setModels(modelsRes.data || []);
+      setTests(testsRes.data || []);
+      setLeaderboard(leaderRes.data || {});
     } catch (error) {
       console.error('Failed to fetch A/B testing data:', error);
     } finally {
@@ -1289,11 +1299,14 @@ const ABTestingTab = () => {
 
   const createTest = async (e) => {
     e.preventDefault();
-    if (!formData.name) return;
+    if (!formData.name || !formData.model_a || !formData.model_b) {
+      alert('Please fill all fields');
+      return;
+    }
     try {
       await api.post('/upgrades/ab-testing/create', formData);
       setShowCreate(false);
-      setFormData({ name: '', model_a: 'ensemble', model_b: 'technical', symbol: 'BTC' });
+      setFormData({ name: '', model_a: '', model_b: '', symbol: 'BTC' });
       fetchData();
     } catch (error) {
       alert('Failed to create test');
@@ -1309,6 +1322,8 @@ const ABTestingTab = () => {
     }
   };
 
+  const leaderboardList = Object.entries(leaderboard).map(([id, data]) => ({ model_id: id, ...data }));
+
   return (
     <div className="space-y-6">
       {/* Control Panel */}
@@ -1320,7 +1335,7 @@ const ABTestingTab = () => {
               AI Model A/B Testing
             </h3>
             <p className="text-gray-400 text-sm">
-              {tests.length} active tests • {Object.keys(models).length} models available
+              {status?.active_tests || 0} active tests • {status?.registered_models || 0} models registered
             </p>
           </div>
           <div className="flex gap-3">
@@ -1355,7 +1370,7 @@ const ABTestingTab = () => {
                 type="text"
                 value={formData.name}
                 onChange={e => setFormData({...formData, name: e.target.value})}
-                placeholder="e.g., Ensemble vs RL"
+                placeholder="e.g., DQN vs Transformer"
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white"
                 required
               />
@@ -1366,9 +1381,11 @@ const ABTestingTab = () => {
                 value={formData.model_a}
                 onChange={e => setFormData({...formData, model_a: e.target.value})}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+                required
               >
-                {Object.entries(models).map(([id, name]) => (
-                  <option key={id} value={id}>{name}</option>
+                <option value="">Select model</option>
+                {modelOptions.map(m => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
               </select>
             </div>
@@ -1378,9 +1395,11 @@ const ABTestingTab = () => {
                 value={formData.model_b}
                 onChange={e => setFormData({...formData, model_b: e.target.value})}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+                required
               >
-                {Object.entries(models).map(([id, name]) => (
-                  <option key={id} value={id}>{name}</option>
+                <option value="">Select model</option>
+                {modelOptions.map(m => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
               </select>
             </div>
@@ -1417,7 +1436,7 @@ const ABTestingTab = () => {
                 <div>
                   <div className="text-white font-medium">{test.name}</div>
                   <div className="text-sm text-gray-400">
-                    {models[test.model_a] || test.model_a} vs {models[test.model_b] || test.model_b} • {test.symbol}
+                    {test.model_a} vs {test.model_b} • {test.symbol}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -1440,80 +1459,77 @@ const ABTestingTab = () => {
       </div>
 
       {/* Selected Test Results */}
-      {selectedTest && (
+      {selectedTest && selectedTest.test && (
         <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
           <h3 className="text-lg font-medium text-white mb-4">
-            Results: {selectedTest.name}
+            Results: {selectedTest.test.name}
             {selectedTest.winner && (
               <span className="ml-3 px-2 py-1 bg-green-500/20 text-green-400 rounded text-sm">
-                Winner: {selectedTest.winner_name}
+                Winner: {selectedTest.winner}
               </span>
             )}
           </h3>
           <div className="grid grid-cols-2 gap-4">
-            {['model_a', 'model_b'].map(key => {
-              const model = selectedTest[key];
-              return (
-                <div key={key} className={`p-4 rounded-lg ${
-                  selectedTest.winner === model?.id ? 'bg-green-500/10 border border-green-500' : 'bg-gray-700/30'
-                }`}>
-                  <div className="text-white font-medium text-lg">{model?.name}</div>
-                  <div className="grid grid-cols-2 gap-3 mt-3">
-                    <div>
-                      <div className="text-gray-400 text-sm">Accuracy</div>
-                      <div className="text-2xl font-bold text-cyan-400">{model?.accuracy?.toFixed(1)}%</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-400 text-sm">P/L</div>
-                      <div className={`text-2xl font-bold ${model?.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {model?.pnl?.toFixed(2)}%
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-gray-400 text-sm">Predictions</div>
-                      <div className="text-white font-medium">{model?.predictions}</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-400 text-sm">Correct</div>
-                      <div className="text-white font-medium">{model?.correct}</div>
+            {[selectedTest.model_a_performance, selectedTest.model_b_performance].filter(Boolean).map((model, idx) => (
+              <div key={idx} className={`p-4 rounded-lg ${
+                selectedTest.winner === model?.model_id ? 'bg-green-500/10 border border-green-500' : 'bg-gray-700/30'
+              }`}>
+                <div className="text-white font-medium text-lg">{model?.model_name || model?.model_id}</div>
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div>
+                    <div className="text-gray-400 text-sm">Accuracy</div>
+                    <div className="text-2xl font-bold text-cyan-400">{model?.accuracy?.toFixed(1)}%</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-400 text-sm">Total P/L</div>
+                    <div className={`text-2xl font-bold ${model?.total_pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      ${model?.total_pnl?.toFixed(2)}
                     </div>
                   </div>
+                  <div>
+                    <div className="text-gray-400 text-sm">Predictions</div>
+                    <div className="text-white font-medium">{model?.total_predictions}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-400 text-sm">Win Rate</div>
+                    <div className="text-white font-medium">{model?.win_rate?.toFixed(1)}%</div>
+                  </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Model Leaderboard */}
+      {/* Model Performance */}
       <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
-        <h3 className="text-lg font-medium text-white mb-4">Model Leaderboard</h3>
-        {leaderboard.length === 0 ? (
-          <div className="text-center py-8 text-gray-400">Complete tests to see the leaderboard</div>
+        <h3 className="text-lg font-medium text-white mb-4">Model Performance</h3>
+        {leaderboardList.length === 0 ? (
+          <div className="text-center py-8 text-gray-400">Run tests to see model performance metrics</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-gray-400 border-b border-gray-700">
-                  <th className="text-left py-2">#</th>
                   <th className="text-left py-2">Model</th>
                   <th className="text-right py-2">Accuracy</th>
+                  <th className="text-right py-2">Win Rate</th>
                   <th className="text-right py-2">Total P/L</th>
+                  <th className="text-right py-2">Sharpe</th>
                   <th className="text-right py-2">Predictions</th>
-                  <th className="text-right py-2">Tests</th>
                 </tr>
               </thead>
               <tbody>
-                {leaderboard.map((model, idx) => (
+                {leaderboardList.map((model, idx) => (
                   <tr key={idx} className="border-b border-gray-700/50">
-                    <td className="py-2 text-orange-400 font-bold">#{idx + 1}</td>
-                    <td className="py-2 text-white">{model.model_name}</td>
+                    <td className="py-2 text-white">{model.model_name || model.model_id}</td>
                     <td className="py-2 text-right text-cyan-400">{model.accuracy?.toFixed(1)}%</td>
+                    <td className="py-2 text-right text-purple-400">{model.win_rate?.toFixed(1)}%</td>
                     <td className={`py-2 text-right font-medium ${model.total_pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {model.total_pnl?.toFixed(2)}%
+                      ${model.total_pnl?.toFixed(2)}
                     </td>
+                    <td className="py-2 text-right text-gray-300">{model.sharpe_ratio?.toFixed(2)}</td>
                     <td className="py-2 text-right text-gray-300">{model.total_predictions}</td>
-                    <td className="py-2 text-right text-gray-300">{model.tests_participated}</td>
                   </tr>
                 ))}
               </tbody>
