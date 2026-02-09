@@ -240,6 +240,14 @@ class PortfolioRebalancer:
             }
         
         return config
+    
+    async def get_status(self) -> Dict[str, Any]:
+        """Get service status"""
+        return {
+            'enabled': True,
+            'target_allocations': {},
+            'available_templates': ['conservative', 'balanced', 'aggressive', 'altcoin_heavy']
+        }
 
 
 # Singleton
