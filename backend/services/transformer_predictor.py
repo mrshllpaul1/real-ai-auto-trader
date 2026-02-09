@@ -11,21 +11,58 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 
 logger = logging.getLogger(__name__)
 
-# TensorFlow imports with error handling
-try:
-    import tensorflow as tf
-    from tensorflow.keras.models import Model
-    from tensorflow.keras.layers import (
-        Input, Dense, Dropout, LayerNormalization, 
-        MultiHeadAttention, GlobalAveragePooling1D, Embedding,
-        Concatenate, Add
-    )
-    from tensorflow.keras.optimizers import Adam
-    from tensorflow.keras.callbacks import EarlyStopping
-    TF_AVAILABLE = True
-except ImportError:
-    TF_AVAILABLE = False
-    logger.warning("TensorFlow not available for Transformer model")
+# TensorFlow imports - DEFERRED to speed up startup
+TF_AVAILABLE = False
+tf = None
+Model = None
+Input = None
+Dense = None
+Dropout = None
+LayerNormalization = None
+MultiHeadAttention = None
+GlobalAveragePooling1D = None
+Embedding = None
+Concatenate = None
+Add = None
+Adam = None
+EarlyStopping = None
+
+def _ensure_tf():
+    """Lazy-load TensorFlow when needed"""
+    global TF_AVAILABLE, tf, Model, Input, Dense, Dropout, LayerNormalization
+    global MultiHeadAttention, GlobalAveragePooling1D, Embedding, Concatenate, Add, Adam, EarlyStopping
+    if tf is not None:
+        return TF_AVAILABLE
+    try:
+        import tensorflow as _tf
+        from tensorflow.keras.models import Model as _Model
+        from tensorflow.keras.layers import (
+            Input as _Input, Dense as _Dense, Dropout as _Dropout, 
+            LayerNormalization as _LN, MultiHeadAttention as _MHA, 
+            GlobalAveragePooling1D as _GAP, Embedding as _Emb,
+            Concatenate as _Concat, Add as _Add
+        )
+        from tensorflow.keras.optimizers import Adam as _Adam
+        from tensorflow.keras.callbacks import EarlyStopping as _ES
+        tf = _tf
+        Model = _Model
+        Input = _Input
+        Dense = _Dense
+        Dropout = _Dropout
+        LayerNormalization = _LN
+        MultiHeadAttention = _MHA
+        GlobalAveragePooling1D = _GAP
+        Embedding = _Emb
+        Concatenate = _Concat
+        Add = _Add
+        Adam = _Adam
+        EarlyStopping = _ES
+        TF_AVAILABLE = True
+        logger.info("✅ TensorFlow loaded for Transformer")
+    except ImportError:
+        TF_AVAILABLE = False
+        logger.warning("TensorFlow not available for Transformer model")
+    return TF_AVAILABLE
 
 
 # Register custom layers for serialization
