@@ -231,7 +231,7 @@ class RegimePredictionEngine:
         """Check if a cache entry is still valid"""
         if cache_key not in self._cache_timestamps:
             return False
-        age = (datetime.now(timezone.utc).timestamp() - self._cache_timestamps[cache_key])
+        age = (datetime.now(timezone.utc) - self._cache_timestamps[cache_key]).total_seconds()
         return age < self._cache_ttl
     
     def _get_cached_features(self, cache_key: str) -> Optional[np.ndarray]:
@@ -243,7 +243,7 @@ class RegimePredictionEngine:
     def _cache_features(self, cache_key: str, features: np.ndarray):
         """Cache computed features"""
         self._feature_cache[cache_key] = features
-        self._cache_timestamps[cache_key] = datetime.now(timezone.utc).timestamp()
+        self._cache_timestamps[cache_key] = datetime.now(timezone.utc)
     
     def _get_cached_scaler(self, cache_key: str) -> Optional[StandardScaler]:
         """Get cached scaler if valid"""
@@ -254,7 +254,7 @@ class RegimePredictionEngine:
     def _cache_scaler(self, cache_key: str, scaler: StandardScaler):
         """Cache fitted scaler"""
         self._scaler_cache[cache_key] = scaler
-        self._cache_timestamps[cache_key] = datetime.now(timezone.utc).timestamp()
+        self._cache_timestamps[cache_key] = datetime.now(timezone.utc)
     
     def _init_ml_models(self):
         """Initialize machine learning models"""
@@ -607,7 +607,7 @@ class RegimePredictionEngine:
         df['price_1d'] = df['close'].pct_change(1) * 100
         df['price_7d'] = df['close'].pct_change(7) * 100
         df['price_14d'] = df['close'].pct_change(14) * 100
-        df['price_30d'] = df['close'].pct_change(29) * 100
+        df['price_30d'] = df['close'].pct_change(30) * 100
         
         df['vol_7d'] = df['returns'].rolling(7).std()
         df['vol_14d'] = df['returns'].rolling(14).std()
@@ -680,7 +680,7 @@ class RegimePredictionEngine:
         if len(ohlcv_data) < 100:
             return {'error': f'Insufficient data: {len(ohlcv_data)} records (need 100+)'}
         
-        # Check feature cache
+        # Use consistent cache key for both training and prediction
         cache_key = f"features_{symbol}"
         X = self._get_cached_features(cache_key)
         
@@ -890,8 +890,8 @@ class RegimePredictionEngine:
         if len(ohlcv_data) < 35:
             return {'error': 'Insufficient recent data'}
         
-        # Check feature cache for prediction
-        cache_key = f"features_{symbol}_predict"
+        # Use consistent cache key for both training and prediction
+        cache_key = f"features_{symbol}"
         X = self._get_cached_features(cache_key)
         
         if X is None:

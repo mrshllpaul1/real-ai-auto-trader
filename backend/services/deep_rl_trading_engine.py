@@ -263,8 +263,12 @@ class LSTMTimeSeriesPredictor:
         # Support batch predictions for better GPU utilization
         if batch_size > 1:
             # Prepare multiple samples if available
+            actual_batch_size = min(batch_size, len(recent_data) - self.sequence_length + 1)
+            if actual_batch_size <= 0:
+                return {"error": "Insufficient data for batch prediction"}
+            
             X_list = []
-            for i in range(min(batch_size, len(recent_data) - self.sequence_length + 1)):
+            for i in range(actual_batch_size):
                 X_list.append(recent_data[i:i+self.sequence_length])
             X = np.array(X_list)
         else:
@@ -272,8 +276,8 @@ class LSTMTimeSeriesPredictor:
         
         predictions = self.model.predict(X, verbose=0)
         
-        # Return the latest prediction (last batch item)
-        pred = predictions[-1] if batch_size > 1 else predictions[0]
+        # Return the latest prediction (last batch item if multiple predictions)
+        pred = predictions[-1] if len(predictions) > 1 else predictions[0]
         
         return {
             "predictions": pred.tolist(),
