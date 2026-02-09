@@ -271,6 +271,7 @@ mongodb          RUNNING   pid 2168
 
 ### Pre-Deployment
 - [x] Frontend start script fixed
+- [x] Vite allowed hosts configured for deployment
 - [x] ML lightweight mode enabled
 - [x] TensorFlow runtime optimized
 - [x] Database queries optimized
