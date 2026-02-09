@@ -53,6 +53,8 @@ def register_routes(api_router: APIRouter):
     from routes import copy_trading as copy_trading_routes
     from routes import market_maker as market_maker_routes
     from routes import dashboard_customization as dashboard_routes
+    from routes import options_trading as options_routes
+    from routes import backtest_engine as backtest_engine_routes
     
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
