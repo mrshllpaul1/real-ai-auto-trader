@@ -50,6 +50,9 @@ def register_routes(api_router: APIRouter):
     from routes import advanced_ai as advanced_ai_routes
     from routes import master_orchestrator as master_routes
     from routes import upgrades as upgrades_routes
+    from routes import copy_trading as copy_trading_routes
+    from routes import market_maker as market_maker_routes
+    from routes import dashboard_customization as dashboard_routes
     
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
