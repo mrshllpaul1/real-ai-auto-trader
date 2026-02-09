@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 async def health_check(response: Response):
     """Health check endpoint for deployment"""
     db_status = await check_database_connection(client)
-    response.status_code = 200 if db_status["status"] == "healthy" else 503
+    _apply_health_status(response, db_status["status"])
     return {"status": db_status["status"], "database": db_status["database"], "version": API_VERSION}
 
 @app.get("/")
@@ -54,7 +54,7 @@ api_router = APIRouter(prefix="/api")
 async def api_health_check(response: Response):
     """API health check endpoint"""
     db_status = await check_database_connection(client)
-    response.status_code = 200 if db_status["status"] == "healthy" else 503
+    _apply_health_status(response, db_status["status"])
     return {"status": db_status["status"], "database": db_status["database"], "version": API_VERSION}
 
 @api_router.get("/")
@@ -114,6 +114,11 @@ app.add_middleware(
 
 # Global service references (initialized lazily)
 _services_initialized = False
+
+
+def _apply_health_status(response: Response, status: str):
+    """Set HTTP status code based on health status string."""
+    response.status_code = 200 if status == "healthy" else 503
 
 
 async def initialize_services():

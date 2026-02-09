@@ -12,11 +12,13 @@ from health import check_database_connection
 
 
 class DummyAdmin:
-    def __init__(self, should_raise: bool = False):
+    def __init__(self, should_raise: bool = False, expected_command: str | None = "ping"):
         self.should_raise = should_raise
+        self.expected_command = expected_command
 
     async def command(self, name: str):
-        assert name == "ping"
+        if self.expected_command:
+            assert name == self.expected_command
         if self.should_raise:
             raise RuntimeError("ping failed")
         return {"ok": 1}
