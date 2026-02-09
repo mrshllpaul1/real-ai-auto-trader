@@ -194,7 +194,17 @@ class LSTMTimeSeriesPredictor:
         }
     
     def _extract_features(self, df: pd.DataFrame) -> np.ndarray:
-        """Extract technical features from price data"""
+        """Extract technical features from price data with caching"""
+        # Generate cache key from dataframe hash
+        df_hash = hashlib.md5(str(df.values.tobytes()).encode()).hexdigest()[:12]
+        cache_key = f"drl_features:{df_hash}"
+        
+        # Check cache
+        cached = ml_cache.get(cache_key)
+        if cached is not None:
+            logger.debug(f"Cache hit for DRL features")
+            return cached
+        
         features = []
         
         close = df['close'].values if 'close' in df else df.iloc[:, 0].values
@@ -233,7 +243,13 @@ class LSTMTimeSeriesPredictor:
         vol_ma = pd.Series(volume).rolling(20).mean().fillna(method='bfill').values
         features.append(volume / (vol_ma + 1e-8))
         
-        return np.column_stack(features)
+        result = np.column_stack(features)
+        
+        # Cache for 1 hour
+        ml_cache.set(cache_key, result, ttl=3600)
+        logger.debug(f"Cached DRL features: {cache_key}")
+        
+        return result
     
     def predict(self, recent_data: np.ndarray) -> Dict[str, Any]:
         """Predict next 5 time steps"""
