@@ -17,6 +17,13 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 import numpy as np
 from enum import Enum
 import logging
+import hashlib
+
+# Import ML caching decorators
+from services.ml_cache import (
+    cache_features, cache_prediction, cache_training_data, cache_sequences,
+    ml_cache, FeatureCache, PredictionCache
+)
 
 logger = logging.getLogger(__name__)
 
