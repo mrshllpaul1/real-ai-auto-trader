@@ -847,7 +847,7 @@ class RegimePredictionEngine:
                 ({'name': n, 'accuracy': round(a, 1)} 
                  for n, a in sorted_models if n in ['lstm', 'gru']),
                 None
-            ) if TF_AVAILABLE else None
+            ) if self._dl_initialized else None
         }
     
     async def get_training_history(self, limit: int = 10) -> List[Dict]:
