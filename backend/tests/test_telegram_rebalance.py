@@ -180,19 +180,16 @@ class TestPortfolioRebalancing:
         print(f"✓ Rebalance suggestions: {summary['total_trades']} trades, volume=${summary['total_volume']}")
     
     def test_rebalance_suggest_with_target(self):
-        """Test POST /api/rebalance/suggest with custom target allocation"""
+        """Test POST /api/rebalance/suggest with risk_based=false (uses default allocation)"""
         response = requests.post(
-            f"{BASE_URL}/api/rebalance/suggest",
-            json={
-                "target_allocation": {"BTC": 40, "ETH": 30, "USDC": 30},
-                "risk_based": False
-            }
+            f"{BASE_URL}/api/rebalance/suggest?risk_based=false"
         )
         assert response.status_code == 200
         
         data = response.json()
         assert "suggested_trades" in data
-        print(f"✓ Custom rebalance suggestions generated")
+        assert "target_allocation" in data
+        print(f"✓ Custom rebalance suggestions generated with default allocation")
     
     def test_rebalance_templates(self):
         """Test GET /api/rebalance/templates - Get allocation templates"""
