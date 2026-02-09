@@ -49,6 +49,8 @@ const Settings = () => {
 
   useEffect(() => {
     checkCredentials();
+    checkBinanceCredentials();
+    checkKucoinCredentials();
     loadRiskSettings();
     loadNotificationSettings();
   }, []);
@@ -59,6 +61,24 @@ const Settings = () => {
       setHasCredentials(response.data.has_credentials);
     } catch (error) {
       console.error('Error checking credentials:', error);
+    }
+  };
+
+  const checkBinanceCredentials = async () => {
+    try {
+      const response = await api.get('/auth/binance/check');
+      setHasBinanceCredentials(response.data.has_credentials);
+    } catch (error) {
+      console.error('Error checking Binance credentials:', error);
+    }
+  };
+
+  const checkKucoinCredentials = async () => {
+    try {
+      const response = await api.get('/auth/kucoin/check');
+      setHasKucoinCredentials(response.data.has_credentials);
+    } catch (error) {
+      console.error('Error checking KuCoin credentials:', error);
     }
   };
 
