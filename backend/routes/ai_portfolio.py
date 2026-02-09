@@ -70,6 +70,7 @@ async def rebalance_portfolio(request: RebalanceRequest):
     Execute portfolio rebalancing to match AI target allocation.
     This will execute real trades on Kraken if configured.
     """
+    ai_portfolio_manager = get_ai_portfolio_manager()
     if not ai_portfolio_manager:
         raise HTTPException(status_code=500, detail="AI Portfolio Manager not initialized")
     
@@ -86,6 +87,7 @@ async def get_portfolio_status(user_id: str = "default"):
     - Target allocation
     - AI strategy details
     """
+    ai_portfolio_manager = get_ai_portfolio_manager()
     if not ai_portfolio_manager:
         raise HTTPException(status_code=500, detail="AI Portfolio Manager not initialized")
     
@@ -99,6 +101,7 @@ async def start_autonomous_trading(request: RebalanceRequest):
     Start AI autonomous trading mode.
     AI will continuously monitor, develop strategies, and execute trades.
     """
+    ai_portfolio_manager = get_ai_portfolio_manager()
     if not ai_portfolio_manager:
         raise HTTPException(status_code=500, detail="AI Portfolio Manager not initialized")
     
@@ -115,6 +118,7 @@ async def start_autonomous_trading(request: RebalanceRequest):
 @router.post("/stop-autonomous")
 async def stop_autonomous_trading():
     """Stop AI autonomous trading"""
+    ai_portfolio_manager = get_ai_portfolio_manager()
     if not ai_portfolio_manager:
         raise HTTPException(status_code=500, detail="AI Portfolio Manager not initialized")
     
@@ -128,6 +132,7 @@ async def stop_autonomous_trading():
 @router.get("/trades/{user_id}")
 async def get_ai_trades(user_id: str = "default", limit: int = 50):
     """Get history of AI-executed trades"""
+    ai_portfolio_manager = get_ai_portfolio_manager()
     if not ai_portfolio_manager:
         raise HTTPException(status_code=500, detail="AI Portfolio Manager not initialized")
     
