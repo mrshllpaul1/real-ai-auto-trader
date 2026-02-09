@@ -341,9 +341,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Enhanced AI Training Endpoint Implementation"
+    - "Market Data Endpoints Parameter Fix"
+    - "TensorFlow ML Integration Fix"
   stuck_tasks:
-    - "Enhanced AI Training Endpoint"
+    - "Tethys Execute Trade Endpoint"
+    - "Market Data Endpoints"
+    - "TensorFlow ML Integration"
   test_all: false
   test_priority: "high_first"
 
