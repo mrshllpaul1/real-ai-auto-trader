@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="10" skipped="0" tests="14" time="486.737" timestamp="2026-02-09T05:41:35.564329+00:00" hostname="agent-env-4b258e2d-aac7-46b6-a594-8918a99e9b69"><testcase classname="backend.tests.test_performance_apis.TestHealthAndPerformance" name="test_health_endpoint_response_time" time="9.185"><failure message="AssertionError: Health endpoint took 9.184s (expected &lt;0.5s)&#10;assert 9.184050798416138 &lt; 0.5">backend/tests/test_performance_apis.py:23: in test_health_endpoint_response_time
+    assert response_time &lt; 0.5, f"Health endpoint took {response_time:.3f}s (expected &lt;0.5s)"
+E   AssertionError: Health endpoint took 9.184s (expected &lt;0.5s)
+E   assert 9.184050798416138 &lt; 0.5</failure></testcase><testcase classname="backend.tests.test_performance_apis.TestKrakenPortfolioAPI" name="test_kraken_portfolio_returns_data" time="330.490"><failure message="AssertionError: Missing 'holdings_count' field&#10;assert 'holdings_count' in {'error': 'Kraken service not initialized', 'holdings': [], 'total_value_usd': 0}">backend/tests/test_performance_apis.py:44: in test_kraken_portfolio_returns_data
+    assert 'holdings_count' in data, "Missing 'holdings_count' field"
+E   AssertionError: Missing 'holdings_count' field
+E   assert 'holdings_count' in {'error': 'Kraken service not initialized', 'holdings': [], 'total_value_usd': 0}</failure></testcase><testcase classname="backend.tests.test_performance_apis.TestGrowthStatusAPI" name="test_growth_status_returns_autopilot_active" time="0.092" /><testcase classname="backend.tests.test_performance_apis.TestMasterStatusAPI" name="test_master_status_returns_orchestrator_status" time="0.065" /><testcase classname="backend.tests.test_performance_apis.TestEnhancedAIStatusAPI" name="test_enhanced_ai_status_returns_model_statuses" time="0.043" /><testcase classname="backend.tests.test_performance_apis.TestTrainingAPI" name="test_train_all_models_endpoint" time="2.534" /><testcase classname="backend.tests.test_performance_apis.TestSpotTradingAPIs" name="test_spot_pairs_endpoint" time="0.970"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_performance_apis.py:166: in test_spot_pairs_endpoint
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_performance_apis.TestSpotTradingAPIs" name="test_spot_balance_endpoint" time="22.418"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_performance_apis.py:183: in test_spot_balance_endpoint
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_performance_apis.TestSpotTradingAPIs" name="test_spot_ai_recommendations_endpoint" time="0.135"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_performance_apis.py:194: in test_spot_ai_recommendations_endpoint
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_performance_apis.TestAPIResponseTimes" name="test_api_response_time[/api/health-0.5]" time="18.577"><failure message="AssertionError: /api/health took 18.576s (expected &lt;0.5s)&#10;assert 18.575886726379395 &lt; 0.5">backend/tests/test_performance_apis.py:220: in test_api_response_time
+    assert response_time &lt; max_time, f"{endpoint} took {response_time:.3f}s (expected &lt;{max_time}s)"
+E   AssertionError: /api/health took 18.576s (expected &lt;0.5s)
+E   assert 18.575886726379395 &lt; 0.5</failure></testcase><testcase classname="backend.tests.test_performance_apis.TestAPIResponseTimes" name="test_api_response_time[/api/trading/kraken/portfolio-2.0]" time="20.283"><failure message="AssertionError: /api/trading/kraken/portfolio took 20.282s (expected &lt;2.0s)&#10;assert 20.282474517822266 &lt; 2.0">backend/tests/test_performance_apis.py:220: in test_api_response_time
+    assert response_time &lt; max_time, f"{endpoint} took {response_time:.3f}s (expected &lt;{max_time}s)"
+E   AssertionError: /api/trading/kraken/portfolio took 20.282s (expected &lt;2.0s)
+E   assert 20.282474517822266 &lt; 2.0</failure></testcase><testcase classname="backend.tests.test_performance_apis.TestAPIResponseTimes" name="test_api_response_time[/api/growth/status-2.0]" time="42.945"><failure message="AssertionError: /api/growth/status took 42.944s (expected &lt;2.0s)&#10;assert 42.94365620613098 &lt; 2.0">backend/tests/test_performance_apis.py:220: in test_api_response_time
+    assert response_time &lt; max_time, f"{endpoint} took {response_time:.3f}s (expected &lt;{max_time}s)"
+E   AssertionError: /api/growth/status took 42.944s (expected &lt;2.0s)
+E   assert 42.94365620613098 &lt; 2.0</failure></testcase><testcase classname="backend.tests.test_performance_apis.TestAPIResponseTimes" name="test_api_response_time[/api/master/status-1.0]" time="20.201"><failure message="AssertionError: /api/master/status took 20.201s (expected &lt;1.0s)&#10;assert 20.20057225227356 &lt; 1.0">backend/tests/test_performance_apis.py:220: in test_api_response_time
+    assert response_time &lt; max_time, f"{endpoint} took {response_time:.3f}s (expected &lt;{max_time}s)"
+E   AssertionError: /api/master/status took 20.201s (expected &lt;1.0s)
+E   assert 20.20057225227356 &lt; 1.0</failure></testcase><testcase classname="backend.tests.test_performance_apis.TestAPIResponseTimes" name="test_api_response_time[/api/enhanced-ai/status-1.0]" time="18.584"><failure message="AssertionError: /api/enhanced-ai/status took 18.584s (expected &lt;1.0s)&#10;assert 18.583619117736816 &lt; 1.0">backend/tests/test_performance_apis.py:220: in test_api_response_time
+    assert response_time &lt; max_time, f"{endpoint} took {response_time:.3f}s (expected &lt;{max_time}s)"
+E   AssertionError: /api/enhanced-ai/status took 18.584s (expected &lt;1.0s)
+E   assert 18.583619117736816 &lt; 1.0</failure></testcase></testsuite></testsuites>
