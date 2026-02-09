@@ -104,11 +104,9 @@ export default defineConfig(({ mode }) => {
         'react',
         'react-dom',
         'react-router-dom'
-      ],
-      exclude: [
-        'recharts',
-        'lightweight-charts'
       ]
+      // Note: recharts and lightweight-charts are intentionally not excluded
+      // They are in vendor-charts manual chunk for lazy loading when needed
     }
   };
 });
