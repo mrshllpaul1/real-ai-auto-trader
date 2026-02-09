@@ -22,8 +22,7 @@ const UnifiedCommandCenter = lazy(() => import("./pages/UnifiedCommandCenter"));
 const TradingView = lazy(() => import("./pages/TradingView"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Settings = lazy(() => import("./pages/Settings"));
-const AILearning = lazy(() => import("./pages/AILearning"));
-const AILearningLoop = lazy(() => import("./pages/AILearningLoop"));
+const AITraining = lazy(() => import("./pages/AITraining"));
 const NewsAndIntelligence = lazy(() => import("./pages/NewsAndIntelligence"));
 const NewsFilters = lazy(() => import("./pages/NewsFilters"));
 const CopyTrading = lazy(() => import('./pages/CopyTrading'));
@@ -52,7 +51,7 @@ const PortfolioDashboard = lazy(() => import("./pages/PortfolioDashboard"));
 const StrategyBuilder = lazy(() => import("./pages/StrategyBuilder"));
 const SpotTrading = lazy(() => import("./pages/SpotTrading"));
 const ModelPerformanceDashboard = lazy(() => import("./pages/ModelPerformanceDashboard"));
-const TethysDashboard = lazy(() => import("./pages/TethysDashboard"));
+
 
 function App() {
   useEffect(() => {
@@ -105,8 +104,9 @@ function App() {
                   <Route path="/strategies" element={<StrategyBuilder />} />
                   <Route path="/trading" element={<TradingView />} />
                   <Route path="/analytics" element={<Analytics />} />
-                  <Route path="/learning" element={<AILearning />} />
-                  <Route path="/learning-loop" element={<AILearningLoop />} />
+                  <Route path="/learning" element={<AITraining />} />
+                  <Route path="/learning-loop" element={<AITraining />} />
+                  <Route path="/training" element={<AITraining />} />
                   <Route path="/ensemble" element={<EnsembleAI />} />
                   <Route path="/triggers" element={<EventTriggers />} />
                 <Route path="/gem-backtest" element={<GemBacktester />} />
@@ -131,7 +131,7 @@ function App() {
                 <Route path="/gem-ml-dl" element={<GemMLDLComparison />} />
                 <Route path="/portfolio-dashboard" element={<PortfolioDashboard />} />
                 <Route path="/strategy-builder" element={<StrategyBuilder />} />
-                <Route path="/training" element={<TethysDashboard />} />
+
                 <Route path="/spot-trading" element={<SpotTrading />} />
                 <Route path="/spot" element={<SpotTrading />} />
                 <Route path="/models" element={<ModelPerformanceDashboard />} />
