@@ -610,8 +610,8 @@ class RegimePredictionEngine:
                 }
                 print(f"  ❌ {name}: {e}")
         
-        # Train DL models if available
-        if TF_AVAILABLE:
+        # Train DL models if available (lazy load TF)
+        if self._ensure_dl_models():
             # Prepare sequences for LSTM/GRU
             X_seq, y_seq = self._prepare_sequences(X_scaled, y)
             
