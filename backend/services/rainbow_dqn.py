@@ -26,18 +26,32 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-try:
-    import tensorflow as tf
-    from tensorflow import keras
-    from tensorflow.keras import layers, Model, optimizers
-    from tensorflow.keras.layers import (
-        Dense, Input, LayerNormalization, Dropout,
-        MultiHeadAttention, Add, Embedding, Reshape, Activation, Softmax
-    )
-    TF_AVAILABLE = True
-except ImportError:
-    TF_AVAILABLE = False
-    logger.warning("TensorFlow not available")
+# Lazy TensorFlow loading - only import when actually needed
+TF_AVAILABLE = False
+tf = None
+keras = None
+layers = None
+Model = None
+optimizers = None
+
+def _ensure_tf():
+    """Lazy load TensorFlow only when needed"""
+    global TF_AVAILABLE, tf, keras, layers, Model, optimizers
+    if tf is not None:
+        return TF_AVAILABLE
+    try:
+        import tensorflow as _tf
+        tf = _tf
+        keras = tf.keras
+        layers = keras.layers
+        Model = keras.Model
+        optimizers = keras.optimizers
+        TF_AVAILABLE = True
+        logger.info("TensorFlow loaded successfully")
+    except ImportError:
+        TF_AVAILABLE = False
+        logger.warning("TensorFlow not available")
+    return TF_AVAILABLE
 
 
 # =============================================================================
