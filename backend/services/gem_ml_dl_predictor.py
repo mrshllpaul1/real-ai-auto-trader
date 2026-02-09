@@ -348,6 +348,15 @@ class GemPredictionEngine:
         )
         return model
     
+    def _generate_data_hash(self, ohlcv_data: List[Dict]) -> str:
+        """Generate a hash for OHLCV data to use as cache key"""
+        # Use last few data points to generate hash
+        if len(ohlcv_data) >= 5:
+            sample = str(ohlcv_data[-5:])
+        else:
+            sample = str(ohlcv_data)
+        return hashlib.md5(sample.encode()).hexdigest()[:12]
+    
     async def _prepare_features(self, ohlcv_data: List[Dict]) -> np.ndarray:
         """
         Prepare gem-specific features from OHLCV data.
@@ -362,6 +371,14 @@ class GemPredictionEngine:
         """
         if len(ohlcv_data) < 35:
             return None
+        
+        # Check cache first
+        data_hash = self._generate_data_hash(ohlcv_data)
+        cache_key = f"gem_features:{data_hash}"
+        cached_features = ml_cache.get(cache_key)
+        if cached_features is not None:
+            logger.debug(f"Cache hit for gem features: {cache_key}")
+            return cached_features
         
         def get_sort_key(x):
             ts = x.get('timestamp', x.get('date', 0))
@@ -429,7 +446,14 @@ class GemPredictionEngine:
             
             features.append(feature_row)
         
-        return np.array(features) if features else None
+        result = np.array(features) if features else None
+        
+        # Cache the result (30 minute TTL for features)
+        if result is not None:
+            ml_cache.set(cache_key, result, ttl=1800)
+            logger.debug(f"Cached gem features: {cache_key}")
+        
+        return result
     
     def _determine_gem_label(self, features: np.ndarray, future_return: float = None) -> int:
         """
