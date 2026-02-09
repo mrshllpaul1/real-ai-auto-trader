@@ -186,6 +186,8 @@ const Sidebar = () => {
     { path: '/portfolio-dashboard', icon: PieChart, label: 'Portfolio', highlight: true },
     { path: '/copy-trading', icon: Users, label: 'Copy Trading', highlight: true },
     { path: '/market-maker', icon: Activity, label: 'Market Maker', highlight: true },
+    { path: '/options-trading', icon: Target, label: 'Options', highlight: true },
+    { path: '/backtest-engine', icon: BarChart3, label: 'Backtest Engine', highlight: true },
     { path: '/triggers', icon: Target, label: 'Event Triggers', highlight: true },
     { path: '/trigger-performance', icon: Award, label: 'Trigger Stats', highlight: true },
     { path: '/adaptive', icon: Gauge, label: 'Adaptive AI', highlight: true },
