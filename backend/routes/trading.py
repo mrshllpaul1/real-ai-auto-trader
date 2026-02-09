@@ -298,9 +298,9 @@ def _use_cached_portfolio(reason: str):
     if cached:
         response = {**cached}
         response["stale"] = True
-        response["cache_age"] = round(
-            time.time() - (_kraken_portfolio_cache.get("timestamp") or time.time()), 2
-        )
+        cache_ts = _kraken_portfolio_cache.get("timestamp")
+        if cache_ts is not None:
+            response["cache_age"] = round(time.time() - cache_ts, 2)
         response["message"] = f"Using cached Kraken portfolio ({reason})"
         return response
 
@@ -312,6 +312,23 @@ def _use_cached_portfolio(reason: str):
         "stale": True,
         "error": reason,
     }
+
+
+def _apply_cached_prices(asset_to_pair: dict, kraken_prices: dict) -> bool:
+    """
+    Populate kraken_prices from cached portfolio holdings.
+    Returns True if any cached prices were applied.
+    """
+    cached = _kraken_portfolio_cache.get("data") or {}
+    used = False
+    for holding in cached.get("holdings", []):
+        asset = holding.get("asset")
+        pair = asset_to_pair.get(asset)
+        price = holding.get("price_usd")
+        if pair and price is not None:
+            kraken_prices[pair] = price
+            used = True
+    return used
 
 
 @router.get("/kraken/portfolio")
@@ -420,14 +437,8 @@ async def get_kraken_portfolio():
                     logger.info(f"Fetched {len(kraken_prices)} Kraken prices")
                 else:
                     logger.warning("Kraken returned no ticker data; attempting to reuse cached prices")
-                    cached = _kraken_portfolio_cache.get("data") or {}
-                    for holding in cached.get("holdings", []):
-                        asset = holding.get("asset")
-                        pair = asset_to_pair.get(asset)
-                        if pair:
-                            kraken_prices[pair] = holding.get("price_usd", 0)
-                            using_cached_prices = True
-                    if not kraken_prices:
+                    using_cached_prices = _apply_cached_prices(asset_to_pair, kraken_prices)
+                    if not using_cached_prices:
                         logger.warning("No cached ticker prices available; proceeding with zero pricing")
                         price_data_missing = True
             except asyncio.TimeoutError:
