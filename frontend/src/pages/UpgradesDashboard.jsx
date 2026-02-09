@@ -90,6 +90,7 @@ const UpgradesDashboard = () => {
 
       {/* Tab Content */}
       {activeTab === 'overview' && <OverviewTab status={status} />}
+      {activeTab === 'whale' && <WhaleTab />}
       {activeTab === 'notifications' && <NotificationsTab />}
       {activeTab === 'arbitrage' && <ArbitrageTab />}
       {activeTab === 'rebalancer' && <RebalancerTab />}
@@ -103,6 +104,13 @@ const OverviewTab = ({ status }) => {
   const features = status?.features || {};
 
   const featureCards = [
+    {
+      name: 'Whale Tracker',
+      icon: Waves,
+      status: features.whale_tracking?.is_monitoring,
+      stats: `${features.whale_tracking?.wallets_watched || 0} wallets`,
+      color: 'blue'
+    },
     {
       name: 'Push Notifications',
       icon: Bell,
