@@ -20,9 +20,9 @@ Build a real money AI crypto auto trading app with aggressive growth strategy. T
 #### P1 - AI Enhancement (Framework Ready)
 | Feature | Status | Description |
 |---------|--------|-------------|
-| Sentiment Dashboard | 🔄 Framework | Twitter/Reddit integration planned |
-| Whale Tracking | 🔄 Framework | On-chain monitoring planned |
-| Backtest Simulator | 🔄 Framework | Historical testing planned |
+| **Sentiment Dashboard** | ✅ Live | Reddit sentiment analysis with bullish/bearish scoring |
+| **Whale Tracking** | ✅ Live | Etherscan integration for whale wallet monitoring |
+| **Backtest Simulator** | ✅ Live | 7 strategies (SMA, RSI, MACD, Bollinger, Momentum, DCA, Buy&Hold) |
 | AI A/B Testing | 🔄 Framework | Model comparison planned |
 
 #### PWA - Mobile App
