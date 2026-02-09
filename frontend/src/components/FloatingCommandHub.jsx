@@ -12,9 +12,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
+import { getBackendUrl } from '../services/backendUrl';
 import { toast } from 'sonner';
 
-const API_URL = window.__RUNTIME_CONFIG__?.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+const API_URL = getBackendUrl();
 
 const FloatingCommandHub = () => {
   const navigate = useNavigate();

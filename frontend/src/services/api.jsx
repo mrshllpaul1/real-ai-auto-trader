@@ -1,9 +1,9 @@
 import axios from 'axios';
+import { getApiBaseUrl, getBackendUrl } from './backendUrl';
 
-// Force use the correct backend URL from build-time env
-// This ensures we don't use stale runtime config
-const BACKEND_URL = 'https://tethys-trade.preview.emergentagent.com';
-const API = `${BACKEND_URL}/api`;
+// Resolve backend URL from runtime config/env with local fallback
+const BACKEND_URL = getBackendUrl();
+const API = getApiBaseUrl();
 
 console.log('[API Service] Using backend URL:', BACKEND_URL);
 

@@ -5,8 +5,9 @@ import {
   ArrowRight, BarChart2, Activity, Clock, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getBackendUrl } from '../services/backendUrl';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = getBackendUrl();
 
 // Price Ticker Component
 const PriceTicker = ({ symbol, name, price, change24h, volume24h, onClick, selected }) => {
