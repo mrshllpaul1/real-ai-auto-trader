@@ -186,30 +186,30 @@ const MasterTab = ({ orchestratorStatus, onToggleOrchestrator }) => (
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Badge className={orchestratorStatus?.is_running ? 'bg-green-500' : 'bg-gray-600'}>
-            {orchestratorStatus?.is_running ? 'ACTIVE' : 'STOPPED'}
+          <Badge className={orchestratorStatus?.is_active ? 'bg-green-500' : 'bg-gray-600'}>
+            {orchestratorStatus?.is_active ? 'ACTIVE' : 'STOPPED'}
           </Badge>
         </CardContent>
       </Card>
 
       <Card className="bg-gray-900/50 border-gray-800">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm text-gray-400">Active Strategies</CardTitle>
+          <CardTitle className="text-sm text-gray-400">Mode</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-cyan-400">
-            {orchestratorStatus?.active_strategies || 0}
+          <div className="text-xl font-bold text-cyan-400 capitalize">
+            {orchestratorStatus?.mode?.replace('_', ' ') || 'Auto'}
           </div>
         </CardContent>
       </Card>
 
       <Card className="bg-gray-900/50 border-gray-800">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm text-gray-400">Today's Trades</CardTitle>
+          <CardTitle className="text-sm text-gray-400">Executed Trades</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-white">
-            {orchestratorStatus?.trades_today || 0}
+            {orchestratorStatus?.stats?.executed_trades || 0}
           </div>
         </CardContent>
       </Card>
@@ -221,11 +221,11 @@ const MasterTab = ({ orchestratorStatus, onToggleOrchestrator }) => (
         <CardContent>
           <Button
             onClick={onToggleOrchestrator}
-            className={orchestratorStatus?.is_running 
+            className={orchestratorStatus?.is_active 
               ? 'bg-red-600 hover:bg-red-700' 
               : 'bg-cyan-600 hover:bg-cyan-700'}
           >
-            {orchestratorStatus?.is_running ? 'Stop' : 'Start'} Orchestrator
+            {orchestratorStatus?.is_active ? 'Stop' : 'Start'} Orchestrator
           </Button>
         </CardContent>
       </Card>
