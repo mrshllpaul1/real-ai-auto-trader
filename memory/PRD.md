@@ -334,9 +334,10 @@ Using Black-Scholes model with:
 - Options prices are simulated (not connected to real options exchange)
 - Backtest uses simulated price data with random walk
 - Heavy ML operations disabled by default (lightweight mode)
-- **New P0 features use MOCK data**: Advanced Orders, DeFi Wallet positions, Yield Farming, Perpetual Futures
+- **P0/P1 features use MOCK data**: Advanced Orders, DeFi Wallet, Yield Farming, Perpetual Futures, Rebalancing
 - MetaMask integration requires browser extension for real wallet connection
 - News Sentiment uses real CryptoPanic/CoinDesk APIs
+- **Telegram requires `TELEGRAM_BOT_TOKEN` env var** for actual message delivery
 
 ---
 
@@ -349,8 +350,13 @@ Using Black-Scholes model with:
 | Yield Farming | 6 endpoints | Page + Deposit | ✅ Pass |
 | Perpetual Futures | 6 endpoints | Page + Trade | ✅ Pass |
 | News Sentiment | 4 endpoints | Page + Tabs | ✅ Pass |
+| Risk Analyzer | 6 endpoints | Page + Stress Test | ✅ Pass |
+| Telegram Notifications | 7 endpoints | Page + Alerts | ✅ Pass |
+| Portfolio Rebalancing | 8 endpoints | Page + Templates | ✅ Pass |
 
-Test Report: `/app/test_reports/iteration_40.json`
+Test Reports: 
+- `/app/test_reports/iteration_40.json` - P0 features
+- `/app/test_reports/iteration_41.json` - P1 features
 
 ---
 
