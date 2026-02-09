@@ -101,6 +101,9 @@ function App() {
                 <Route path="/ai-chat" element={<AIChat />} />
                 <Route path="/news" element={<NewsAndIntelligence />} />
                 <Route path="/news-filters" element={<NewsFilters />} />
+                <Route path="/copy-trading" element={<CopyTrading />} />
+                <Route path="/market-maker" element={<MarketMaker />} />
+                <Route path="/dashboard-settings" element={<DashboardCustomization />} />
                 <Route path="/auto-trading" element={<AutoTrading />} />
                 <Route path="/scanner" element={<GemScanner />} />
                 <Route path="/auto-exec" element={<AutoExecution />} />
