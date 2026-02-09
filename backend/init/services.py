@@ -262,6 +262,17 @@ async def _init_phase4_automation(db):
     _services['push_notification'] = push_notification
     automated_trader.notification_service = push_notification
     
+    # P0 Upgrades Services
+    from services.push_notifications import get_push_service
+    from services.arbitrage_service import get_arbitrage_service
+    from services.portfolio_rebalancer import get_rebalancer
+    from services.trailing_stop_service import get_trailing_stop_service
+    
+    _services['push_service'] = get_push_service(db)
+    _services['arbitrage'] = get_arbitrage_service(db, kraken)
+    _services['rebalancer'] = get_rebalancer(db, kraken, market)
+    _services['trailing_stops'] = get_trailing_stop_service(db, kraken, market)
+    
     logger.info("✅ Phase 4: Automation services initialized")
 
 
