@@ -100,13 +100,14 @@ export default defineConfig(({ mode }) => {
     },
     // Performance optimizations
     optimizeDeps: {
+      // Pre-bundle these core dependencies for faster dev server startup
       include: [
         'react',
         'react-dom',
         'react-router-dom'
       ]
-      // Note: recharts and lightweight-charts are intentionally not excluded
-      // They are in vendor-charts manual chunk for lazy loading when needed
+      // Note: Chart libraries (recharts, lightweight-charts) are in vendor-charts
+      // manual chunk for code splitting and lazy loading when pages need them
     }
   };
 });

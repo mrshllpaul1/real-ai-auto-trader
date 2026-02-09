@@ -15,16 +15,11 @@
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         
-        <!-- Preload critical fonts with display=swap for faster text rendering -->
+        <!-- Load fonts asynchronously to avoid render blocking -->
         <link 
             href="https://fonts.googleapis.com/css2?family=Chivo:wght@700;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" 
             rel="stylesheet" 
-            media="print" 
-            onload="this.media='all'; this.onload=null;" 
         />
-        <noscript>
-            <link href="https://fonts.googleapis.com/css2?family=Chivo:wght@700;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-        </noscript>
         
         <script>
             // Runtime config - injected at runtime, not build time
