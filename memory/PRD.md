@@ -7,7 +7,89 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ## Session Update - Feb 9, 2026 (Latest)
 
-### ✅ Major Features Added
+### ✅ P0 Features COMPLETED This Session
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Advanced Orders** | Trailing Stop, DCA Bot, OCO, Iceberg orders | ✅ Complete |
+| **DeFi Wallet** | MetaMask integration, multi-chain support | ✅ Complete |
+| **Yield Farming** | 10 DeFi protocols with APY tracking | ✅ Complete |
+| **Perpetual Futures** | Leverage trading up to 100x, 6 markets | ✅ Complete |
+| **News Sentiment** | AI-powered market sentiment analysis | ✅ Complete |
+
+---
+
+### Advanced Orders (`/advanced-orders`)
+- **Trailing Stop**: Auto-adjusting stop losses that follow price
+- **DCA Bots**: Dollar-cost averaging automation
+- **OCO Orders**: One-Cancels-Other (Take Profit + Stop Loss)
+- **Iceberg Orders**: Large order execution without market impact
+
+**API Endpoints:**
+- `GET /api/advanced-orders/summary` - Order counts
+- `POST /api/advanced-orders/trailing-stop/create` - Create trailing stop
+- `POST /api/advanced-orders/dca/create` - Create DCA bot
+- `POST /api/advanced-orders/oco/create` - Create OCO order
+
+---
+
+### DeFi Wallet (`/defi-wallet`)
+- **MetaMask Connect**: Browser extension integration
+- **Multi-Chain**: Ethereum, BSC, Polygon, Arbitrum, Optimism, Base
+- **Portfolio View**: Token balances, DeFi positions, NFTs
+- **Transaction History**: Recent activity tracking
+
+**API Endpoints:**
+- `GET /api/defi-wallet/supported` - Supported chains & protocols
+- `POST /api/defi-wallet/connect` - Register wallet
+- `GET /api/defi-wallet/balances/{address}` - Token balances
+- `GET /api/defi-wallet/positions/{address}` - DeFi positions
+
+---
+
+### Yield Farming (`/yield-farming`)
+- **10 Protocols**: Lido, Aave, Curve, Yearn, GMX, Uniswap, etc.
+- **APY Tracking**: Real-time yield rates with breakdown
+- **Risk Levels**: Low/Medium/High classification
+- **IL Calculator**: Impermanent loss estimation tool
+
+**API Endpoints:**
+- `GET /api/yield-farming/opportunities` - Available vaults
+- `POST /api/yield-farming/deposit` - Deposit to vault
+- `GET /api/yield-farming/positions` - User positions
+
+---
+
+### Perpetual Futures (`/perpetuals`)
+- **6 Markets**: BTC-PERP, ETH-PERP, SOL-PERP, ARB-PERP, DOGE-PERP, LINK-PERP
+- **Leverage**: Up to 100x on BTC, configurable per market
+- **Funding Rates**: 8-hour funding with predictions
+- **Position Calculator**: PnL/ROE/liquidation estimates
+
+**API Endpoints:**
+- `GET /api/perpetuals/markets` - Available markets
+- `POST /api/perpetuals/position/open` - Open position
+- `POST /api/perpetuals/position/close` - Close position
+- `GET /api/perpetuals/funding-rates` - Funding rates
+
+---
+
+### News Sentiment (`/news-sentiment`)
+- **Market Sentiment**: Overall crypto market score (0-100)
+- **Coin Analysis**: Individual coin sentiment with AI insights
+- **News Feed**: Trending, bullish, and bearish news
+- **Data Sources**: CryptoPanic API, CoinDesk API
+
+**API Endpoints:**
+- `GET /api/sentiment/market` - Market sentiment
+- `GET /api/sentiment/coin/{coin_id}` - Coin-specific analysis
+- `GET /api/sentiment/trending` - Trending news
+
+---
+
+## Previously Implemented Features
+
+### Options Trading & Backtesting (Previous Session)
 
 | Feature | Description | Status |
 |---------|-------------|--------|
@@ -97,8 +179,13 @@ Sidebar:
 ├── Portfolio
 ├── Copy Trading
 ├── Market Maker
-├── Options (NEW)
-├── Backtest Engine (NEW)
+├── Options
+├── Backtest Engine
+├── Advanced Orders (NEW)
+├── DeFi Wallet (NEW)
+├── Yield Farming (NEW)
+├── Perpetuals (NEW)
+├── News Sentiment (NEW)
 ├── Event Triggers
 ├── Trigger Stats
 ├── Adaptive AI
@@ -131,25 +218,30 @@ Sidebar:
 
 | File | Purpose |
 |------|---------|
-| `/app/backend/routes/options_trading.py` | Options trading API with Black-Scholes |
-| `/app/backend/routes/backtest_engine.py` | Backtesting engine API |
-| `/app/frontend/src/pages/OptionsTrading.jsx` | Options trading UI |
-| `/app/frontend/src/pages/BacktestEngine.jsx` | Backtesting UI |
+| `/app/backend/routes/advanced_orders.py` | Advanced order types API |
+| `/app/backend/routes/defi_wallet.py` | DeFi wallet integration API |
+| `/app/backend/routes/yield_farming.py` | Yield farming API |
+| `/app/backend/routes/perpetual_futures.py` | Perpetual futures trading API |
+| `/app/frontend/src/pages/AdvancedOrders.jsx` | Advanced orders UI |
+| `/app/frontend/src/pages/DeFiWallet.jsx` | DeFi wallet UI with MetaMask |
+| `/app/frontend/src/pages/YieldFarming.jsx` | Yield farming dashboard |
+| `/app/frontend/src/pages/PerpetualFutures.jsx` | Perpetuals trading UI |
+| `/app/frontend/src/pages/NewsSentiment.jsx` | News sentiment dashboard |
 
 ---
 
 ## Future Tasks (Remaining)
 
 ### P1 - Upcoming
-- MetaMask Wallet Integration
-- Telegram Notifications
+- Telegram Notifications Bot
 - Mobile PWA
-- DeFi Yield Farming
+- Real exchange API connections (replace mock data)
 
 ### P2+ - Backlog
-- Advanced order types (Trailing Stop, OCO)
 - Strategy marketplace
 - Subscription tiers & referral program
+- Social trading features
+- Multi-language support
 
 ---
 
@@ -174,6 +266,23 @@ Using Black-Scholes model with:
 - Options prices are simulated (not connected to real options exchange)
 - Backtest uses simulated price data with random walk
 - Heavy ML operations disabled by default (lightweight mode)
+- **New P0 features use MOCK data**: Advanced Orders, DeFi Wallet positions, Yield Farming, Perpetual Futures
+- MetaMask integration requires browser extension for real wallet connection
+- News Sentiment uses real CryptoPanic/CoinDesk APIs
+
+---
+
+## Testing Status
+
+| Feature | Backend Tests | Frontend Tests | Status |
+|---------|--------------|----------------|--------|
+| Advanced Orders | 7 endpoints | Page + Modal | ✅ Pass |
+| DeFi Wallet | 6 endpoints | Page + Connect | ✅ Pass |
+| Yield Farming | 6 endpoints | Page + Deposit | ✅ Pass |
+| Perpetual Futures | 6 endpoints | Page + Trade | ✅ Pass |
+| News Sentiment | 4 endpoints | Page + Tabs | ✅ Pass |
+
+Test Report: `/app/test_reports/iteration_40.json`
 
 ---
 
