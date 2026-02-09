@@ -19,6 +19,7 @@ import DeFiWallet from './pages/DeFiWallet';
 import YieldFarming from './pages/YieldFarming';
 import PerpetualFutures from './pages/PerpetualFutures';
 import NewsSentiment from './pages/NewsSentiment';
+import RiskAnalyzer from './pages/RiskAnalyzer';
 import AutoTrading from "./pages/AutoTrading";
 import GemScanner from "./pages/GemScanner";
 import AutoExecution from "./pages/AutoExecution";
@@ -118,6 +119,7 @@ function App() {
                 <Route path="/yield-farming" element={<YieldFarming />} />
                 <Route path="/perpetuals" element={<PerpetualFutures />} />
                 <Route path="/news-sentiment" element={<NewsSentiment />} />
+                <Route path="/risk-analyzer" element={<RiskAnalyzer />} />
                 <Route path="/auto-trading" element={<AutoTrading />} />
                 <Route path="/scanner" element={<GemScanner />} />
                 <Route path="/auto-exec" element={<AutoExecution />} />
