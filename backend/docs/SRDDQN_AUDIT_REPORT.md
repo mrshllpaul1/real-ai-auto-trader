@@ -9,6 +9,18 @@
 
 ---
 
+## Learning AI Upgrade Recommendations (Prioritized)
+
+**P0 (Immediate):**
+- Add Gaussian input noise + CVaR penalty to improve generalization and tail-risk control.
+- Replace ε-greedy exploration with NoisyNets or parameter-space exploration.
+- Implement prioritized experience replay (TD-error weighted sampling).
+
+**P1 (Next):**
+- Increase reward model dropout (0.3–0.4) and add L2 regularization.
+- Add volatility-scaled position sizing and pre-trade data validation.
+- Introduce model drift monitoring with retraining triggers.
+
 ## I. REWARD MODELING PHASE - GAPS IDENTIFIED
 
 ### Current Implementation:
