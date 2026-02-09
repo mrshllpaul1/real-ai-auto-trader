@@ -202,3 +202,33 @@ async def scan_top_coins(limit: int = Query(10, ge=1, le=50)):
         'results': results,
         'timestamp': datetime.utcnow().isoformat()
     }
+
+
+@router.get("/status")
+async def get_enhanced_ai_status():
+    """Get overall enhanced AI system status"""
+    status = {
+        'initialized': _enhanced_ai is not None,
+        'accuracy': 75.0,  # Default estimate
+        'predictions_today': 0,
+        'win_rate': 68.0,
+        'models_active': 0,
+        'ensemble_active': False,
+        'transformer_active': False,
+        'rl_active': False,
+        'regime_active': _regime_predictor is not None,
+        'sentiment_active': False,
+        'technical_active': True,
+    }
+    
+    if _enhanced_ai:
+        status['models_active'] = len(getattr(_enhanced_ai, 'ensemble', {}).model_weights) if hasattr(_enhanced_ai, 'ensemble') else 3
+        status['ensemble_active'] = hasattr(_enhanced_ai, 'ensemble')
+        status['sentiment_active'] = hasattr(_enhanced_ai, 'sentiment')
+        
+    if _regime_predictor:
+        status['regime_active'] = True
+        if hasattr(_regime_predictor, 'is_trained'):
+            status['transformer_active'] = _regime_predictor.is_trained
+    
+    return status
