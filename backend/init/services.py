@@ -1,9 +1,10 @@
 """
 Service Initialization
-Complete modular initialization of all backend services
+Complete modular initialization of all backend services with parallel optimization
 """
 
 import os
+import asyncio
 import logging
 from typing import Any, Dict
 
@@ -25,21 +26,32 @@ def get_all_services() -> Dict[str, Any]:
 
 
 async def initialize_all_services(db):
-    """Initialize all services - called after startup"""
+    """Initialize all services - called after startup with optimized parallelization"""
     global _initialized, _services
     
     if _initialized:
         return _services
     
-    logger.info("🚀 Initializing services...")
+    logger.info("🚀 Initializing services with parallel optimization...")
     
     try:
         # Initialize in phases for proper dependency order
-        await _init_phase1_core(db)
-        await _init_phase2_trading(db)
+        # Phases 1-2 can run in parallel (no dependencies)
+        await asyncio.gather(
+            _init_phase1_core(db),
+            _init_phase2_trading(db)
+        )
+        
+        # Phase 3 depends on phase 1-2
         await _init_phase3_ai(db)
-        await _init_phase4_automation(db)
-        await _init_phase5_predictions(db)
+        
+        # Phases 4-5 can run in parallel (depend on phase 3 but not each other)
+        await asyncio.gather(
+            _init_phase4_automation(db),
+            _init_phase5_predictions(db)
+        )
+        
+        # Phase 6-7 run sequentially (depend on previous phases)
         await _init_phase6_scheduling(db)
         await _init_phase7_wire_dependencies(db)
         

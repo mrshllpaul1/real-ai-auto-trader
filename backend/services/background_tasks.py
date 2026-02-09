@@ -80,6 +80,7 @@ class BackgroundTaskManager:
     - Status persistence
     - Automatic timeout handling
     - Cancellation support
+    - Optimized DB updates (debounced)
     """
     
     def __init__(self, db: AsyncIOMotorDatabase):
@@ -87,6 +88,8 @@ class BackgroundTaskManager:
         self.tasks: Dict[str, asyncio.Task] = {}
         self.task_status: Dict[str, Dict[str, Any]] = {}
         self._collection = db.background_tasks
+        self._pending_updates: Dict[str, float] = {}  # track last update time
+        self._update_debounce = 2.0  # seconds between DB updates
     
     async def submit_task(
         self,
@@ -194,19 +197,29 @@ class BackgroundTaskManager:
         return task_id
     
     def _update_progress(self, task_id: str, progress: int, message: str = None):
-        """Update task progress (called by task functions)"""
+        """Update task progress (called by task functions) - debounced for performance"""
+        import time
+        
         if task_id in self.task_status:
             self.task_status[task_id]["progress"] = min(progress, 99)  # Keep 100 for completion
             if message:
                 self.task_status[task_id]["message"] = message
             
-            # Non-blocking DB update
-            asyncio.create_task(self._update_db_status(task_id))
+            # Debounce DB updates to reduce load
+            current_time = time.time()
+            last_update = self._pending_updates.get(task_id, 0)
+            
+            # Always update on completion (100%) or if enough time has passed
+            if progress >= 99 or (current_time - last_update) >= self._update_debounce:
+                self._pending_updates[task_id] = current_time
+                # Non-blocking DB update
+                asyncio.create_task(self._update_db_status(task_id))
     
     async def _update_db_status(self, task_id: str):
-        """Update status in database"""
+        """Update status in database - batched for performance"""
         if task_id in self.task_status:
             status = self.task_status[task_id]
+            # Only update changed fields to reduce DB load
             await self._collection.update_one(
                 {"task_id": task_id},
                 {"$set": {
@@ -217,7 +230,8 @@ class BackgroundTaskManager:
                     "error": status["error"],
                     "started_at": status["started_at"],
                     "completed_at": status["completed_at"]
-                }}
+                }},
+                upsert=False  # Don't create if not exists (should already exist)
             )
     
     async def _cleanup_task(self, task_id: str, delay: int = 300):

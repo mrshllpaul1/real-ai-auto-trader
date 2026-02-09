@@ -202,10 +202,12 @@ async def startup_event():
 
 async def delayed_init():
     """Initialize services after startup completes"""
-    await asyncio.sleep(5)  # Give health checks more time to pass
+    await asyncio.sleep(1)  # Reduced from 5s to 1s for faster startup
     
+    logger.info("⚡ Starting background service initialization...")
     from init.services import initialize_all_services
     await initialize_all_services(db)
+    logger.info("✅ Background initialization complete")
 
 
 @app.on_event("shutdown")
