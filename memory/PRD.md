@@ -241,11 +241,14 @@ Sidebar:
 ├── Market Maker
 ├── Options
 ├── Backtest Engine
-├── Advanced Orders (NEW)
-├── DeFi Wallet (NEW)
-├── Yield Farming (NEW)
-├── Perpetuals (NEW)
-├── News Sentiment (NEW)
+├── Advanced Orders ⭐
+├── DeFi Wallet ⭐
+├── Yield Farming ⭐
+├── Perpetuals ⭐
+├── News Sentiment ⭐
+├── Risk Analyzer ⭐
+├── Rebalance ⭐
+├── Telegram ⭐
 ├── Event Triggers
 ├── Trigger Stats
 ├── Adaptive AI
@@ -270,6 +273,8 @@ Sidebar:
 ├── Guide
 ├── Setup
 └── Settings
+
+⭐ = Added this session
 ```
 
 ---
