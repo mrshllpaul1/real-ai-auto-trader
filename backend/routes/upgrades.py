@@ -668,6 +668,132 @@ async def get_backtest_result(result_id: str):
 
 
 # ============================================================================
+# AI Model A/B Testing Routes (P1)
+# ============================================================================
+
+class ABTestRequest(BaseModel):
+    name: str
+    model_a: str
+    model_b: str
+    symbol: str = 'BTC'
+
+
+@router.get("/ab-testing/status")
+async def get_ab_testing_status():
+    """Get A/B testing service status"""
+    from services.ab_testing_service import get_ab_testing_service
+    service = get_ab_testing_service()
+    if not service:
+        return {"is_monitoring": False, "message": "Service not initialized"}
+    
+    return await service.get_status()
+
+
+@router.get("/ab-testing/models")
+async def get_available_models():
+    """Get available models for testing"""
+    from services.ab_testing_service import get_ab_testing_service
+    service = get_ab_testing_service()
+    if not service:
+        return {}
+    
+    return await service.get_available_models()
+
+
+@router.post("/ab-testing/create")
+async def create_ab_test(request: ABTestRequest):
+    """Create a new A/B test"""
+    from services.ab_testing_service import get_ab_testing_service
+    service = get_ab_testing_service()
+    if not service:
+        raise HTTPException(500, "A/B testing service not available")
+    
+    return await service.create_test(
+        name=request.name,
+        model_a=request.model_a,
+        model_b=request.model_b,
+        symbol=request.symbol
+    )
+
+
+@router.post("/ab-testing/start")
+async def start_ab_testing():
+    """Start A/B test monitoring"""
+    from services.ab_testing_service import get_ab_testing_service
+    service = get_ab_testing_service()
+    if not service:
+        raise HTTPException(500, "A/B testing service not available")
+    
+    return await service.start_monitoring()
+
+
+@router.post("/ab-testing/stop")
+async def stop_ab_testing():
+    """Stop A/B test monitoring"""
+    from services.ab_testing_service import get_ab_testing_service
+    service = get_ab_testing_service()
+    if not service:
+        raise HTTPException(500, "A/B testing service not available")
+    
+    return await service.stop_monitoring()
+
+
+@router.get("/ab-testing/tests")
+async def get_active_tests():
+    """Get all active A/B tests"""
+    from services.ab_testing_service import get_ab_testing_service
+    service = get_ab_testing_service()
+    if not service:
+        return []
+    
+    return await service.get_active_tests()
+
+
+@router.get("/ab-testing/tests/{test_id}")
+async def get_test_details(test_id: str):
+    """Get details for a specific test"""
+    from services.ab_testing_service import get_ab_testing_service
+    service = get_ab_testing_service()
+    if not service:
+        raise HTTPException(500, "A/B testing service not available")
+    
+    return await service.get_test(test_id)
+
+
+@router.get("/ab-testing/tests/{test_id}/results")
+async def get_test_results(test_id: str):
+    """Get results for a specific test"""
+    from services.ab_testing_service import get_ab_testing_service
+    service = get_ab_testing_service()
+    if not service:
+        raise HTTPException(500, "A/B testing service not available")
+    
+    return await service.get_test_results(test_id)
+
+
+@router.post("/ab-testing/tests/{test_id}/stop")
+async def stop_test(test_id: str):
+    """Stop a specific test"""
+    from services.ab_testing_service import get_ab_testing_service
+    service = get_ab_testing_service()
+    if not service:
+        raise HTTPException(500, "A/B testing service not available")
+    
+    return await service.stop_test(test_id)
+
+
+@router.get("/ab-testing/leaderboard")
+async def get_model_leaderboard():
+    """Get model performance leaderboard"""
+    from services.ab_testing_service import get_ab_testing_service
+    service = get_ab_testing_service()
+    if not service:
+        return []
+    
+    return await service.get_model_leaderboard()
+
+
+# ============================================================================
 # Combined Status Endpoint
 # ============================================================================
 
