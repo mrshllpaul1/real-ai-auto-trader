@@ -598,7 +598,22 @@ class SchedulerService:
         Execute weekly AI retraining with real market data.
         This updates the AI's pattern recognition and hidden gem detection.
         Trains on ALL coins in the universe for comprehensive learning.
+        
+        Respects ML_LIGHTWEIGHT_MODE and ENABLE_ML_TRAINING environment flags.
         """
+        import os
+        lightweight_mode = os.getenv('ML_LIGHTWEIGHT_MODE', 'false').lower() == 'true'
+        enable_training = os.getenv('ENABLE_ML_TRAINING', 'true').lower() == 'true'
+        
+        if lightweight_mode or not enable_training:
+            logger.info("🚀 ML Lightweight mode - skipping auto-retrain")
+            return {
+                'success': True,
+                'status': 'skipped',
+                'reason': 'lightweight_mode_enabled',
+                'message': 'ML training disabled for deployment efficiency'
+            }
+        
         timestamp = datetime.utcnow()
         logger.info(f"🧠 [{timestamp.strftime('%H:%M')}] Running weekly AI retraining...")
         
