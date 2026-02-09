@@ -788,9 +788,9 @@ async def get_model_leaderboard():
     from services.ab_testing_service import get_ab_testing_service
     service = get_ab_testing_service()
     if not service:
-        return []
+        return {}
     
-    return await service.get_model_leaderboard()
+    return await service.get_performance()
 
 
 # ============================================================================
