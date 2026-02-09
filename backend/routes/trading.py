@@ -405,6 +405,7 @@ async def get_kraken_portfolio():
         # Fetch prices from Kraken directly
         kraken_prices = {}
         using_cached_prices = False
+        price_data_missing = False
         if kraken_pairs:
             try:
                 ticker_data = await asyncio.wait_for(
@@ -428,7 +429,7 @@ async def get_kraken_portfolio():
                             using_cached_prices = True
                     if not kraken_prices:
                         logger.warning("No cached ticker prices available; proceeding with zero pricing")
-                        using_cached_prices = True
+                        price_data_missing = True
             except asyncio.TimeoutError:
                 logger.warning("Kraken price batch timed out")
                 return _use_cached_portfolio("price timeout")
@@ -505,7 +506,7 @@ async def get_kraken_portfolio():
             "total_value_usd": round(total_value_usd, 2),
             "holdings_count": len(holdings),
             "last_updated": datetime.now(timezone.utc).isoformat(),
-            "stale": using_cached_prices,
+            "stale": using_cached_prices or price_data_missing,
         }
         
         # Cache the result
