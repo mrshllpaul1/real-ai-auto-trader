@@ -145,8 +145,13 @@ def get_noisy_dense():
 # CAUSAL TRANSFORMER ENCODER (168 timesteps)
 # =============================================================================
 
-class PositionalEncoding(layers.Layer):
-    """Sinusoidal positional encoding for transformer"""
+def _get_positional_encoding_class():
+    """Create PositionalEncoding class if TensorFlow is available"""
+    if not _ensure_tf():
+        return None
+    
+    class PositionalEncoding(layers.Layer):
+        """Sinusoidal positional encoding for transformer"""
     
     def __init__(self, max_len: int = 168, d_model: int = 128, **kwargs):
         super().__init__(**kwargs)
