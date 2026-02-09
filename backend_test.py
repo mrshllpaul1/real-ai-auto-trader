@@ -69,6 +69,7 @@ class BackendTester:
             if method.upper() == 'GET':
                 async with self.session.get(url) as response:
                     status = response.status
+                    headers = dict(response.headers)
                     try:
                         resp_data = await response.json()
                     except:
@@ -76,6 +77,7 @@ class BackendTester:
             elif method.upper() == 'POST':
                 async with self.session.post(url, json=data) as response:
                     status = response.status
+                    headers = dict(response.headers)
                     try:
                         resp_data = await response.json()
                     except:
@@ -87,7 +89,7 @@ class BackendTester:
             self.log_result(test_name, success, status, resp_data, 
                           None if success else f"Unexpected status code: {status}")
             
-            return {'success': success, 'status': status, 'data': resp_data}
+            return {'success': success, 'status': status, 'data': resp_data, 'headers': headers}
             
         except Exception as e:
             error_msg = str(e)
