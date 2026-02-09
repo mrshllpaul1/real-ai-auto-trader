@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
+import asyncio
 import time
 import logging
 
@@ -286,6 +287,32 @@ _kraken_portfolio_cache = {
     "ttl": 60  # Cache for 60 seconds
 }
 
+# Fast-fail timeouts to keep portfolio endpoint responsive
+_KRAKEN_BALANCE_TIMEOUT = 2.0
+_KRAKEN_TICKER_TIMEOUT = 1.5
+
+
+def _use_cached_portfolio(reason: str):
+    """Return cached portfolio when Kraken is slow or unavailable."""
+    cached = _kraken_portfolio_cache.get("data")
+    if cached:
+        response = {**cached}
+        response["stale"] = True
+        response["cache_age"] = round(
+            time.time() - (_kraken_portfolio_cache.get("timestamp") or time.time()), 2
+        )
+        response["message"] = f"Using cached Kraken portfolio ({reason})"
+        return response
+
+    # No cache available - return empty but structured response
+    return {
+        "holdings": [],
+        "total_value_usd": 0,
+        "holdings_count": 0,
+        "stale": True,
+        "error": reason,
+    }
+
 
 @router.get("/kraken/portfolio")
 async def get_kraken_portfolio():
@@ -308,8 +335,17 @@ async def get_kraken_portfolio():
         if not kraken_service:
             return {"error": "Kraken service not initialized", "holdings": [], "total_value_usd": 0}
         
-        # Get raw balances from Kraken
-        balances = await kraken_service.get_balance()
+        # Get raw balances from Kraken with aggressive timeout
+        try:
+            balances = await asyncio.wait_for(
+                kraken_service.get_balance(), timeout=_KRAKEN_BALANCE_TIMEOUT
+            )
+        except asyncio.TimeoutError:
+            logger.warning("Kraken balance request timed out")
+            return _use_cached_portfolio("balance timeout")
+        except Exception as e:
+            logger.warning(f"Kraken balance error: {e}")
+            return _use_cached_portfolio(str(e))
         
         if not balances:
             return {"holdings": [], "total_value_usd": 0, "message": "No balances found"}
@@ -370,15 +406,19 @@ async def get_kraken_portfolio():
         kraken_prices = {}
         if kraken_pairs:
             try:
-                ticker_data = await kraken_service.get_tickers_batch(list(set(kraken_pairs)))
+                ticker_data = await asyncio.wait_for(
+                    kraken_service.get_tickers_batch(list(set(kraken_pairs))),
+                    timeout=_KRAKEN_TICKER_TIMEOUT,
+                )
                 if ticker_data:
                     for pair, data in ticker_data.items():
                         if isinstance(data, dict) and 'c' in data:
                             price = float(data['c'][0]) if data['c'] else 0
                             kraken_prices[pair] = price
-                logger.info(f"Fetched {len(kraken_prices)} Kraken prices")
+                    logger.info(f"Fetched {len(kraken_prices)} Kraken prices")
             except Exception as e:
                 logger.error(f"Error fetching Kraken prices: {e}")
+                return _use_cached_portfolio("price timeout/error")
         
         # Build portfolio
         holdings = []
@@ -448,7 +488,8 @@ async def get_kraken_portfolio():
             "holdings": holdings,
             "total_value_usd": round(total_value_usd, 2),
             "holdings_count": len(holdings),
-            "last_updated": datetime.utcnow().isoformat()
+            "last_updated": datetime.utcnow().isoformat(),
+            "stale": False,
         }
         
         # Cache the result
@@ -459,4 +500,4 @@ async def get_kraken_portfolio():
     
     except Exception as e:
         print(f"Error fetching Kraken portfolio: {e}")
-        return {"error": str(e), "holdings": [], "total_value_usd": 0}
+        return _use_cached_portfolio(str(e))
