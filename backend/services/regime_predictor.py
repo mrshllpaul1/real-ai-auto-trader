@@ -186,8 +186,9 @@ class RegimePredictionEngine:
             with open(ml_path, 'wb') as f:
                 pickle.dump(ml_data, f)
             
-            # Save DL models
-            if TF_AVAILABLE:
+            # Save DL models if initialized
+            if self._dl_initialized and _ensure_tf():
+                from tensorflow.keras.models import load_model
                 for model_name in ['lstm', 'gru', 'bidirectional_lstm', 'cnn_lstm', 'attention']:
                     if model_name in self.models and hasattr(self.models[model_name], 'save'):
                         model_file = os.path.join(self.model_path, f"{model_name}.keras")
