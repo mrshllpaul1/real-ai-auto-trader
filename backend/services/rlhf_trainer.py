@@ -67,6 +67,14 @@ class RewardModel:
         # Training data
         self.training_data: List[Tuple[Dict, float]] = []
         
+        # Adaptive learning controls
+        self.base_learning_rate = 0.05
+        self.min_learning_rate = 0.005
+        self.momentum_beta = 0.9
+        self.gradient_momentum: Dict[str, float] = {}
+        self.last_effective_lr = self.base_learning_rate
+        self.last_update_at = None
+        
     def predict_reward(self, trade_features: Dict) -> float:
         """Predict human rating for a trade"""
         reward = 0
@@ -87,23 +95,50 @@ class RewardModel:
         predicted = self.predict_reward(trade_features)
         error = human_rating - predicted
         
-        learning_rate = 0.01
+        learning_rate = self._get_effective_learning_rate()
         
         for feature in self.feature_weights:
             if feature in trade_features:
-                value = trade_features[feature]
+                value = self._normalize_feature_value(trade_features[feature])
                 gradient = error * value
+                
+                prev_momentum = self.gradient_momentum.get(feature, 0.0)
+                momentum = self.momentum_beta * prev_momentum + (1 - self.momentum_beta) * gradient
+                self.gradient_momentum[feature] = momentum
                 
                 if feature not in self.learned_adjustments:
                     self.learned_adjustments[feature] = 0
                 
-                self.learned_adjustments[feature] += learning_rate * gradient
+                self.learned_adjustments[feature] += learning_rate * momentum
+        
+        self.last_update_at = datetime.now(timezone.utc)
     
     def get_weights(self) -> Dict:
         """Get current effective weights"""
         return {
             feature: self.feature_weights[feature] + self.learned_adjustments.get(feature, 0)
             for feature in self.feature_weights
+        }
+    
+    def _normalize_feature_value(self, value: float) -> float:
+        """Scale feature values to a stable -1..1 range to prevent gradient spikes"""
+        return float(np.tanh(value / 10))
+    
+    def _get_effective_learning_rate(self) -> float:
+        """Use a decaying learning rate with a safety floor to stabilize training"""
+        decay = 1 / (1 + 0.05 * len(self.training_data))
+        self.last_effective_lr = max(self.min_learning_rate, self.base_learning_rate * decay)
+        return self.last_effective_lr
+    
+    def get_training_signal(self) -> Dict[str, Any]:
+        """Expose training health for monitoring and curriculum building"""
+        adjustments = list(self.learned_adjustments.values())
+        avg_adjustment = float(np.mean(np.abs(adjustments))) if adjustments else 0.0
+        return {
+            "samples": len(self.training_data),
+            "effective_learning_rate": self.last_effective_lr,
+            "avg_adjustment_magnitude": avg_adjustment,
+            "last_update_at": self.last_update_at.isoformat() if self.last_update_at else None
         }
 
 
@@ -296,6 +331,7 @@ class RLHFTrainer:
             **self.stats,
             "pending_trades": len(self.pending_trades),
             "reward_model_weights": self.reward_model.get_weights(),
+            "reward_model_training": self.reward_model.get_training_signal(),
             "recent_ratings": [r.to_dict() for r in self.ratings[-10:]]
         }
     
