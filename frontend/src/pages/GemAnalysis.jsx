@@ -223,6 +223,12 @@ const GemAnalysis = () => {
     }
   };
 
+  const handleViewGemDetails = (symbol) => {
+    // Navigate to spot trading page with the selected symbol
+    window.location.href = `/spot?symbol=${symbol}`;
+    toast.info(`Opening ${symbol} trading view...`);
+  };
+
   // Load data based on active tab
   useEffect(() => {
     if (activeTab === 'scanner') {
@@ -492,7 +498,12 @@ const GemAnalysis = () => {
                                   </div>
                                   <div className="text-xs text-[#A1A1AA]">Potential</div>
                                 </div>
-                                <Button size="sm" className="bg-[#9D00FF] hover:bg-[#8B00E6]">
+                                <Button 
+                                  size="sm" 
+                                  className="bg-[#9D00FF] hover:bg-[#8B00E6]"
+                                  onClick={() => handleViewGemDetails(alert.symbol)}
+                                  title="View trading details"
+                                >
                                   <ArrowUpRight className="h-4 w-4" />
                                 </Button>
                               </div>

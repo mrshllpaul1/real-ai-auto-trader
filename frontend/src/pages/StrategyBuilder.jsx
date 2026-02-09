@@ -302,6 +302,38 @@ const StrategyBuilder = () => {
     }
   };
 
+  const handleBacktest = async () => {
+    if (!generatedStrategy) return;
+
+    try {
+      toast.loading('Starting backtest...');
+      
+      const response = await fetch(`${API_BASE}/api/strategy-builder/backtest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          strategy: generatedStrategy,
+          start_date: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(), // 90 days ago
+          end_date: new Date().toISOString()
+        })
+      });
+      
+      const data = await response.json();
+      toast.dismiss();
+      
+      if (data.success) {
+        toast.success(`Backtest complete! Win rate: ${data.metrics?.win_rate?.toFixed(1) || 0}%`);
+        // Could navigate to backtest results page or show modal with results
+      } else {
+        toast.error('Backtest failed: ' + (data.message || 'Unknown error'));
+      }
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Error running backtest');
+      console.error('Backtest error:', error);
+    }
+  };
+
   const handleActivateStrategy = async (strategyId) => {
     try {
       const response = await fetch(`${API_BASE}/api/strategy-builder/strategies/${strategyId}/activate`, {
@@ -843,7 +875,7 @@ const StrategyBuilder = () => {
                               <Save className="h-4 w-4 mr-2" />
                               Save
                             </Button>
-                            <Button className="bg-green-600 hover:bg-green-700">
+                            <Button className="bg-green-600 hover:bg-green-700" onClick={handleBacktest}>
                               <Play className="h-4 w-4 mr-2" />
                               Backtest
                             </Button>
