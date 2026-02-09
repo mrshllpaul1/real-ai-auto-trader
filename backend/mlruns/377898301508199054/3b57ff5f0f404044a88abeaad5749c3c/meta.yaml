@@ -1,5 +1,5 @@
 artifact_uri: file:///app/backend/mlruns/377898301508199054/3b57ff5f0f404044a88abeaad5749c3c/artifacts
-end_time: null
+end_time: 1770598523098
 entry_point_name: ''
 experiment_id: '377898301508199054'
 lifecycle_stage: active
@@ -9,6 +9,6 @@ source_name: ''
 source_type: 4
 source_version: ''
 start_time: 1770598522436
-status: 1
+status: 4
 tags: []
 user_id: root
