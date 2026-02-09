@@ -162,9 +162,9 @@ async def _init_phase3_ai(db):
     _services['ensemble'] = ensemble_predictor
     _services['universe_optimizer'] = universe_optimizer
     
-    # Performance & Regime
+    # Performance & Regime - Regime predictor deferred to avoid TF loading at startup
     _services['performance'] = get_performance_tracker(db)
-    _services['regime'] = get_regime_predictor(db)
+    _services['regime'] = None  # Will be lazy-loaded when regime prediction is needed
     
     # Enhanced AI
     _services['enhanced_ai'] = get_enhanced_ai(db)
