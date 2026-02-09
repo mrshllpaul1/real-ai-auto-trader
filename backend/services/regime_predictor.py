@@ -121,9 +121,9 @@ class RegimePredictionEngine:
         self._load_saved_models()
     
     def _load_saved_models(self):
-        """Attempt to load previously saved models"""
+        """Attempt to load previously saved ML models (DL models loaded lazily)"""
         try:
-            # Load ML models
+            # Load ML models only - DL models loaded lazily when needed
             ml_path = os.path.join(self.model_path, "ml_models.pkl")
             if os.path.exists(ml_path):
                 with open(ml_path, 'rb') as f:
@@ -135,13 +135,7 @@ class RegimePredictionEngine:
                     self.is_trained = saved_data.get('is_trained', False)
                 logger.info(f"✅ Regime predictor loaded ML models from disk (best: {self.best_model})")
             
-            # Load DL models
-            if TF_AVAILABLE:
-                for model_name in ['lstm', 'gru', 'bidirectional_lstm', 'cnn_lstm', 'attention']:
-                    model_file = os.path.join(self.model_path, f"{model_name}.keras")
-                    if os.path.exists(model_file):
-                        self.models[model_name] = load_model(model_file)
-                        logger.info(f"  Loaded DL model: {model_name}")
+            # DL models will be loaded lazily when _ensure_dl_models() is called
                         
         except Exception as e:
             logger.warning(f"Could not load saved regime models: {e}")
