@@ -289,45 +289,35 @@ async def _init_phase4_automation(db):
 
 
 async def _init_phase5_predictions(db):
-    """Phase 5: Prediction Services (ML/DL services DEFERRED)"""
+    """Phase 5: Prediction Services (ALL ML/DL services DEFERRED for fast startup)"""
     from services.order_book_analyzer import get_order_book_analyzer
     from services.on_chain_analytics import get_on_chain_analytics
     from services.social_sentiment_pipeline import get_social_sentiment
-    from services.transformer_predictor import get_transformer_predictor
-    from services.rl_trading_agent import get_rl_agent
     from services.cross_asset_correlation import get_cross_asset_correlation
     from services.advanced_technical_analysis import get_advanced_ta
-    # DEFERRED: deep_rl_trading_engine - imported on-demand to avoid TF loading
-    # DEFERRED: trading_intelligence_engine - imported on-demand
+    # ALL TF-BASED SERVICES DEFERRED:
+    # - transformer_predictor
+    # - rl_trading_agent
+    # - deep_rl_trading_engine
+    # - trading_intelligence_engine
     
     task_manager = _services['task_manager']
     
-    # DEFERRED: Deep RL Trading Engine - will be lazy-loaded
+    # DEFERRED: All TensorFlow-based services
     _services['drl_engine'] = None
-    logger.info("⏳ Deep RL Trading Engine (deferred)")
-    
-    # DEFERRED: Trading Intelligence Engine - will be lazy-loaded
     _services['trading_intelligence'] = None
-    logger.info("⏳ Trading Intelligence Engine (deferred)")
-    
-    # DEFERRED: SB3 Trading Agent Manager
     _services['sb3_manager'] = None
-    logger.info("⏳ SB3 Trading Agent Manager (deferred)")
-    
-    # DEFERRED: SRDDQN Manager
     _services['srddqn_manager'] = None
-    logger.info("⏳ SRDDQN Manager (deferred)")
+    _services['transformer'] = None  # DEFERRED - TF
+    _services['rl_agent'] = None  # DEFERRED - TF
+    logger.info("⏳ TensorFlow services deferred (drl, transformer, rl_agent)")
     
+    # Non-TF services can load immediately
     order_book = get_order_book_analyzer(db)
     on_chain = get_on_chain_analytics(db)
     social_sentiment = get_social_sentiment(db)
-    transformer = get_transformer_predictor(db)
-    rl_agent = get_rl_agent(db)
     cross_asset = get_cross_asset_correlation(db)
     advanced_ta = get_advanced_ta(db)
-    
-    # Inject task manager into RL agent
-    rl_agent.set_task_manager(task_manager)
     
     _services['order_book'] = order_book
     _services['on_chain'] = on_chain
