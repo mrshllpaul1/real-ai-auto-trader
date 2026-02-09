@@ -52,6 +52,7 @@ def register_routes(api_router: APIRouter):
     
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+    api_router.include_router(api_keys.router)  # API Key Management - uses own prefix
     api_router.include_router(trading.router, prefix="/trading", tags=["Trading"])
     api_router.include_router(strategies.router, prefix="/strategies", tags=["Strategies"])
     api_router.include_router(market.router, prefix="/market", tags=["Market Data"])
