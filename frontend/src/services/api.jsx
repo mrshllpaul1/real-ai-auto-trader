@@ -1,8 +1,7 @@
 import axios from 'axios';
 
-// Force use the correct backend URL from build-time env
-// This ensures we don't use stale runtime config
-const BACKEND_URL = 'https://ai-trader-85.preview.emergentagent.com';
+// Use environment variable for backend URL (required for deployment)
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || window.location.origin;
 const API = `${BACKEND_URL}/api`;
 
 console.log('[API Service] Using backend URL:', BACKEND_URL);
