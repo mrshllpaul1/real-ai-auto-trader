@@ -12,6 +12,8 @@ import NewsFilters from "./pages/NewsFilters";
 import CopyTrading from './pages/CopyTrading';
 import MarketMaker from './pages/MarketMaker';
 import DashboardCustomization from './pages/DashboardCustomization';
+import OptionsTrading from './pages/OptionsTrading';
+import BacktestEngine from './pages/BacktestEngine';
 import AutoTrading from "./pages/AutoTrading";
 import GemScanner from "./pages/GemScanner";
 import AutoExecution from "./pages/AutoExecution";
