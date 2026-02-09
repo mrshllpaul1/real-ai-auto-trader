@@ -19,7 +19,6 @@ const PageLoader = () => (
 
 // Lazy load pages for code splitting
 const UnifiedCommandCenter = lazy(() => import("./pages/UnifiedCommandCenter"));
-const StrategySelector = lazy(() => import("./pages/StrategySelector"));
 const TradingView = lazy(() => import("./pages/TradingView"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -103,7 +102,8 @@ function App() {
                   <Route path="/enhanced-ai" element={<UnifiedCommandCenter />} />
                   <Route path="/tethys" element={<UnifiedCommandCenter />} />
                   <Route path="/journal" element={<TradingJournal />} />
-                  <Route path="/strategies" element={<StrategySelector />} />
+                  <Route path="/strategy-builder" element={<StrategyBuilder />} />
+                  <Route path="/strategies" element={<StrategyBuilder />} />
                   <Route path="/trading" element={<TradingView />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/learning" element={<AILearning />} />

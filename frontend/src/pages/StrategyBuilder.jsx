@@ -25,7 +25,9 @@ import {
   Bot,
   Settings,
   Target,
-  Shield
+  Shield,
+  RefreshCw,
+  Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
@@ -33,11 +35,15 @@ import api from '../services/api';
 const API_BASE = process.env.REACT_APP_BACKEND_URL;
 
 const StrategyBuilder = () => {
-  const [activeTab, setActiveTab] = useState('ai-builder');
+  const [activeTab, setActiveTab] = useState('selector');
   const [templates, setTemplates] = useState([]);
   const [savedStrategies, setSavedStrategies] = useState([]);
   const [indicators, setIndicators] = useState({});
   const [loading, setLoading] = useState(false);
+  
+  // Strategy Selector state (from StrategySelector.jsx)
+  const [activeStrategies, setActiveStrategies] = useState([]);
+  const [generatingStrategies, setGeneratingStrategies] = useState(false);
   
   // AI Builder state
   const [aiDescription, setAiDescription] = useState('');
@@ -69,6 +75,7 @@ const StrategyBuilder = () => {
     fetchTemplates();
     fetchStrategies();
     fetchIndicators();
+    loadActiveStrategies();
     
     // Initial AI greeting
     setChatMessages([{
@@ -108,6 +115,51 @@ const StrategyBuilder = () => {
       setIndicators(data);
     } catch (error) {
       console.error('Failed to fetch indicators:', error);
+    }
+  };
+
+  // Strategy Selector functions
+  const loadActiveStrategies = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/strategies?status=active&limit=10');
+      setActiveStrategies(response.data.strategies || []);
+    } catch (error) {
+      console.error('Error loading strategies:', error);
+      toast.error('Failed to load strategies');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateAIStrategies = async () => {
+    try {
+      setGeneratingStrategies(true);
+      toast.loading('Generating AI strategies...');
+      
+      const response = await api.post('/strategies/generate', {
+        pairs: ['bitcoin/USD', 'ethereum/USD', 'solana/USD']
+      });
+      
+      toast.dismiss();
+      toast.success(`Generated ${response.data.count || 0} strategies!`);
+      await loadActiveStrategies();
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Failed to generate strategies');
+      console.error('Error generating strategies:', error);
+    } finally {
+      setGeneratingStrategies(false);
+    }
+  };
+
+  const activateStrategy = async (strategyId) => {
+    try {
+      await api.post(`/strategies/${strategyId}/activate`);
+      toast.success('Strategy activated!');
+      await loadActiveStrategies();
+    } catch (error) {
+      toast.error('Failed to activate strategy');
     }
   };
 
@@ -407,6 +459,10 @@ const StrategyBuilder = () => {
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <CardHeader className="pb-2">
                   <TabsList className="bg-slate-800/50">
+                    <TabsTrigger value="selector" className="data-[state=active]:bg-purple-600">
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Strategies
+                    </TabsTrigger>
                     <TabsTrigger value="ai-builder" className="data-[state=active]:bg-purple-600">
                       <Bot className="h-4 w-4 mr-2" />
                       AI Builder
@@ -427,6 +483,119 @@ const StrategyBuilder = () => {
                 </CardHeader>
 
                 <CardContent className="pt-4">
+                  {/* Strategy Selector Tab */}
+                  <TabsContent value="selector" className="space-y-4 mt-0">
+                    <div className="flex justify-between items-center mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Active Strategies</h3>
+                        <p className="text-sm text-slate-400">Select and activate AI-generated trading strategies</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={loadActiveStrategies}
+                          variant="outline"
+                          size="sm"
+                          disabled={loading}
+                        >
+                          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                        </Button>
+                        <Button
+                          onClick={generateAIStrategies}
+                          size="sm"
+                          disabled={generatingStrategies}
+                          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                        >
+                          {generatingStrategies ? (
+                            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>
+                          ) : (
+                            <><Zap className="h-4 w-4 mr-2" /> Generate Strategies</>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {loading ? (
+                      <div className="text-center py-12">
+                        <Loader2 className="h-8 w-8 animate-spin text-purple-400 mx-auto mb-2" />
+                        <p className="text-slate-400">Loading strategies...</p>
+                      </div>
+                    ) : activeStrategies.length === 0 ? (
+                      <Card className="bg-slate-800/50 border-slate-700">
+                        <CardContent className="py-12 text-center">
+                          <Sparkles className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+                          <p className="text-slate-400 mb-4">No strategies found. Generate some AI strategies!</p>
+                          <Button
+                            onClick={generateAIStrategies}
+                            disabled={generatingStrategies}
+                            className="bg-gradient-to-r from-purple-600 to-pink-600"
+                          >
+                            <Zap className="h-4 w-4 mr-2" />
+                            Generate Strategies
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-4">
+                        {activeStrategies.map((strategy, idx) => (
+                          <Card key={idx} className="bg-slate-800/50 border-slate-700 hover:border-purple-500/50 transition-colors">
+                            <CardHeader className="pb-3">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <CardTitle className="text-white text-lg flex items-center gap-2">
+                                    {strategy.name}
+                                    {strategy.is_active && (
+                                      <Badge className="bg-green-500/20 text-green-400">Active</Badge>
+                                    )}
+                                  </CardTitle>
+                                  <CardDescription className="mt-1">
+                                    {strategy.description}
+                                  </CardDescription>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  onClick={() => activateStrategy(strategy.id)}
+                                  disabled={strategy.is_active}
+                                  variant={strategy.is_active ? "outline" : "default"}
+                                >
+                                  <Play className="h-4 w-4 mr-1" />
+                                  {strategy.is_active ? 'Running' : 'Activate'}
+                                </Button>
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                  <p className="text-slate-400">Win Rate</p>
+                                  <p className="text-white font-semibold">
+                                    {strategy.win_rate ? `${strategy.win_rate}%` : 'N/A'}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-slate-400">Total Trades</p>
+                                  <p className="text-white font-semibold">
+                                    {strategy.total_trades || 0}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-slate-400">P&L</p>
+                                  <p className={`font-semibold ${(strategy.total_pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                    {(strategy.total_pnl || 0) >= 0 ? '+' : ''}{strategy.total_pnl?.toFixed(2) || '0.00'}%
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-slate-400">Pairs</p>
+                                  <p className="text-white font-semibold">
+                                    {strategy.pairs?.length || 0}
+                                  </p>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
+
                   {/* AI Builder Tab */}
                   <TabsContent value="ai-builder" className="space-y-4 mt-0">
                     <div className="bg-slate-800/30 rounded-xl p-4 h-[400px] flex flex-col">
