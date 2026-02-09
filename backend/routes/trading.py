@@ -293,7 +293,16 @@ _KRAKEN_TICKER_TIMEOUT = 1.5
 
 
 def _use_cached_portfolio(reason: str):
-    """Return cached portfolio when Kraken is slow or unavailable."""
+    """
+    Return cached portfolio when Kraken is slow or unavailable.
+    
+    Args:
+        reason: Human-readable reason describing why cache is used.
+    
+    Returns:
+        Dict containing portfolio fields (holdings, total_value_usd, holdings_count)
+        plus metadata fields: stale (bool), optional cache_age (seconds), message, error.
+    """
     cached = _kraken_portfolio_cache.get("data")
     if cached:
         response = {**cached}
@@ -319,7 +328,13 @@ def _use_cached_portfolio(reason: str):
 def _apply_cached_prices(asset_to_pair: dict, kraken_prices: dict) -> bool:
     """
     Populate kraken_prices from cached portfolio holdings.
-    Returns True if any cached prices were applied.
+    
+    Args:
+        asset_to_pair: Mapping of asset symbols to Kraken trading pairs.
+        kraken_prices: Mutable dict to be populated with pair -> price_usd.
+    
+    Returns:
+        True if any cached prices were applied, False otherwise.
     """
     cached = _kraken_portfolio_cache.get("data") or {}
     used = False
