@@ -580,6 +580,15 @@ warm_cache_for_popular_symbols()
 - Health checks
 - Pattern-based invalidation
 
+### Integrated ML Services ✅
+
+| Service | Cache Points | TTL |
+|---------|--------------|-----|
+| `learning_engine.py` | Best indicators analysis | 1 hour |
+| `gem_ml_dl_predictor.py` | Feature preparation, predictions, sequences | 5-30 min |
+| `deep_rl_trading_engine.py` | Feature extraction, trading signals | 1-60 min |
+| `rainbow_dqn.py` | Cache-aware imports | As needed |
+
 ### Planned 🔄
 
 - Distributed caching (Redis Cluster)
