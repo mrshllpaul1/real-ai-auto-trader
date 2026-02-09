@@ -30,10 +30,22 @@ next-env.d.ts
 dist/
 dist
 
-# Environment files (comprehensive coverage)
+# Environment files and secrets (comprehensive protection)
+# Note: Use .env.example for templates, never commit actual .env files
+*.env
+*.env.local
+*.env.*.local
+.env.production
+.env.development
+.env.test
 
+# API credentials and secrets
 *token.json*
 *credentials.json*
+*secret*
+*apikey*
+*.key
+*.pem
 
 # Logs and debug files
 npm-debug.log*
@@ -87,36 +99,3 @@ frontend/node_modules/.cache/default-development/6.pack
 frontend/node_modules/.cache/default-development/8.pack
 frontend/node_modules/.cache/default-development/5.pack
 frontend/node_modules/.cache/default-development/10.pack
-
-# Note: .env files are NOT ignored - they are required for Emergent deployment
-
-# Note: .env files are NOT ignored - they are required for Emergent deployment
-# DO NOT ADD *.env or *.env.* here - Emergent needs these files!
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*

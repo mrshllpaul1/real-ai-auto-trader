@@ -1,0 +1,129 @@
+# Gitleaks configuration for detecting secrets
+title = "Gitleaks Configuration for AI Crypto Auto Trading Platform"
+
+# Extend the default gitleaks config
+[extend]
+useDefault = true
+
+# Additional custom rules
+[[rules]]
+id = "kraken-api-key"
+description = "Kraken API Key"
+regex = '''(?i)kraken[_-]?api[_-]?key['\"\s:=]+[A-Za-z0-9+/]{40,}'''
+keywords = ["kraken"]
+
+[[rules]]
+id = "kraken-api-secret"
+description = "Kraken API Secret"
+regex = '''(?i)kraken[_-]?api[_-]?secret['\"\s:=]+[A-Za-z0-9+/=]{40,}'''
+keywords = ["kraken"]
+
+[[rules]]
+id = "binance-api-key"
+description = "Binance API Key"
+regex = '''(?i)binance[_-]?api[_-]?key['\"\s:=]+[A-Za-z0-9]{64}'''
+keywords = ["binance"]
+
+[[rules]]
+id = "coinbase-api-key"
+description = "Coinbase API Key"
+regex = '''(?i)coinbase[_-]?api[_-]?key['\"\s:=]+[A-Za-z0-9]{32}'''
+keywords = ["coinbase"]
+
+[[rules]]
+id = "emergent-llm-key"
+description = "Emergent LLM API Key"
+regex = '''(?i)emergent[_-]?llm[_-]?key['\"\s:=]+[A-Za-z0-9\-_]{20,}'''
+keywords = ["emergent"]
+
+[[rules]]
+id = "fernet-encryption-key"
+description = "Fernet Encryption Key"
+regex = '''(?i)encryption[_-]?key['\"\s:=]+[A-Za-z0-9+/=]{44}'''
+keywords = ["encryption_key", "fernet"]
+
+[[rules]]
+id = "mongodb-connection-string"
+description = "MongoDB Connection String"
+regex = '''mongodb(\+srv)?://[^\s:]+:[^\s@]+@[^\s/]+'''
+keywords = ["mongodb"]
+
+[[rules]]
+id = "resend-api-key"
+description = "Resend API Key"
+regex = '''re_[A-Za-z0-9]{32,}'''
+keywords = ["resend"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(api[_-]?key|apikey)['\"\s:=]+[A-Za-z0-9_\-]{20,}'''
+keywords = ["api", "key"]
+
+[[rules]]
+id = "generic-secret"
+description = "Generic Secret"
+regex = '''(?i)(secret|password|passwd|pwd)['\"\s:=]+[^\s]{8,}'''
+keywords = ["secret", "password"]
+
+# Allowlist patterns - files/paths to ignore
+[allowlist]
+description = "Allowlisted files"
+paths = [
+    # Template and example files
+    '''\.env\.example$''',
+    '''\.env\.template$''',
+    
+    # Documentation
+    '''README\.md$''',
+    '''SECURITY\.md$''',
+    '''\.github/''',
+    
+    # Test files with mock data
+    '''test_reports/''',
+    '''tests/.*\.json$''',
+    '''backend_test\.py$''',
+    
+    # Lock files
+    '''package-lock\.json$''',
+    '''yarn\.lock$''',
+    
+    # Build artifacts
+    '''node_modules/''',
+    '''\.cache/''',
+    '''dist/''',
+    '''build/''',
+    
+    # Binary files
+    '''\.pack$''',
+    '''\.png$''',
+    '''\.jpg$''',
+    '''\.jpeg$''',
+]
+
+# Specific regexes to ignore (false positives)
+regexes = [
+    # Example/placeholder values
+    '''your_.*_key_here''',
+    '''your-.*-key''',
+    '''<your.*>''',
+    '''example\.com''',
+    '''test@test\.com''',
+    '''mongodb://localhost''',
+    
+    # Common test strings
+    '''test[_-]?(key|secret|password)''',
+    '''fake[_-]?(key|secret|password)''',
+    '''mock[_-]?(key|secret|password)''',
+]
+
+# Stop words - don't scan these
+stopwords = [
+    "example",
+    "placeholder",
+    "template",
+    "your_key_here",
+    "test",
+    "mock",
+    "fake",
+]
