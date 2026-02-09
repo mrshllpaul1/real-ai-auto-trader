@@ -6,6 +6,7 @@ Now integrated with Adaptive Strategy Engine, ML Regime Prediction, and Budget I
 """
 
 import asyncio
+import time
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 import os
@@ -50,6 +51,9 @@ class AutomatedWeeklyTrader:
         self.task_manager = background_task_manager  # Background task manager (P2)
         self.custom_strategies = []  # Active custom strategies
         self.notification_service = None  # Push notifications
+        # Caches for predictions and adaptive params
+        self._prediction_cache: Dict[str, Dict[str, Any]] = {}
+        self._adaptive_cache: Dict[str, Any] = {"data": None, "ts": None, "ttl": 300}
         
         # Prediction Enhancement Services (8 services)
         self.prediction_services = prediction_services or {}
@@ -165,6 +169,13 @@ class AutomatedWeeklyTrader:
         Get current adaptive strategy parameters.
         Uses ML/DL regime prediction if available, falls back to adaptive strategy.
         """
+        # Reuse cached adaptive params when fresh to avoid recomputation on slow paths
+        cache = self._adaptive_cache
+        if cache.get("data") and cache.get("ts") and (time.time() - cache["ts"] < cache.get("ttl", 300)):
+            cached = dict(cache["data"])
+            cached["cache_hit"] = True
+            return cached
+        
         regime = 'unknown'
         ml_prediction = None
         
@@ -201,7 +212,7 @@ class AutomatedWeeklyTrader:
                 
                 result = await self.adaptive_strategy.adapt_strategy()
                 
-                return {
+                result_payload = {
                     'regime': regime if regime != 'unknown' else result.get('regime', 'sideways'),
                     'max_position_pct': result['adapted_params'].get('max_position_pct', self.config['main_position_pct']),
                     'stop_loss': result['adapted_params'].get('stop_loss_pct', self.config['stop_loss_main']),
@@ -210,13 +221,16 @@ class AutomatedWeeklyTrader:
                     'max_exposure': result['adapted_params'].get('max_total_exposure', 90),
                     'preferred_assets': result.get('preferred_assets', []),
                     'is_adaptive': True,
-                    'ml_prediction': ml_prediction
+                    'ml_prediction': ml_prediction,
+                    'cache_hit': False
                 }
+                self._adaptive_cache = {"data": result_payload, "ts": time.time(), "ttl": cache.get("ttl", 300)}
+                return result_payload
             except Exception as e:
                 print(f"  ⚠️ Adaptive strategy error: {e}, using base config")
         
         # Fallback to base config
-        return {
+        fallback = {
             'regime': regime if regime != 'unknown' else 'sideways',
             'max_position_pct': self.config['main_position_pct'],
             'stop_loss': self.config['stop_loss_main'],
@@ -225,8 +239,11 @@ class AutomatedWeeklyTrader:
             'max_exposure': 90,
             'preferred_assets': [],
             'is_adaptive': False,
-            'ml_prediction': ml_prediction
+            'ml_prediction': ml_prediction,
+            'cache_hit': False
         }
+        self._adaptive_cache = {"data": fallback, "ts": time.time(), "ttl": cache.get("ttl", 300)}
+        return fallback
     
     async def get_prediction_signals(self, symbol: str) -> Dict[str, Any]:
         """
@@ -244,6 +261,8 @@ class AutomatedWeeklyTrader:
         Returns:
             Composite signal with individual component scores
         """
+        start_time = time.time()
+        component_latencies = {}
         signals = {
             'symbol': symbol,
             'timestamp': datetime.now().isoformat(),
@@ -261,11 +280,14 @@ class AutomatedWeeklyTrader:
         }
         
         ps = self.prediction_services
+        cache_entry = self._prediction_cache.get(symbol)
         
         # #1: Order Book Analysis
         if ps.get('order_book'):
             try:
-                result = await ps['order_book'].analyze_order_book(symbol)
+                t0 = time.time()
+                result = await asyncio.wait_for(ps['order_book'].analyze_order_book(symbol), timeout=1.5)
+                component_latencies['order_book'] = round(time.time() - t0, 3)
                 score = result.get('signal', {}).get('score', 50)
                 signals['components']['order_book'] = {
                     'score': score,
@@ -275,11 +297,16 @@ class AutomatedWeeklyTrader:
                 signals['scores'].append(('order_book', score))
             except Exception as e:
                 logger.debug(f"Order book analysis failed for {symbol}: {e}")
+                if cache_entry:
+                    signals['components']['order_book'] = cache_entry['components'].get('order_book', {})
+                    signals['scores'].append(('order_book', cache_entry['components'].get('order_book', {}).get('score', 50)))
         
         # #2: On-Chain Analytics
         if ps.get('on_chain'):
             try:
-                result = await ps['on_chain'].get_on_chain_metrics(symbol)
+                t0 = time.time()
+                result = await asyncio.wait_for(ps['on_chain'].get_on_chain_metrics(symbol), timeout=1.5)
+                component_latencies['on_chain'] = round(time.time() - t0, 3)
                 score = result.get('signal', {}).get('score', 50)
                 signals['components']['on_chain'] = {
                     'score': score,
@@ -289,11 +316,16 @@ class AutomatedWeeklyTrader:
                 signals['scores'].append(('on_chain', score))
             except Exception as e:
                 logger.debug(f"On-chain analysis failed for {symbol}: {e}")
+                if cache_entry:
+                    signals['components']['on_chain'] = cache_entry['components'].get('on_chain', {})
+                    signals['scores'].append(('on_chain', cache_entry['components'].get('on_chain', {}).get('score', 50)))
         
         # #3: Social Sentiment
         if ps.get('social'):
             try:
-                result = await ps['social'].analyze_social_sentiment(symbol)
+                t0 = time.time()
+                result = await asyncio.wait_for(ps['social'].analyze_social_sentiment(symbol), timeout=1.5)
+                component_latencies['social'] = round(time.time() - t0, 3)
                 score = result.get('signal', {}).get('score', 50)
                 signals['components']['social'] = {
                     'score': score,
@@ -303,11 +335,16 @@ class AutomatedWeeklyTrader:
                 signals['scores'].append(('social', score))
             except Exception as e:
                 logger.debug(f"Social sentiment failed for {symbol}: {e}")
+                if cache_entry:
+                    signals['components']['social'] = cache_entry['components'].get('social', {})
+                    signals['scores'].append(('social', cache_entry['components'].get('social', {}).get('score', 50)))
         
         # #4: Transformer Predictor
         if ps.get('transformer') and ps['transformer'].is_trained:
             try:
-                result = await ps['transformer'].predict(symbol)
+                t0 = time.time()
+                result = await asyncio.wait_for(ps['transformer'].predict(symbol), timeout=2.0)
+                component_latencies['transformer'] = round(time.time() - t0, 3)
                 # Convert prediction to score (0-100)
                 if result.get('prediction') == 'up':
                     score = 50 + result.get('confidence', 0) / 2
@@ -323,11 +360,16 @@ class AutomatedWeeklyTrader:
                 signals['scores'].append(('transformer', score))
             except Exception as e:
                 logger.debug(f"Transformer prediction failed for {symbol}: {e}")
+                if cache_entry:
+                    signals['components']['transformer'] = cache_entry['components'].get('transformer', {})
+                    signals['scores'].append(('transformer', cache_entry['components'].get('transformer', {}).get('score', 50)))
         
         # #5: RL Trading Agent
         if ps.get('rl_agent') and ps['rl_agent'].is_trained:
             try:
-                result = await ps['rl_agent'].get_signal(symbol)
+                t0 = time.time()
+                result = await asyncio.wait_for(ps['rl_agent'].get_signal(symbol), timeout=2.0)
+                component_latencies['rl_agent'] = round(time.time() - t0, 3)
                 # Convert signal to score
                 if result.get('signal') == 'buy':
                     score = 50 + result.get('confidence', 0) / 2
@@ -344,11 +386,16 @@ class AutomatedWeeklyTrader:
                 signals['scores'].append(('rl_agent', score))
             except Exception as e:
                 logger.debug(f"RL agent signal failed for {symbol}: {e}")
+                if cache_entry:
+                    signals['components']['rl_agent'] = cache_entry['components'].get('rl_agent', {})
+                    signals['scores'].append(('rl_agent', cache_entry['components'].get('rl_agent', {}).get('score', 50)))
         
         # #6: Cross-Asset Correlation
         if ps.get('cross_asset'):
             try:
-                result = await ps['cross_asset'].analyze_correlations(symbol)
+                t0 = time.time()
+                result = await asyncio.wait_for(ps['cross_asset'].analyze_correlations(symbol), timeout=1.5)
+                component_latencies['cross_asset'] = round(time.time() - t0, 3)
                 score = result.get('signal', {}).get('score', 50)
                 signals['components']['cross_asset'] = {
                     'score': score,
@@ -358,11 +405,16 @@ class AutomatedWeeklyTrader:
                 signals['scores'].append(('cross_asset', score))
             except Exception as e:
                 logger.debug(f"Cross-asset analysis failed for {symbol}: {e}")
+                if cache_entry:
+                    signals['components']['cross_asset'] = cache_entry['components'].get('cross_asset', {})
+                    signals['scores'].append(('cross_asset', cache_entry['components'].get('cross_asset', {}).get('score', 50)))
         
         # #7 & #8: Advanced Technical Analysis
         if ps.get('advanced_ta'):
             try:
-                result = await ps['advanced_ta'].analyze(symbol)
+                t0 = time.time()
+                result = await asyncio.wait_for(ps['advanced_ta'].analyze(symbol), timeout=1.5)
+                component_latencies['advanced_ta'] = round(time.time() - t0, 3)
                 score = result.get('signal', {}).get('score', 50)
                 signals['components']['advanced_ta'] = {
                     'score': score,
@@ -372,6 +424,9 @@ class AutomatedWeeklyTrader:
                 signals['scores'].append(('advanced_ta', score))
             except Exception as e:
                 logger.debug(f"Advanced TA failed for {symbol}: {e}")
+                if cache_entry:
+                    signals['components']['advanced_ta'] = cache_entry['components'].get('advanced_ta', {})
+                    signals['scores'].append(('advanced_ta', cache_entry['components'].get('advanced_ta', {}).get('score', 50)))
         
         # Calculate composite score
         if signals['scores']:
@@ -411,6 +466,21 @@ class AutomatedWeeklyTrader:
                 'models_used': 0,
                 'error': 'No prediction models available'
             }
+        
+        signals['latencies'] = component_latencies
+        signals['cache_hit'] = False
+        signals['stale'] = False
+        
+        # Cache result
+        self._prediction_cache[symbol] = signals
+        
+        # If signals were fully empty but cache exists, mark stale
+        if not signals['scores'] and cache_entry:
+            signals = cache_entry
+            signals['cache_hit'] = True
+            signals['stale'] = True
+        
+        signals['total_latency'] = round(time.time() - start_time, 3)
         
         return signals
     
@@ -1896,4 +1966,3 @@ Exit: ${exit_price:.4f}
                 )
             except Exception as e:
                 logger.warning(f"Failed to send spot trade notification: {e}")
-

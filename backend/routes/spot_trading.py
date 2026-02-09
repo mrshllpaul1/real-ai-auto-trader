@@ -608,6 +608,10 @@ async def get_ai_recommendations():
                     "models_used": composite.get('models_used'),
                     "recommendation": signals.get('recommendation', 'Hold'),
                     "composite": composite,
+                    "latencies": signals.get('latencies', {}),
+                    "total_latency": signals.get('total_latency'),
+                    "cache_hit": signals.get('cache_hit', False),
+                    "stale": signals.get('stale', False),
                     "components": {
                         k: v for k, v in signals.items() 
                         if k in ['order_book', 'on_chain', 'social', 'transformer', 'rl_agent', 'technical']
