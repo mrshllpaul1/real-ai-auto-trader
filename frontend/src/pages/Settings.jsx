@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { motion } from 'framer-motion';
 import api, { authAPI, riskAPI } from '../services/api';
-import { toast } from 'sonner';
+import toast from '../utils/toast';
 import { Shield, Key, Settings as SettingsIcon, Bell, Smartphone, Vibrate } from 'lucide-react';
 
 const Settings = () => {
@@ -73,31 +73,53 @@ const Settings = () => {
 
   const saveCredentials = async () => {
     if (!apiKey || !apiSecret) {
-      toast.error('Please enter both API key and secret');
+      toast.error('Missing credentials', {
+        description: 'Please enter both API key and secret',
+      });
       return;
     }
 
+    const loadingToast = toast.loading('Saving API credentials...');
     try {
       setLoading(true);
       await authAPI.storeCredentials(apiKey, apiSecret);
-      toast.success('API credentials saved successfully!');
+      toast.dismiss(loadingToast);
+      toast.success('API credentials saved!', {
+        description: 'Your Kraken credentials are now active',
+        duration: 5000,
+      });
       setHasCredentials(true);
       setApiKey('');
       setApiSecret('');
     } catch (error) {
-      toast.error('Failed to save credentials');
+      toast.dismiss(loadingToast);
+      toast.error('Failed to save credentials', {
+        description: error.response?.data?.detail || 'Please check your API key and secret',
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const saveRiskSettings = async () => {
+    const loadingToast = toast.loading('Updating risk settings...');
     try {
       setLoading(true);
       await riskAPI.updateSettings(riskSettings);
-      toast.success('Risk settings updated successfully!');
+      toast.dismiss(loadingToast);
+      toast.success('Risk settings updated!', {
+        description: 'Your trading risk parameters have been saved',
+        duration: 4000,
+      });
     } catch (error) {
-      toast.error('Failed to update risk settings');
+      toast.dismiss(loadingToast);
+      toast.error('Failed to update risk settings', {
+        description: error.response?.data?.detail || 'Please try again',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
     } finally {
       setLoading(false);
     }
