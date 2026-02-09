@@ -31,16 +31,16 @@ class MockDatabaseClient:
 
 @pytest.mark.asyncio
 async def test_check_database_connection_success():
-    dummy = MockDatabaseClient()
-    result = await check_database_connection(dummy)
+    healthy_client = MockDatabaseClient()
+    result = await check_database_connection(healthy_client)
     assert result["status"] == "healthy"
     assert result["database"] == "connected"
 
 
 @pytest.mark.asyncio
 async def test_check_database_connection_failure():
-    dummy = MockDatabaseClient(should_raise=True)
-    result = await check_database_connection(dummy)
+    failing_client = MockDatabaseClient(should_raise=True)
+    result = await check_database_connection(failing_client)
     assert result["status"] == "unhealthy"
     assert "error" in result["database"]
 
