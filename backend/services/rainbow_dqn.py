@@ -254,84 +254,86 @@ def _get_causal_transformer_encoder_class():
     CausalTransformerBlock = _get_causal_transformer_block_class()
 
     class CausalTransformerEncoder(layers.Layer):
-    """
-    Causal Transformer Encoder for time-series state encoding.
-    
-    Processes 168 timesteps (1 week) of market data including
-    order book features and OHLCV.
-    """
-    
-    def __init__(
-        self,
-        sequence_length: int = 168,
-        input_dim: int = 45,  # Order book features
-        d_model: int = 128,
-        num_heads: int = 8,
-        num_layers: int = 4,
-        ff_dim: int = 256,
-        dropout: float = 0.1,
-        **kwargs
-    ):
-        super().__init__(**kwargs)
-        self.sequence_length = sequence_length
-        self.input_dim = input_dim
-        self.d_model = d_model
-        self.num_heads = num_heads
-        self.num_layers = num_layers
-        self.ff_dim = ff_dim
-        self.dropout_rate = dropout
+        """
+        Causal Transformer Encoder for time-series state encoding.
         
-    def build(self, input_shape):
-        # Input projection
-        self.input_projection = Dense(self.d_model, name='input_proj')
+        Processes 168 timesteps (1 week) of market data including
+        order book features and OHLCV.
+        """
         
-        # Positional encoding
-        self.pos_encoding = PositionalEncoding(
-            max_len=self.sequence_length,
-            d_model=self.d_model
-        )
-        
-        # Transformer blocks
-        self.transformer_blocks = [
-            CausalTransformerBlock(
-                d_model=self.d_model,
-                num_heads=self.num_heads,
-                ff_dim=self.ff_dim,
-                dropout=self.dropout_rate,
-                name=f'transformer_block_{i}'
+        def __init__(
+            self,
+            sequence_length: int = 168,
+            input_dim: int = 45,  # Order book features
+            d_model: int = 128,
+            num_heads: int = 8,
+            num_layers: int = 4,
+            ff_dim: int = 256,
+            dropout: float = 0.1,
+            **kwargs
+        ):
+            super().__init__(**kwargs)
+            self.sequence_length = sequence_length
+            self.input_dim = input_dim
+            self.d_model = d_model
+            self.num_heads = num_heads
+            self.num_layers = num_layers
+            self.ff_dim = ff_dim
+            self.dropout_rate = dropout
+            
+        def build(self, input_shape):
+            # Input projection
+            self.input_projection = Dense(self.d_model, name='input_proj')
+            
+            # Positional encoding
+            self.pos_encoding = PositionalEncoding(
+                max_len=self.sequence_length,
+                d_model=self.d_model
             )
-            for i in range(self.num_layers)
-        ]
-        
-        # Output projection
-        self.output_norm = LayerNormalization(epsilon=1e-6)
-        self.output_projection = Dense(self.d_model, name='output_proj')
-        
-    def call(self, x, training=None):
-        """
-        Args:
-            x: Input tensor of shape (batch, sequence_length, input_dim)
-        Returns:
-            Encoded representation of shape (batch, d_model)
-        """
-        # Project input to d_model dimensions
-        x = self.input_projection(x)
-        
-        # Add positional encoding
-        x = self.pos_encoding(x)
-        
-        # Pass through transformer blocks
-        for block in self.transformer_blocks:
-            x = block(x, training=training)
-        
-        # Take the last timestep output (causal - can only see past)
-        x = x[:, -1, :]
-        
-        # Final normalization and projection
-        x = self.output_norm(x)
-        x = self.output_projection(x)
-        
-        return x
+            
+            # Transformer blocks
+            self.transformer_blocks = [
+                CausalTransformerBlock(
+                    d_model=self.d_model,
+                    num_heads=self.num_heads,
+                    ff_dim=self.ff_dim,
+                    dropout=self.dropout_rate,
+                    name=f'transformer_block_{i}'
+                )
+                for i in range(self.num_layers)
+            ]
+            
+            # Output projection
+            self.output_norm = LayerNormalization(epsilon=1e-6)
+            self.output_projection = Dense(self.d_model, name='output_proj')
+            
+        def call(self, x, training=None):
+            """
+            Args:
+                x: Input tensor of shape (batch, sequence_length, input_dim)
+            Returns:
+                Encoded representation of shape (batch, d_model)
+            """
+            # Project input to d_model dimensions
+            x = self.input_projection(x)
+            
+            # Add positional encoding
+            x = self.pos_encoding(x)
+            
+            # Pass through transformer blocks
+            for block in self.transformer_blocks:
+                x = block(x, training=training)
+            
+            # Take the last timestep output (causal - can only see past)
+            x = x[:, -1, :]
+            
+            # Final normalization and projection
+            x = self.output_norm(x)
+            x = self.output_projection(x)
+            
+            return x
+    
+    return CausalTransformerEncoder
 
 
 # =============================================================================
