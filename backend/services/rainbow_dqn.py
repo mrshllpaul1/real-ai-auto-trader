@@ -58,59 +58,88 @@ def _ensure_tf():
 # NOISY LINEAR LAYER (From previous implementation)
 # =============================================================================
 
-class NoisyDense(layers.Layer):
-    """Factorized Gaussian Noisy Layer for exploration"""
+# Deferred class creation - will be populated when TF loads
+_NoisyDense = None
+_PositionalEncoding = None
+_CausalTransformerEncoder = None
+
+def _create_tf_classes():
+    """Create TensorFlow-dependent classes after TF is loaded"""
+    global _NoisyDense, _PositionalEncoding, _CausalTransformerEncoder
     
-    def __init__(self, units, sigma_init=0.5, **kwargs):
-        super().__init__(**kwargs)
-        self.units = units
-        self.sigma_init = sigma_init
-        
-    def build(self, input_shape):
-        self.input_dim = input_shape[-1]
-        mu_range = 1.0 / np.sqrt(float(self.input_dim))
-        
-        self.w_mu = self.add_weight(
-            name='w_mu',
-            shape=(self.input_dim, self.units),
-            initializer=tf.keras.initializers.RandomUniform(-mu_range, mu_range),
-            trainable=True
-        )
-        self.w_sigma = self.add_weight(
-            name='w_sigma',
-            shape=(self.input_dim, self.units),
-            initializer=tf.keras.initializers.Constant(self.sigma_init / np.sqrt(float(self.input_dim))),
-            trainable=True
-        )
-        self.b_mu = self.add_weight(
-            name='b_mu',
-            shape=(self.units,),
-            initializer=tf.keras.initializers.RandomUniform(-mu_range, mu_range),
-            trainable=True
-        )
-        self.b_sigma = self.add_weight(
-            name='b_sigma',
-            shape=(self.units,),
-            initializer=tf.keras.initializers.Constant(self.sigma_init / np.sqrt(float(self.units))),
-            trainable=True
-        )
-        
-    def _scale_noise(self, size):
-        x = tf.random.normal([size])
-        return tf.sign(x) * tf.sqrt(tf.abs(x))
+    if not _ensure_tf():
+        return False
     
-    def call(self, inputs, training=None):
-        if training:
-            epsilon_in = self._scale_noise(self.input_dim)
-            epsilon_out = self._scale_noise(self.units)
-            w_epsilon = tf.tensordot(epsilon_in, epsilon_out, axes=0)
-            b_epsilon = epsilon_out
-            w = self.w_mu + self.w_sigma * w_epsilon
-            b = self.b_mu + self.b_sigma * b_epsilon
-        else:
-            w = self.w_mu
-            b = self.b_mu
-        return tf.matmul(inputs, w) + b
+    if _NoisyDense is not None:
+        return True  # Already created
+    
+    from tensorflow.keras.layers import (
+        Dense, Input, LayerNormalization, Dropout,
+        MultiHeadAttention, Add, Reshape, Activation, Softmax
+    )
+    
+    class NoisyDense(layers.Layer):
+        """Factorized Gaussian Noisy Layer for exploration"""
+        
+        def __init__(self, units, sigma_init=0.5, **kwargs):
+            super().__init__(**kwargs)
+            self.units = units
+            self.sigma_init = sigma_init
+            
+        def build(self, input_shape):
+            self.input_dim = input_shape[-1]
+            mu_range = 1.0 / np.sqrt(float(self.input_dim))
+            
+            self.w_mu = self.add_weight(
+                name='w_mu',
+                shape=(self.input_dim, self.units),
+                initializer=tf.keras.initializers.RandomUniform(-mu_range, mu_range),
+                trainable=True
+            )
+            self.w_sigma = self.add_weight(
+                name='w_sigma',
+                shape=(self.input_dim, self.units),
+                initializer=tf.keras.initializers.Constant(self.sigma_init / np.sqrt(float(self.input_dim))),
+                trainable=True
+            )
+            self.b_mu = self.add_weight(
+                name='b_mu',
+                shape=(self.units,),
+                initializer=tf.keras.initializers.RandomUniform(-mu_range, mu_range),
+                trainable=True
+            )
+            self.b_sigma = self.add_weight(
+                name='b_sigma',
+                shape=(self.units,),
+                initializer=tf.keras.initializers.Constant(self.sigma_init / np.sqrt(float(self.units))),
+                trainable=True
+            )
+            
+        def _scale_noise(self, size):
+            x = tf.random.normal([size])
+            return tf.sign(x) * tf.sqrt(tf.abs(x))
+        
+        def call(self, inputs, training=None):
+            if training:
+                epsilon_in = self._scale_noise(self.input_dim)
+                epsilon_out = self._scale_noise(self.units)
+                w_epsilon = tf.tensordot(epsilon_in, epsilon_out, axes=0)
+                b_epsilon = epsilon_out
+                w = self.w_mu + self.w_sigma * w_epsilon
+                b = self.b_mu + self.b_sigma * b_epsilon
+            else:
+                w = self.w_mu
+                b = self.b_mu
+            return tf.matmul(inputs, w) + b
+    
+    _NoisyDense = NoisyDense
+    return True
+
+
+def get_noisy_dense():
+    """Get NoisyDense class, creating it if needed"""
+    _create_tf_classes()
+    return _NoisyDense
 
 
 # =============================================================================
