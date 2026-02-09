@@ -39,6 +39,8 @@ const UpgradesDashboard = () => {
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Activity },
     { id: 'whale', label: 'Whale Tracker', icon: Waves },
+    { id: 'sentiment', label: 'Sentiment', icon: MessageCircle },
+    { id: 'backtest', label: 'Backtest', icon: LineChart },
     { id: 'arbitrage', label: 'Arbitrage', icon: Zap },
     { id: 'rebalancer', label: 'Rebalancer', icon: PieChart },
     { id: 'trailing', label: 'Trailing Stops', icon: Target },
