@@ -187,63 +187,73 @@ def _get_causal_transformer_block_class():
         return None
 
     class CausalTransformerBlock(layers.Layer):
-    """Single causal transformer block with masked self-attention"""
+        """Single causal transformer block with masked self-attention"""
+        
+        def __init__(
+            self,
+            d_model: int = 128,
+            num_heads: int = 8,
+            ff_dim: int = 256,
+            dropout: float = 0.1,
+            **kwargs
+        ):
+            super().__init__(**kwargs)
+            self.d_model = d_model
+            self.num_heads = num_heads
+            self.ff_dim = ff_dim
+            self.dropout_rate = dropout
+            
+        def build(self, input_shape):
+            self.attention = MultiHeadAttention(
+                num_heads=self.num_heads,
+                key_dim=self.d_model // self.num_heads,
+                dropout=self.dropout_rate
+            )
+            self.ffn = keras.Sequential([
+                Dense(self.ff_dim, activation='gelu'),
+                Dropout(self.dropout_rate),
+                Dense(self.d_model),
+                Dropout(self.dropout_rate)
+            ])
+            self.layernorm1 = LayerNormalization(epsilon=1e-6)
+            self.layernorm2 = LayerNormalization(epsilon=1e-6)
+            self.dropout1 = Dropout(self.dropout_rate)
+            self.dropout2 = Dropout(self.dropout_rate)
+            
+        def call(self, x, training=None):
+            # Create causal mask
+            seq_len = tf.shape(x)[1]
+            causal_mask = tf.linalg.band_part(
+                tf.ones((seq_len, seq_len)), -1, 0
+            )
+            
+            # Multi-head self-attention with causal mask
+            attn_output = self.attention(
+                query=x, value=x, key=x,
+                attention_mask=causal_mask,
+                training=training
+            )
+            attn_output = self.dropout1(attn_output, training=training)
+            x = self.layernorm1(x + attn_output)
+            
+            # Feed-forward
+            ffn_output = self.ffn(x, training=training)
+            x = self.layernorm2(x + ffn_output)
+            
+            return x
     
-    def __init__(
-        self,
-        d_model: int = 128,
-        num_heads: int = 8,
-        ff_dim: int = 256,
-        dropout: float = 0.1,
-        **kwargs
-    ):
-        super().__init__(**kwargs)
-        self.d_model = d_model
-        self.num_heads = num_heads
-        self.ff_dim = ff_dim
-        self.dropout_rate = dropout
-        
-    def build(self, input_shape):
-        self.attention = MultiHeadAttention(
-            num_heads=self.num_heads,
-            key_dim=self.d_model // self.num_heads,
-            dropout=self.dropout_rate
-        )
-        self.ffn = keras.Sequential([
-            Dense(self.ff_dim, activation='gelu'),
-            Dropout(self.dropout_rate),
-            Dense(self.d_model),
-            Dropout(self.dropout_rate)
-        ])
-        self.layernorm1 = LayerNormalization(epsilon=1e-6)
-        self.layernorm2 = LayerNormalization(epsilon=1e-6)
-        self.dropout1 = Dropout(self.dropout_rate)
-        self.dropout2 = Dropout(self.dropout_rate)
-        
-    def call(self, x, training=None):
-        # Create causal mask
-        seq_len = tf.shape(x)[1]
-        causal_mask = tf.linalg.band_part(
-            tf.ones((seq_len, seq_len)), -1, 0
-        )
-        
-        # Multi-head self-attention with causal mask
-        attn_output = self.attention(
-            query=x, value=x, key=x,
-            attention_mask=causal_mask,
-            training=training
-        )
-        attn_output = self.dropout1(attn_output, training=training)
-        x = self.layernorm1(x + attn_output)
-        
-        # Feed-forward
-        ffn_output = self.ffn(x, training=training)
-        x = self.layernorm2(x + ffn_output)
-        
-        return x
+    return CausalTransformerBlock
 
 
-class CausalTransformerEncoder(layers.Layer):
+def _get_causal_transformer_encoder_class():
+    """Create CausalTransformerEncoder class if TensorFlow is available"""
+    if not _ensure_tf():
+        return None
+
+    PositionalEncoding = _get_positional_encoding_class()
+    CausalTransformerBlock = _get_causal_transformer_block_class()
+
+    class CausalTransformerEncoder(layers.Layer):
     """
     Causal Transformer Encoder for time-series state encoding.
     
