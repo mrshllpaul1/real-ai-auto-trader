@@ -96,6 +96,7 @@ const UpgradesDashboard = () => {
       {activeTab === 'whale' && <WhaleTab />}
       {activeTab === 'sentiment' && <SentimentTab />}
       {activeTab === 'backtest' && <BacktestTab />}
+      {activeTab === 'abtesting' && <ABTestingTab />}
       {activeTab === 'notifications' && <NotificationsTab />}
       {activeTab === 'arbitrage' && <ArbitrageTab />}
       {activeTab === 'rebalancer' && <RebalancerTab />}
