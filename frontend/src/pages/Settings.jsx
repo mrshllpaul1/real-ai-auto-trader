@@ -166,34 +166,32 @@ const Settings = () => {
     }
   };
 
-  const saveKucoinCredentials = async () => {
-    if (!kucoinApiKey || !kucoinApiSecret || !kucoinPassphrase) {
-      toast.error('Missing KuCoin credentials', {
-        description: 'Please enter API key, secret, and passphrase',
+  const saveCryptoComCredentials = async () => {
+    if (!cryptoComApiKey || !cryptoComApiSecret) {
+      toast.error('Missing Crypto.com credentials', {
+        description: 'Please enter both API key and secret',
       });
       return;
     }
 
-    const loadingToast = toast.loading('Saving KuCoin credentials...');
+    const loadingToast = toast.loading('Saving Crypto.com credentials...');
     try {
       setLoading(true);
-      await api.post('/auth/kucoin/store', {
-        api_key: kucoinApiKey,
-        api_secret: kucoinApiSecret,
-        passphrase: kucoinPassphrase
+      await api.post('/auth/crypto-com/store', {
+        api_key: cryptoComApiKey,
+        api_secret: cryptoComApiSecret
       });
       toast.dismiss(loadingToast);
-      toast.success('KuCoin credentials saved!', {
-        description: 'Your KuCoin exchange is now connected for arbitrage',
+      toast.success('Crypto.com credentials saved!', {
+        description: 'Your Crypto.com exchange is now connected for arbitrage',
         duration: 5000,
       });
-      setHasKucoinCredentials(true);
-      setKucoinApiKey('');
-      setKucoinApiSecret('');
-      setKucoinPassphrase('');
+      setHasCryptoComCredentials(true);
+      setCryptoComApiKey('');
+      setCryptoComApiSecret('');
     } catch (error) {
       toast.dismiss(loadingToast);
-      toast.error('Failed to save KuCoin credentials', {
+      toast.error('Failed to save Crypto.com credentials', {
         description: error.response?.data?.detail || 'Please check your credentials',
       });
     } finally {
