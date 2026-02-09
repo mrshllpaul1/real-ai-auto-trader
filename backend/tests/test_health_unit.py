@@ -11,7 +11,7 @@ import server
 from health import check_database_connection
 
 
-class DummyAdmin:
+class MockDatabaseAdmin:
     def __init__(self, should_raise: bool = False, expected_command: str = "ping"):
         self.should_raise = should_raise
         self.expected_command = expected_command
@@ -24,14 +24,14 @@ class DummyAdmin:
         return {"ok": 1}
 
 
-class DummyClient:
+class MockDatabaseClient:
     def __init__(self, should_raise: bool = False):
-        self.admin = DummyAdmin(should_raise=should_raise)
+        self.admin = MockDatabaseAdmin(should_raise=should_raise)
 
 
 @pytest.mark.asyncio
 async def test_check_database_connection_success():
-    dummy = DummyClient()
+    dummy = MockDatabaseClient()
     result = await check_database_connection(dummy)
     assert result["status"] == "healthy"
     assert result["database"] == "connected"
@@ -39,7 +39,7 @@ async def test_check_database_connection_success():
 
 @pytest.mark.asyncio
 async def test_check_database_connection_failure():
-    dummy = DummyClient(should_raise=True)
+    dummy = MockDatabaseClient(should_raise=True)
     result = await check_database_connection(dummy)
     assert result["status"] == "unhealthy"
     assert "error" in result["database"]
