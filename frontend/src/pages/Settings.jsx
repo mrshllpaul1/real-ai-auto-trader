@@ -72,12 +72,12 @@ const Settings = () => {
     }
   };
 
-  const checkKucoinCredentials = async () => {
+  const checkCryptoComCredentials = async () => {
     try {
-      const response = await api.get('/auth/kucoin/check');
-      setHasKucoinCredentials(response.data.has_credentials);
+      const response = await api.get('/auth/crypto-com/check');
+      setHasCryptoComCredentials(response.data.has_credentials);
     } catch (error) {
-      console.error('Error checking KuCoin credentials:', error);
+      console.error('Error checking Crypto.com credentials:', error);
     }
   };
 
