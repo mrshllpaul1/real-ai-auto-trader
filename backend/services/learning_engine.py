@@ -1,9 +1,12 @@
 import numpy as np
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 import json
 import os
 from services.ml_cache import cache_features, cache_prediction, FeatureCache
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AILearningEngine:
     """
@@ -365,3 +368,108 @@ class AILearningEngine:
             "strategies_updated": len(strategy_ids[:50]),
             "updated_at": datetime.now().isoformat()
         }
+
+    async def integrate_online_learning(self, strategy_id: str, recent_trades: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Integrate online learning updates based on recent trade outcomes.
+        This enables faster adaptation than weekly batch retraining.
+        """
+        try:
+            from services.online_learning_engine import OnlineLearningEngine
+            
+            if not recent_trades:
+                return {"status": "no_data"}
+            
+            # Initialize online learning engine
+            online_engine = OnlineLearningEngine(self.db)
+            
+            # Prepare features and labels from trades
+            features = []
+            labels = []
+            
+            for trade in recent_trades:
+                # Extract features (simplified example)
+                feature_vec = [
+                    trade.get('rsi', 50) / 100,
+                    trade.get('macd', 0) / 100,
+                    trade.get('volume_ratio', 1.0),
+                    trade.get('price_momentum', 0) / 100,
+                    trade.get('volatility', 0.02) / 0.1
+                ]
+                features.append(feature_vec)
+                
+                # Label: 0=bearish, 1=neutral, 2=bullish
+                if trade.get('profit_loss', 0) > 2:
+                    labels.append(2)  # Bullish (profitable)
+                elif trade.get('profit_loss', 0) < -2:
+                    labels.append(0)  # Bearish (loss)
+                else:
+                    labels.append(1)  # Neutral
+            
+            features_array = np.array(features)
+            labels_array = np.array(labels)
+            
+            # Update model
+            result = await online_engine.update_model_online(
+                coin_symbol=strategy_id,
+                features=features_array,
+                labels=labels_array,
+                market_volatility=0.02  # Could calculate from recent price data
+            )
+            
+            logger.info(f"Online learning update for {strategy_id}: {result}")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error in integrate_online_learning: {e}")
+            return {"status": "error", "error": str(e)}
+    
+    async def get_prediction_with_uncertainty(
+        self, 
+        strategy_id: str, 
+        current_features: Dict[str, float]
+    ) -> Dict[str, Any]:
+        """
+        Get enhanced prediction with uncertainty quantification.
+        Integrates with EnhancedPredictionEngine.
+        """
+        try:
+            from services.enhanced_prediction_engine import EnhancedPredictionEngine
+            
+            enhanced_engine = EnhancedPredictionEngine(self.db)
+            
+            # Gather predictions from different models (simplified example)
+            model_predictions = [
+                {
+                    'model_name': 'rule_based',
+                    'signal': 'bullish' if current_features.get('rsi', 50) < 30 else 'bearish' if current_features.get('rsi', 50) > 70 else 'neutral',
+                    'confidence': abs(current_features.get('rsi', 50) - 50),
+                    'prediction': (current_features.get('rsi', 50) - 50) / 50,
+                    'weight': 1.0
+                },
+                {
+                    'model_name': 'momentum',
+                    'signal': 'bullish' if current_features.get('macd', 0) > 0 else 'bearish',
+                    'confidence': min(80, abs(current_features.get('macd', 0)) * 10),
+                    'prediction': current_features.get('macd', 0) / 100,
+                    'weight': 1.0
+                }
+            ]
+            
+            # Get enhanced prediction with uncertainty
+            result = await enhanced_engine.predict_with_uncertainty(
+                coin_symbol=strategy_id,
+                model_predictions=model_predictions,
+                metadata={'strategy_id': strategy_id}
+            )
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error in get_prediction_with_uncertainty: {e}")
+            return {
+                'signal': 'neutral',
+                'confidence': 0,
+                'error': str(e)
+            }
