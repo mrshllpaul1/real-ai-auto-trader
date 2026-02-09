@@ -779,7 +779,7 @@ async def stop_test(test_id: str):
     if not service:
         raise HTTPException(500, "A/B testing service not available")
     
-    return await service.stop_test(test_id)
+    return await service.end_test(test_id)
 
 
 @router.get("/ab-testing/leaderboard")
