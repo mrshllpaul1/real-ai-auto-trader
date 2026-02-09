@@ -369,7 +369,8 @@ class BackendTester:
         await self.test_ensemble_ai_page()
         await self.test_portfolio_information()
         await self.test_model_training()
-        await self.test_additional_endpoints()
+        await self.test_comprehensive_endpoints()
+        await self.test_error_handling()
         
         # Print summary
         self.print_summary()
