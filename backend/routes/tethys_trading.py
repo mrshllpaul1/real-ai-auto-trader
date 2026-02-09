@@ -51,23 +51,71 @@ async def start_trading_loop(
     """Start continuous trading loop"""
     global _trading_loop, _db
     
-    from services.tethys_trading import get_trading_loop
-    _trading_loop = get_trading_loop(_db)
-    
-    if _trading_loop.is_running:
-        return {"status": "already_running"}
-    
-    async def run_loop():
-        await _trading_loop.initialize()
-        await _trading_loop.run_continuous(interval)
-    
-    background_tasks.add_task(run_loop)
-    
-    return {
-        "status": "started",
-        "interval": interval,
-        "message": "Tethys trading loop started in background"
-    }
+    try:
+        # Check if database is available
+        if _db is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Database not available. Please ensure the backend is fully initialized."
+            )
+        
+        # Import and get trading loop
+        try:
+            from services.tethys_trading import get_trading_loop
+            _trading_loop = get_trading_loop(_db)
+        except ImportError as e:
+            logger.error(f"Failed to import Tethys trading module: {e}")
+            raise HTTPException(
+                status_code=503,
+                detail="Tethys trading service not available. Module import failed."
+            )
+        except Exception as e:
+            logger.error(f"Failed to initialize trading loop: {e}")
+            raise HTTPException(
+                status_code=503,
+                detail=f"Failed to initialize Tethys trading loop: {str(e)}"
+            )
+        
+        # Check if already running
+        if _trading_loop and hasattr(_trading_loop, 'is_running') and _trading_loop.is_running:
+            return {
+                "status": "already_running",
+                "message": "Tethys trading loop is already active"
+            }
+        
+        # Define async run function
+        async def run_loop():
+            try:
+                await _trading_loop.initialize()
+                await _trading_loop.run_continuous(interval)
+            except Exception as e:
+                logger.error(f"Error running trading loop: {e}")
+        
+        # Start in background if BackgroundTasks available
+        if background_tasks:
+            background_tasks.add_task(run_loop)
+            return {
+                "status": "started",
+                "interval": interval,
+                "message": "Tethys trading loop started in background"
+            }
+        else:
+            # Fallback: start as asyncio task
+            asyncio.create_task(run_loop())
+            return {
+                "status": "started",
+                "interval": interval,
+                "message": "Tethys trading loop started (no background tasks available)"
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error starting Tethys: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal error starting Tethys trading: {str(e)}"
+        )
 
 
 @router.post("/stop")
@@ -75,23 +123,91 @@ async def stop_trading_loop():
     """Stop trading loop"""
     global _trading_loop
     
-    if not _trading_loop:
-        return {"status": "not_running"}
-    
-    _trading_loop.stop()
-    return {"status": "stopped"}
+    try:
+        if not _trading_loop:
+            return {
+                "status": "not_running",
+                "message": "Tethys trading loop is not currently running"
+            }
+        
+        # Check if it has a stop method
+        if not hasattr(_trading_loop, 'stop'):
+            logger.warning("Trading loop doesn't have stop method")
+            return {
+                "status": "error",
+                "message": "Trading loop cannot be stopped (no stop method)"
+            }
+        
+        # Try to stop
+        try:
+            _trading_loop.stop()
+            return {
+                "status": "stopped",
+                "message": "Tethys trading loop stopped successfully"
+            }
+        except Exception as e:
+            logger.error(f"Error stopping trading loop: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error stopping trading loop: {str(e)}"
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error stopping Tethys: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal error stopping Tethys trading: {str(e)}"
+        )
 
 
 @router.get("/status")
 async def get_trading_status():
     """Get trading loop status"""
-    global _trading_loop
+    global _trading_loop, _db
     
-    if not _trading_loop:
-        from services.tethys_trading import get_trading_loop
-        _trading_loop = get_trading_loop(_db)
-    
-    return _trading_loop.get_status()
+    try:
+        if not _trading_loop:
+            # Try to initialize it for status check
+            try:
+                from services.tethys_trading import get_trading_loop
+                _trading_loop = get_trading_loop(_db)
+            except Exception as e:
+                logger.warning(f"Cannot initialize trading loop for status: {e}")
+                return {
+                    "status": "not_initialized",
+                    "message": "Tethys trading loop not initialized",
+                    "is_running": False
+                }
+        
+        # Get status if available
+        if hasattr(_trading_loop, 'get_status'):
+            try:
+                return _trading_loop.get_status()
+            except Exception as e:
+                logger.error(f"Error getting status: {e}")
+                return {
+                    "status": "error",
+                    "message": f"Error retrieving status: {str(e)}",
+                    "is_running": False
+                }
+        else:
+            # Fallback status
+            is_running = getattr(_trading_loop, 'is_running', False) if _trading_loop else False
+            return {
+                "status": "active" if is_running else "inactive",
+                "is_running": is_running,
+                "message": "Status retrieved (limited info available)"
+            }
+            
+    except Exception as e:
+        logger.error(f"Unexpected error getting status: {e}")
+        return {
+            "status": "error",
+            "message": f"Error retrieving status: {str(e)}",
+            "is_running": False
+        }
 
 
 @router.post("/tick")
