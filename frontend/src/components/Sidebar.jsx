@@ -178,6 +178,7 @@ const Sidebar = () => {
 
   const navItems = [
     { path: '/master', icon: Zap, label: 'Master Trader', highlight: true },
+    { path: '/upgrades', icon: Sparkles, label: 'Upgrades', highlight: true },
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/growth', icon: TrendingUp, label: '$500→$100k', highlight: true },
     { path: '/budget', icon: Shield, label: 'AI Budget', highlight: true },
