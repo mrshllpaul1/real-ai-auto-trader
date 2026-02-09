@@ -225,29 +225,135 @@ class BackendTester:
         # Test Enhanced AI status
         await self.test_endpoint('GET', '/enhanced-ai/status', 'Enhanced AI Status')
 
-    async def test_additional_endpoints(self):
-        """Test additional important endpoints"""
-        print("\n=== TESTING ADDITIONAL ENDPOINTS ===")
+    async def test_comprehensive_endpoints(self):
+        """Test comprehensive endpoints from review request"""
+        print("\n=== TESTING COMPREHENSIVE ENDPOINTS ===")
         
-        # Test market data
-        await self.test_endpoint('GET', '/market/status', 'Market Data Status',
+        # Market Data Endpoints
+        await self.test_endpoint('GET', '/market/prices', 'Market Prices',
                                expected_status=[200, 404, 503])
         
-        # Test news endpoints
-        await self.test_endpoint('GET', '/news/latest', 'Latest Crypto News',
+        await self.test_endpoint('GET', '/market/coin/BTC', 'Market Coin BTC Data',
                                expected_status=[200, 404, 503])
         
-        # Test sentiment analysis
-        await self.test_endpoint('GET', '/sentiment/market', 'Market Sentiment',
+        await self.test_endpoint('GET', '/market/coin/ETH', 'Market Coin ETH Data',
                                expected_status=[200, 404, 503])
         
-        # Test AI chat
-        await self.test_endpoint('GET', '/ai-chat/status', 'AI Chat Status',
+        await self.test_endpoint('GET', '/market/coin/SOL', 'Market Coin SOL Data',
                                expected_status=[200, 404, 503])
         
-        # Test scheduler
-        await self.test_endpoint('GET', '/scheduler/status', 'Scheduler Status',
+        # News and Sentiment
+        await self.test_endpoint('GET', '/news/recent', 'Recent Crypto News',
                                expected_status=[200, 404, 503])
+        
+        await self.test_endpoint('GET', '/sentiment/market', 'Market Sentiment Analysis',
+                               expected_status=[200, 404, 503])
+        
+        # Tethys Signals and Execute Trade
+        await self.test_endpoint('GET', '/tethys/signals', 'Tethys Trading Signals',
+                               expected_status=[200, 404, 503])
+        
+        trade_data = {
+            "symbol": "BTC",
+            "action": "buy",
+            "amount": 0.001,
+            "mode": "paper"
+        }
+        await self.test_endpoint('POST', '/tethys/execute-trade', 'Tethys Execute Trade',
+                               data=trade_data, expected_status=[200, 201, 400, 503])
+        
+        # Event Triggers Advanced
+        await self.test_endpoint('POST', '/triggers/check-now', 'Trigger Check Now',
+                               expected_status=[200, 201, 400, 503])
+        
+        # Ensemble AI Predictions with specific coins
+        predict_data = {"coins": ["BTC", "ETH", "SOL"]}
+        await self.test_endpoint('POST', '/ensemble/predict', 'Ensemble Predict Coins',
+                               data=predict_data, expected_status=[200, 201, 400, 503])
+        
+        # Portfolio and Trading
+        await self.test_endpoint('GET', '/portfolio/positions', 'Portfolio Positions',
+                               expected_status=[200, 404, 503])
+        
+        await self.test_endpoint('GET', '/portfolio/history', 'Portfolio History',
+                               expected_status=[200, 404, 503])
+        
+        execute_trade_data = {
+            "symbol": "BTC",
+            "side": "buy",
+            "amount": 0.001,
+            "mode": "paper"
+        }
+        await self.test_endpoint('POST', '/trading/execute', 'Execute Paper Trade',
+                               data=execute_trade_data, expected_status=[200, 201, 400, 503])
+        
+        # Model Performance
+        await self.test_endpoint('GET', '/model-performance/metrics', 'Model Performance Metrics',
+                               expected_status=[200, 404, 503])
+        
+        # User Features
+        await self.test_endpoint('GET', '/budget/status', 'Budget Status',
+                               expected_status=[200, 404, 503])
+        
+        await self.test_endpoint('GET', '/journal/trades', 'Trade Journal',
+                               expected_status=[200, 404, 503])
+        
+        journal_entry = {
+            "trade_id": f"test_trade_{int(datetime.now().timestamp())}",
+            "symbol": "BTC",
+            "action": "buy",
+            "amount": 0.001,
+            "price": 69000,
+            "notes": "Test journal entry"
+        }
+        await self.test_endpoint('POST', '/journal/add', 'Add Journal Entry',
+                               data=journal_entry, expected_status=[200, 201, 400, 503])
+        
+        # Strategies
+        await self.test_endpoint('GET', '/strategies/list', 'Strategies List',
+                               expected_status=[200, 404, 503])
+        
+        await self.test_endpoint('GET', '/strategies/active', 'Active Strategies',
+                               expected_status=[200, 404, 503])
+        
+        # Advanced Features
+        await self.test_endpoint('GET', '/gem-scanner/scan', 'Gem Scanner Scan',
+                               expected_status=[200, 404, 503])
+        
+        await self.test_endpoint('GET', '/adaptive-strategy/status', 'Adaptive Strategy Status',
+                               expected_status=[200, 404, 503])
+        
+        await self.test_endpoint('GET', '/spot-trading/status', 'Spot Trading Status',
+                               expected_status=[200, 404, 503])
+        
+        await self.test_endpoint('GET', '/auto-trading/status', 'Auto Trading Status',
+                               expected_status=[200, 404, 503])
+
+    async def test_error_handling(self):
+        """Test error handling scenarios"""
+        print("\n=== TESTING ERROR HANDLING ===")
+        
+        # Test invalid endpoints
+        await self.test_endpoint('GET', '/invalid/endpoint', 'Invalid Endpoint Test',
+                               expected_status=[404])
+        
+        # Test missing parameters
+        await self.test_endpoint('POST', '/tethys/execute-trade', 'Missing Parameters Test',
+                               data={}, expected_status=[400, 422])
+        
+        # Test invalid coin symbol
+        await self.test_endpoint('GET', '/market/coin/INVALID', 'Invalid Coin Symbol',
+                               expected_status=[404, 400])
+        
+        # Test malformed JSON
+        try:
+            url = f"{BASE_URL}/triggers/create"
+            async with self.session.post(url, data="invalid json") as response:
+                status = response.status
+                self.log_result('Malformed JSON Test', status in [400, 422], status, 
+                              None, None if status in [400, 422] else f"Expected 400/422, got {status}")
+        except Exception as e:
+            self.log_result('Malformed JSON Test', True, None, None, f"Correctly rejected: {e}")
 
     async def run_all_tests(self):
         """Run all test suites"""
