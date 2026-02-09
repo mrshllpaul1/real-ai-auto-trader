@@ -404,10 +404,10 @@ class TestPerpetualFutures:
         assert response.status_code == 200
         
         data = response.json()
-        assert "rates" in data
-        assert len(data["rates"]) > 0
+        assert "funding_rates" in data
+        assert len(data["funding_rates"]) > 0
         
-        rate = data["rates"][0]
+        rate = data["funding_rates"][0]
         assert "symbol" in rate
         assert "current_rate" in rate
     
@@ -417,8 +417,8 @@ class TestPerpetualFutures:
         assert response.status_code == 200
         
         data = response.json()
-        assert "balance" in data
-        assert "available_margin" in data
+        assert "account_balance" in data
+        assert "available_balance" in data
         assert "margin_used" in data
 
 
