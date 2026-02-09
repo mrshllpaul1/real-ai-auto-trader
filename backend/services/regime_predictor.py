@@ -29,22 +29,29 @@ from sklearn.model_selection import cross_val_score
 import warnings
 warnings.filterwarnings('ignore')
 
-# Try importing TensorFlow for deep learning
-try:
-    import tensorflow as tf
-    from tensorflow.keras.models import Sequential, Model, load_model
-    from tensorflow.keras.layers import (
-        LSTM, GRU, Dense, Dropout, BatchNormalization, 
-        Conv1D, MaxPooling1D, Flatten, Bidirectional,
-        Input, Attention, MultiHeadAttention, LayerNormalization,
-        GlobalAveragePooling1D
-    )
-    from tensorflow.keras.callbacks import EarlyStopping
-    from tensorflow.keras.optimizers import Adam
-    TF_AVAILABLE = True
-except ImportError:
-    TF_AVAILABLE = False
-    print("TensorFlow not available - DL models disabled")
+# Lazy TensorFlow loading - defer until actually needed
+TF_AVAILABLE = None  # Will be set on first check
+_tf_module = None
+
+def _ensure_tf():
+    """Lazy load TensorFlow only when needed for DL models"""
+    global TF_AVAILABLE, _tf_module
+    if TF_AVAILABLE is not None:
+        return TF_AVAILABLE
+    try:
+        import tensorflow as tf
+        _tf_module = tf
+        TF_AVAILABLE = True
+        logging.info("TensorFlow loaded for regime predictor")
+    except ImportError:
+        TF_AVAILABLE = False
+        logging.warning("TensorFlow not available - DL models disabled")
+    return TF_AVAILABLE
+
+def _get_tf():
+    """Get TensorFlow module, loading if needed"""
+    _ensure_tf()
+    return _tf_module
 
 
 class RegimeLabel(Enum):
