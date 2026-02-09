@@ -51,7 +51,10 @@ const ModelPerformanceDashboard = () => {
   const handleTrain = async (engine) => {
     setTraining(true);
     try {
-      if (engine === 'intelligence') {
+      if (engine === 'all') {
+        // Train ALL models
+        await api.post('/training/train-all');
+      } else if (engine === 'intelligence') {
         await api.post('/trading-intelligence/train', { epochs: 50 });
       } else if (engine === 'drl') {
         await api.post('/drl-engine/train', { episodes: 50 });
