@@ -418,9 +418,12 @@ async def get_kraken_portfolio():
                     logger.info(f"Fetched {len(kraken_prices)} Kraken prices")
                 else:
                     logger.warning("Kraken returned no ticker data; using cached prices if available")
+            except asyncio.TimeoutError:
+                logger.warning("Kraken price batch timed out")
+                return _use_cached_portfolio("price timeout")
             except Exception as e:
                 logger.error(f"Error fetching Kraken prices: {e}")
-                return _use_cached_portfolio("price timeout/error")
+                return _use_cached_portfolio(str(e))
         
         # Build portfolio
         holdings = []
