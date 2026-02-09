@@ -241,9 +241,35 @@ class RegimePredictionEngine:
         }
     
     def _init_dl_models(self):
-        """Initialize deep learning models"""
-        if not TF_AVAILABLE:
+        """Initialize deep learning models (called lazily)"""
+        if not _ensure_tf():
             return
+        
+        # Import TF components now that we've loaded TF
+        tf = _get_tf()
+        from tensorflow.keras.models import Sequential, Model
+        from tensorflow.keras.layers import (
+            LSTM, GRU, Dense, Dropout, BatchNormalization, 
+            Conv1D, MaxPooling1D, Flatten, Bidirectional,
+            Input, MultiHeadAttention, LayerNormalization,
+            GlobalAveragePooling1D
+        )
+        from tensorflow.keras.optimizers import Adam
+        
+        # Store these for model building
+        self._tf = tf
+        self._Sequential = Sequential
+        self._Model = Model
+        self._keras_layers = {
+            'LSTM': LSTM, 'GRU': GRU, 'Dense': Dense, 'Dropout': Dropout,
+            'BatchNormalization': BatchNormalization, 'Conv1D': Conv1D,
+            'MaxPooling1D': MaxPooling1D, 'Flatten': Flatten,
+            'Bidirectional': Bidirectional, 'Input': Input,
+            'MultiHeadAttention': MultiHeadAttention, 
+            'LayerNormalization': LayerNormalization,
+            'GlobalAveragePooling1D': GlobalAveragePooling1D
+        }
+        self._Adam = Adam
         
         # LSTM model
         self.models['lstm'] = self._build_lstm_model()
@@ -285,10 +311,17 @@ class RegimePredictionEngine:
             'description': 'Multi-head attention mechanism for regime patterns'
         }
     
-    def _build_lstm_model(self, input_shape: Tuple = None) -> Sequential:
+    def _build_lstm_model(self, input_shape: Tuple = None):
         """Build LSTM neural network"""
         if input_shape is None:
             input_shape = (self.sequence_length, 10)  # Default feature count
+        
+        Sequential = self._Sequential
+        LSTM = self._keras_layers['LSTM']
+        Dropout = self._keras_layers['Dropout']
+        BatchNormalization = self._keras_layers['BatchNormalization']
+        Dense = self._keras_layers['Dense']
+        Adam = self._Adam
         
         model = Sequential([
             LSTM(64, return_sequences=True, input_shape=input_shape),
