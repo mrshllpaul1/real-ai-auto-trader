@@ -63,7 +63,10 @@ async def _run_training(symbols: List[str] = None):
     _training_status["message"] = "Training ML and DL models..."
     
     try:
-        result = await _gem_engine.train_models(symbols)
+        engine = get_gem_engine()
+        if engine is None:
+            raise Exception("Gem prediction engine not available")
+        result = await engine.train_models(symbols)
         _training_status["result"] = result
         _training_status["message"] = "Training complete"
     except Exception as e:
