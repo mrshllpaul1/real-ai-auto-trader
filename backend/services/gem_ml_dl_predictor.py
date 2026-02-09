@@ -740,6 +740,13 @@ class GemPredictionEngine:
         if symbol is None:
             symbol = coin_id.upper()
         
+        # Check prediction cache first (5-minute TTL)
+        cache_key = f"gem_prediction:{symbol}:{datetime.now(timezone.utc).strftime('%Y%m%d%H%M')[:11]}"  # 10-min buckets
+        cached_prediction = ml_cache.get(cache_key)
+        if cached_prediction is not None:
+            logger.debug(f"Cache hit for gem prediction: {symbol}")
+            return cached_prediction
+        
         # Get recent OHLCV data
         ohlcv_data = await self.db.historical_ohlcv.find(
             {'symbol': symbol},
@@ -818,7 +825,7 @@ class GemPredictionEngine:
         consensus = max(set(all_preds), key=all_preds.count) if all_preds else 'unknown'
         consensus_pct = (all_preds.count(consensus) / len(all_preds) * 100) if all_preds else 0
         
-        return {
+        result = {
             'coin_id': coin_id,
             'symbol': symbol,
             'best_model_prediction': {
@@ -837,6 +844,12 @@ class GemPredictionEngine:
             'best_dl': self.best_dl_model,
             'timestamp': datetime.now(timezone.utc).isoformat()
         }
+        
+        # Cache the prediction (5-minute TTL)
+        ml_cache.set(cache_key, result, ttl=300)
+        logger.debug(f"Cached gem prediction: {symbol}")
+        
+        return result
     
     async def compare_models(self) -> Dict[str, Any]:
         """Get detailed ML vs DL comparison"""
