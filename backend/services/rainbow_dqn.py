@@ -26,54 +26,25 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-# Lazy TensorFlow loading - only import when actually needed
-TF_AVAILABLE = False
-tf = None
-keras = None
-layers = None
-Model = None
-optimizers = None
-
-def _ensure_tf():
-    """Lazy load TensorFlow only when needed"""
-    global TF_AVAILABLE, tf, keras, layers, Model, optimizers
-    if tf is not None:
-        return TF_AVAILABLE
-    try:
-        import tensorflow as _tf
-        tf = _tf
-        keras = tf.keras
-        layers = keras.layers
-        Model = keras.Model
-        optimizers = keras.optimizers
-        TF_AVAILABLE = True
-        logger.info("TensorFlow loaded successfully for Rainbow DQN")
-    except ImportError:
-        TF_AVAILABLE = False
-        logger.warning("TensorFlow not available")
-    return TF_AVAILABLE
-
-
-# Placeholder class for lazy loading - actual implementations created after TF loads
-class _LazyLayerBase:
-    """Placeholder base class before TensorFlow loads"""
-    pass
-
-
-# This will be replaced when TF loads
-class _PlaceholderLayer(_LazyLayerBase):
-    def __init__(self, *args, **kwargs):
-        pass
-
-
-# Create a placeholder module for layers
-class _PlaceholderLayers:
-    """Placeholder for keras.layers before TF loads"""
-    Layer = _PlaceholderLayer
-
-# Use placeholder until TF is loaded
-if layers is None:
-    layers = _PlaceholderLayers()
+# TensorFlow import - this module is only imported after delayed_init
+try:
+    import tensorflow as tf
+    from tensorflow import keras
+    from tensorflow.keras import layers, Model, optimizers
+    from tensorflow.keras.layers import (
+        Dense, Input, LayerNormalization, Dropout,
+        MultiHeadAttention, Add, Embedding, Reshape, Activation, Softmax
+    )
+    TF_AVAILABLE = True
+    logger.info("TensorFlow loaded for Rainbow DQN")
+except ImportError:
+    TF_AVAILABLE = False
+    tf = None
+    keras = None
+    layers = None
+    Model = None
+    optimizers = None
+    logger.warning("TensorFlow not available - Rainbow DQN disabled")
 
 
 # =============================================================================
