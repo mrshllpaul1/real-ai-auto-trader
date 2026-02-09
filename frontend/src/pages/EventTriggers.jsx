@@ -88,38 +88,58 @@ const EventTriggers = () => {
   }, [loadData]);
 
   const handleCheckNow = async () => {
+    const loadingToast = toast.loading('Checking for matching news events...');
     try {
-      toast.info('Checking news events...');
       const response = await api.post('/triggers/check-now');
+      toast.dismiss(loadingToast);
+      
       if (response.data.triggers_executed > 0) {
-        toast.success(`${response.data.triggers_executed} trigger(s) matched!`);
+        toast.success(`${response.data.triggers_executed} trigger(s) matched!`, {
+          description: `${response.data.events_checked || 0} events checked`,
+          duration: 5000,
+        });
       } else {
-        toast.info('No matching events found');
+        toast.info('No matching events found', {
+          description: `Checked ${response.data.events_checked || 0} recent events`,
+        });
       }
       loadData();
     } catch (error) {
-      toast.error('Failed to check events');
+      toast.dismiss(loadingToast);
+      toast.error('Failed to check events', {
+        description: error.response?.data?.detail || 'Please try again',
+      });
     }
   };
 
   const handleToggleTrigger = async (triggerId, enabled) => {
     try {
       await api.post(`/triggers/${triggerId}/${enabled ? 'enable' : 'disable'}`);
-      toast.success(`Trigger ${enabled ? 'enabled' : 'disabled'}`);
+      toast.success(`Trigger ${enabled ? 'enabled' : 'disabled'}`, {
+        description: 'Trigger status updated successfully',
+      });
       loadData();
     } catch (error) {
-      toast.error('Failed to update trigger');
+      toast.error('Failed to update trigger', {
+        description: error.response?.data?.detail || 'Please try again',
+      });
     }
   };
 
-  const handleDeleteTrigger = async (triggerId) => {
+  const handleDeleteTrigger = async (triggerId, triggerName) => {
     if (!window.confirm('Are you sure you want to delete this trigger?')) return;
+    
+    const loadingToast = toast.loading('Deleting trigger...');
     try {
       await api.delete(`/triggers/${triggerId}`);
-      toast.success('Trigger deleted');
+      toast.dismiss(loadingToast);
+      toast.trigger.deleted(triggerName || triggerId);
       loadData();
     } catch (error) {
-      toast.error('Failed to delete trigger');
+      toast.dismiss(loadingToast);
+      toast.error('Failed to delete trigger', {
+        description: error.response?.data?.detail || 'Please try again',
+      });
     }
   };
 
@@ -128,7 +148,11 @@ const EventTriggers = () => {
       toast.error('Please select a template');
       return;
     }
+    
     const triggerId = `${selectedTemplate}_${Date.now()}`;
+    const templateName = templates[selectedTemplate]?.name || selectedTemplate;
+    const loadingToast = toast.loading(`Creating trigger from ${templateName}...`);
+    
     try {
       await api.post('/triggers/create-from-template', {
         template_name: selectedTemplate,
@@ -136,21 +160,32 @@ const EventTriggers = () => {
         amount_usd: parseFloat(newTrigger.amount_usd) || 50,
         enabled: true
       });
-      toast.success('Trigger created from template!');
+      
+      toast.dismiss(loadingToast);
+      toast.trigger.created(templateName);
+      
       setShowCreateModal(false);
       setSelectedTemplate('');
       setNewTrigger({ ...newTrigger, amount_usd: '' });
       loadData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to create trigger');
+      toast.dismiss(loadingToast);
+      toast.error('Failed to create trigger', {
+        description: error.response?.data?.detail || 'Please check your inputs',
+      });
     }
   };
 
   const handleCreateCustom = async () => {
     if (!newTrigger.trigger_id || !newTrigger.name || !newTrigger.keywords || !newTrigger.coins) {
-      toast.error('Please fill all required fields');
+      toast.error('Please fill all required fields', {
+        description: 'Name, keywords, and coins are required',
+      });
       return;
     }
+    
+    const loadingToast = toast.loading('Creating custom trigger...');
+    
     try {
       await api.post('/triggers/create', {
         trigger_id: newTrigger.trigger_id.replace(/\s+/g, '_').toLowerCase(),
@@ -163,7 +198,10 @@ const EventTriggers = () => {
         cooldown_hours: parseInt(newTrigger.cooldown_hours) || 24,
         enabled: newTrigger.enabled
       });
-      toast.success('Custom trigger created!');
+      
+      toast.dismiss(loadingToast);
+      toast.trigger.created(newTrigger.name);
+      
       setShowCreateModal(false);
       setNewTrigger({
         trigger_id: '', name: '', keywords: '', coins: '', action: 'alert',
@@ -171,7 +209,10 @@ const EventTriggers = () => {
       });
       loadData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to create trigger');
+      toast.dismiss(loadingToast);
+      toast.error('Failed to create trigger', {
+        description: error.response?.data?.detail || 'Please check your inputs',
+      });
     }
   };
 
