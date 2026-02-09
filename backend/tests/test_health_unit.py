@@ -16,6 +16,7 @@ class DummyAdmin:
         self.should_raise = should_raise
 
     async def command(self, name: str):
+        assert name == "ping"
         if self.should_raise:
             raise RuntimeError("ping failed")
         return {"ok": 1}

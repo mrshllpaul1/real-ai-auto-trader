@@ -15,5 +15,5 @@ async def check_database_connection(db_client: Any) -> Dict[str, Any]:
     try:
         await db_client.admin.command("ping")
         return {"status": "healthy", "database": "connected"}
-    except Exception as exc:  # pragma: no cover - string value asserted in tests
+    except Exception as exc:
         return {"status": "unhealthy", "database": f"error: {exc}"}
