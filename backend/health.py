@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple
+from typing import Any, Dict
 
 
 async def check_database_connection(db_client: Any) -> Dict[str, Any]:
