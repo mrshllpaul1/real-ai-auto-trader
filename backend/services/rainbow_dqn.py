@@ -56,6 +56,12 @@ _NoisyDense = None
 _PositionalEncoding = None
 _CausalTransformerEncoder = None
 
+
+def _ensure_tf():
+    """Check if TensorFlow is available"""
+    return TF_AVAILABLE and tf is not None
+
+
 def _create_tf_classes():
     """Create TensorFlow-dependent classes after TF is loaded"""
     global _NoisyDense, _PositionalEncoding, _CausalTransformerEncoder
