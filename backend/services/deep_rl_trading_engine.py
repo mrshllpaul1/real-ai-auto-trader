@@ -122,9 +122,26 @@ class LSTMTimeSeriesPredictor:
         return np.array(X), np.array(y)
     
     async def train(self, price_data: List[Dict], epochs: int = 50) -> Dict[str, Any]:
-        """Train the LSTM model"""
+        """Train the LSTM model - lightweight mode respects deployment constraints"""
+        import os
+        lightweight_mode = os.getenv('ML_LIGHTWEIGHT_MODE', 'false').lower() == 'true'
+        enable_training = os.getenv('ENABLE_ML_TRAINING', 'true').lower() == 'true'
+        max_epochs = int(os.getenv('MAX_TRAINING_EPOCHS', '50'))
+        
+        if lightweight_mode or not enable_training:
+            logger.info("🚀 DL Lightweight mode - skipping intensive training")
+            self.is_trained = True  # Mark as trained to allow predictions
+            return {
+                "status": "lightweight_mode",
+                "message": "Deep learning training disabled for deployment",
+                "mode": "rule-based_predictions"
+            }
+        
         if not TF_AVAILABLE or len(price_data) < self.sequence_length + 10:
             return {"error": "Insufficient data or TF not available"}
+        
+        # Limit epochs for deployment
+        epochs = min(epochs, max_epochs)
         
         # Prepare features
         df = pd.DataFrame(price_data)
