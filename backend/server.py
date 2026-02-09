@@ -183,7 +183,48 @@ register_routes(api_router)
 # Include the router
 app.include_router(api_router)
 
-# CORS middleware
+# Import and include monitoring routes
+try:
+    from middleware.error_monitoring import error_router
+    app.include_router(error_router)
+    logger.info("✅ Error monitoring routes registered")
+except ImportError as e:
+    logger.warning(f"Could not import error monitoring routes: {e}")
+
+# Add middleware in correct order (last added = first executed)
+# 1. Security Headers (outermost - first to execute)
+try:
+    from middleware.security_headers import SecurityHeadersMiddleware
+    app.add_middleware(SecurityHeadersMiddleware, enable_hsts=True, enable_csp=True)
+    logger.info("✅ Security Headers middleware enabled")
+except ImportError as e:
+    logger.warning(f"Could not import security headers middleware: {e}")
+
+# 2. Error Monitoring
+try:
+    from middleware.error_monitoring import ErrorMonitoringMiddleware
+    app.add_middleware(ErrorMonitoringMiddleware, log_all_requests=False)
+    logger.info("✅ Error Monitoring middleware enabled")
+except ImportError as e:
+    logger.warning(f"Could not import error monitoring middleware: {e}")
+
+# 3. Rate Limiting
+try:
+    from middleware.rate_limiter import RateLimitMiddleware
+    app.add_middleware(RateLimitMiddleware)
+    logger.info("✅ Rate Limiting middleware enabled")
+except ImportError as e:
+    logger.warning(f"Could not import rate limiting middleware: {e}")
+
+# 4. Request Validation
+try:
+    from middleware.request_validation import ValidationMiddleware
+    app.add_middleware(ValidationMiddleware)
+    logger.info("✅ Request Validation middleware enabled")
+except ImportError as e:
+    logger.warning(f"Could not import validation middleware: {e}")
+
+# CORS middleware (must be after custom middleware)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
