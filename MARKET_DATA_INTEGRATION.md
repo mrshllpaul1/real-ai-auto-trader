@@ -10,8 +10,8 @@ The AI Crypto Trading platform now integrates with **three premium data sources*
 
 ## API Keys Configured
 
-✅ **CoinMarketCap API Key**: `18133157d0414918a6a63137f39525de`
-✅ **CoinStats API Key**: `3aOEZ6HaFlWHJGaVi6thn4llY5bGXCA727KCOjly0tM=`
+✅ **CoinMarketCap API Key**: `YOUR_COINMARKETCAP_API_KEY`
+✅ **CoinStats API Key**: `YOUR_COINSTATS_API_KEY`
 ✅ **CoinGecko**: Free tier (no key required)
 
 ## Data Aggregation Strategy
