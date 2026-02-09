@@ -110,7 +110,7 @@ def register_routes(api_router: APIRouter):
     api_router.include_router(training_history_routes.router, tags=["Training History"])
     api_router.include_router(training_scheduler_routes.router, tags=["Training Scheduler"])
     api_router.include_router(model_persistence_routes.router, tags=["Model Persistence"])
-    api_router.include_router(spot_trading_routes.router, tags=["Spot Trading"])
+    api_router.include_router(spot_trading_routes.router, prefix="/spot-trading", tags=["Spot Trading"])
     api_router.include_router(drl_engine_routes.router, tags=["Deep RL Engine"])
     api_router.include_router(trading_intelligence_routes.router, tags=["Trading Intelligence"])
     api_router.include_router(sb3_agents_routes.router, tags=["SB3 Trading Agents"])
