@@ -28,22 +28,77 @@ from sklearn.model_selection import cross_val_score
 import warnings
 warnings.filterwarnings('ignore')
 
-# Try importing TensorFlow for deep learning
-try:
-    import tensorflow as tf
-    from tensorflow.keras.models import Sequential, Model
-    from tensorflow.keras.layers import (
-        LSTM, GRU, Dense, Dropout, BatchNormalization,
-        Conv1D, MaxPooling1D, Flatten, Bidirectional,
-        Input, MultiHeadAttention, LayerNormalization,
-        GlobalAveragePooling1D
-    )
-    from tensorflow.keras.callbacks import EarlyStopping
-    from tensorflow.keras.optimizers import Adam
-    TF_AVAILABLE = True
-except ImportError:
-    TF_AVAILABLE = False
-    logger.warning("TensorFlow not available - DL gem models disabled")
+# TensorFlow - DEFERRED import to speed up startup
+TF_AVAILABLE = False
+tf = None
+Sequential = None
+Model = None
+LSTM = None
+GRU = None
+Dense = None
+Dropout = None
+BatchNormalization = None
+Conv1D = None
+MaxPooling1D = None
+Flatten = None
+Bidirectional = None
+Input = None
+MultiHeadAttention = None
+LayerNormalization = None
+GlobalAveragePooling1D = None
+EarlyStopping = None
+Adam = None
+
+
+def _ensure_tf():
+    """Lazy-load TensorFlow when needed"""
+    global TF_AVAILABLE, tf, Sequential, Model, LSTM, GRU, Dense, Dropout
+    global BatchNormalization, Conv1D, MaxPooling1D, Flatten, Bidirectional
+    global Input, MultiHeadAttention, LayerNormalization, GlobalAveragePooling1D
+    global EarlyStopping, Adam
+    
+    if tf is not None:
+        return TF_AVAILABLE
+    
+    try:
+        import tensorflow as _tf
+        from tensorflow.keras.models import Sequential as _Sequential, Model as _Model
+        from tensorflow.keras.layers import (
+            LSTM as _LSTM, GRU as _GRU, Dense as _Dense, Dropout as _Dropout,
+            BatchNormalization as _BN, Conv1D as _Conv1D, MaxPooling1D as _MP1D,
+            Flatten as _Flatten, Bidirectional as _Bi, Input as _Input,
+            MultiHeadAttention as _MHA, LayerNormalization as _LN,
+            GlobalAveragePooling1D as _GAP
+        )
+        from tensorflow.keras.callbacks import EarlyStopping as _ES
+        from tensorflow.keras.optimizers import Adam as _Adam
+        
+        tf = _tf
+        Sequential = _Sequential
+        Model = _Model
+        LSTM = _LSTM
+        GRU = _GRU
+        Dense = _Dense
+        Dropout = _Dropout
+        BatchNormalization = _BN
+        Conv1D = _Conv1D
+        MaxPooling1D = _MP1D
+        Flatten = _Flatten
+        Bidirectional = _Bi
+        Input = _Input
+        MultiHeadAttention = _MHA
+        LayerNormalization = _LN
+        GlobalAveragePooling1D = _GAP
+        EarlyStopping = _ES
+        Adam = _Adam
+        
+        TF_AVAILABLE = True
+        logger.info("✅ TensorFlow loaded for Gem ML/DL Predictor")
+    except ImportError:
+        TF_AVAILABLE = False
+        logger.warning("TensorFlow not available - DL gem models disabled")
+    
+    return TF_AVAILABLE
 
 
 class GemLabel(Enum):
