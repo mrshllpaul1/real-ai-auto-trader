@@ -181,11 +181,20 @@ class AILearningEngine:
             return "needs_improvement"
     
     async def get_best_performing_indicators(self) -> List[Dict[str, Any]]:
-        """Analyze which technical indicators perform best"""
-        outcomes = await self.db.learning_outcomes.find(
-            {},
-            {"_id": 0, "strategy_id": 1, "was_correct": 1, "profit_loss": 1}
-        ).limit(1000).to_list(1000)
+        """Analyze which technical indicators perform best using aggregation"""
+        # Use aggregation to limit data processing
+        pipeline = [
+            {"$sort": {"recorded_at": -1}},
+            {"$limit": 500},  # Reduced from 1000 to 500 for better performance
+            {"$project": {
+                "_id": 0,
+                "strategy_id": 1,
+                "was_correct": 1,
+                "profit_loss": 1
+            }}
+        ]
+        
+        outcomes = await self.db.learning_outcomes.aggregate(pipeline).to_list(500)
         
         if len(outcomes) < 10:
             return []
