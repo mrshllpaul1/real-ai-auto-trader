@@ -268,6 +268,7 @@ async def _init_phase4_automation(db):
     from services.portfolio_rebalancer import get_rebalancer
     from services.trailing_stop_service import get_trailing_stop_service
     
+    market = _services.get('market')
     _services['push_service'] = get_push_service(db)
     _services['arbitrage'] = get_arbitrage_service(db, kraken)
     _services['rebalancer'] = get_rebalancer(db, kraken, market)
