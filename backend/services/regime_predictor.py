@@ -140,6 +140,34 @@ class RegimePredictionEngine:
         except Exception as e:
             logger.warning(f"Could not load saved regime models: {e}")
     
+    def _ensure_dl_models(self):
+        """Lazy-load DL models when first needed"""
+        if self._dl_initialized:
+            return _ensure_tf()
+        
+        if not _ensure_tf():
+            return False
+        
+        # Now load TensorFlow components
+        tf = _get_tf()
+        from tensorflow.keras.models import load_model
+        
+        # Initialize DL model structures
+        self._init_dl_models()
+        
+        # Load saved DL models if they exist
+        for model_name in ['lstm', 'gru', 'bidirectional_lstm', 'cnn_lstm', 'attention']:
+            model_file = os.path.join(self.model_path, f"{model_name}.keras")
+            if os.path.exists(model_file):
+                try:
+                    self.models[model_name] = load_model(model_file)
+                    logger.info(f"  Loaded DL model: {model_name}")
+                except Exception as e:
+                    logger.warning(f"Failed to load {model_name}: {e}")
+        
+        self._dl_initialized = True
+        return True
+    
     def save_models(self) -> bool:
         """Save trained models to disk"""
         try:
