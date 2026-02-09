@@ -52,7 +52,7 @@ class KrakenAuthenticator:
             "User-Agent": "CryptoTradingBot/1.0"
         }
         
-        async with AsyncClient() as client:
+        async with AsyncClient(timeout=10.0) as client:
             response = await client.post(
                 f"{self.api_url}{urlpath}",
                 data=params,
@@ -64,6 +64,7 @@ class KrakenTradeService:
     def __init__(self, authenticator: KrakenAuthenticator):
         self.auth = authenticator
         self.api_url = "https://api.kraken.com"
+        self._api_timeout = 10.0  # 10 second timeout for all API calls
     
     async def get_balance(self) -> Dict[str, float]:
         """Retrieve all account balances"""
@@ -78,18 +79,22 @@ class KrakenTradeService:
     
     async def get_ticker(self, symbol: str) -> Dict[str, Any]:
         """Get ticker for a single trading pair (public endpoint)"""
-        async with AsyncClient() as client:
-            response = await client.get(
-                f"{self.api_url}/0/public/Ticker",
-                params={"pair": symbol}
-            )
-            data = response.json()
-            if data.get("error"):
+        try:
+            async with AsyncClient(timeout=self._api_timeout) as client:
+                response = await client.get(
+                    f"{self.api_url}/0/public/Ticker",
+                    params={"pair": symbol}
+                )
+                data = response.json()
+                if data.get("error"):
+                    return None
+                result = data.get("result", {})
+                # Return the first (and only) ticker
+                for key, ticker in result.items():
+                    return ticker
                 return None
-            result = data.get("result", {})
-            # Return the first (and only) ticker
-            for key, ticker in result.items():
-                return ticker
+        except Exception as e:
+            print(f"Kraken ticker error for {symbol}: {e}")
             return None
     
     async def create_order(
