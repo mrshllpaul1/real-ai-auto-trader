@@ -530,6 +530,144 @@ async def get_whale_history(limit: int = 100):
 
 
 # ============================================================================
+# Sentiment Analysis Routes (P1)
+# ============================================================================
+
+@router.get("/sentiment/status")
+async def get_sentiment_status():
+    """Get sentiment analysis service status"""
+    from services.sentiment_analysis import get_sentiment_service
+    service = get_sentiment_service()
+    if not service:
+        return {"is_monitoring": False, "message": "Service not initialized"}
+    
+    return await service.get_status()
+
+
+@router.post("/sentiment/start")
+async def start_sentiment_monitoring():
+    """Start sentiment monitoring"""
+    from services.sentiment_analysis import get_sentiment_service
+    service = get_sentiment_service()
+    if not service:
+        raise HTTPException(500, "Sentiment service not available")
+    
+    return await service.start_monitoring()
+
+
+@router.post("/sentiment/stop")
+async def stop_sentiment_monitoring():
+    """Stop sentiment monitoring"""
+    from services.sentiment_analysis import get_sentiment_service
+    service = get_sentiment_service()
+    if not service:
+        raise HTTPException(500, "Sentiment service not available")
+    
+    return await service.stop_monitoring()
+
+
+@router.get("/sentiment/data")
+async def get_sentiment_data(coin: Optional[str] = None):
+    """Get sentiment data for a coin or all coins"""
+    from services.sentiment_analysis import get_sentiment_service
+    service = get_sentiment_service()
+    if not service:
+        return {}
+    
+    return await service.get_sentiment(coin)
+
+
+@router.get("/sentiment/trending")
+async def get_trending_sentiment(limit: int = 10):
+    """Get trending coins by sentiment activity"""
+    from services.sentiment_analysis import get_sentiment_service
+    service = get_sentiment_service()
+    if not service:
+        return []
+    
+    return await service.get_trending(limit)
+
+
+@router.get("/sentiment/posts")
+async def get_sentiment_posts(coin: Optional[str] = None, limit: int = 50):
+    """Get recent sentiment posts"""
+    from services.sentiment_analysis import get_sentiment_service
+    service = get_sentiment_service()
+    if not service:
+        return []
+    
+    return await service.get_recent_posts(coin, limit)
+
+
+# ============================================================================
+# Backtest Simulator Routes (P1)
+# ============================================================================
+
+class BacktestRequest(BaseModel):
+    strategy: str
+    symbol: str
+    start_date: str
+    end_date: str
+    initial_capital: float = 10000
+    params: Optional[Dict[str, Any]] = None
+
+
+@router.get("/backtest/strategies")
+async def get_backtest_strategies():
+    """Get available backtest strategies"""
+    from services.backtest_service import get_backtest_service
+    service = get_backtest_service()
+    if not service:
+        return {}
+    
+    return await service.get_strategies()
+
+
+@router.post("/backtest/run")
+async def run_backtest(request: BacktestRequest):
+    """Run a backtest simulation"""
+    from services.backtest_service import get_backtest_service
+    service = get_backtest_service()
+    if not service:
+        raise HTTPException(500, "Backtest service not available")
+    
+    return await service.run_backtest(
+        strategy=request.strategy,
+        symbol=request.symbol,
+        start_date=request.start_date,
+        end_date=request.end_date,
+        initial_capital=request.initial_capital,
+        params=request.params
+    )
+
+
+@router.get("/backtest/results")
+async def get_backtest_results(limit: int = 20):
+    """Get recent backtest results"""
+    from services.backtest_service import get_backtest_service
+    service = get_backtest_service()
+    if not service:
+        return []
+    
+    return await service.get_results(limit)
+
+
+@router.get("/backtest/results/{result_id}")
+async def get_backtest_result(result_id: str):
+    """Get a specific backtest result"""
+    from services.backtest_service import get_backtest_service
+    service = get_backtest_service()
+    if not service:
+        raise HTTPException(500, "Backtest service not available")
+    
+    result = await service.get_result(result_id)
+    if not result:
+        raise HTTPException(404, "Result not found")
+    
+    return result
+
+
+# ============================================================================
 # Combined Status Endpoint
 # ============================================================================
 
