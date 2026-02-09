@@ -82,8 +82,14 @@ function App() {
             >
               <div className="md:hidden h-16" />
               <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/growth" element={<GrowthDashboard />} />
+                <Route path="/" element={<CommandCenter />} />
+                <Route path="/command" element={<CommandCenter />} />
+                <Route path="/ai-center" element={<AICommandCenter />} />
+                <Route path="/growth" element={<CommandCenter />} />
+                <Route path="/master" element={<CommandCenter />} />
+                <Route path="/upgrades" element={<CommandCenter />} />
+                <Route path="/enhanced-ai" element={<AICommandCenter />} />
+                <Route path="/tethys" element={<AICommandCenter />} />
                 <Route path="/journal" element={<TradingJournal />} />
                 <Route path="/strategies" element={<StrategySelector />} />
                 <Route path="/trading" element={<TradingView />} />
@@ -107,15 +113,13 @@ function App() {
                 <Route path="/positions" element={<PositionManagement />} />
                 <Route path="/gem-ml-dl" element={<GemMLDLComparison />} />
                 <Route path="/portfolio-dashboard" element={<PortfolioDashboard />} />
-                <Route path="/enhanced-ai" element={<EnhancedAIDashboard />} />
                 <Route path="/strategy-builder" element={<StrategyBuilder />} />
                 <Route path="/training" element={<TethysDashboard />} />
+                <Route path="/spot-trading" element={<SpotTrading />} />
                 <Route path="/spot" element={<SpotTrading />} />
                 <Route path="/models" element={<ModelPerformanceDashboard />} />
-                <Route path="/tethys" element={<TethysDashboard />} />
+                <Route path="/model-performance" element={<ModelPerformanceDashboard />} />
                 <Route path="/advanced-ai" element={<AdvancedAI />} />
-                <Route path="/master" element={<MasterDashboard />} />
-                <Route path="/upgrades" element={<UpgradesDashboard />} />
                 <Route path="/guide" element={<Guide />} />
                 <Route path="/setup" element={<Setup />} />
                 <Route path="/settings" element={<Settings />} />
