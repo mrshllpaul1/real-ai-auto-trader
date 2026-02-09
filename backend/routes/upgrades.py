@@ -695,9 +695,9 @@ async def get_available_models():
     from services.ab_testing_service import get_ab_testing_service
     service = get_ab_testing_service()
     if not service:
-        return {}
+        return []
     
-    return await service.get_available_models()
+    return await service.get_models()
 
 
 @router.post("/ab-testing/create")
