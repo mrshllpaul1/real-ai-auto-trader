@@ -417,7 +417,15 @@ async def get_kraken_portfolio():
                             kraken_prices[pair] = price
                     logger.info(f"Fetched {len(kraken_prices)} Kraken prices")
                 else:
-                    logger.warning("Kraken returned no ticker data; using cached prices if available")
+                    logger.warning("Kraken returned no ticker data; attempting to reuse cached prices")
+                    cached = _kraken_portfolio_cache.get("data") or {}
+                    for holding in cached.get("holdings", []):
+                        asset = holding.get("asset")
+                        pair = asset_to_pair.get(asset)
+                        if pair:
+                            kraken_prices[pair] = holding.get("price_usd", 0)
+                    if not kraken_prices:
+                        logger.warning("No cached ticker prices available; proceeding with zero pricing")
             except asyncio.TimeoutError:
                 logger.warning("Kraken price batch timed out")
                 return _use_cached_portfolio("price timeout")
