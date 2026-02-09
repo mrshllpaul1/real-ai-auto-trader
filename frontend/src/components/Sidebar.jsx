@@ -198,7 +198,7 @@ const Sidebar = () => {
     { path: '/gem-backtest', icon: Gem, label: 'Gem Backtester', highlight: true },
     { path: '/gem-ml-dl', icon: Cpu, label: 'ML vs DL Gems', highlight: true },
     { path: '/auto-exec', icon: Bot, label: 'Auto Execute', highlight: true },
-    { path: '/advanced', icon: FlaskConical, label: 'Advanced' },
+    { path: '/advanced', icon: FlaskConical, label: 'Advanced AI', highlight: true },
     { path: '/strategy-builder', icon: Sparkles, label: 'Strategies' },
     { path: '/auto-trading', icon: Zap, label: 'Auto Trading' },
     { path: '/trading', icon: TrendingUp, label: 'Trading' },

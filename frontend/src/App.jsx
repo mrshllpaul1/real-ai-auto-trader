@@ -34,7 +34,6 @@ const BacktestEngine = lazy(() => import('./pages/BacktestEngine'));
 const AutoTrading = lazy(() => import("./pages/AutoTrading"));
 const GemScanner = lazy(() => import("./pages/GemScanner"));
 const AutoExecution = lazy(() => import("./pages/AutoExecution"));
-const AdvancedFeatures = lazy(() => import("./pages/AdvancedFeatures"));
 const AdvancedAI = lazy(() => import("./pages/AdvancedAI"));
 const Guide = lazy(() => import("./pages/Guide"));
 const Setup = lazy(() => import("./pages/Setup"));
@@ -123,7 +122,8 @@ function App() {
                 <Route path="/auto-trading" element={<AutoTrading />} />
                 <Route path="/scanner" element={<GemScanner />} />
                 <Route path="/auto-exec" element={<AutoExecution />} />
-                <Route path="/advanced" element={<AdvancedFeatures />} />
+                <Route path="/advanced" element={<AdvancedAI />} />
+                <Route path="/advanced-ai" element={<AdvancedAI />} />
                 <Route path="/budget" element={<TradingBudget />} />
                 <Route path="/trigger-performance" element={<TriggerPerformance />} />
                 <Route path="/adaptive" element={<AdaptiveStrategy />} />
@@ -136,7 +136,6 @@ function App() {
                 <Route path="/spot" element={<SpotTrading />} />
                 <Route path="/models" element={<ModelPerformanceDashboard />} />
                 <Route path="/model-performance" element={<ModelPerformanceDashboard />} />
-                <Route path="/advanced-ai" element={<AdvancedAI />} />
                 <Route path="/guide" element={<Guide />} />
                 <Route path="/setup" element={<Setup />} />
                 <Route path="/settings" element={<Settings />} />
