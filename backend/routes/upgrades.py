@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timezone
 
-router = APIRouter(prefix="/api/upgrades", tags=["upgrades"])
+router = APIRouter(prefix="/upgrades", tags=["upgrades"])
 
 
 # ============================================================================
