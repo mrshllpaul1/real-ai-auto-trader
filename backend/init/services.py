@@ -177,8 +177,8 @@ async def _init_phase3_ai(db):
     universe_expander = get_universe_expander(db, market)
     _services['universe_expander'] = universe_expander
     
-    # Hidden Gem Predictor (use rainbow_agent instead of deep_ai)
-    hidden_gem_predictor = get_gem_predictor(db, market, rainbow_agent)
+    # Hidden Gem Predictor (rainbow_agent is deferred, pass None)
+    hidden_gem_predictor = get_gem_predictor(db, market, None)
     _services['gem_predictor'] = hidden_gem_predictor
     
     # Social Sentiment
