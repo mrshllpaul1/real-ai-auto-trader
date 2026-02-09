@@ -179,7 +179,6 @@ const Sidebar = () => {
 
   const navItems = [
     { path: '/', icon: LayoutDashboard, label: 'Command Center', highlight: true },
-    { path: '/ai-center', icon: Brain, label: 'AI Center', highlight: true },
     { path: '/budget', icon: Shield, label: 'AI Budget', highlight: true },
     { path: '/spot-trading', icon: Wallet, label: 'Spot Trading', highlight: true },
     { path: '/positions', icon: Briefcase, label: 'Positions', highlight: true },

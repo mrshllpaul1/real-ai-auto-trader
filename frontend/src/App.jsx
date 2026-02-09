@@ -18,8 +18,7 @@ const PageLoader = () => (
 );
 
 // Lazy load pages for code splitting
-const CommandCenter = lazy(() => import("./pages/CommandCenter"));
-const AICommandCenter = lazy(() => import("./pages/AICommandCenter"));
+const UnifiedCommandCenter = lazy(() => import("./pages/UnifiedCommandCenter"));
 const StrategySelector = lazy(() => import("./pages/StrategySelector"));
 const TradingView = lazy(() => import("./pages/TradingView"));
 const Analytics = lazy(() => import("./pages/Analytics"));
@@ -95,14 +94,14 @@ function App() {
               <div className="md:hidden h-16" />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
-                  <Route path="/" element={<CommandCenter />} />
-                  <Route path="/command" element={<CommandCenter />} />
-                  <Route path="/ai-center" element={<AICommandCenter />} />
-                  <Route path="/growth" element={<CommandCenter />} />
-                  <Route path="/master" element={<CommandCenter />} />
-                  <Route path="/upgrades" element={<CommandCenter />} />
-                  <Route path="/enhanced-ai" element={<AICommandCenter />} />
-                  <Route path="/tethys" element={<AICommandCenter />} />
+                  <Route path="/" element={<UnifiedCommandCenter />} />
+                  <Route path="/command" element={<UnifiedCommandCenter />} />
+                  <Route path="/ai-center" element={<UnifiedCommandCenter />} />
+                  <Route path="/growth" element={<UnifiedCommandCenter />} />
+                  <Route path="/master" element={<UnifiedCommandCenter />} />
+                  <Route path="/upgrades" element={<UnifiedCommandCenter />} />
+                  <Route path="/enhanced-ai" element={<UnifiedCommandCenter />} />
+                  <Route path="/tethys" element={<UnifiedCommandCenter />} />
                   <Route path="/journal" element={<TradingJournal />} />
                   <Route path="/strategies" element={<StrategySelector />} />
                   <Route path="/trading" element={<TradingView />} />
