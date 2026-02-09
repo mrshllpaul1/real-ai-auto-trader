@@ -342,10 +342,17 @@ class RegimePredictionEngine:
         
         return model
     
-    def _build_gru_model(self, input_shape: Tuple = None) -> Sequential:
+    def _build_gru_model(self, input_shape: Tuple = None):
         """Build GRU neural network"""
         if input_shape is None:
             input_shape = (self.sequence_length, 10)
+        
+        Sequential = self._Sequential
+        GRU = self._keras_layers['GRU']
+        Dropout = self._keras_layers['Dropout']
+        BatchNormalization = self._keras_layers['BatchNormalization']
+        Dense = self._keras_layers['Dense']
+        Adam = self._Adam
         
         model = Sequential([
             GRU(64, return_sequences=True, input_shape=input_shape),
@@ -366,10 +373,18 @@ class RegimePredictionEngine:
         
         return model
     
-    def _build_bilstm_model(self, input_shape: Tuple = None) -> Sequential:
+    def _build_bilstm_model(self, input_shape: Tuple = None):
         """Build Bidirectional LSTM neural network - learns patterns in both directions"""
         if input_shape is None:
             input_shape = (self.sequence_length, 10)
+        
+        Sequential = self._Sequential
+        LSTM = self._keras_layers['LSTM']
+        Bidirectional = self._keras_layers['Bidirectional']
+        Dropout = self._keras_layers['Dropout']
+        BatchNormalization = self._keras_layers['BatchNormalization']
+        Dense = self._keras_layers['Dense']
+        Adam = self._Adam
         
         model = Sequential([
             Bidirectional(LSTM(64, return_sequences=True), input_shape=input_shape),
@@ -390,13 +405,22 @@ class RegimePredictionEngine:
         
         return model
     
-    def _build_cnn_lstm_model(self, input_shape: Tuple = None) -> Sequential:
+    def _build_cnn_lstm_model(self, input_shape: Tuple = None):
         """
         Build CNN-LSTM Hybrid model.
         CNN extracts local patterns, LSTM captures temporal dependencies.
         """
         if input_shape is None:
             input_shape = (self.sequence_length, 10)
+        
+        Sequential = self._Sequential
+        Conv1D = self._keras_layers['Conv1D']
+        MaxPooling1D = self._keras_layers['MaxPooling1D']
+        LSTM = self._keras_layers['LSTM']
+        Dropout = self._keras_layers['Dropout']
+        BatchNormalization = self._keras_layers['BatchNormalization']
+        Dense = self._keras_layers['Dense']
+        Adam = self._Adam
         
         model = Sequential([
             # CNN layers for pattern extraction
@@ -424,7 +448,7 @@ class RegimePredictionEngine:
         
         return model
     
-    def _build_attention_model(self, input_shape: Tuple = None) -> Model:
+    def _build_attention_model(self, input_shape: Tuple = None):
         """
         Build Transformer-style attention model.
         Uses multi-head attention to focus on important time steps.
