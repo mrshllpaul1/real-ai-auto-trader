@@ -850,6 +850,180 @@ async def get_open_orders():
         
         return {
             "orders": formatted_orders,
+
+
+# ============= Entry Price Tracking Endpoints =============
+
+@router.get("/entry-prices")
+async def get_all_entry_prices():
+    """Get all recorded entry prices for positions"""
+    if _entry_tracker is None:
+        return {
+            "entries": [],
+            "message": "Entry tracking not initialized",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    
+    try:
+        entries = await _entry_tracker.get_all_entries()
+        return {
+            "entries": entries,
+            "count": len(entries),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error fetching entry prices: {e}")
+        return {"entries": [], "error": str(e)}
+
+
+@router.get("/entry-prices/{symbol}")
+async def get_entry_price(symbol: str):
+    """Get entry price for a specific symbol"""
+    if _entry_tracker is None:
+        raise HTTPException(status_code=503, detail="Entry tracking not initialized")
+    
+    symbol = symbol.upper()
+    entry = await _entry_tracker.get_entry_price(symbol)
+    
+    if not entry:
+        raise HTTPException(status_code=404, detail=f"No entry price found for {symbol}")
+    
+    # Get current price for P&L calculation
+    current_price = 0
+    if _kraken_service and symbol in TRADING_PAIRS:
+        try:
+            ticker = await _kraken_service.get_ticker(TRADING_PAIRS[symbol]['pair'])
+            if ticker:
+                current_price = float(ticker.get("c", [0])[0]) if ticker.get("c") else 0
+        except:
+            pass
+    
+    # Calculate unrealized P&L
+    pnl_data = await _entry_tracker.calculate_unrealized_pnl(symbol, current_price)
+    
+    return {
+        "entry": entry,
+        "current_price": current_price,
+        "pnl": pnl_data,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@router.post("/entry-prices/{symbol}")
+async def manually_set_entry_price(
+    symbol: str,
+    entry_price: float = Query(..., gt=0, description="Entry price per unit"),
+    quantity: float = Query(..., gt=0, description="Quantity held")
+):
+    """
+    Manually set entry price for a position.
+    Useful for recording positions acquired before tracking was enabled.
+    """
+    if _entry_tracker is None:
+        raise HTTPException(status_code=503, detail="Entry tracking not initialized")
+    
+    symbol = symbol.upper()
+    
+    result = await _entry_tracker.record_buy(
+        symbol=symbol,
+        quantity=quantity,
+        price=entry_price,
+        source="manual_entry"
+    )
+    
+    return {
+        "success": True,
+        "symbol": symbol,
+        "entry_price": entry_price,
+        "quantity": quantity,
+        "result": result,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@router.delete("/entry-prices/{symbol}")
+async def delete_entry_price(symbol: str):
+    """Delete entry price record for a symbol"""
+    if _entry_tracker is None:
+        raise HTTPException(status_code=503, detail="Entry tracking not initialized")
+    
+    symbol = symbol.upper()
+    
+    if _entry_tracker.collection:
+        result = await _entry_tracker.collection.delete_one({"symbol": symbol})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail=f"No entry found for {symbol}")
+        
+        return {
+            "success": True,
+            "symbol": symbol,
+            "message": f"Entry price record for {symbol} deleted",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    
+    raise HTTPException(status_code=503, detail="Database not available")
+
+
+@router.get("/portfolio-pnl")
+async def get_portfolio_pnl():
+    """Get comprehensive P&L summary for entire portfolio"""
+    if _entry_tracker is None:
+        raise HTTPException(status_code=503, detail="Entry tracking not initialized")
+    
+    if _kraken_service is None:
+        raise HTTPException(status_code=503, detail="Kraken service not initialized")
+    
+    # Get current prices for all held assets
+    current_prices = {}
+    for symbol in TRADING_PAIRS:
+        try:
+            ticker = await _kraken_service.get_ticker(TRADING_PAIRS[symbol]['pair'])
+            if ticker:
+                current_prices[symbol] = float(ticker.get("c", [0])[0]) if ticker.get("c") else 0
+        except:
+            pass
+    
+    pnl_summary = await _entry_tracker.get_portfolio_pnl_summary(current_prices)
+    
+    return pnl_summary
+
+
+@router.get("/cache-stats")
+async def get_cache_stats():
+    """Get Kraken API cache statistics"""
+    if _kraken_service is None:
+        raise HTTPException(status_code=503, detail="Kraken service not initialized")
+    
+    if hasattr(_kraken_service, 'get_stats'):
+        stats = _kraken_service.get_stats()
+        return {
+            "cache_stats": stats,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    
+    return {
+        "message": "Cache stats not available",
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@router.post("/cache-invalidate")
+async def invalidate_cache(key: str = None):
+    """Invalidate Kraken API cache (admin use)"""
+    if _kraken_service is None:
+        raise HTTPException(status_code=503, detail="Kraken service not initialized")
+    
+    if hasattr(_kraken_service, 'invalidate'):
+        _kraken_service.invalidate(key)
+        return {
+            "success": True,
+            "invalidated": key or "all",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    
+    return {"message": "Cache invalidation not available"}
+
             "count": len(formatted_orders),
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
