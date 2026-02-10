@@ -428,8 +428,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Win Rate Improvements testing completed successfully"
-    - "All targets achieved: 70%+ win rates, positive Sharpe ratios, 40%+ improvement"
+    - "Yearly Adaptive Backtest System"
+    - "Full Year 2025 Backtest with Weekly Adaptation"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
