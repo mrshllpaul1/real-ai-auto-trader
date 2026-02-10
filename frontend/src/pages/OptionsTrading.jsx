@@ -125,16 +125,11 @@ const OptionsTrading = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Select value={selectedSymbol} onValueChange={setSelectedSymbol}>
-            <SelectTrigger className="w-32 bg-[#121212] border-[#1F1F1F]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-[#121212] border-[#1F1F1F]">
-              <SelectItem value="BTC">BTC</SelectItem>
-              <SelectItem value="ETH">ETH</SelectItem>
-              <SelectItem value="SOL">SOL</SelectItem>
-            </SelectContent>
-          </Select>
+          <TradingPairSelector 
+            value={`${selectedSymbol}/USD`} 
+            onValueChange={(v) => setSelectedSymbol(v.replace('/USD', ''))}
+            className="w-40"
+          />
           <Button onClick={loadData} variant="outline" className="border-[#1F1F1F]">
             <RefreshCw size={16} />
           </Button>
