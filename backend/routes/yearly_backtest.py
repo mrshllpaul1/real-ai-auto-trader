@@ -309,12 +309,13 @@ async def get_market_calendar(year: Optional[int] = None):
     """
     Get the market events calendar used for regime detection.
     Can specify a year (2020-2026) or get all years.
-    Returns week-by-week breakdown with month, regime, and event details.
+    Returns week-by-week breakdown with month, regime, event details, and sentiment data.
     """
     from services.yearly_adaptive_backtest import (
         MARKET_EVENTS_2020, MARKET_EVENTS_2021, MARKET_EVENTS_2022,
         MARKET_EVENTS_2023, MARKET_EVENTS_2024, MARKET_EVENTS_2025,
-        MARKET_EVENTS_2026, MARKET_EVENTS_BY_YEAR
+        MARKET_EVENTS_2026, MARKET_EVENTS_BY_YEAR,
+        HISTORICAL_SENTIMENT_BY_YEAR, get_weekly_sentiment
     )
     
     all_calendars = {
@@ -327,14 +328,26 @@ async def get_market_calendar(year: Optional[int] = None):
         2026: MARKET_EVENTS_2026
     }
     
-    def get_calendar_summary(events, year):
+    def get_calendar_summary(events, calendar_year):
         """Build detailed calendar summary for a year"""
         months = ["January", "February", "March", "April", "May", "June", 
                   "July", "August", "September", "October", "November", "December"]
         
+        # Enrich events with sentiment data
+        enriched_events = []
+        for event in events:
+            sentiment = get_weekly_sentiment(calendar_year, event["week"])
+            enriched_event = {
+                **event,
+                "sentiment": sentiment["fear_greed_value"],
+                "sentiment_category": sentiment["category"],
+                "sentiment_signal": sentiment["signal"]
+            }
+            enriched_events.append(enriched_event)
+        
         # Group events by month
         events_by_month = {month: [] for month in months}
-        for event in events:
+        for event in enriched_events:
             # Use month from event if available, otherwise calculate from week
             if "month" in event:
                 month = event["month"]
@@ -349,25 +362,47 @@ async def get_market_calendar(year: Optional[int] = None):
         
         # Calculate regime distribution
         regime_counts = {}
-        for event in events:
+        for event in enriched_events:
             regime = event["regime"]
             regime_counts[regime] = regime_counts.get(regime, 0) + 1
         
+        # Calculate sentiment distribution
+        sentiment_counts = {"extreme_fear": 0, "fear": 0, "neutral": 0, "greed": 0, "extreme_greed": 0}
+        for event in enriched_events:
+            sentiment_counts[event["sentiment_category"]] += 1
+        
         # Find key events
-        key_events = [e for e in events if e["regime"] in ["crash", "euphoria", "high_volatility"]]
+        key_events = [e for e in enriched_events if e["regime"] in ["crash", "euphoria", "high_volatility"]]
+        
+        # Calculate average sentiment by quarter
+        sentiment_by_quarter = {}
+        for q, q_events in [
+            ("Q1", [e for e in enriched_events if e["week"] <= 13]),
+            ("Q2", [e for e in enriched_events if 13 < e["week"] <= 26]),
+            ("Q3", [e for e in enriched_events if 26 < e["week"] <= 39]),
+            ("Q4", [e for e in enriched_events if e["week"] > 39])
+        ]:
+            if q_events:
+                avg_sentiment = sum(e["sentiment"] for e in q_events) / len(q_events)
+                sentiment_by_quarter[q] = {
+                    "average_sentiment": round(avg_sentiment, 1),
+                    "weeks": len(q_events)
+                }
         
         return {
-            "year": year,
-            "total_weeks": len(events),
-            "events": events,
+            "year": calendar_year,
+            "total_weeks": len(enriched_events),
+            "events": enriched_events,
             "events_by_month": events_by_month,
             "regime_distribution": regime_counts,
+            "sentiment_distribution": sentiment_counts,
+            "sentiment_by_quarter": sentiment_by_quarter,
             "key_events": key_events,
             "regimes_by_quarter": {
-                "Q1": [e for e in events if e["week"] <= 13],
-                "Q2": [e for e in events if 13 < e["week"] <= 26],
-                "Q3": [e for e in events if 26 < e["week"] <= 39],
-                "Q4": [e for e in events if e["week"] > 39]
+                "Q1": [e for e in enriched_events if e["week"] <= 13],
+                "Q2": [e for e in enriched_events if 13 < e["week"] <= 26],
+                "Q3": [e for e in enriched_events if 26 < e["week"] <= 39],
+                "Q4": [e for e in enriched_events if e["week"] > 39]
             }
         }
     
