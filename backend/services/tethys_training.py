@@ -116,18 +116,24 @@ class TethysModelRegistry:
     
     def end_run(self, status: str = "FINISHED"):
         """End current run"""
-        mlflow.end_run(status=status)
+        if self.mlflow_enabled and mlflow:
+            mlflow.end_run(status=status)
     
     def get_best_model(self, metric: str = "sharpe_ratio") -> Optional[str]:
         """Get the best model based on a metric"""
-        runs = self.client.search_runs(
-            experiment_ids=[self.experiment_id],
-            order_by=[f"metrics.{metric} DESC"],
-            max_results=1
-        )
-        
-        if runs:
-            return runs[0].info.run_id
+        if not self.mlflow_enabled or not self.client:
+            return None
+        try:
+            runs = self.client.search_runs(
+                experiment_ids=[self.experiment_id],
+                order_by=[f"metrics.{metric} DESC"],
+                max_results=1
+            )
+            
+            if runs:
+                return runs[0].info.run_id
+        except Exception:
+            pass
         return None
     
     def get_model_versions(self, model_name: str = "tethys_rainbow_dqn"):
