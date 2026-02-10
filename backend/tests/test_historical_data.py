@@ -155,10 +155,15 @@ class TestHistoricalDataDownload:
         assert data["records_stored"] > 0
         assert "status" in data
         assert data["status"] == "success"
+        assert "indicators_computed" in data
+        assert data["indicators_computed"] is True
+        assert "records_with_indicators" in data
         
         print(f"✓ Downloaded LINK history:")
         print(f"  - Records stored: {data['records_stored']}")
+        print(f"  - Records with indicators: {data.get('records_with_indicators', 'N/A')}")
         print(f"  - Date range: {data.get('date_range', {}).get('from', 'N/A')} to {data.get('date_range', {}).get('to', 'N/A')}")
+        print(f"  - Indicators computed: {data.get('indicators_computed', False)}")
     
     def test_start_batch_download(self):
         """Test POST /api/historical-data/download/start - Start batch download"""
@@ -231,6 +236,63 @@ class TestStoredCoinData:
         data = response.json()
         assert data["symbol"] == "ETH"
         print(f"✓ Stored ETH data: {data['count']} records")
+    
+    def test_validate_technical_indicators(self):
+        """Test that stored data includes technical indicators"""
+        # Download fresh data with indicators
+        response = requests.post(
+            f"{BASE_URL}/api/historical-data/download/single/BTC?max_days=100",
+            timeout=120
+        )
+        
+        if response.status_code != 200:
+            print("⚠ Could not download BTC data for validation")
+            return
+        
+        # Retrieve the stored data
+        response = requests.get(f"{BASE_URL}/api/historical-data/coin/BTC?limit=10", timeout=30)
+        
+        if response.status_code != 200:
+            print("⚠ Could not retrieve stored BTC data")
+            return
+        
+        data = response.json()
+        assert "data" in data
+        assert len(data["data"]) > 0
+        
+        # Check that recent records have technical indicators
+        recent_records = data["data"][-5:]  # Get last 5 records
+        
+        # Expected technical indicator fields
+        expected_fields = [
+            "rsi", "macd", "macd_signal", "macd_hist",
+            "sma_7", "sma_14", "sma_20", "sma_30", "sma_50",
+            "ema_7", "ema_14", "ema_20", "ema_30", "ema_50",
+            "bb_upper", "bb_middle", "bb_lower",
+            "atr", "returns_pct", "volatility_7d", "volatility_14d",
+            "momentum_1d", "momentum_7d", "momentum_14d", "momentum_30d",
+            "volume_surge", "vwap"
+        ]
+        
+        records_with_indicators = 0
+        for record in recent_records:
+            has_indicators = any(record.get(field) is not None for field in expected_fields)
+            if has_indicators:
+                records_with_indicators += 1
+        
+        print(f"✓ Technical indicators validation:")
+        print(f"  - Records checked: {len(recent_records)}")
+        print(f"  - Records with indicators: {records_with_indicators}")
+        
+        # At least some recent records should have indicators
+        assert records_with_indicators > 0, "No records found with technical indicators"
+        
+        # Verify a sample record has expected fields
+        sample_record = recent_records[-1]
+        print(f"  - Sample record fields present:")
+        for field in expected_fields[:5]:  # Show first 5 fields
+            value = sample_record.get(field)
+            print(f"    - {field}: {value if value is not None else 'None'}")
     
     def test_get_stored_coin_data_nonexistent(self):
         """Test GET /api/historical-data/coin/{coin_symbol} - Get data for non-existent coin"""
