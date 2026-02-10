@@ -106,7 +106,7 @@ async def ask_teacher(request: TeachRequest):
     )
     
     # Store in history
-    if _db:
+    if _db is not None:
         try:
             await _db.teaching_history.insert_one({
                 "session_id": request.session_id,
