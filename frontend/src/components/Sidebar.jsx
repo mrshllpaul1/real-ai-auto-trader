@@ -201,6 +201,7 @@ const Sidebar = () => {
     { path: '/adaptive', icon: Gauge, label: 'Adaptive AI', highlight: true },
     { path: '/training', icon: GraduationCap, label: 'AI Training', highlight: true },
     { path: '/model-performance', icon: Cpu, label: 'Model Performance', highlight: true },
+    { path: '/mtf-predictions', icon: Brain, label: 'MTF AI Predictions', highlight: true },
     { path: '/event-timeline', icon: Calendar, label: 'Event Timeline', highlight: true },
     { path: '/journal', icon: BookOpen, label: 'Journal' },
     { path: '/scanner', icon: Radar, label: 'Gem Scanner', highlight: true },
