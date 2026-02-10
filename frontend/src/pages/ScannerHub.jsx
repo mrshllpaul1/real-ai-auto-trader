@@ -87,34 +87,29 @@ const ScannerHub = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <MobileTabsList>
             <TabsList className="glass-card flex-nowrap md:flex-wrap h-auto p-1 gap-1 w-max md:w-auto">
-              <TabsTrigger value="scanner" className="data-[state=active]:bg-pink-500/20 whitespace-nowrap">
-                <Radar className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Gem Scanner</span>
-                <span className="sm:hidden">1</span>
-              </TabsTrigger>
-              <TabsTrigger value="ml-dl" className="data-[state=active]:bg-purple-500/20 whitespace-nowrap">
-                <Cpu className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">ML vs DL</span>
-                <span className="sm:hidden">2</span>
-              </TabsTrigger>
-              <TabsTrigger value="copy" className="data-[state=active]:bg-blue-500/20 whitespace-nowrap">
-                <Users className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Copy Trading</span>
-                <span className="sm:hidden">3</span>
-              </TabsTrigger>
+              {TAB_CONFIG.map((tab) => (
+                <TabTriggerItem key={tab.value} {...tab} />
+              ))}
             </TabsList>
           </MobileTabsList>
 
+          {/* Lazy-loaded tab content - only renders active tab */}
           <TabsContent value="scanner" className="mt-0">
-            <GemScanner embedded={true} />
+            <LazyTabContent isActive={activeTab === 'scanner'}>
+              <GemScanner embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="ml-dl" className="mt-0">
-            <GemMLDLComparison embedded={true} />
+            <LazyTabContent isActive={activeTab === 'ml-dl'}>
+              <GemMLDLComparison embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="copy" className="mt-0">
-            <CopyTrading embedded={true} />
+            <LazyTabContent isActive={activeTab === 'copy'}>
+              <CopyTrading embedded={true} />
+            </LazyTabContent>
           </TabsContent>
         </Tabs>
       </motion.div>

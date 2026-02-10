@@ -93,52 +93,41 @@ const NewsHub = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <MobileTabsList>
             <TabsList className="glass-card flex-nowrap md:flex-wrap h-auto p-1 gap-1 w-max md:w-auto">
-              <TabsTrigger value="sentiment" className="data-[state=active]:bg-amber-500/20 whitespace-nowrap">
-                <MessageSquare className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Sentiment</span>
-                <span className="sm:hidden">1</span>
-              </TabsTrigger>
-              <TabsTrigger value="intel" className="data-[state=active]:bg-blue-500/20 whitespace-nowrap">
-                <Newspaper className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Intelligence</span>
-                <span className="sm:hidden">2</span>
-              </TabsTrigger>
-              <TabsTrigger value="triggers" className="data-[state=active]:bg-red-500/20 whitespace-nowrap">
-                <Target className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Triggers</span>
-                <span className="sm:hidden">3</span>
-              </TabsTrigger>
-              <TabsTrigger value="timeline" className="data-[state=active]:bg-purple-500/20 whitespace-nowrap">
-                <Calendar className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Timeline</span>
-                <span className="sm:hidden">4</span>
-              </TabsTrigger>
-              <TabsTrigger value="performance" className="data-[state=active]:bg-green-500/20 whitespace-nowrap">
-                <Award className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Stats</span>
-                <span className="sm:hidden">5</span>
-              </TabsTrigger>
+              {TAB_CONFIG.map((tab) => (
+                <TabTriggerItem key={tab.value} {...tab} />
+              ))}
             </TabsList>
           </MobileTabsList>
 
+          {/* Lazy-loaded tab content - only renders active tab */}
           <TabsContent value="sentiment" className="mt-0">
-            <NewsSentiment embedded={true} />
+            <LazyTabContent isActive={activeTab === 'sentiment'}>
+              <NewsSentiment embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="intel" className="mt-0">
-            <NewsAndIntelligence embedded={true} />
+            <LazyTabContent isActive={activeTab === 'intel'}>
+              <NewsAndIntelligence embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="triggers" className="mt-0">
-            <EventTriggers embedded={true} />
+            <LazyTabContent isActive={activeTab === 'triggers'}>
+              <EventTriggers embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="timeline" className="mt-0">
-            <EventTimeline embedded={true} />
+            <LazyTabContent isActive={activeTab === 'timeline'}>
+              <EventTimeline embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="performance" className="mt-0">
-            <TriggerPerformance embedded={true} />
+            <LazyTabContent isActive={activeTab === 'performance'}>
+              <TriggerPerformance embedded={true} />
+            </LazyTabContent>
           </TabsContent>
         </Tabs>
       </motion.div>

@@ -87,34 +87,29 @@ const DeFiHub = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <MobileTabsList>
             <TabsList className="glass-card flex-nowrap md:flex-wrap h-auto p-1 gap-1 w-max md:w-auto">
-              <TabsTrigger value="wallet" className="data-[state=active]:bg-emerald-500/20 whitespace-nowrap">
-                <Wallet className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Wallet</span>
-                <span className="sm:hidden">1</span>
-              </TabsTrigger>
-              <TabsTrigger value="yield" className="data-[state=active]:bg-green-500/20 whitespace-nowrap">
-                <Sprout className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Yield Farming</span>
-                <span className="sm:hidden">2</span>
-              </TabsTrigger>
-              <TabsTrigger value="rebalance" className="data-[state=active]:bg-blue-500/20 whitespace-nowrap">
-                <PieChart className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Rebalance</span>
-                <span className="sm:hidden">3</span>
-              </TabsTrigger>
+              {TAB_CONFIG.map((tab) => (
+                <TabTriggerItem key={tab.value} {...tab} />
+              ))}
             </TabsList>
           </MobileTabsList>
 
+          {/* Lazy-loaded tab content - only renders active tab */}
           <TabsContent value="wallet" className="mt-0">
-            <DeFiWallet embedded={true} />
+            <LazyTabContent isActive={activeTab === 'wallet'}>
+              <DeFiWallet embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="yield" className="mt-0">
-            <YieldFarming embedded={true} />
+            <LazyTabContent isActive={activeTab === 'yield'}>
+              <YieldFarming embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="rebalance" className="mt-0">
-            <PortfolioRebalance embedded={true} />
+            <LazyTabContent isActive={activeTab === 'rebalance'}>
+              <PortfolioRebalance embedded={true} />
+            </LazyTabContent>
           </TabsContent>
         </Tabs>
       </motion.div>

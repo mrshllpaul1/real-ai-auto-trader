@@ -99,70 +99,53 @@ const SettingsHub = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <MobileTabsList>
             <TabsList className="glass-card flex-nowrap md:flex-wrap h-auto p-1 gap-1 w-max md:w-auto">
-              <TabsTrigger value="settings" className="data-[state=active]:bg-slate-500/20 whitespace-nowrap">
-                <SettingsIcon className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Settings</span>
-                <span className="sm:hidden">1</span>
-              </TabsTrigger>
-              <TabsTrigger value="setup" className="data-[state=active]:bg-amber-500/20 whitespace-nowrap">
-                <Key className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">API Setup</span>
-                <span className="sm:hidden">2</span>
-              </TabsTrigger>
-              <TabsTrigger value="budget" className="data-[state=active]:bg-green-500/20 whitespace-nowrap">
-                <Shield className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Budget</span>
-                <span className="sm:hidden">3</span>
-              </TabsTrigger>
-              <TabsTrigger value="telegram" className="data-[state=active]:bg-blue-500/20 whitespace-nowrap">
-                <MessageCircle className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Telegram</span>
-                <span className="sm:hidden">4</span>
-              </TabsTrigger>
-              <TabsTrigger value="journal" className="data-[state=active]:bg-purple-500/20 whitespace-nowrap">
-                <BookOpen className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Journal</span>
-                <span className="sm:hidden">5</span>
-              </TabsTrigger>
-              <TabsTrigger value="guide" className="data-[state=active]:bg-cyan-500/20 whitespace-nowrap">
-                <BookOpen className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Guide</span>
-                <span className="sm:hidden">6</span>
-              </TabsTrigger>
-              <TabsTrigger value="customize" className="data-[state=active]:bg-pink-500/20 whitespace-nowrap">
-                <Layout className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Customize</span>
-                <span className="sm:hidden">7</span>
-              </TabsTrigger>
+              {TAB_CONFIG.map((tab) => (
+                <TabTriggerItem key={tab.value} {...tab} />
+              ))}
             </TabsList>
           </MobileTabsList>
 
+          {/* Lazy-loaded tab content - only renders active tab */}
           <TabsContent value="settings" className="mt-0">
-            <Settings embedded={true} />
+            <LazyTabContent isActive={activeTab === 'settings'}>
+              <Settings embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="setup" className="mt-0">
-            <Setup embedded={true} />
+            <LazyTabContent isActive={activeTab === 'setup'}>
+              <Setup embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="budget" className="mt-0">
-            <TradingBudget embedded={true} />
+            <LazyTabContent isActive={activeTab === 'budget'}>
+              <TradingBudget embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="telegram" className="mt-0">
-            <TelegramNotifications embedded={true} />
+            <LazyTabContent isActive={activeTab === 'telegram'}>
+              <TelegramNotifications embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="journal" className="mt-0">
-            <TradingJournal embedded={true} />
+            <LazyTabContent isActive={activeTab === 'journal'}>
+              <TradingJournal embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="guide" className="mt-0">
-            <Guide embedded={true} />
+            <LazyTabContent isActive={activeTab === 'guide'}>
+              <Guide embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="customize" className="mt-0">
-            <DashboardCustomization embedded={true} />
+            <LazyTabContent isActive={activeTab === 'customize'}>
+              <DashboardCustomization embedded={true} />
+            </LazyTabContent>
           </TabsContent>
         </Tabs>
       </motion.div>
