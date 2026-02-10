@@ -1211,18 +1211,25 @@ class EnhancedMTFTrainingService:
     async def predict_all(
         self,
         symbols: List[str] = None,
-        timeframes: List[str] = None
+        timeframes: List[str] = None,
+        use_fast: bool = True
     ) -> Dict[str, Any]:
         """
         Make predictions for all symbols.
         """
-        if symbols is None:
-            symbols = self.DEFAULT_COINS
+        # Handle "all" to use Kraken universe
+        if symbols is None or symbols == ["all"] or (isinstance(symbols, list) and len(symbols) == 1 and symbols[0].lower() == "all"):
+            symbols = await self.fetch_all_kraken_coins()
+            use_fast = True  # Force fast mode for large symbol sets
         
         predictions = []
         errors = []
         
         logger.info(f"🔮 Running predictions for {len(symbols)} symbols...")
+        
+        if use_fast and len(symbols) > 50:
+            # Use fast sentiment-only predictions
+            return await self.predict_all_fast(symbols)
         
         for symbol in symbols:
             try:
