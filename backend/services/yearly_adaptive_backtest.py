@@ -62,26 +62,72 @@ MARKET_REGIMES = {
     "euphoria": {"bias": 0.005, "volatility": 0.03, "trend_strength": 0.85}
 }
 
-# 2020 Market calendar - COVID crash and DeFi summer
+# 2020 Market calendar - COVID crash and DeFi summer - COMPLETE WEEK BY WEEK
 MARKET_EVENTS_2020 = [
-    {"week": 1, "regime": "bull_weak", "event": "New Year optimism"},
-    {"week": 4, "regime": "sideways", "event": "Pre-COVID uncertainty"},
-    {"week": 8, "regime": "bear_weak", "event": "COVID fears begin"},
-    {"week": 11, "regime": "crash", "event": "COVID crash - Black Thursday"},
-    {"week": 13, "regime": "bear_strong", "event": "Market capitulation"},
-    {"week": 15, "regime": "recovery", "event": "Fed stimulus announced"},
-    {"week": 18, "regime": "bull_weak", "event": "Recovery begins"},
-    {"week": 21, "regime": "sideways", "event": "Consolidation"},
-    {"week": 24, "regime": "bull_weak", "event": "DeFi summer begins"},
-    {"week": 27, "regime": "bull_strong", "event": "DeFi mania - YFI launch"},
-    {"week": 30, "regime": "high_volatility", "event": "DeFi volatility peak"},
-    {"week": 33, "regime": "bear_weak", "event": "DeFi correction"},
-    {"week": 36, "regime": "sideways", "event": "September consolidation"},
-    {"week": 40, "regime": "bull_weak", "event": "PayPal crypto announcement"},
-    {"week": 43, "regime": "bull_strong", "event": "Institutional FOMO begins"},
-    {"week": 46, "regime": "bull_strong", "event": "BTC breaks ATH"},
-    {"week": 49, "regime": "euphoria", "event": "December rally"},
-    {"week": 52, "regime": "bull_strong", "event": "Year-end euphoria"}
+    # January
+    {"week": 1, "month": "January", "regime": "bull_weak", "event": "New Year optimism", "date_range": "Jan 1-7"},
+    {"week": 2, "month": "January", "regime": "bull_weak", "event": "Early January rally", "date_range": "Jan 8-14"},
+    {"week": 3, "month": "January", "regime": "sideways", "event": "Consolidation", "date_range": "Jan 15-21"},
+    {"week": 4, "month": "January", "regime": "sideways", "event": "Pre-COVID uncertainty", "date_range": "Jan 22-28"},
+    # February
+    {"week": 5, "month": "February", "regime": "bull_weak", "event": "February optimism", "date_range": "Jan 29-Feb 4"},
+    {"week": 6, "month": "February", "regime": "bull_strong", "event": "BTC rally to $10k", "date_range": "Feb 5-11"},
+    {"week": 7, "month": "February", "regime": "bull_strong", "event": "Momentum continues", "date_range": "Feb 12-18"},
+    {"week": 8, "month": "February", "regime": "bear_weak", "event": "COVID fears begin", "date_range": "Feb 19-25"},
+    # March - COVID Crash
+    {"week": 9, "month": "March", "regime": "bear_weak", "event": "Growing COVID concerns", "date_range": "Feb 26-Mar 3"},
+    {"week": 10, "month": "March", "regime": "bear_strong", "event": "Market panic starts", "date_range": "Mar 4-10"},
+    {"week": 11, "month": "March", "regime": "crash", "event": "COVID crash - Black Thursday", "date_range": "Mar 11-17"},
+    {"week": 12, "month": "March", "regime": "crash", "event": "BTC crashes to $3.8k", "date_range": "Mar 18-24"},
+    {"week": 13, "month": "March", "regime": "bear_strong", "event": "Market capitulation", "date_range": "Mar 25-31"},
+    # April
+    {"week": 14, "month": "April", "regime": "recovery", "event": "Initial recovery", "date_range": "Apr 1-7"},
+    {"week": 15, "month": "April", "regime": "recovery", "event": "Fed stimulus announced", "date_range": "Apr 8-14"},
+    {"week": 16, "month": "April", "regime": "bull_weak", "event": "Relief rally", "date_range": "Apr 15-21"},
+    {"week": 17, "month": "April", "regime": "bull_weak", "event": "Halving anticipation", "date_range": "Apr 22-28"},
+    # May - Bitcoin Halving
+    {"week": 18, "month": "May", "regime": "bull_weak", "event": "Recovery begins", "date_range": "Apr 29-May 5"},
+    {"week": 19, "month": "May", "regime": "high_volatility", "event": "Pre-halving volatility", "date_range": "May 6-12"},
+    {"week": 20, "month": "May", "regime": "sideways", "event": "Bitcoin halving May 11", "date_range": "May 13-19"},
+    {"week": 21, "month": "May", "regime": "sideways", "event": "Post-halving consolidation", "date_range": "May 20-26"},
+    # June - DeFi Summer begins
+    {"week": 22, "month": "June", "regime": "bull_weak", "event": "DeFi interest grows", "date_range": "May 27-Jun 2"},
+    {"week": 23, "month": "June", "regime": "bull_weak", "event": "COMP token launch", "date_range": "Jun 3-9"},
+    {"week": 24, "month": "June", "regime": "bull_weak", "event": "DeFi summer begins", "date_range": "Jun 10-16"},
+    {"week": 25, "month": "June", "regime": "bull_strong", "event": "Yield farming starts", "date_range": "Jun 17-23"},
+    {"week": 26, "month": "June", "regime": "bull_strong", "event": "DeFi TVL growing", "date_range": "Jun 24-30"},
+    # July - DeFi Mania
+    {"week": 27, "month": "July", "regime": "bull_strong", "event": "DeFi mania - YFI launch", "date_range": "Jul 1-7"},
+    {"week": 28, "month": "July", "regime": "euphoria", "event": "YFI explosion", "date_range": "Jul 8-14"},
+    {"week": 29, "month": "July", "regime": "euphoria", "event": "DeFi tokens moon", "date_range": "Jul 15-21"},
+    {"week": 30, "month": "July", "regime": "high_volatility", "event": "DeFi volatility peak", "date_range": "Jul 22-28"},
+    # August
+    {"week": 31, "month": "August", "regime": "bull_strong", "event": "DeFi expansion", "date_range": "Jul 29-Aug 4"},
+    {"week": 32, "month": "August", "regime": "high_volatility", "event": "Sushi swap drama", "date_range": "Aug 5-11"},
+    {"week": 33, "month": "August", "regime": "bear_weak", "event": "DeFi correction", "date_range": "Aug 12-18"},
+    {"week": 34, "month": "August", "regime": "sideways", "event": "Market digests gains", "date_range": "Aug 19-25"},
+    # September
+    {"week": 35, "month": "September", "regime": "bear_weak", "event": "September weakness", "date_range": "Aug 26-Sep 1"},
+    {"week": 36, "month": "September", "regime": "sideways", "event": "September consolidation", "date_range": "Sep 2-8"},
+    {"week": 37, "month": "September", "regime": "bear_weak", "event": "DeFi unwind", "date_range": "Sep 9-15"},
+    {"week": 38, "month": "September", "regime": "sideways", "event": "Range trading", "date_range": "Sep 16-22"},
+    {"week": 39, "month": "September", "regime": "sideways", "event": "Month end calm", "date_range": "Sep 23-29"},
+    # October - Institutional Interest
+    {"week": 40, "month": "October", "regime": "bull_weak", "event": "PayPal crypto announcement", "date_range": "Sep 30-Oct 6"},
+    {"week": 41, "month": "October", "regime": "bull_weak", "event": "Square buys BTC", "date_range": "Oct 7-13"},
+    {"week": 42, "month": "October", "regime": "bull_strong", "event": "Institutional interest", "date_range": "Oct 14-20"},
+    {"week": 43, "month": "October", "regime": "bull_strong", "event": "Institutional FOMO begins", "date_range": "Oct 21-27"},
+    # November - ATH Breakout
+    {"week": 44, "month": "November", "regime": "bull_strong", "event": "BTC approaches $14k", "date_range": "Oct 28-Nov 3"},
+    {"week": 45, "month": "November", "regime": "bull_strong", "event": "Biden election clarity", "date_range": "Nov 4-10"},
+    {"week": 46, "month": "November", "regime": "bull_strong", "event": "BTC breaks ATH", "date_range": "Nov 11-17"},
+    {"week": 47, "month": "November", "regime": "euphoria", "event": "New ATH celebration", "date_range": "Nov 18-24"},
+    {"week": 48, "month": "November", "regime": "bull_strong", "event": "Rally continues", "date_range": "Nov 25-30"},
+    # December
+    {"week": 49, "month": "December", "regime": "euphoria", "event": "December rally", "date_range": "Dec 1-8"},
+    {"week": 50, "month": "December", "regime": "bull_strong", "event": "BTC $20k milestone", "date_range": "Dec 9-15"},
+    {"week": 51, "month": "December", "regime": "euphoria", "event": "Holiday FOMO", "date_range": "Dec 16-22"},
+    {"week": 52, "month": "December", "regime": "bull_strong", "event": "Year-end euphoria", "date_range": "Dec 23-31"}
 ]
 
 # 2021 Market calendar - Bull run and May crash
