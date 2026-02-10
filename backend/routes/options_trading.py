@@ -373,17 +373,17 @@ async def get_option_positions(
     status: str = "open",
     db = Depends(get_database)
 ):
-    """Get user's option positions"""
+    """Get user's option positions with REAL market prices"""
     positions = await db.option_positions.find(
         {"user_id": user_id, "status": status},
         {"_id": 0}
     ).to_list(100)
     
-    # Update greeks and P&L for each position
-    current_prices = {"BTC": 45000, "ETH": 2500, "SOL": 100}
-    
+    # Update greeks and P&L for each position with REAL prices
     for pos in positions:
-        current_price = current_prices.get(pos["symbol"], 1000)
+        current_price = await get_real_price(pos["symbol"])
+        if current_price is None:
+            current_price = pos.get("entry_price", 0)  # Fallback to entry price
         expiry = datetime.fromisoformat(pos["expiry_date"].replace('Z', '+00:00'))
         days_to_expiry = max((expiry - datetime.now(timezone.utc)).days, 0)
         T = max(days_to_expiry, 0.01) / 365
