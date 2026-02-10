@@ -331,7 +331,15 @@ async def get_market_calendar(year: Optional[int] = None):
         # Group events by month
         events_by_month = {month: [] for month in months}
         for event in events:
-            month = event.get("month", months[(event["week"] - 1) // 4])
+            # Use month from event if available, otherwise calculate from week
+            if "month" in event:
+                month = event["month"]
+            else:
+                # Calculate approximate month from week number (1-52)
+                week = event.get("week", 1)
+                month_idx = min(11, (week - 1) * 12 // 52)
+                month = months[month_idx]
+            
             if month in events_by_month:
                 events_by_month[month].append(event)
         
