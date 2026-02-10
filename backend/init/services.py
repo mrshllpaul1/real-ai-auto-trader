@@ -135,6 +135,7 @@ async def _init_phase2_trading(db):
     from services.isolated_portfolio import get_isolated_portfolio
     from services.historical_trainer import HistoricalTrainer
     from services.enhanced_historical_trainer import EnhancedHistoricalTrainer
+    from services.enhanced_copy_trading import EnhancedCopyTradingService
     
     _services['alerts'] = AlertService(db)
     _services['budget'] = BudgetManager(db)
@@ -142,6 +143,11 @@ async def _init_phase2_trading(db):
     _services['isolated_portfolio'] = get_isolated_portfolio(db, _services['kraken'])
     _services['historical_trainer'] = HistoricalTrainer(db)
     _services['enhanced_trainer'] = EnhancedHistoricalTrainer(db)
+    
+    # Enhanced Copy Trading Service
+    enhanced_copy_trading = EnhancedCopyTradingService(db)
+    _services['enhanced_copy_trading'] = enhanced_copy_trading
+    logger.info("✅ Enhanced Copy Trading service initialized")
     
     logger.info("✅ Phase 2: Trading services initialized")
 
@@ -655,6 +661,12 @@ async def _init_phase7_wire_dependencies(db):
     from routes import master_orchestrator as master_routes
     master_routes.set_db(db)
     logger.info("✅ Master Orchestrator wired")
+    
+    # Wire Copy Trading routes with enhanced service
+    from routes import copy_trading as copy_trading_routes
+    copy_trading_routes.set_db(db)
+    copy_trading_routes.set_enhanced_service(_services.get('enhanced_copy_trading'))
+    logger.info("✅ Copy Trading System wired")
     
     # Start schedulers
     await _services['training_scheduler'].start()

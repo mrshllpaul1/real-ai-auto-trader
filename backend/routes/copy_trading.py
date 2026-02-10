@@ -6,7 +6,7 @@ Enhanced with real-time sync, advanced risk management, and performance analytic
 """
 
 import logging
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, WebSocket
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
@@ -804,3 +804,45 @@ async def get_enhanced_leaderboard(
     except Exception as e:
         logger.error(f"Error getting enhanced leaderboard: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+# =============================================================================
+# WEBSOCKET ENDPOINT
+# =============================================================================
+
+@router.websocket("/ws/signals/{copier_id}")
+async def websocket_trade_signals(
+    websocket: WebSocket,
+    copier_id: str,
+    trader_ids: str = ""
+):
+    """
+    WebSocket endpoint for real-time trade signals
+    
+    Usage:
+        ws://host/api/copy-trading/ws/signals/{copier_id}?trader_ids=trader1,trader2
+    
+    Client receives:
+        - trade_signal: When a followed trader makes a trade
+        - notification: System notifications (risk alerts, etc.)
+        - market_update: General market updates
+    
+    Client can send:
+        - ping: Keepalive (receives pong)
+        - update_subscriptions: Change followed traders
+    """
+    from services.copy_trading_websocket import handle_copy_trading_websocket
+    
+    await handle_copy_trading_websocket(websocket, copier_id, trader_ids)
+
+
+@router.get("/ws/stats")
+async def get_websocket_stats():
+    """Get WebSocket connection statistics"""
+    from services.copy_trading_websocket import get_websocket_manager
+    
+    manager = get_websocket_manager()
+    stats = manager.get_connection_stats()
+    
+    return stats
