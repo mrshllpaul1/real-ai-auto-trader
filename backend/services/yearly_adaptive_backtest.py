@@ -1217,6 +1217,35 @@ class YearlyBacktestEngine:
         best_week = max(self.weekly_performance, key=lambda x: x["return"]) if self.weekly_performance else {}
         worst_week = min(self.weekly_performance, key=lambda x: x["return"]) if self.weekly_performance else {}
         
+        # Calculate monthly performance from weekly data
+        months = ["January", "February", "March", "April", "May", "June",
+                  "July", "August", "September", "October", "November", "December"]
+        
+        monthly_performance = {}
+        for month_idx, month in enumerate(months):
+            start_week = month_idx * 4 + 1  # Approximate
+            end_week = min((month_idx + 1) * 4 + 1, 53)
+            
+            month_weeks = [w for w in self.weekly_performance if start_week <= w["week"] < end_week]
+            if month_weeks:
+                month_return = sum(w["return"] for w in month_weeks)
+                month_trades = sum(w["trades"] for w in month_weeks)
+                month_wins = sum(1 for w in month_weeks if w["return"] > 0)
+                dominant_regime = max(set(w["regime"] for w in month_weeks), 
+                                     key=lambda r: sum(1 for w in month_weeks if w["regime"] == r))
+                
+                monthly_performance[month] = {
+                    "return_pct": round(month_return * 100, 2),
+                    "trades": month_trades,
+                    "weeks_profitable": month_wins,
+                    "weeks_total": len(month_weeks),
+                    "dominant_regime": dominant_regime
+                }
+        
+        # Best/worst months
+        best_month = max(monthly_performance.items(), key=lambda x: x[1]["return_pct"]) if monthly_performance else None
+        worst_month = min(monthly_performance.items(), key=lambda x: x[1]["return_pct"]) if monthly_performance else None
+        
         # Coin performance
         coin_performance = {}
         for trade in self.trades:
