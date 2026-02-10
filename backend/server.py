@@ -71,7 +71,7 @@ All trading endpoints are prefixed with `/api`. See below for full documentation
     },
     servers=[
         {
-            "url": "https://mtf-retrain.preview.emergentagent.com",
+            "url": "https://ai-trading-trainer.preview.emergentagent.com",
             "description": "Production server"
         },
         {
