@@ -372,8 +372,8 @@ nginx-code-proxy RUNNING   pid 45
 - All environment variables set ✅
 
 **URL:**
-- Deployment: https://coverage-enhancer.preview.emergentagent.com ✅
-- Backend API: https://coverage-enhancer.preview.emergentagent.com/api ✅
+- Deployment: https://winrate-booster.preview.emergentagent.com ✅
+- Backend API: https://winrate-booster.preview.emergentagent.com/api ✅
 
 ---
 
