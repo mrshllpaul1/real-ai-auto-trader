@@ -17,11 +17,20 @@ import pandas as pd
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 from collections import deque
-import mlflow
-import mlflow.keras
-from mlflow.tracking import MlflowClient
 
 logger = logging.getLogger(__name__)
+
+# Try to import MLflow - make it optional
+MLFLOW_AVAILABLE = False
+try:
+    import mlflow
+    import mlflow.keras
+    from mlflow.tracking import MlflowClient
+    MLFLOW_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"MLflow not available: {e}. Training will work without experiment tracking.")
+    mlflow = None
+    MlflowClient = None
 
 # MLflow configuration
 MLFLOW_TRACKING_URI = os.environ.get("MLFLOW_TRACKING_URI", "file:///app/backend/mlruns")
