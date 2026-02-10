@@ -380,11 +380,17 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Comprehensive Full-Stack Testing"
     - "Enhanced Event Prediction Coverage"
+    - "Hardened Hidden Gem Prediction (LLM Fallback)"
   stuck_tasks:
     - "Enhanced MTF Training API Service Availability"
-  test_all: false
+  test_all: true
   test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+    - message: "COMPREHENSIVE TESTING REQUESTED - February 10, 2026. User requests full comprehensive tests and checks across ALL backend endpoints. Please test ALL major systems in order: 1) Core Health, 2) Enhanced Event Prediction (NEW - 4 new endpoints), 3) Hardened Gem Prediction (NEW - LLM fallback fields), 4) Adaptive Strategy, 5) Whale Alerts & Backtesting, 6) On-Chain Data, 7) Tethys Trading Engine, 8) Event Triggers, 9) Ensemble AI, 10) Portfolio & Kraken, 11) Model Training, 12) MTF Training, 13) Market Data & Sentiment, 14) Auto Trading, 15) Security/Monitoring/Rate Limiting, 16) ML Optimization & A/B Testing, 17) Journal, 18) Cache. Report comprehensive results with pass/fail counts per system."
 
   - task: "Enhanced Event Prediction Coverage"
     implemented: true
