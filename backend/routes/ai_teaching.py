@@ -375,7 +375,7 @@ async def clear_session_history(session_id: str):
         if session_id in _teaching_service.conversations:
             del _teaching_service.conversations[session_id]
     
-    if _db:
+    if _db is not None:
         await _db.teaching_history.delete_many({"session_id": session_id})
     
     return {"status": "cleared", "session_id": session_id}
