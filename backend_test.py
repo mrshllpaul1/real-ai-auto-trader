@@ -1,2160 +1,591 @@
 #!/usr/bin/env python3
 """
-On-Chain Data and Enhanced Adaptive Strategy Testing
-Tests new on-chain data endpoints and enhanced adaptive strategy features.
+Enhanced Event Prediction Coverage Testing
+==========================================
+Comprehensive testing for all adaptive strategy endpoints with specific focus on:
+- Event prediction with 20+ event types
+- Event calendar with 90 days coverage
+- Event coverage stats with >60% coverage
+- Scheduled events with real 2026 dates
+- All new endpoints functionality
 """
 
-import asyncio
-import aiohttp
+import requests
 import json
 import sys
-from datetime import datetime
-from typing import Dict, Any, List, Optional
+from datetime import datetime, timezone, timedelta
+from typing import Dict, List, Any, Optional
 
-# Backend URL from frontend environment
-BASE_URL = "https://coverage-enhancer.preview.emergentagent.com/api"
-USER_ID = "demo_user_test123"
+# Use production URL from environment
+BACKEND_URL = "https://coverage-enhancer.preview.emergentagent.com/api"
+print(f"🔗 Testing Enhanced Event Prediction Coverage at: {BACKEND_URL}")
 
-class OnChainAndAdaptiveStrategyTester:
+class EventPredictionTester:
     def __init__(self):
-        self.session = None
+        self.base_url = BACKEND_URL
+        self.session = requests.Session()
+        self.session.headers.update({
+            'Content-Type': 'application/json',
+            'User-Agent': 'EventPredictionTester/1.0'
+        })
         self.results = []
         self.failed_tests = []
-        self.passed_tests = []
         
-    async def __aenter__(self):
-        self.session = aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=60),
-            headers={'Content-Type': 'application/json'}
-        )
-        return self
-        
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        if self.session:
-            await self.session.close()
-    
-    def log_result(self, test_name: str, success: bool, status_code: int = None, 
-                   response: Any = None, error: str = None):
+    def log_result(self, test_name: str, success: bool, details: str = "", response_data: Any = None):
         """Log test result"""
-        result = {
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} {test_name}: {details}")
+        
+        self.results.append({
             'test': test_name,
             'success': success,
-            'status_code': status_code,
-            'timestamp': datetime.now().isoformat(),
-            'error': error
-        }
+            'details': details,
+            'response_data': response_data
+        })
+        
+        if not success:
+            self.failed_tests.append({
+                'test': test_name,
+                'details': details,
+                'response_data': response_data
+            })
+    
+    def make_request(self, method: str, endpoint: str, data: Dict = None, params: Dict = None) -> tuple:
+        """Make HTTP request and return (success, status_code, data)"""
+        try:
+            url = f"{self.base_url}{endpoint}"
+            
+            if method == "GET":
+                response = self.session.get(url, params=params, timeout=15)
+            elif method == "POST":
+                response = self.session.post(url, json=data, params=params, timeout=15)
+            else:
+                return False, 0, f"Unsupported method: {method}"
+            
+            if response.status_code == 200:
+                try:
+                    return True, response.status_code, response.json()
+                except json.JSONDecodeError:
+                    return True, response.status_code, response.text
+            else:
+                return False, response.status_code, response.text
+                
+        except requests.exceptions.RequestException as e:
+            return False, 0, str(e)
+    
+    def test_predict_events_60_days(self):
+        """Test POST /api/adaptive-strategy/predict-events with 60 days"""
+        print("\n🎯 Testing Enhanced Event Predictions (60 days)...")
+        
+        success, status, data = self.make_request(
+            "POST", 
+            "/adaptive-strategy/predict-events",
+            data={"days_ahead": 60}
+        )
+        
+        if not success:
+            self.log_result("Predict Events 60 Days", False, f"HTTP {status}: {data}")
+            return
+        
+        # Verify response structure
+        required_fields = ["status", "events", "total_events", "high_probability_events"]
+        missing_fields = [field for field in required_fields if field not in data]
+        
+        if missing_fields:
+            self.log_result("Predict Events 60 Days", False, f"Missing fields: {missing_fields}")
+            return
+        
+        events = data.get("events", [])
+        total_events = data.get("total_events", 0)
+        high_prob_events = data.get("high_probability_events", 0)
+        
+        # Check requirements: 20+ events across 20+ different event types
+        if total_events < 20:
+            self.log_result("Predict Events 60 Days", False, f"Only {total_events} events, need 20+")
+            return
+        
+        # Check unique event types
+        event_types = set()
+        valid_event_structure = True
+        
+        for event in events:
+            required_event_fields = ["event_id", "event_type", "description", "predicted_date", 
+                                   "probability", "expected_impact", "affected_coins", 
+                                   "confidence_factors", "prediction_basis", "created_at"]
+            
+            missing_event_fields = [field for field in required_event_fields if field not in event]
+            if missing_event_fields:
+                valid_event_structure = False
+                break
+            
+            event_types.add(event.get("event_type"))
+        
+        if not valid_event_structure:
+            self.log_result("Predict Events 60 Days", False, f"Invalid event structure: missing {missing_event_fields}")
+            return
+        
+        unique_event_types = len(event_types)
+        if unique_event_types < 20:
+            self.log_result("Predict Events 60 Days", False, f"Only {unique_event_types} event types, need 20+")
+            return
+        
+        # Check for new event types
+        new_event_types = ["token_unlock", "quarterly_earnings", "governance_vote", "airdrop_event", 
+                          "geopolitical_event", "protocol_launch", "futures_expiry", "tax_deadline"]
+        
+        found_new_types = [et for et in new_event_types if et in event_types]
+        
+        self.log_result(
+            "Predict Events 60 Days", 
+            True, 
+            f"{total_events} events, {unique_event_types} types, {high_prob_events} high-prob, new types: {len(found_new_types)}"
+        )
+        
+        # Log sample events for verification
+        print(f"   📊 Sample Event Types: {list(event_types)[:10]}...")
+        print(f"   🆕 New Event Types Found: {found_new_types}")
+        
+        return data
+    
+    def test_event_coverage_stats(self):
+        """Test GET /api/adaptive-strategy/event-coverage-stats"""
+        print("\n📈 Testing Event Coverage Statistics...")
+        
+        success, status, data = self.make_request("GET", "/adaptive-strategy/event-coverage-stats")
+        
+        if not success:
+            self.log_result("Event Coverage Stats", False, f"HTTP {status}: {data}")
+            return
+        
+        # Verify required fields
+        required_fields = ["coverage_percentage", "total_event_types_defined", 
+                          "event_types_with_predictions", "total_active_predictions"]
+        
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            self.log_result("Event Coverage Stats", False, f"Missing fields: {missing_fields}")
+            return
+        
+        # Check coverage requirements
+        coverage_pct = data.get("coverage_percentage", 0)
+        total_types = data.get("total_event_types_defined", 0)
+        types_with_predictions = data.get("event_types_with_predictions", 0)
+        
+        if coverage_pct < 60:
+            self.log_result("Event Coverage Stats", False, f"Coverage {coverage_pct}% < 60% required")
+            return
+        
+        if total_types < 33:
+            self.log_result("Event Coverage Stats", False, f"Only {total_types} event types defined, expected ~33")
+            return
+        
+        if types_with_predictions < 20:
+            self.log_result("Event Coverage Stats", False, f"Only {types_with_predictions} types with predictions, need >20")
+            return
+        
+        # Check for upcoming events structure
+        upcoming = data.get("upcoming_events", {})
+        required_periods = ["next_30_days", "next_60_days", "next_90_days"]
+        missing_periods = [period for period in required_periods if period not in upcoming]
+        
+        if missing_periods:
+            self.log_result("Event Coverage Stats", False, f"Missing upcoming periods: {missing_periods}")
+            return
+        
+        # Check for type_details
+        type_details = data.get("type_details", [])
+        if len(type_details) < 20:
+            self.log_result("Event Coverage Stats", False, f"Only {len(type_details)} type details, need 20+")
+            return
+        
+        self.log_result(
+            "Event Coverage Stats", 
+            True, 
+            f"{coverage_pct}% coverage, {total_types} types, {types_with_predictions} with predictions"
+        )
+        
+        return data
+    
+    def test_event_calendar(self):
+        """Test GET /api/adaptive-strategy/event-calendar?days_ahead=90"""
+        print("\n📅 Testing Event Calendar (90 days)...")
+        
+        success, status, data = self.make_request(
+            "GET", 
+            "/adaptive-strategy/event-calendar",
+            params={"days_ahead": 90}
+        )
+        
+        if not success:
+            self.log_result("Event Calendar", False, f"HTTP {status}: {data}")
+            return
+        
+        # Check required fields
+        required_fields = ["calendar", "scheduled_events_raw", "category_breakdown"]
+        missing_fields = [field for field in required_fields if field not in data]
+        
+        if missing_fields:
+            self.log_result("Event Calendar", False, f"Missing fields: {missing_fields}")
+            return
+        
+        # Check calendar structure
+        calendar = data.get("calendar", {})
+        required_categories = ["scheduled_certain", "highly_likely", "probable", "possible", "monitoring"]
+        missing_categories = [cat for cat in required_categories if cat not in calendar]
+        
+        if missing_categories:
+            self.log_result("Event Calendar", False, f"Missing calendar categories: {missing_categories}")
+            return
+        
+        # Check scheduled events
+        scheduled_raw = data.get("scheduled_events_raw", [])
+        if len(scheduled_raw) < 10:
+            self.log_result("Event Calendar", False, f"Only {len(scheduled_raw)} scheduled events, need more")
+            return
+        
+        # Verify dates are real 2026 dates
+        real_dates_found = 0
+        for event in scheduled_raw[:5]:  # Check first 5
+            event_date = event.get("date", "")
+            if "2025-" in event_date or "2026-" in event_date:
+                real_dates_found += 1
+        
+        if real_dates_found < 3:
+            self.log_result("Event Calendar", False, f"Not enough real 2025/2026 dates found")
+            return
+        
+        # Check category breakdown
+        breakdown = data.get("category_breakdown", {})
+        total_calendar_events = sum(len(events) for events in calendar.values())
+        
+        self.log_result(
+            "Event Calendar", 
+            True, 
+            f"{len(scheduled_raw)} scheduled events, {total_calendar_events} calendar entries, real dates confirmed"
+        )
+        
+        return data
+    
+    def test_event_types(self):
+        """Test GET /api/adaptive-strategy/event-types"""
+        print("\n🏷️ Testing Event Types Definition...")
+        
+        success, status, data = self.make_request("GET", "/adaptive-strategy/event-types")
+        
+        if not success:
+            self.log_result("Event Types", False, f"HTTP {status}: {data}")
+            return
+        
+        # Check required fields
+        required_fields = ["event_types", "total_types", "types_with_predictions"]
+        missing_fields = [field for field in required_fields if field not in data]
+        
+        if missing_fields:
+            self.log_result("Event Types", False, f"Missing fields: {missing_fields}")
+            return
+        
+        event_types = data.get("event_types", [])
+        total_types = data.get("total_types", 0)
+        
+        if total_types < 27:
+            self.log_result("Event Types", False, f"Only {total_types} event types, expected 27+")
+            return
+        
+        # Check event type structure
+        required_event_fields = ["type", "description", "impact", "confidence", "lead_indicators", "active_predictions"]
+        
+        for event_type in event_types[:5]:  # Check first 5
+            missing_event_fields = [field for field in required_event_fields if field not in event_type]
+            if missing_event_fields:
+                self.log_result("Event Types", False, f"Event type missing fields: {missing_event_fields}")
+                return
+        
+        # Check for new event types
+        type_names = [et.get("type") for et in event_types]
+        new_types = ["token_unlock", "quarterly_earnings", "governance_vote", "airdrop_event", 
+                    "geopolitical_event", "protocol_launch", "futures_expiry", "tax_deadline"]
+        
+        found_new_types = [nt for nt in new_types if nt in type_names]
+        
+        if len(found_new_types) < 6:
+            self.log_result("Event Types", False, f"Only {len(found_new_types)} new event types found, expected 8")
+            return
+        
+        self.log_result(
+            "Event Types", 
+            True, 
+            f"{total_types} types, {len(found_new_types)}/8 new types: {found_new_types}"
+        )
+        
+        return data
+    
+    def test_scheduled_events(self):
+        """Test GET /api/adaptive-strategy/scheduled-events?days_ahead=90"""
+        print("\n📋 Testing Scheduled Events Calendar...")
+        
+        success, status, data = self.make_request(
+            "GET", 
+            "/adaptive-strategy/scheduled-events",
+            params={"days_ahead": 90}
+        )
+        
+        if not success:
+            self.log_result("Scheduled Events", False, f"HTTP {status}: {data}")
+            return
+        
+        # Check required fields
+        required_fields = ["scheduled_events", "total", "days_ahead", "calendars"]
+        missing_fields = [field for field in required_fields if field not in data]
+        
+        if missing_fields:
+            self.log_result("Scheduled Events", False, f"Missing fields: {missing_fields}")
+            return
+        
+        scheduled_events = data.get("scheduled_events", [])
+        total = data.get("total", 0)
+        
+        if total < 10:
+            self.log_result("Scheduled Events", False, f"Only {total} scheduled events, need more")
+            return
+        
+        # Check event structure
+        if scheduled_events:
+            event = scheduled_events[0]
+            required_event_fields = ["date", "days_until", "description", "calendar_category"]
+            missing_event_fields = [field for field in required_event_fields if field not in event]
+            
+            if missing_event_fields:
+                self.log_result("Scheduled Events", False, f"Event missing fields: {missing_event_fields}")
+                return
+        
+        # Check for specific event types mentioned in requirements
+        descriptions = [event.get("description", "").lower() for event in scheduled_events]
+        required_event_categories = ["fomc", "options", "token", "earnings", "sec"]
+        
+        found_categories = []
+        for category in required_event_categories:
+            if any(category in desc for desc in descriptions):
+                found_categories.append(category)
+        
+        if len(found_categories) < 4:
+            self.log_result("Scheduled Events", False, f"Only found {len(found_categories)} required categories: {found_categories}")
+            return
+        
+        # Check dates are real 2026 dates and sorted
+        dates_are_sorted = True
+        real_dates = 0
+        
+        for i, event in enumerate(scheduled_events[:10]):
+            event_date = event.get("date", "")
+            if "2025-" in event_date or "2026-" in event_date:
+                real_dates += 1
+            
+            if i > 0 and scheduled_events[i-1].get("date", "") > event_date:
+                dates_are_sorted = False
+        
+        if real_dates < 8:
+            self.log_result("Scheduled Events", False, f"Only {real_dates} real 2025/2026 dates found")
+            return
+        
+        if not dates_are_sorted:
+            self.log_result("Scheduled Events", False, "Events not sorted by date")
+            return
+        
+        self.log_result(
+            "Scheduled Events", 
+            True, 
+            f"{total} events, {len(found_categories)} categories: {found_categories}, dates sorted"
+        )
+        
+        return data
+    
+    def test_predicted_events_filter(self):
+        """Test GET /api/adaptive-strategy/predicted-events?min_probability=0.3"""
+        print("\n🎲 Testing Predicted Events Filtering...")
+        
+        success, status, data = self.make_request(
+            "GET", 
+            "/adaptive-strategy/predicted-events",
+            params={"min_probability": 0.3}
+        )
+        
+        if not success:
+            self.log_result("Predicted Events Filter", False, f"HTTP {status}: {data}")
+            return
+        
+        events = data.get("events", [])
+        total = data.get("total", 0)
+        min_prob = data.get("min_probability_filter", 0)
+        
+        if min_prob != 0.3:
+            self.log_result("Predicted Events Filter", False, f"Filter not applied correctly: {min_prob}")
+            return
+        
+        # Check all events meet probability threshold
+        invalid_events = [e for e in events if e.get("probability", 0) < 0.3]
+        
+        if invalid_events:
+            self.log_result("Predicted Events Filter", False, f"{len(invalid_events)} events below 0.3 probability")
+            return
+        
+        self.log_result(
+            "Predicted Events Filter", 
+            True, 
+            f"{total} events ≥ 0.3 probability, filter working correctly"
+        )
+        
+        return data
+    
+    def test_predicted_events_by_type(self):
+        """Test event type-specific endpoints"""
+        print("\n🎯 Testing Event Type Specific Endpoints...")
+        
+        # Test FOMC specific predictions
+        success, status, data = self.make_request(
+            "GET", 
+            "/adaptive-strategy/predicted-events/fomc_meeting"
+        )
         
         if success:
-            result['response_preview'] = str(response)[:200] if response else None
-            self.passed_tests.append(result)
-            print(f"✅ {test_name} - Status: {status_code}")
-        else:
-            result['error_details'] = error
-            self.failed_tests.append(result)
-            
-        self.results.append(result)
-        
-        # Print immediate feedback
-        status = "✅ PASS" if success else "❌ FAIL"
-        print(f"{status} {test_name} - Status: {status_code} - {error if error else 'OK'}")
-    
-    async def test_endpoint(self, method: str, endpoint: str, test_name: str, 
-                           data: Dict = None, expected_status: List[int] = None) -> Dict:
-        """Generic endpoint tester"""
-        if expected_status is None:
-            expected_status = [200, 201]
-            
-        url = f"{BASE_URL}{endpoint}"
-        
-        try:
-            if method.upper() == 'GET':
-                async with self.session.get(url) as response:
-                    status = response.status
-                    headers = dict(response.headers)
-                    try:
-                        resp_data = await response.json()
-                    except:
-                        resp_data = await response.text()
-            elif method.upper() == 'POST':
-                async with self.session.post(url, json=data) as response:
-                    status = response.status
-                    headers = dict(response.headers)
-                    try:
-                        resp_data = await response.json()
-                    except:
-                        resp_data = await response.text()
-            else:
-                raise ValueError(f"Unsupported method: {method}")
-            
-            success = status in expected_status
-            self.log_result(test_name, success, status, resp_data, 
-                          None if success else f"Unexpected status code: {status}")
-            
-            return {'success': success, 'status': status, 'data': resp_data, 'headers': headers}
-            
-        except Exception as e:
-            error_msg = str(e)
-            self.log_result(test_name, False, None, None, error_msg)
-            return {'success': False, 'error': error_msg}
-
-    async def test_health_endpoints(self):
-        """Test basic health endpoints"""
-        print("\n=== TESTING HEALTH ENDPOINTS ===")
-        
-        await self.test_endpoint('GET', '/health', 'API Health Check')
-        await self.test_endpoint('GET', '/', 'Root API Endpoint')
-
-    async def test_tethys_trading_engine(self):
-        """Test Tethys Trading Engine Toggle"""
-        print("\n=== TESTING TETHYS TRADING ENGINE ===")
-        
-        # Test Tethys status
-        await self.test_endpoint('GET', '/tethys/status', 'Tethys Status Check')
-        
-        # Test start trading engine
-        await self.test_endpoint('POST', '/tethys-trading/start', 'Tethys Start Trading Engine',
-                               data={'interval': 60}, expected_status=[200, 201, 400, 503])
-        
-        # Test stop trading engine  
-        await self.test_endpoint('POST', '/tethys-trading/stop', 'Tethys Stop Trading Engine',
-                               expected_status=[200, 201, 400, 503])
-        
-        # Test trading status
-        await self.test_endpoint('GET', '/tethys-trading/status', 'Tethys Trading Status')
-
-    async def test_event_triggers_system(self):
-        """Test Event Triggers System"""
-        print("\n=== TESTING EVENT TRIGGERS SYSTEM ===")
-        
-        # Test triggers list
-        await self.test_endpoint('GET', '/triggers/list', 'Event Triggers List')
-        
-        # Test create trigger
-        trigger_data = {
-            "trigger_id": f"test_trigger_{int(datetime.now().timestamp())}",
-            "name": "Test Bitcoin News Trigger",
-            "keywords": ["bitcoin", "btc", "surge"],
-            "coins": ["BTC"],
-            "action": "alert",
-            "sentiment_filter": "positive",
-            "cooldown_hours": 1,
-            "enabled": True
-        }
-        
-        await self.test_endpoint('POST', '/triggers/create', 'Create Event Trigger',
-                               data=trigger_data, expected_status=[200, 201, 400, 503])
-        
-        # Test triggers history
-        await self.test_endpoint('GET', '/triggers/history/all', 'Event Triggers History')
-        
-        # Test trigger templates
-        await self.test_endpoint('GET', '/triggers/templates', 'Event Trigger Templates')
-        
-        # Test trigger status
-        await self.test_endpoint('GET', '/triggers/status', 'Event Trigger Service Status')
-
-    async def test_ensemble_ai_page(self):
-        """Test Ensemble AI Page"""
-        print("\n=== TESTING ENSEMBLE AI ===")
-        
-        # Test ensemble status
-        await self.test_endpoint('GET', '/ensemble/status', 'Ensemble AI Status')
-        
-        # Test ensemble predictions
-        await self.test_endpoint('GET', '/ensemble/predictions', 'Ensemble AI Predictions',
-                               expected_status=[200, 404, 503])
-        
-        # Test model weights
-        await self.test_endpoint('GET', '/ensemble/weights', 'Ensemble Model Weights')
-        
-        # Test build status
-        await self.test_endpoint('GET', '/ensemble/build-status', 'Ensemble Build Status')
-        
-        # Test optimal universe
-        await self.test_endpoint('GET', '/ensemble/optimal-universe', 'Ensemble Optimal Universe')
-
-    async def test_portfolio_information(self):
-        """Test Portfolio Information"""
-        print("\n=== TESTING PORTFOLIO INFORMATION ===")
-        
-        # Test Kraken portfolio
-        await self.test_endpoint('GET', '/kraken/portfolio', 'Kraken Portfolio',
-                               expected_status=[200, 404, 503])
-        
-        # Test portfolio summary
-        await self.test_endpoint('GET', '/portfolio/summary', 'Portfolio Summary',
-                               expected_status=[200, 404, 503])
-        
-        # Test Kraken status
-        await self.test_endpoint('GET', '/kraken/status', 'Kraken Connection Status')
-        
-        # Test Kraken balance
-        await self.test_endpoint('GET', '/kraken/balance', 'Kraken Account Balance',
-                               expected_status=[200, 500, 503])
-        
-        # Test portfolio visualization
-        await self.test_endpoint('GET', '/portfolio/visualization/summary', 'Portfolio Visualization Summary',
-                               expected_status=[200, 503])
-
-    async def test_model_training(self):
-        """Test Model Training Endpoints"""
-        print("\n=== TESTING MODEL TRAINING ===")
-        
-        # Test Enhanced AI training
-        training_data = {
-            "coins": ["bitcoin", "ethereum"],
-            "start_year": 2023,
-            "include_hidden_gems": True
-        }
-        
-        await self.test_endpoint('POST', '/enhanced-ai/train', 'Enhanced AI Training',
-                               data=training_data, expected_status=[200, 201, 400, 503])
-        
-        # Test Transformer training (if exists)
-        await self.test_endpoint('POST', '/transformer/train', 'Transformer Training',
-                               data=training_data, expected_status=[200, 201, 400, 404, 503])
-        
-        # Test RL Agent training (if exists)
-        await self.test_endpoint('POST', '/rl-agent/train', 'RL Agent Training',
-                               data=training_data, expected_status=[200, 201, 400, 404, 503])
-        
-        # Test general training endpoint
-        await self.test_endpoint('POST', '/training/train', 'General AI Training',
-                               data=training_data, expected_status=[200, 201, 400, 503])
-        
-        # Test training status
-        await self.test_endpoint('GET', '/training/status', 'Training Status')
-        
-        # Test Enhanced AI status
-        await self.test_endpoint('GET', '/enhanced-ai/status', 'Enhanced AI Status')
-
-    async def test_8_enhancements_verification(self):
-        """Test the 8 recently implemented enhancements - February 2026"""
-        print("\n=== TESTING 8 ENHANCEMENTS VERIFICATION ===")
-        
-        # 1. SECURITY HEADERS VERIFICATION
-        print("\n--- 1. Security Headers Verification ---")
-        result = await self.test_endpoint('GET', '/health', 'Security Headers Check')
-        if result['success']:
-            headers = result.get('headers', {})
-            required_headers = [
-                'X-Content-Type-Options',
-                'X-Frame-Options', 
-                'X-XSS-Protection',
-                'Strict-Transport-Security',
-                'Content-Security-Policy',
-                'Permissions-Policy',
-                'X-Request-ID'
-            ]
-            
-            missing_headers = []
-            for header in required_headers:
-                if header not in headers:
-                    missing_headers.append(header)
-            
-            if missing_headers:
-                self.log_result('Security Headers Complete', False, None, None, 
-                              f"Missing headers: {missing_headers}")
-            else:
-                self.log_result('Security Headers Complete', True, 200, 
-                              f"All security headers present: {required_headers}")
-        
-        # 2. ERROR MONITORING ENDPOINTS
-        print("\n--- 2. Error Monitoring Endpoints ---")
-        await self.test_endpoint('GET', '/monitoring/errors', 'Error Monitoring - Get Errors')
-        await self.test_endpoint('GET', '/monitoring/errors/stats', 'Error Monitoring - Error Stats')
-        await self.test_endpoint('GET', '/monitoring/health/detailed', 'Error Monitoring - Detailed Health')
-        
-        # 3. RATE LIMITING VERIFICATION
-        print("\n--- 3. Rate Limiting Verification ---")
-        # Make multiple rapid requests to test rate limiting
-        for i in range(3):
-            result = await self.test_endpoint('GET', '/tethys/status', f'Rate Limit Test {i+1}')
-            if result['success'] and 'headers' in result:
-                headers = result.get('headers', {})
-                rate_limit_headers = [h for h in headers.keys() if 'ratelimit' in h.lower()]
-                if rate_limit_headers:
-                    self.log_result(f'Rate Limit Headers Present {i+1}', True, 200,
-                                  f"Rate limit headers: {rate_limit_headers}")
-        
-        # 4. DATABASE CONNECTION POOLING
-        print("\n--- 4. Database Connection Pooling ---")
-        result = await self.test_endpoint('GET', '/health', 'Database Health Check')
-        if result['success'] and result.get('data'):
-            data = result['data']
-            if isinstance(data, dict) and 'database' in data:
-                db_status = data['database']
-                if db_status == 'connected':
-                    self.log_result('Database Connection Pool', True, 200, 
-                                  "Database connected successfully")
-                else:
-                    self.log_result('Database Connection Pool', False, 200, None,
-                                  f"Database status: {db_status}")
-        
-        # Check detailed health for pool stats
-        result = await self.test_endpoint('GET', '/monitoring/health/detailed', 'Database Pool Stats')
-        if result['success'] and result.get('data'):
-            data = result['data']
-            if isinstance(data, dict) and 'database' in data:
-                self.log_result('Database Pool Stats Available', True, 200,
-                              "Pool stats in detailed health check")
-        
-        # 5. API INPUT VALIDATION (Pydantic)
-        print("\n--- 5. API Input Validation ---")
-        # Test with invalid data (missing fields)
-        invalid_trigger_data = {
-            "name": "Test Trigger"
-            # Missing required fields like trigger_id, keywords, etc.
-        }
-        result = await self.test_endpoint('POST', '/triggers/create', 'Pydantic Validation Test',
-                                        data=invalid_trigger_data, expected_status=[422, 400])
-        if result['success'] and result['status'] == 422:
-            self.log_result('Pydantic Input Validation', True, 422,
-                          "Validation errors returned correctly")
-        
-        # 6. CORE API VERIFICATION
-        print("\n--- 6. Core API Verification ---")
-        core_apis = [
-            ('/health', 'Core API - Health'),
-            ('/tethys/status', 'Core API - Tethys Status'),
-            ('/ensemble/status', 'Core API - Ensemble Status'),
-            ('/kraken/status', 'Core API - Kraken Status'),
-            ('/ensemble/weights', 'Core API - Ensemble Weights'),
-            ('/auto-trading/status', 'Core API - Auto Trading Status')
-        ]
-        
-        for endpoint, test_name in core_apis:
-            await self.test_endpoint('GET', endpoint, test_name)
-
-    async def test_comprehensive_endpoints(self):
-        """Test comprehensive endpoints from review request"""
-        print("\n=== TESTING COMPREHENSIVE ENDPOINTS ===")
-        
-        # Market Data Endpoints
-        await self.test_endpoint('GET', '/market/prices', 'Market Prices',
-                               expected_status=[200, 404, 422, 503])
-        
-        await self.test_endpoint('GET', '/market/coin/BTC', 'Market Coin BTC Data',
-                               expected_status=[200, 404, 503])
-        
-        await self.test_endpoint('GET', '/market/coin/ETH', 'Market Coin ETH Data',
-                               expected_status=[200, 404, 503])
-        
-        await self.test_endpoint('GET', '/market/coin/SOL', 'Market Coin SOL Data',
-                               expected_status=[200, 404, 503])
-        
-        # News and Sentiment
-        await self.test_endpoint('GET', '/news/recent', 'Recent Crypto News',
-                               expected_status=[200, 404, 503])
-        
-        await self.test_endpoint('GET', '/sentiment/market', 'Market Sentiment Analysis',
-                               expected_status=[200, 404, 503])
-        
-        # Tethys Signals and Execute Trade
-        await self.test_endpoint('GET', '/tethys/signals', 'Tethys Trading Signals',
-                               expected_status=[200, 404, 503])
-        
-        trade_data = {
-            "symbol": "BTC",
-            "action": "buy",
-            "amount": 0.001,
-            "mode": "paper"
-        }
-        await self.test_endpoint('POST', '/tethys/execute-trade', 'Tethys Execute Trade',
-                               data=trade_data, expected_status=[200, 201, 400, 404, 503])
-        
-        # Event Triggers Advanced
-        await self.test_endpoint('POST', '/triggers/check-now', 'Trigger Check Now',
-                               expected_status=[200, 201, 400, 503])
-        
-        # Ensemble AI Predictions with specific coins
-        predict_data = {"coins": ["BTC", "ETH", "SOL"]}
-        await self.test_endpoint('POST', '/ensemble/predict', 'Ensemble Predict Coins',
-                               data=predict_data, expected_status=[200, 201, 400, 404, 503])
-        
-        # Portfolio and Trading
-        await self.test_endpoint('GET', '/portfolio/positions', 'Portfolio Positions',
-                               expected_status=[200, 404, 503])
-        
-        await self.test_endpoint('GET', '/portfolio/history', 'Portfolio History',
-                               expected_status=[200, 404, 503])
-        
-        execute_trade_data = {
-            "symbol": "BTC",
-            "side": "buy",
-            "amount": 0.001,
-            "mode": "paper"
-        }
-        await self.test_endpoint('POST', '/trading/execute', 'Execute Paper Trade',
-                               data=execute_trade_data, expected_status=[200, 201, 400, 422, 503])
-        
-        # Model Performance
-        await self.test_endpoint('GET', '/model-performance/metrics', 'Model Performance Metrics',
-                               expected_status=[200, 404, 503])
-        
-        # User Features
-        await self.test_endpoint('GET', '/budget/status', 'Budget Status',
-                               expected_status=[200, 404, 503])
-        
-        await self.test_endpoint('GET', '/journal/trades', 'Trade Journal',
-                               expected_status=[200, 404, 503])
-        
-        journal_entry = {
-            "trade_id": f"test_trade_{int(datetime.now().timestamp())}",
-            "symbol": "BTC",
-            "action": "buy",
-            "amount": 0.001,
-            "price": 69000,
-            "notes": "Test journal entry"
-        }
-        await self.test_endpoint('POST', '/journal/add', 'Add Journal Entry',
-                               data=journal_entry, expected_status=[200, 201, 400, 404, 503])
-        
-        # Strategies
-        await self.test_endpoint('GET', '/strategies/list', 'Strategies List',
-                               expected_status=[200, 404, 503])
-        
-        await self.test_endpoint('GET', '/strategies/active', 'Active Strategies',
-                               expected_status=[200, 404, 503])
-        
-        # Advanced Features
-        await self.test_endpoint('GET', '/gem-scanner/scan', 'Gem Scanner Scan',
-                               expected_status=[200, 404, 503])
-        
-        await self.test_endpoint('GET', '/adaptive-strategy/status', 'Adaptive Strategy Status',
-                               expected_status=[200, 404, 503])
-        
-        await self.test_endpoint('GET', '/spot-trading/status', 'Spot Trading Status',
-                               expected_status=[200, 404, 503])
-        
-        await self.test_endpoint('GET', '/auto-trading/status', 'Auto Trading Status',
-                               expected_status=[200, 404, 503])
-
-    async def test_error_handling(self):
-        """Test error handling scenarios"""
-        print("\n=== TESTING ERROR HANDLING ===")
-        
-        # Test invalid endpoints
-        await self.test_endpoint('GET', '/invalid/endpoint', 'Invalid Endpoint Test',
-                               expected_status=[404])
-        
-        # Test missing parameters
-        await self.test_endpoint('POST', '/tethys/execute-trade', 'Missing Parameters Test',
-                               data={}, expected_status=[400, 422])
-        
-        # Test invalid coin symbol
-        await self.test_endpoint('GET', '/market/coin/INVALID', 'Invalid Coin Symbol',
-                               expected_status=[404, 400])
-        
-        # Test malformed JSON
-        try:
-            url = f"{BASE_URL}/triggers/create"
-            async with self.session.post(url, data="invalid json") as response:
-                status = response.status
-                self.log_result('Malformed JSON Test', status in [400, 422], status, 
-                              None, None if status in [400, 422] else f"Expected 400/422, got {status}")
-        except Exception as e:
-            self.log_result('Malformed JSON Test', True, None, None, f"Correctly rejected: {e}")
-
-    async def test_enhanced_data_api_endpoints(self):
-        """Test Enhanced Data API endpoints for historical data integration"""
-        print("\n=== TESTING ENHANCED DATA API ENDPOINTS ===")
-        
-        # 1. KRAKEN UNIVERSE ENDPOINTS
-        print("\n--- 1. Kraken Universe Endpoints ---")
-        await self.test_endpoint('GET', '/enhanced-data/kraken-universe/stats', 
-                               'Kraken Universe Stats')
-        
-        await self.test_endpoint('GET', '/enhanced-data/kraken-universe/coins', 
-                               'Kraken Universe All Coins')
-        
-        await self.test_endpoint('GET', '/enhanced-data/kraken-universe/unique-coins', 
-                               'Kraken Universe Unique Coins')
-        
-        await self.test_endpoint('GET', '/enhanced-data/kraken-universe/check-new', 
-                               'Kraken Universe Check New Coins')
-        
-        await self.test_endpoint('GET', '/enhanced-data/kraken-universe/coin/BTC', 
-                               'Kraken Universe BTC Pairs')
-        
-        await self.test_endpoint('GET', '/enhanced-data/kraken-universe/sync-now', 
-                               'Kraken Universe Sync Now')
-        
-        # 2. ON-CHAIN METRICS ENDPOINTS
-        print("\n--- 2. On-Chain Metrics Endpoints ---")
-        await self.test_endpoint('GET', '/enhanced-data/onchain/supported', 
-                               'On-Chain Supported Chains')
-        
-        await self.test_endpoint('GET', '/enhanced-data/onchain/btc/stats', 
-                               'On-Chain BTC Network Stats')
-        
-        await self.test_endpoint('GET', '/enhanced-data/onchain/eth/stats', 
-                               'On-Chain ETH Stats from Blockchair')
-        
-        await self.test_endpoint('GET', '/enhanced-data/onchain/BTC/whales?min_usd=1000000', 
-                               'On-Chain BTC Whale Transactions')
-        
-        await self.test_endpoint('GET', '/enhanced-data/onchain/btc/mempool', 
-                               'On-Chain BTC Mempool Stats')
-        
-        await self.test_endpoint('GET', '/enhanced-data/onchain/btc/fees', 
-                               'On-Chain BTC Fee Estimates')
-        
-        await self.test_endpoint('GET', '/enhanced-data/onchain/btc/difficulty', 
-                               'On-Chain BTC Difficulty Adjustment')
-        
-        await self.test_endpoint('GET', '/enhanced-data/onchain/BTC/comprehensive', 
-                               'On-Chain BTC Comprehensive Metrics')
-        
-        # Test batch fetch
-        batch_data = {"symbols": ["BTC", "ETH"]}
-        await self.test_endpoint('POST', '/enhanced-data/onchain/batch', 
-                               'On-Chain Batch Fetch Metrics', data=batch_data)
-        
-        # 3. MULTI-TIMEFRAME ENDPOINTS
-        print("\n--- 3. Multi-Timeframe Historical Data Endpoints ---")
-        await self.test_endpoint('GET', '/enhanced-data/multitimeframe/stats', 
-                               'Multi-Timeframe Storage Statistics')
-        
-        await self.test_endpoint('GET', '/enhanced-data/multitimeframe/BTC/features', 
-                               'Multi-Timeframe BTC Training Features')
-        
-        await self.test_endpoint('GET', '/enhanced-data/multitimeframe/BTC/1D', 
-                               'Multi-Timeframe BTC Daily OHLCV Data')
-        
-        await self.test_endpoint('GET', '/enhanced-data/multitimeframe/BTC/multi?timeframes=1h,4h,1D', 
-                               'Multi-Timeframe BTC Multi-Timeframe Data')
-        
-        await self.test_endpoint('GET', '/enhanced-data/multitimeframe/ETH/1h', 
-                               'Multi-Timeframe ETH Hourly Data')
-        
-        await self.test_endpoint('GET', '/enhanced-data/multitimeframe/BTC/features?timeframes=1h,4h', 
-                               'Multi-Timeframe BTC Features with Specific Timeframes')
-        
-        # Test download endpoints (background tasks)
-        await self.test_endpoint('POST', '/enhanced-data/multitimeframe/download/BTC?timeframes=1h,4h', 
-                               'Multi-Timeframe Download BTC Data (Background)', 
-                               expected_status=[200, 201, 202])
-        
-        await self.test_endpoint('GET', '/enhanced-data/multitimeframe/download-now/BTC?timeframes=1D', 
-                               'Multi-Timeframe Download BTC Data (Sync)')
-        
-        # Test backfill
-        backfill_data = {
-            "symbols": ["BTC", "ETH"],
-            "timeframes": ["1h", "4h"],
-            "max_days": 30
-        }
-        await self.test_endpoint('POST', '/enhanced-data/multitimeframe/backfill', 
-                               'Multi-Timeframe Backfill Historical Data', 
-                               data=backfill_data, expected_status=[200, 201, 202])
-        
-        # 4. DATA PROVIDER KEYS ENDPOINTS
-        print("\n--- 4. Data Provider API Keys Endpoints ---")
-        await self.test_endpoint('GET', '/enhanced-data/provider-keys/status', 
-                               'Data Provider Keys Status')
-        
-        # Test saving provider keys (with dummy data)
-        provider_keys_data = {
-            "blockchair_api_key": "test_blockchair_key_123",
-            "glassnode_api_key": "test_glassnode_key_456"
-        }
-        await self.test_endpoint('POST', '/enhanced-data/provider-keys/save', 
-                               'Save Data Provider Keys', 
-                               data=provider_keys_data)
-        
-        # 5. OVERALL STATUS ENDPOINT
-        print("\n--- 5. Enhanced Data Overall Status ---")
-        await self.test_endpoint('GET', '/enhanced-data/status', 
-                               'Enhanced Data Overall Service Status')
-        
-        # 6. ADDITIONAL KRAKEN UNIVERSE ENDPOINTS
-        print("\n--- 6. Additional Kraken Universe Features ---")
-        sync_data = {"force": True}
-        await self.test_endpoint('POST', '/enhanced-data/kraken-universe/sync', 
-                               'Kraken Universe Background Sync', 
-                               data=sync_data, expected_status=[200, 201, 202])
-        
-        # Test with different quote currencies
-        await self.test_endpoint('GET', '/enhanced-data/kraken-universe/coins?quote_currency=EUR', 
-                               'Kraken Universe EUR Pairs')
-        
-        # 7. ON-CHAIN HISTORICAL DATA
-        print("\n--- 7. On-Chain Historical Data ---")
-        await self.test_endpoint('POST', '/enhanced-data/onchain/BTC/snapshot', 
-                               'Store BTC On-Chain Metrics Snapshot')
-        
-        await self.test_endpoint('GET', '/enhanced-data/onchain/BTC/history?days=7&limit=10', 
-                               'Get BTC On-Chain Historical Metrics')
-
-    async def test_enhanced_mtf_training_endpoints(self):
-        """Test Enhanced MTF Training API endpoints with full Kraken universe features"""
-        print("\n=== TESTING ENHANCED MTF TRAINING API - KRAKEN UNIVERSE FEATURES ===")
-        print("Testing the new full Kraken universe features with sentiment-only training")
-        
-        # 1. GET /api/enhanced-mtf-training/kraken-universe - Should return all 634 Kraken coins
-        print("\n--- 1. Kraken Universe - All 634 Coins ---")
-        result = await self.test_endpoint('GET', '/enhanced-mtf-training/kraken-universe', 
-                               'Enhanced MTF Kraken Universe (634 coins)')
-        
-        if result['success'] and result.get('data'):
-            data = result['data']
-            total_coins = data.get('total_coins', 0)
-            print(f"   📊 Total Kraken coins available: {total_coins}")
-            if total_coins >= 600:
-                self.log_result('Kraken Universe Size Check', True, 200, 
-                              f"✅ {total_coins} coins available (expected 634+)")
-            else:
-                self.log_result('Kraken Universe Size Check', False, 200, None,
-                              f"❌ Only {total_coins} coins (expected 634+)")
-        
-        # 2. GET /api/enhanced-mtf-training/status - Should show training status with coins_trained=634
-        print("\n--- 2. Training Status - Should show 634 coins trained ---")
-        result = await self.test_endpoint('GET', '/enhanced-mtf-training/status', 
-                               'Enhanced MTF Training Status')
-        
-        if result['success'] and result.get('data'):
-            data = result['data']
-            coins_trained = data.get('coins_trained', 0)
-            accuracy = data.get('accuracy', 0)
-            print(f"   📊 Coins trained: {coins_trained}")
-            print(f"   📊 Model accuracy: {accuracy * 100:.1f}%")
-            
-            if coins_trained >= 600:
-                self.log_result('Training Status - Coins Count', True, 200,
-                              f"✅ {coins_trained} coins trained (expected 634)")
-            else:
-                self.log_result('Training Status - Coins Count', False, 200, None,
-                              f"❌ Only {coins_trained} coins trained (expected 634)")
-        
-        # 3. POST /api/enhanced-mtf-training/train-fast - Fast training on all Kraken coins
-        print("\n--- 3. Fast Training - All Kraken Coins (Sentiment Only) ---")
-        print("   ⚡ Testing fast training with sentiment features only (~2 seconds)")
-        
-        import time
-        start_time = time.time()
-        
-        result = await self.test_endpoint('POST', '/enhanced-mtf-training/train-fast', 
-                               'Enhanced MTF Fast Training (All Kraken)',
-                               data={}, expected_status=[200, 201])
-        
-        end_time = time.time()
-        duration = end_time - start_time
-        
-        if result['success'] and result.get('data'):
-            data = result['data']
-            symbols_trained = data.get('symbols_trained', 0)
-            accuracy = data.get('accuracy', 0)
-            mode = data.get('mode', '')
-            
-            print(f"   📊 Training duration: {duration:.1f} seconds")
-            print(f"   📊 Symbols trained: {symbols_trained}")
-            print(f"   📊 Training mode: {mode}")
-            print(f"   📊 Accuracy: {accuracy * 100:.1f}%")
-            
-            # Check if training completed in ~2 seconds
-            if duration <= 10:  # Allow up to 10 seconds for network latency
-                self.log_result('Fast Training Duration', True, 200,
-                              f"✅ Completed in {duration:.1f}s (expected ~2s)")
-            else:
-                self.log_result('Fast Training Duration', False, 200, None,
-                              f"❌ Took {duration:.1f}s (expected ~2s)")
-            
-            # Check if trained on 634+ coins
-            if symbols_trained >= 600:
-                self.log_result('Fast Training - Coins Count', True, 200,
-                              f"✅ Trained on {symbols_trained} coins (expected 634)")
-            else:
-                self.log_result('Fast Training - Coins Count', False, 200, None,
-                              f"❌ Only trained on {symbols_trained} coins (expected 634)")
-        
-        # 4. POST /api/enhanced-mtf-training/predict-all with {"symbols": ["all"]} - Should return predictions for all 634 coins
-        print("\n--- 4. Batch Predictions - All 634 Coins ---")
-        result = await self.test_endpoint('POST', '/enhanced-mtf-training/predict-all', 
-                               'Enhanced MTF Predict All Coins (634 predictions)',
-                               data={"symbols": ["all"]})
-        
-        if result['success'] and result.get('data'):
-            data = result['data']
-            total_predictions = data.get('total_predictions', 0)
-            buy_signals = data.get('buy_signals', 0)
-            hold_signals = data.get('hold_signals', 0)
-            sell_signals = data.get('sell_signals', 0)
-            
-            print(f"   📊 Total predictions: {total_predictions}")
-            print(f"   📊 BUY signals: {buy_signals}")
-            print(f"   📊 HOLD signals: {hold_signals}")
-            print(f"   📊 SELL signals: {sell_signals}")
-            
-            # Check if we got 634 predictions
-            if total_predictions >= 600:
-                self.log_result('Batch Predictions Count', True, 200,
-                              f"✅ {total_predictions} predictions (expected 634)")
-            else:
-                self.log_result('Batch Predictions Count', False, 200, None,
-                              f"❌ Only {total_predictions} predictions (expected 634)")
-            
-            # Check signal distribution (expected: 336 BUY, 234 HOLD, 64 SELL)
-            expected_buy = 336
-            expected_hold = 234
-            expected_sell = 64
-            
-            # Allow some variance (±50)
-            buy_ok = abs(buy_signals - expected_buy) <= 100
-            hold_ok = abs(hold_signals - expected_hold) <= 100
-            sell_ok = abs(sell_signals - expected_sell) <= 100
-            
-            if buy_ok and hold_ok and sell_ok:
-                self.log_result('Signal Distribution Check', True, 200,
-                              f"✅ Signals: {buy_signals} BUY, {hold_signals} HOLD, {sell_signals} SELL")
-            else:
-                self.log_result('Signal Distribution Check', False, 200, None,
-                              f"❌ Unexpected distribution: {buy_signals} BUY, {hold_signals} HOLD, {sell_signals} SELL (expected ~336/234/64)")
-        
-        # 5. GET /api/enhanced-mtf-training/model-info - Should show sentiment_only_mtf model with 12 features and 634+ coins
-        print("\n--- 5. Model Info - Sentiment Only MTF with 12 Features ---")
-        result = await self.test_endpoint('GET', '/enhanced-mtf-training/model-info', 
-                               'Enhanced MTF Model Information')
-        
-        if result['success'] and result.get('data'):
-            data = result['data']
-            model = data.get('model', {})
-            model_type = model.get('type', '')
-            feature_info = model.get('feature_info', {})
-            training_info = model.get('training_info', {})
-            
-            total_features = feature_info.get('total_features', 0)
-            symbols_trained = training_info.get('symbols_trained', 0)
-            accuracy = training_info.get('accuracy', 0)
-            
-            print(f"   📊 Model type: {model_type}")
-            print(f"   📊 Total features: {total_features}")
-            print(f"   📊 Symbols trained: {symbols_trained}")
-            print(f"   📊 Model accuracy: {accuracy * 100:.1f}%")
-            
-            # Check if it's sentiment_only_mtf model with 12 features
-            if model_type == 'sentiment_only_mtf' and total_features == 12:
-                self.log_result('Model Type & Features', True, 200,
-                              f"✅ {model_type} with {total_features} features")
-            else:
-                self.log_result('Model Type & Features', False, 200, None,
-                              f"❌ Got {model_type} with {total_features} features (expected sentiment_only_mtf with 12)")
-            
-            # Check if trained on 634+ coins
-            if symbols_trained >= 600:
-                self.log_result('Model Training Scale', True, 200,
-                              f"✅ Trained on {symbols_trained} coins (expected 634+)")
-            else:
-                self.log_result('Model Training Scale', False, 200, None,
-                              f"❌ Only trained on {symbols_trained} coins (expected 634+)")
-            
-            # Check if accuracy is 100%
-            if accuracy >= 0.99:  # Allow for floating point precision
-                self.log_result('Model Accuracy', True, 200,
-                              f"✅ Model accuracy: {accuracy * 100:.1f}% (expected 100%)")
-            else:
-                self.log_result('Model Accuracy', False, 200, None,
-                              f"❌ Model accuracy: {accuracy * 100:.1f}% (expected 100%)")
-        
-        # 6. GET /api/enhanced-mtf-training/fear-greed - Should return real Fear & Greed Index (currently "Extreme Fear" at 9)
-        print("\n--- 6. Fear & Greed Index - Real Data ---")
-        result = await self.test_endpoint('GET', '/enhanced-mtf-training/fear-greed', 
-                               'Fear & Greed Index Data')
-        
-        if result['success'] and result.get('data'):
-            data = result['data']
-            value = data.get('value', 50)
-            classification = data.get('classification', 'Neutral')
-            
-            print(f"   📊 Fear & Greed value: {value}")
-            print(f"   📊 Classification: {classification}")
-            
-            # Check if we got real data (not default 50)
-            if value != 50 and classification != 'Neutral':
-                self.log_result('Fear & Greed Real Data', True, 200,
-                              f"✅ Real F&G data: {value} ({classification})")
-            else:
-                self.log_result('Fear & Greed Real Data', False, 200, None,
-                              f"❌ Got default/neutral data: {value} ({classification})")
-        
-        # Additional tests for completeness
-        print("\n--- Additional Enhanced MTF Tests ---")
-        
-        # Test individual predictions
-        await self.test_endpoint('GET', '/enhanced-mtf-training/predict/BTC', 
-                               'Enhanced MTF BTC Prediction')
-        
-        await self.test_endpoint('GET', '/enhanced-mtf-training/predict/ETH', 
-                               'Enhanced MTF ETH Prediction')
-        
-        # Test sentiment analysis
-        await self.test_endpoint('GET', '/enhanced-mtf-training/sentiment/BTC', 
-                               'BTC Sentiment Analysis')
-        
-        # Test training history
-        await self.test_endpoint('GET', '/enhanced-mtf-training/history', 
-                               'Enhanced MTF Training History')
-
-    async def test_whale_alerts_and_backtesting_system(self):
-        """Test the new Whale Alerts and Event Backtesting system"""
-        print("\n=== TESTING WHALE ALERTS AND EVENT BACKTESTING SYSTEM ===")
-        print("🎯 Testing whale alerts, monitoring, and event backtesting with accuracy metrics")
-        
-        # 1. WHALE ALERT SYSTEM
-        print("\n--- 1. Whale Alert System ---")
-        
-        # Test whale alert check
-        check_result = await self.test_endpoint('POST', '/alerts/whale/check', 
-                                              'Whale Alert Check - On-Chain Data Analysis')
-        
-        if check_result['success'] and check_result.get('data'):
-            data = check_result['data']
-            new_alerts = data.get('new_alerts', 0)
-            alerts = data.get('alerts', [])
-            
-            print(f"   📊 New alerts generated: {new_alerts}")
-            
-            # Verify alert structure
-            if alerts:
-                sample_alert = alerts[0]
-                required_fields = ['alert_id', 'title', 'severity', 'price_impact']
-                has_required_fields = all(field in sample_alert for field in required_fields)
-                
-                if has_required_fields:
-                    self.log_result('Whale Alert - Alert Structure', True, 200,
-                                  f"✅ Alerts contain required fields: {required_fields}")
-                    
-                    # Check severity levels
-                    severity = sample_alert.get('severity', '')
-                    expected_severities = ['info', 'warning', 'critical', 'urgent']
-                    if severity in expected_severities:
-                        self.log_result('Whale Alert - Severity Levels', True, 200,
-                                      f"✅ Valid severity level: {severity}")
-                    else:
-                        self.log_result('Whale Alert - Severity Levels', False, 200, None,
-                                      f"❌ Invalid severity: {severity}. Expected: {expected_severities}")
-                    
-                    # Check price impact
-                    price_impact = sample_alert.get('price_impact', 0)
-                    if isinstance(price_impact, (int, float)):
-                        self.log_result('Whale Alert - Price Impact', True, 200,
-                                      f"✅ Price impact included: {price_impact}")
-                    else:
-                        self.log_result('Whale Alert - Price Impact', False, 200, None,
-                                      f"❌ Invalid price impact format: {price_impact}")
-                else:
-                    missing_fields = [field for field in required_fields if field not in sample_alert]
-                    self.log_result('Whale Alert - Alert Structure', False, 200, None,
-                                  f"❌ Missing fields: {missing_fields}")
-        
-        # Test active alerts
-        active_result = await self.test_endpoint('GET', '/alerts/whale/active', 
-                                               'Whale Alert - Get Active Alerts')
-        
-        if active_result['success'] and active_result.get('data'):
-            data = active_result['data']
-            alerts = data.get('alerts', [])
-            count = data.get('count', 0)
-            
-            print(f"   📊 Active alerts: {count}")
-            
-            # Verify alerts include recommended_action
-            if alerts:
-                for alert in alerts[:3]:  # Check first 3 alerts
-                    if 'recommended_action' in alert:
-                        self.log_result('Whale Alert - Recommended Action', True, 200,
-                                      f"✅ Alert includes recommended_action")
-                        break
-                else:
-                    self.log_result('Whale Alert - Recommended Action', False, 200, None,
-                                  f"❌ Alerts missing recommended_action field")
-        
-        # Test alert summary with severity breakdown
-        summary_result = await self.test_endpoint('GET', '/alerts/whale/summary', 
-                                                'Whale Alert - Summary with Severity Breakdown')
-        
-        if summary_result['success'] and summary_result.get('data'):
-            data = summary_result['data']
-            
-            # Check for severity breakdown
-            severity_counts = {}
-            for severity in ['info', 'warning', 'critical', 'urgent']:
-                if f"{severity}_count" in data or severity in data:
-                    severity_counts[severity] = data.get(f"{severity}_count", data.get(severity, 0))
-            
-            if severity_counts:
-                self.log_result('Whale Alert - Severity Breakdown', True, 200,
-                              f"✅ Severity breakdown: {severity_counts}")
-            else:
-                self.log_result('Whale Alert - Severity Breakdown', False, 200, None,
-                              f"❌ No severity breakdown found in summary")
-        
-        # Test alert thresholds
-        thresholds_result = await self.test_endpoint('GET', '/alerts/whale/thresholds', 
-                                                   'Whale Alert - Get Thresholds')
-        
-        if thresholds_result['success'] and thresholds_result.get('data'):
-            data = thresholds_result['data']
-            thresholds = data.get('thresholds', {})
-            
-            print(f"   📊 Alert thresholds configured: {len(thresholds)} metrics")
-            
-            # Verify threshold structure
-            if thresholds:
-                sample_threshold = list(thresholds.values())[0]
-                required_threshold_fields = ['name', 'warning', 'critical', 'urgent']
-                has_threshold_fields = all(field in sample_threshold for field in required_threshold_fields)
-                
-                if has_threshold_fields:
-                    self.log_result('Whale Alert - Threshold Structure', True, 200,
-                                  f"✅ Thresholds properly configured")
-                else:
-                    self.log_result('Whale Alert - Threshold Structure', False, 200, None,
-                                  f"❌ Invalid threshold structure")
-        
-        # Test monitoring start
-        start_monitoring_result = await self.test_endpoint('POST', '/alerts/whale/monitoring/start', 
-                                                         'Whale Alert - Start Monitoring')
-        
-        if start_monitoring_result['success'] and start_monitoring_result.get('data'):
-            data = start_monitoring_result['data']
-            status = data.get('status', '')
-            
-            if status in ['started', 'already_running']:
-                self.log_result('Whale Alert - Start Monitoring', True, 200,
-                              f"✅ Monitoring {status}")
-            else:
-                self.log_result('Whale Alert - Start Monitoring', False, 200, None,
-                              f"❌ Unexpected monitoring status: {status}")
-        
-        # Test monitoring stop
-        stop_monitoring_result = await self.test_endpoint('POST', '/alerts/whale/monitoring/stop', 
-                                                        'Whale Alert - Stop Monitoring')
-        
-        if stop_monitoring_result['success'] and stop_monitoring_result.get('data'):
-            data = stop_monitoring_result['data']
-            status = data.get('status', '')
-            
-            if status == 'stopped':
-                self.log_result('Whale Alert - Stop Monitoring', True, 200,
-                              f"✅ Monitoring stopped successfully")
-            else:
-                self.log_result('Whale Alert - Stop Monitoring', False, 200, None,
-                              f"❌ Unexpected stop status: {status}")
-        
-        # 2. EVENT BACKTESTING SYSTEM
-        print("\n--- 2. Event Backtesting System ---")
-        
-        # Test simulate backtest with n_predictions=50
-        simulate_data = {"n_predictions": 50}
-        simulate_result = await self.test_endpoint('POST', '/alerts/backtest/simulate', 
-                                                 'Event Backtest - Simulate 50 Predictions',
-                                                 data=simulate_data)
-        
-        if simulate_result['success'] and simulate_result.get('data'):
-            data = simulate_result['data']
-            
-            # Check for required backtest metrics
-            required_metrics = ['precision', 'recall', 'f1_score', 'impact_accuracy']
-            metrics_found = {}
-            
-            for metric in required_metrics:
-                if metric in data:
-                    metrics_found[metric] = data[metric]
-            
-            if len(metrics_found) >= 3:  # At least 3 of 4 metrics
-                self.log_result('Event Backtest - Required Metrics', True, 200,
-                              f"✅ Backtest metrics: {metrics_found}")
-                
-                # Check if average accuracy > 70%
-                accuracy_metrics = [v for v in metrics_found.values() if isinstance(v, (int, float))]
-                if accuracy_metrics:
-                    avg_accuracy = sum(accuracy_metrics) / len(accuracy_metrics)
-                    if avg_accuracy > 0.7:
-                        self.log_result('Event Backtest - Accuracy Threshold', True, 200,
-                                      f"✅ Average accuracy: {avg_accuracy:.1%} (>70%)")
-                    else:
-                        self.log_result('Event Backtest - Accuracy Threshold', False, 200, None,
-                                      f"❌ Average accuracy: {avg_accuracy:.1%} (≤70%)")
-            else:
-                missing_metrics = [m for m in required_metrics if m not in data]
-                self.log_result('Event Backtest - Required Metrics', False, 200, None,
-                              f"❌ Missing metrics: {missing_metrics}")
-        
-        # Test accuracy metrics endpoint
-        accuracy_result = await self.test_endpoint('GET', '/alerts/backtest/accuracy', 
-                                                 'Event Backtest - Get Accuracy Metrics')
-        
-        if accuracy_result['success'] and accuracy_result.get('data'):
-            data = accuracy_result['data']
-            
-            # Verify precision, recall, F1 score are present
-            accuracy_metrics = ['precision', 'recall', 'f1_score']
-            found_metrics = {metric: data.get(metric) for metric in accuracy_metrics if metric in data}
-            
-            if len(found_metrics) >= 2:
-                self.log_result('Event Backtest - Accuracy Metrics Detail', True, 200,
-                              f"✅ Accuracy metrics available: {found_metrics}")
-            else:
-                self.log_result('Event Backtest - Accuracy Metrics Detail', False, 200, None,
-                              f"❌ Insufficient accuracy metrics: {found_metrics}")
-        
-        # Test event type performance breakdown
-        event_types_result = await self.test_endpoint('GET', '/alerts/backtest/event-types', 
-                                                    'Event Backtest - Event Type Performance')
-        
-        if event_types_result['success'] and event_types_result.get('data'):
-            data = event_types_result['data']
-            
-            # Check for hit_rate by event type
-            event_performance = {}
-            for key, value in data.items():
-                if 'hit_rate' in str(key).lower() or isinstance(value, dict) and 'hit_rate' in value:
-                    event_performance[key] = value
-            
-            if event_performance:
-                self.log_result('Event Backtest - Event Type Hit Rates', True, 200,
-                              f"✅ Event type performance breakdown available")
-                
-                # Check if any event type has hit_rate
-                hit_rates_found = False
-                for event_type, performance in event_performance.items():
-                    if isinstance(performance, dict) and 'hit_rate' in performance:
-                        hit_rate = performance['hit_rate']
-                        print(f"   📊 {event_type} hit rate: {hit_rate}")
-                        hit_rates_found = True
-                
-                if hit_rates_found:
-                    self.log_result('Event Backtest - Hit Rate Values', True, 200,
-                                  f"✅ Hit rates calculated for event types")
-                else:
-                    self.log_result('Event Backtest - Hit Rate Values', False, 200, None,
-                                  f"❌ No hit_rate values found in event performance")
-            else:
-                self.log_result('Event Backtest - Event Type Hit Rates', False, 200, None,
-                              f"❌ No event type performance breakdown found")
-        
-        # Test historical events list
-        historical_result = await self.test_endpoint('GET', '/alerts/backtest/historical-events', 
-                                                   'Event Backtest - Historical Events List')
-        
-        if historical_result['success'] and historical_result.get('data'):
-            data = historical_result['data']
-            events = data.get('events', [])
-            count = data.get('count', 0)
-            event_types = data.get('event_types', [])
-            
-            print(f"   📊 Historical events available: {count}")
-            print(f"   📊 Event types: {event_types}")
-            
-            if count > 0:
-                self.log_result('Event Backtest - Historical Events', True, 200,
-                              f"✅ {count} historical events available")
-                
-                # Verify event structure
-                if events:
-                    sample_event = events[0]
-                    required_event_fields = ['event_type', 'date']
-                    has_event_fields = any(field in sample_event for field in required_event_fields)
-                    
-                    if has_event_fields:
-                        self.log_result('Event Backtest - Event Structure', True, 200,
-                                      f"✅ Historical events properly structured")
-                    else:
-                        self.log_result('Event Backtest - Event Structure', False, 200, None,
-                                      f"❌ Invalid historical event structure")
-            else:
-                self.log_result('Event Backtest - Historical Events', False, 200, None,
-                              f"❌ No historical events found")
-        
-        # 3. INTEGRATION TESTS
-        print("\n--- 3. Integration Tests ---")
-        
-        # Test filtering alerts by severity
-        for severity in ['info', 'warning', 'critical', 'urgent']:
-            await self.test_endpoint('GET', f'/alerts/whale/active?severity={severity}', 
-                                   f'Whale Alert - Filter by {severity.title()} Severity')
-        
-        # Test event type specific accuracy
-        for event_type in ['fomc_meeting', 'bitcoin_halving', 'options_expiry']:
-            await self.test_endpoint('GET', f'/alerts/backtest/accuracy?event_type={event_type}', 
-                                   f'Event Backtest - {event_type.title()} Accuracy')
-        
-        print("\n🏁 WHALE ALERTS AND EVENT BACKTESTING SYSTEM TESTING COMPLETED")
-        
-        # Summary of key verification points
-        print("\n📊 VERIFICATION SUMMARY:")
-        print("   • Alerts generated with severity levels (info, warning, critical, urgent)")
-        print("   • Alerts include recommended_action and price_impact_expected")
-        print("   • Backtest returns precision, recall, f1_score, impact_accuracy")
-        print("   • Event type breakdown shows hit_rate for each type")
-        print("   • Average accuracy score verification (target: >70%)")
-
-    async def test_adaptive_strategy_system(self):
-        """Test the new Adaptive Strategy and Event Prediction system"""
-        print("\n=== TESTING ADAPTIVE STRATEGY AND EVENT PREDICTION SYSTEM ===")
-        print("🎯 Testing regime detection, variants, auto-adjustment, event prediction, and monitoring")
-        
-        # 1. REGIME DETECTION
-        print("\n--- 1. Regime Detection ---")
-        
-        # Test current regime detection
-        regime_result = await self.test_endpoint('GET', '/adaptive-strategy/regime/current', 
-                                               'Regime Detection - Current Market Regime')
-        
-        if regime_result['success'] and regime_result.get('data'):
-            data = regime_result['data']
-            regime_info = data.get('regime', {})
-            regime_type = regime_info.get('regime', 'unknown')
-            confidence = regime_info.get('confidence', 0)
-            indicators = regime_info.get('indicators', {})
-            
-            print(f"   📊 Detected regime: {regime_type}")
-            print(f"   📊 Confidence: {confidence:.2%}")
-            print(f"   📊 Indicators: {list(indicators.keys())}")
-            
-            # Verify response structure
-            expected_indicators = ['trend_strength', 'momentum', 'volatility', 'rsi']
-            has_required_indicators = all(ind in str(indicators) for ind in expected_indicators)
-            
-            if has_required_indicators:
-                self.log_result('Regime Detection - Response Structure', True, 200,
-                              f"✅ Contains required indicators: {expected_indicators}")
-            else:
-                self.log_result('Regime Detection - Response Structure', False, 200, None,
-                              f"❌ Missing indicators. Got: {list(indicators.keys())}")
-            
-            # Verify regime is one of expected types
-            expected_regimes = ['bull', 'bear', 'sideways', 'high_volatility', 'low_volatility', 'recovery', 'distribution']
-            if regime_type in expected_regimes:
-                self.log_result('Regime Detection - Valid Regime Type', True, 200,
-                              f"✅ Valid regime: {regime_type}")
-            else:
-                self.log_result('Regime Detection - Valid Regime Type', False, 200, None,
-                              f"❌ Invalid regime: {regime_type}. Expected one of: {expected_regimes}")
-        
-        # Test regime history
-        await self.test_endpoint('GET', '/adaptive-strategy/regime/history', 
-                               'Regime Detection - Historical Regimes')
-        
-        # 2. REGIME-SPECIFIC VARIANTS
-        print("\n--- 2. Regime-Specific Variants ---")
-        
-        # Initialize 14 regime variants
-        init_result = await self.test_endpoint('POST', '/adaptive-strategy/variants/initialize', 
-                                             'Initialize Regime Variants (14 variants)')
-        
-        if init_result['success'] and init_result.get('data'):
-            data = init_result['data']
-            total_variants = data.get('total', 0)
-            variants = data.get('variants', [])
-            
-            print(f"   📊 Total variants initialized: {total_variants}")
-            
-            # Verify 14 variants were created
-            if total_variants == 14:
-                self.log_result('Regime Variants - Count Check', True, 200,
-                              f"✅ Created {total_variants} variants (expected 14)")
-            else:
-                self.log_result('Regime Variants - Count Check', False, 200, None,
-                              f"❌ Created {total_variants} variants (expected 14)")
-            
-            # Check variant distribution by regime
-            regime_counts = {}
-            for variant in variants:
-                regime = variant.get('target_regime', 'unknown')
-                regime_counts[regime] = regime_counts.get(regime, 0) + 1
-            
-            print(f"   📊 Variants by regime: {regime_counts}")
-            
-            # Expected distribution: 3 bull, 3 bear, 2 high_vol, 2 low_vol, 2 sideways, 1 recovery, 1 distribution
-            expected_distribution = {
-                'bull': 3, 'bear': 3, 'high_volatility': 2, 'low_volatility': 2, 
-                'sideways': 2, 'recovery': 1, 'distribution': 1
-            }
-            
-            distribution_correct = True
-            for regime, expected_count in expected_distribution.items():
-                actual_count = regime_counts.get(regime, 0)
-                if actual_count != expected_count:
-                    distribution_correct = False
-                    break
-            
-            if distribution_correct:
-                self.log_result('Regime Variants - Distribution Check', True, 200,
-                              f"✅ Correct distribution: {regime_counts}")
-            else:
-                self.log_result('Regime Variants - Distribution Check', False, 200, None,
-                              f"❌ Incorrect distribution. Got: {regime_counts}, Expected: {expected_distribution}")
-        
-        # Get all variants
-        await self.test_endpoint('GET', '/adaptive-strategy/variants', 
-                               'Get All Regime Variants')
-        
-        # Get bull market variants
-        bull_result = await self.test_endpoint('GET', '/adaptive-strategy/variants/bull', 
-                                             'Get Bull Market Variants')
-        
-        if bull_result['success'] and bull_result.get('data'):
-            data = bull_result['data']
-            bull_variants = data.get('variants', [])
-            bull_count = data.get('count', 0)
-            
-            if bull_count == 3:
-                self.log_result('Bull Market Variants Count', True, 200,
-                              f"✅ Found {bull_count} bull variants (expected 3)")
-            else:
-                self.log_result('Bull Market Variants Count', False, 200, None,
-                              f"❌ Found {bull_count} bull variants (expected 3)")
-        
-        # Get bear market variants
-        bear_result = await self.test_endpoint('GET', '/adaptive-strategy/variants/bear', 
-                                             'Get Bear Market Variants')
-        
-        if bear_result['success'] and bear_result.get('data'):
-            data = bear_result['data']
-            bear_count = data.get('count', 0)
-            
-            if bear_count == 3:
-                self.log_result('Bear Market Variants Count', True, 200,
-                              f"✅ Found {bear_count} bear variants (expected 3)")
-            else:
-                self.log_result('Bear Market Variants Count', False, 200, None,
-                              f"❌ Found {bear_count} bear variants (expected 3)")
-        
-        # 3. AUTO-ADJUSTMENT
-        print("\n--- 3. Auto-Adjustment ---")
-        
-        # Test auto-adjust parameters
-        adjust_result = await self.test_endpoint('POST', '/adaptive-strategy/auto-adjust', 
-                                               'Auto-Adjust Parameters Based on Market')
-        
-        if adjust_result['success'] and adjust_result.get('data'):
-            data = adjust_result['data']
-            status = data.get('status', '')
-            current_regime = data.get('current_regime', '')
-            selected_variant = data.get('selected_variant', {})
-            adjusted_params = data.get('adjusted_parameters', {})
-            adjustments_applied = data.get('adjustments_applied', {})
-            
-            print(f"   📊 Adjustment status: {status}")
-            print(f"   📊 Current regime: {current_regime}")
-            print(f"   📊 Selected variant: {selected_variant.get('name', 'Unknown')}")
-            print(f"   📊 Parameters adjusted: {len(adjusted_params)} parameters")
-            
-            # Verify parameters change based on conditions
-            volatility_adj = adjustments_applied.get('volatility_adjustment', False)
-            trend_adj = adjustments_applied.get('trend_adjustment', False)
-            
-            if volatility_adj or trend_adj:
-                self.log_result('Auto-Adjustment - Parameter Changes', True, 200,
-                              f"✅ Parameters adjusted based on conditions (vol: {volatility_adj}, trend: {trend_adj})")
-            else:
-                self.log_result('Auto-Adjustment - Parameter Changes', True, 200,
-                              f"✅ No adjustments needed for current conditions")
-        
-        # Test optimal strategy recommendation
-        optimal_result = await self.test_endpoint('GET', '/adaptive-strategy/optimal-strategy', 
-                                                'Get Optimal Strategy with Predictions')
-        
-        if optimal_result['success'] and optimal_result.get('data'):
-            data = optimal_result['data']
-            current_regime = data.get('current_regime', {})
-            recommended_strategy = data.get('recommended_strategy', {})
-            upcoming_events = data.get('upcoming_events', [])
-            risk_level = data.get('risk_level', 'unknown')
-            
-            print(f"   📊 Recommended strategy: {recommended_strategy.get('name', 'Unknown')}")
-            print(f"   📊 Risk level: {risk_level}")
-            print(f"   📊 Upcoming events: {len(upcoming_events)}")
-            
-            # Verify strategy recommendation includes predictions
-            if upcoming_events:
-                self.log_result('Optimal Strategy - Event Integration', True, 200,
-                              f"✅ Strategy includes {len(upcoming_events)} upcoming events")
-            else:
-                self.log_result('Optimal Strategy - Event Integration', True, 200,
-                              f"✅ No high-probability events in near term")
-        
-        # 4. EVENT PREDICTION
-        print("\n--- 4. Event Prediction ---")
-        
-        # Predict events for next 30 days
-        predict_result = await self.test_endpoint('POST', '/adaptive-strategy/predict-events', 
-                                                'Predict Future Events (30 days)',
-                                                data={"days_ahead": 30})
-        
-        if predict_result['success'] and predict_result.get('data'):
-            data = predict_result['data']
-            events = data.get('events', [])
-            total_events = data.get('total_events', 0)
-            high_prob_events = data.get('high_probability_events', 0)
-            
-            print(f"   📊 Total predicted events: {total_events}")
-            print(f"   📊 High probability events (>70%): {high_prob_events}")
-            
-            # Verify predicted events include required types
-            event_types = [event.get('event_type', '') for event in events]
-            expected_event_types = ['bitcoin_halving', 'fomc_meeting', 'options_expiry']
-            
-            found_types = []
-            for expected_type in expected_event_types:
-                if any(expected_type in event_type for event_type in event_types):
-                    found_types.append(expected_type)
-            
-            print(f"   📊 Event types found: {found_types}")
-            
-            # Check for scheduled events with 90%+ probability
-            high_confidence_events = [
-                event for event in events 
-                if event.get('probability', 0) >= 0.9
-            ]
-            
-            if high_confidence_events:
-                self.log_result('Event Prediction - High Confidence Events', True, 200,
-                              f"✅ Found {len(high_confidence_events)} events with 90%+ probability")
-            else:
-                self.log_result('Event Prediction - High Confidence Events', False, 200, None,
-                              f"❌ No events with 90%+ probability found")
-            
-            # Verify event structure
-            if events:
-                sample_event = events[0]
-                required_fields = ['event_type', 'probability', 'expected_impact', 'affected_coins', 'confidence_factors']
-                has_required_fields = all(field in sample_event for field in required_fields)
-                
-                if has_required_fields:
-                    self.log_result('Event Prediction - Event Structure', True, 200,
-                                  f"✅ Events contain required fields: {required_fields}")
-                else:
-                    missing_fields = [field for field in required_fields if field not in sample_event]
-                    self.log_result('Event Prediction - Event Structure', False, 200, None,
-                                  f"❌ Missing fields: {missing_fields}")
-        
-        # Get predicted events with minimum probability filter
-        filtered_result = await self.test_endpoint('GET', '/adaptive-strategy/predicted-events?min_probability=0.5', 
-                                                 'Get Predicted Events (min 50% probability)')
-        
-        if filtered_result['success'] and filtered_result.get('data'):
-            data = filtered_result['data']
-            filtered_events = data.get('events', [])
-            min_prob_filter = data.get('min_probability_filter', 0)
-            
-            print(f"   📊 Events with ≥{min_prob_filter:.0%} probability: {len(filtered_events)}")
-            
-            # Verify all events meet minimum probability
-            all_meet_threshold = all(
-                event.get('probability', 0) >= min_prob_filter 
-                for event in filtered_events
+            events = data.get("events", [])
+            fomc_events = len(events)
+            self.log_result(
+                "FOMC Events", 
+                True, 
+                f"{fomc_events} FOMC predictions found"
             )
-            
-            if all_meet_threshold:
-                self.log_result('Event Prediction - Probability Filter', True, 200,
-                              f"✅ All {len(filtered_events)} events meet {min_prob_filter:.0%} threshold")
-            else:
-                self.log_result('Event Prediction - Probability Filter', False, 200, None,
-                              f"❌ Some events below {min_prob_filter:.0%} threshold")
-        
-        # Test specific event type filtering
-        await self.test_endpoint('GET', '/adaptive-strategy/predicted-events/fomc_meeting', 
-                               'Get FOMC Meeting Events')
-        
-        await self.test_endpoint('GET', '/adaptive-strategy/predicted-events/options_expiry', 
-                               'Get Options Expiry Events')
-        
-        # 5. MONITORING
-        print("\n--- 5. Adaptive Monitoring ---")
-        
-        # Start adaptive monitoring
-        start_result = await self.test_endpoint('POST', '/adaptive-strategy/monitoring/start', 
-                                              'Start Adaptive Monitoring')
-        
-        if start_result['success'] and start_result.get('data'):
-            data = start_result['data']
-            status = data.get('status', '')
-            
-            if status in ['started', 'already_running']:
-                self.log_result('Adaptive Monitoring - Start', True, 200,
-                              f"✅ Monitoring {status}")
-            else:
-                self.log_result('Adaptive Monitoring - Start', False, 200, None,
-                              f"❌ Unexpected status: {status}")
-        
-        # Get monitoring status
-        status_result = await self.test_endpoint('GET', '/adaptive-strategy/status', 
-                                               'Get Adaptive Strategy Status')
-        
-        if status_result['success'] and status_result.get('data'):
-            data = status_result['data']
-            is_monitoring = data.get('is_monitoring', False)
-            current_regime = data.get('current_regime', {})
-            total_variants = data.get('total_regime_variants', 0)
-            predicted_events_count = data.get('predicted_events_count', 0)
-            
-            print(f"   📊 Monitoring active: {is_monitoring}")
-            print(f"   📊 Total variants: {total_variants}")
-            print(f"   📊 Predicted events: {predicted_events_count}")
-            
-            if is_monitoring:
-                self.log_result('Adaptive Monitoring - Status Check', True, 200,
-                              f"✅ Monitoring active with {total_variants} variants, {predicted_events_count} events")
-            else:
-                self.log_result('Adaptive Monitoring - Status Check', False, 200, None,
-                              f"❌ Monitoring not active")
-        
-        # Stop adaptive monitoring
-        stop_result = await self.test_endpoint('POST', '/adaptive-strategy/monitoring/stop', 
-                                             'Stop Adaptive Monitoring')
-        
-        if stop_result['success'] and stop_result.get('data'):
-            data = stop_result['data']
-            status = data.get('status', '')
-            
-            if status == 'stopped':
-                self.log_result('Adaptive Monitoring - Stop', True, 200,
-                              f"✅ Monitoring stopped successfully")
-            else:
-                self.log_result('Adaptive Monitoring - Stop', False, 200, None,
-                              f"❌ Unexpected stop status: {status}")
-        
-        # 6. PERFORMANCE TRACKING (Optional)
-        print("\n--- 6. Performance Tracking ---")
-        
-        # Test performance recording
-        performance_data = {
-            "variant_id": "test_variant_123",
-            "regime": "bull",
-            "win_rate": 65.5,
-            "sharpe_ratio": 1.8,
-            "total_trades": 50
-        }
-        
-        await self.test_endpoint('POST', '/adaptive-strategy/performance/record', 
-                               'Record Variant Performance',
-                               data=performance_data, expected_status=[200, 201, 404])
-        
-        # Test regime performance retrieval
-        await self.test_endpoint('GET', '/adaptive-strategy/performance/bull', 
-                               'Get Bull Market Performance Stats')
-        
-        print("\n🏁 ADAPTIVE STRATEGY AND EVENT PREDICTION SYSTEM TESTING COMPLETED")
-        
-        # Summary of key metrics
-        print("\n📊 EXPECTED RESULTS SUMMARY:")
-        print("   • 14 regime variants (3 bull, 3 bear, 2 high_vol, 2 low_vol, 2 sideways, 1 recovery, 1 distribution)")
-        print("   • Predicted events with 90%+ probability for scheduled events")
-        print("   • Optimal strategy recommendation based on detected regime")
-        print("   • Auto-adjustment of parameters based on volatility and trend conditions")
-        print("   • Monitoring system for continuous adaptation")
-        """Test AI training and backtest system to verify improved win rate and Sharpe ratio"""
-        print("\n=== TESTING AI TRAINING AND BACKTEST SYSTEM ===")
-        print("🎯 OBJECTIVE: Verify improved win rate (>50%) and Sharpe ratio (>0.5)")
-        print("📊 Testing Enhanced MTF Training + Backtest Engine with ML strategy")
-        
-        # 1. Test Enhanced MTF Training endpoints
-        print("\n--- 1. Enhanced MTF Training Endpoints ---")
-        
-        # Test fast sentiment training
-        print("⚡ Testing fast sentiment training...")
-        fast_train_result = await self.test_endpoint('POST', '/enhanced-mtf-training/train-fast', 
-                                   'Enhanced MTF Fast Training (Sentiment Only)',
-                                   data={}, expected_status=[200, 201])
-        
-        if fast_train_result['success']:
-            data = fast_train_result.get('data', {})
-            symbols_trained = data.get('symbols_trained', 0)
-            accuracy = data.get('accuracy', 0)
-            print(f"   📊 Fast training completed: {symbols_trained} symbols, {accuracy*100:.1f}% accuracy")
-        
-        # Test training status
-        await self.test_endpoint('GET', '/enhanced-mtf-training/status', 
-                               'Enhanced MTF Training Status Check')
-        
-        # Test BTC prediction
-        btc_prediction = await self.test_endpoint('GET', '/enhanced-mtf-training/predict/BTC', 
-                               'Enhanced MTF BTC Prediction')
-        
-        if btc_prediction['success']:
-            data = btc_prediction.get('data', {})
-            signal = data.get('signal', 'UNKNOWN')
-            confidence = data.get('confidence', 0)
-            print(f"   📊 BTC Prediction: {signal} signal with {confidence*100:.1f}% confidence")
-        
-        # Test batch predictions
-        batch_predictions = await self.test_endpoint('GET', '/enhanced-mtf-training/predict-all', 
-                               'Enhanced MTF Batch Predictions (All Coins)')
-        
-        if batch_predictions['success']:
-            data = batch_predictions.get('data', {})
-            total_predictions = data.get('total_predictions', 0)
-            buy_signals = data.get('buy_signals', 0)
-            hold_signals = data.get('hold_signals', 0)
-            sell_signals = data.get('sell_signals', 0)
-            print(f"   📊 Batch Predictions: {total_predictions} total ({buy_signals} BUY, {hold_signals} HOLD, {sell_signals} SELL)")
-        
-        # 2. Run Multiple ML Strategy Backtests to Find Best Performance
-        print("\n--- 2. Multiple ML Strategy Backtests ---")
-        print("🔄 Running multiple ML backtests to find best performance...")
-        
-        ml_backtest_ids = []
-        ml_results = []
-        
-        # Run 5 ML backtests with different parameters
-        for i in range(5):
-            ml_backtest_config = {
-                "name": f"ML Strategy Test v{i+6}",  # v6, v7, v8, v9, v10
-                "strategy_type": "ml_based",
-                "symbols": ["BTC/USD"],
-                "start_date": "2024-01-01T00:00:00Z",
-                "end_date": "2024-12-31T23:59:59Z",
-                "initial_capital": 10000,
-                "position_size_pct": 15 + i * 2,  # 15%, 17%, 19%, 21%, 23%
-                "max_positions": 3,
-                "stop_loss_pct": 4 + i,  # 4%, 5%, 6%, 7%, 8%
-                "take_profit_pct": 12 + i * 2,  # 12%, 14%, 16%, 18%, 20%
-                "commission_pct": 0.1,
-                "slippage_pct": 0.05,
-                "strategy_params": {
-                    "lookback": 15 + i * 5,  # 15, 20, 25, 30, 35
-                    "model": "enhanced_mtf"
-                }
-            }
-            
-            print(f"🤖 Running ML backtest {i+1}/5 (v{i+6})...")
-            result = await self.test_endpoint('POST', '/backtest-engine/run', 
-                                   f'ML Strategy Backtest v{i+6}',
-                                   data=ml_backtest_config, expected_status=[200, 201])
-            
-            if result['success']:
-                data = result.get('data', {})
-                backtest_id = data.get('backtest_id')
-                if backtest_id:
-                    ml_backtest_ids.append(backtest_id)
-                    print(f"   📊 ML Backtest v{i+6} started: ID {backtest_id}")
-        
-        # 3. Run Multiple Random Strategy Backtests for Comparison
-        print("\n--- 3. Multiple Random Strategy Backtests ---")
-        print("🎲 Running multiple random backtests for baseline comparison...")
-        
-        random_backtest_ids = []
-        random_results = []
-        
-        # Run 3 random backtests
-        for i in range(3):
-            random_backtest_config = {
-                "name": f"Random Strategy Baseline {i+1}",
-                "strategy_type": "random",
-                "symbols": ["BTC/USD"],
-                "start_date": "2024-01-01T00:00:00Z",
-                "end_date": "2024-12-31T23:59:59Z",
-                "initial_capital": 10000,
-                "position_size_pct": 20,
-                "max_positions": 3,
-                "stop_loss_pct": 5,
-                "take_profit_pct": 15,
-                "commission_pct": 0.1,
-                "slippage_pct": 0.05,
-                "strategy_params": {}
-            }
-            
-            print(f"🎲 Running random backtest {i+1}/3...")
-            result = await self.test_endpoint('POST', '/backtest-engine/run', 
-                                   f'Random Strategy Baseline {i+1}',
-                                   data=random_backtest_config, expected_status=[200, 201])
-            
-            if result['success']:
-                data = result.get('data', {})
-                backtest_id = data.get('backtest_id')
-                if backtest_id:
-                    random_backtest_ids.append(backtest_id)
-                    print(f"   📊 Random Backtest {i+1} started: ID {backtest_id}")
-        
-        # 4. Wait for backtests to complete and collect results
-        print("\n--- 4. Collecting Backtest Results ---")
-        print("⏳ Waiting for backtests to complete...")
-        
-        import asyncio
-        await asyncio.sleep(8)  # Wait longer for multiple backtests
-        
-        # Collect ML results
-        print("\n🤖 ML Strategy Results:")
-        for i, backtest_id in enumerate(ml_backtest_ids):
-            result = await self.test_endpoint('GET', f'/backtest-engine/results/{backtest_id}', 
-                                   f'ML Strategy v{i+6} Results')
-            
-            if result['success']:
-                data = result.get('data', {})
-                metrics = data.get('metrics', {})
-                if metrics:
-                    ml_results.append(metrics)
-                    win_rate = metrics.get('win_rate', 0)
-                    sharpe = metrics.get('sharpe_ratio', 0)
-                    total_return = metrics.get('total_return_pct', 0)
-                    print(f"   v{i+6}: Win Rate: {win_rate:.1f}%, Sharpe: {sharpe:.2f}, Return: {total_return:.2f}%")
-        
-        # Collect Random results
-        print("\n🎲 Random Strategy Results:")
-        for i, backtest_id in enumerate(random_backtest_ids):
-            result = await self.test_endpoint('GET', f'/backtest-engine/results/{backtest_id}', 
-                                   f'Random Strategy {i+1} Results')
-            
-            if result['success']:
-                data = result.get('data', {})
-                metrics = data.get('metrics', {})
-                if metrics:
-                    random_results.append(metrics)
-                    win_rate = metrics.get('win_rate', 0)
-                    sharpe = metrics.get('sharpe_ratio', 0)
-                    total_return = metrics.get('total_return_pct', 0)
-                    print(f"   #{i+1}: Win Rate: {win_rate:.1f}%, Sharpe: {sharpe:.2f}, Return: {total_return:.2f}%")
-        
-        # 5. Performance Analysis and Validation
-        print("\n--- 5. Performance Analysis ---")
-        
-        if ml_results and random_results:
-            # Find best ML performance
-            best_ml = max(ml_results, key=lambda x: x.get('sharpe_ratio', -999))
-            best_ml_win_rate = best_ml.get('win_rate', 0)
-            best_ml_sharpe = best_ml.get('sharpe_ratio', 0)
-            best_ml_return = best_ml.get('total_return_pct', 0)
-            
-            # Calculate average random performance
-            avg_random_win_rate = sum(r.get('win_rate', 0) for r in random_results) / len(random_results)
-            avg_random_sharpe = sum(r.get('sharpe_ratio', 0) for r in random_results) / len(random_results)
-            avg_random_return = sum(r.get('total_return_pct', 0) for r in random_results) / len(random_results)
-            
-            # Find best random performance
-            best_random = max(random_results, key=lambda x: x.get('sharpe_ratio', -999))
-            best_random_win_rate = best_random.get('win_rate', 0)
-            best_random_sharpe = best_random.get('sharpe_ratio', 0)
-            
-            print(f"\n📊 BEST ML PERFORMANCE:")
-            print(f"   Win Rate: {best_ml_win_rate:.1f}%")
-            print(f"   Sharpe Ratio: {best_ml_sharpe:.2f}")
-            print(f"   Total Return: {best_ml_return:.2f}%")
-            
-            print(f"\n📊 AVERAGE RANDOM PERFORMANCE:")
-            print(f"   Win Rate: {avg_random_win_rate:.1f}%")
-            print(f"   Sharpe Ratio: {avg_random_sharpe:.2f}")
-            print(f"   Total Return: {avg_random_return:.2f}%")
-            
-            # Check if best ML meets targets
-            win_rate_target_met = best_ml_win_rate > 50
-            sharpe_target_met = best_ml_sharpe > 0.5
-            
-            # Check if best ML beats average baseline
-            beats_avg_baseline_win_rate = best_ml_win_rate > avg_random_win_rate
-            beats_avg_baseline_sharpe = best_ml_sharpe > avg_random_sharpe
-            
-            # Check if best ML beats best baseline
-            beats_best_baseline_win_rate = best_ml_win_rate > best_random_win_rate
-            beats_best_baseline_sharpe = best_ml_sharpe > best_random_sharpe
-            
-            print(f"\n🎯 TARGET VALIDATION:")
-            print(f"   Win Rate >50%: {'✅ PASS' if win_rate_target_met else '❌ FAIL'} ({best_ml_win_rate:.1f}%)")
-            print(f"   Sharpe Ratio >0.5: {'✅ PASS' if sharpe_target_met else '❌ FAIL'} ({best_ml_sharpe:.2f})")
-            
-            print(f"\n📊 BASELINE COMPARISON (vs Average):")
-            print(f"   ML vs Avg Random Win Rate: {'✅ BETTER' if beats_avg_baseline_win_rate else '❌ WORSE'} ({best_ml_win_rate:.1f}% vs {avg_random_win_rate:.1f}%)")
-            print(f"   ML vs Avg Random Sharpe: {'✅ BETTER' if beats_avg_baseline_sharpe else '❌ WORSE'} ({best_ml_sharpe:.2f} vs {avg_random_sharpe:.2f})")
-            
-            print(f"\n📊 BASELINE COMPARISON (vs Best):")
-            print(f"   ML vs Best Random Win Rate: {'✅ BETTER' if beats_best_baseline_win_rate else '❌ WORSE'} ({best_ml_win_rate:.1f}% vs {best_random_win_rate:.1f}%)")
-            print(f"   ML vs Best Random Sharpe: {'✅ BETTER' if beats_best_baseline_sharpe else '❌ WORSE'} ({best_ml_sharpe:.2f} vs {best_random_sharpe:.2f})")
-            
-            # Overall assessment - more lenient criteria
-            target_success = win_rate_target_met or sharpe_target_met  # At least one target met
-            baseline_success = beats_avg_baseline_win_rate or beats_avg_baseline_sharpe  # Beats average baseline
-            overall_success = target_success and baseline_success
-            
-            # Calculate improvement metrics
-            win_rate_improvement = ((best_ml_win_rate - avg_random_win_rate) / avg_random_win_rate * 100) if avg_random_win_rate > 0 else 0
-            sharpe_improvement = ((best_ml_sharpe - avg_random_sharpe) / abs(avg_random_sharpe) * 100) if avg_random_sharpe != 0 else 0
-            
-            print(f"\n📈 IMPROVEMENT METRICS:")
-            print(f"   Win Rate Improvement: {win_rate_improvement:+.1f}%")
-            print(f"   Sharpe Ratio Improvement: {sharpe_improvement:+.1f}%")
-            
-            self.log_result('AI Training & Backtest System Performance', overall_success, 200,
-                          f"Best ML: {best_ml_win_rate:.1f}% win rate, {best_ml_sharpe:.2f} Sharpe vs Avg Random: {avg_random_win_rate:.1f}%, {avg_random_sharpe:.2f}. Improvement: Win Rate {win_rate_improvement:+.1f}%, Sharpe {sharpe_improvement:+.1f}%",
-                          None if overall_success else f"ML strategy performance: Win Rate {'✅' if win_rate_target_met else '❌'} {best_ml_win_rate:.1f}% (target >50%), Sharpe {'✅' if sharpe_target_met else '❌'} {best_ml_sharpe:.2f} (target >0.5)")
-        
         else:
-            self.log_result('AI Training & Backtest System Performance', False, None, None,
-                          "Could not retrieve sufficient backtest results for comparison")
+            self.log_result("FOMC Events", False, f"HTTP {status}: {data}")
         
-        # 6. Additional Enhanced MTF Features
-        print("\n--- 6. Additional Enhanced MTF Features ---")
+        # Test Token Unlock specific predictions  
+        success, status, data = self.make_request(
+            "GET", 
+            "/adaptive-strategy/predicted-events/token_unlock"
+        )
         
-        # Test Fear & Greed Index
-        await self.test_endpoint('GET', '/enhanced-mtf-training/fear-greed', 
-                               'Fear & Greed Index Data')
+        if success:
+            events = data.get("events", [])
+            unlock_events = len(events)
+            self.log_result(
+                "Token Unlock Events", 
+                True, 
+                f"{unlock_events} token unlock predictions found"
+            )
+        else:
+            self.log_result("Token Unlock Events", False, f"HTTP {status}: {data}")
         
-        # Test sentiment analysis
-        await self.test_endpoint('GET', '/enhanced-mtf-training/sentiment/BTC', 
-                               'BTC Sentiment Analysis')
+        return True
+    
+    def test_existing_endpoints(self):
+        """Test that existing endpoints still work"""
+        print("\n🔧 Testing Existing Adaptive Strategy Endpoints...")
         
-        # Test model info
-        await self.test_endpoint('GET', '/enhanced-mtf-training/model-info', 
-                               'Enhanced MTF Model Information')
-        
-        # Test training history
-        await self.test_endpoint('GET', '/enhanced-mtf-training/history', 
-                               'Enhanced MTF Training History')
-        
-        print("\n🏁 AI TRAINING AND BACKTEST SYSTEM TESTING COMPLETED")
-
-    async def test_on_chain_data_endpoints(self):
-        """Test new On-Chain Data endpoints from review request"""
-        print("\n=== TESTING ON-CHAIN DATA ENDPOINTS ===")
-        print("🔗 Testing whale activity, exchange flows, network metrics, and whale distribution")
-        
-        # 1. WHALE ACTIVITY ENDPOINT
-        print("\n--- 1. Whale Activity with Exchange Flows ---")
-        whale_activity_result = await self.test_endpoint('GET', '/on-chain/whale-activity', 
-                                                       'On-Chain Whale Activity')
-        
-        if whale_activity_result['success'] and whale_activity_result.get('data'):
-            data = whale_activity_result['data']
-            
-            # Check for required fields from review request
-            required_fields = ['whale_sentiment', 'accumulation_score', 'network_health']
-            found_fields = []
-            
-            # Check if data contains whale_sentiment
-            if 'whale_sentiment' in str(data) or 'sentiment' in str(data):
-                found_fields.append('whale_sentiment')
-            
-            # Check if data contains accumulation_score
-            if 'accumulation_score' in str(data) or 'accumulation' in str(data):
-                found_fields.append('accumulation_score')
-            
-            # Check if data contains network_health
-            if 'network_health' in str(data) or 'health' in str(data):
-                found_fields.append('network_health')
-            
-            print(f"   📊 Found fields: {found_fields}")
-            
-            if len(found_fields) >= 2:  # At least 2 out of 3 required fields
-                self.log_result('Whale Activity - Required Fields', True, 200,
-                              f"✅ Contains required fields: {found_fields}")
-            else:
-                self.log_result('Whale Activity - Required Fields', False, 200, None,
-                              f"❌ Missing required fields. Found: {found_fields}, Expected: {required_fields}")
-        
-        # 2. EXCHANGE FLOWS ENDPOINT
-        print("\n--- 2. Exchange Flows ---")
-        exchange_flows_result = await self.test_endpoint('GET', '/on-chain/exchange-flows', 
-                                                       'On-Chain Exchange Flows')
-        
-        if exchange_flows_result['success'] and exchange_flows_result.get('data'):
-            data = exchange_flows_result['data']
-            
-            # Check for required exchange flow fields
-            required_flow_fields = ['inflow', 'outflow', 'net_flow', 'signal']
-            found_flow_fields = []
-            
-            data_str = str(data).lower()
-            for field in required_flow_fields:
-                if field in data_str:
-                    found_flow_fields.append(field)
-            
-            print(f"   📊 Exchange flow fields found: {found_flow_fields}")
-            
-            if len(found_flow_fields) >= 3:  # At least 3 out of 4 fields
-                self.log_result('Exchange Flows - Required Fields', True, 200,
-                              f"✅ Contains flow fields: {found_flow_fields}")
-            else:
-                self.log_result('Exchange Flows - Required Fields', False, 200, None,
-                              f"❌ Missing flow fields. Found: {found_flow_fields}, Expected: {required_flow_fields}")
-        
-        # 3. WHALE TRANSACTIONS ENDPOINT
-        print("\n--- 3. Whale Transactions ---")
-        whale_transactions_result = await self.test_endpoint('GET', '/on-chain/whale-transactions', 
-                                                           'On-Chain Whale Transactions')
-        
-        if whale_transactions_result['success'] and whale_transactions_result.get('data'):
-            data = whale_transactions_result['data']
-            
-            # Check if we got transaction data
-            if isinstance(data, dict) and ('transactions' in data or 'whale_transactions' in data):
-                self.log_result('Whale Transactions - Data Structure', True, 200,
-                              "✅ Contains whale transaction data")
-            elif isinstance(data, list) and len(data) > 0:
-                self.log_result('Whale Transactions - Data Structure', True, 200,
-                              f"✅ Contains {len(data)} whale transactions")
-            else:
-                self.log_result('Whale Transactions - Data Structure', False, 200, None,
-                              "❌ No whale transaction data found")
-        
-        # 4. NETWORK METRICS ENDPOINT
-        print("\n--- 4. Network Metrics ---")
-        network_metrics_result = await self.test_endpoint('GET', '/on-chain/network-metrics', 
-                                                        'On-Chain Network Metrics')
-        
-        if network_metrics_result['success'] and network_metrics_result.get('data'):
-            data = network_metrics_result['data']
-            
-            # Check for required network metrics from review request
-            required_metrics = ['active_addresses', 'hash_rate', 'transaction_volume']
-            found_metrics = []
-            
-            data_str = str(data).lower()
-            for metric in required_metrics:
-                if metric.replace('_', '') in data_str.replace('_', '') or metric in data_str:
-                    found_metrics.append(metric)
-            
-            print(f"   📊 Network metrics found: {found_metrics}")
-            
-            if len(found_metrics) >= 2:  # At least 2 out of 3 metrics
-                self.log_result('Network Metrics - Required Fields', True, 200,
-                              f"✅ Contains network metrics: {found_metrics}")
-            else:
-                self.log_result('Network Metrics - Required Fields', False, 200, None,
-                              f"❌ Missing network metrics. Found: {found_metrics}, Expected: {required_metrics}")
-        
-        # 5. WHALE DISTRIBUTION ENDPOINT
-        print("\n--- 5. Whale Distribution ---")
-        whale_distribution_result = await self.test_endpoint('GET', '/on-chain/whale-distribution', 
-                                                           'On-Chain Whale Distribution')
-        
-        if whale_distribution_result['success'] and whale_distribution_result.get('data'):
-            data = whale_distribution_result['data']
-            
-            # Check if we got distribution data
-            if 'distribution' in str(data).lower() or 'wallet' in str(data).lower():
-                self.log_result('Whale Distribution - Data Structure', True, 200,
-                              "✅ Contains whale distribution data")
-            else:
-                self.log_result('Whale Distribution - Data Structure', False, 200, None,
-                              "❌ No whale distribution data found")
-        
-        # 6. ON-CHAIN SUMMARY ENDPOINT
-        print("\n--- 6. On-Chain Summary ---")
-        summary_result = await self.test_endpoint('GET', '/on-chain/summary', 
-                                                'On-Chain Quick Summary')
-        
-        if summary_result['success'] and summary_result.get('data'):
-            data = summary_result['data']
-            
-            # Check for summary fields mentioned in review request
-            summary_fields = ['whale_sentiment', 'accumulation_score', 'network_health']
-            found_summary_fields = []
-            
-            data_str = str(data).lower()
-            for field in summary_fields:
-                if field.replace('_', '') in data_str.replace('_', ''):
-                    found_summary_fields.append(field)
-            
-            print(f"   📊 Summary fields found: {found_summary_fields}")
-            
-            if len(found_summary_fields) >= 2:  # At least 2 out of 3 summary fields
-                self.log_result('On-Chain Summary - Required Fields', True, 200,
-                              f"✅ Contains summary fields: {found_summary_fields}")
-            else:
-                self.log_result('On-Chain Summary - Required Fields', False, 200, None,
-                              f"❌ Missing summary fields. Found: {found_summary_fields}, Expected: {summary_fields}")
-        
-        print("\n🏁 ON-CHAIN DATA ENDPOINTS TESTING COMPLETED")
-        
-        # Summary of expected results
-        print("\n📊 EXPECTED ON-CHAIN DATA RESULTS:")
-        print("   • Whale activity shows: whale_sentiment, accumulation_score, network_health")
-        print("   • Exchange flows show: inflow, outflow, net_flow, signal")
-        print("   • Network metrics show: active_addresses, hash_rate, transaction_volume")
-        print("   • Whale distribution shows wallet distribution analysis")
-        print("   • Summary provides quick overview of key on-chain metrics")
-
-    async def test_enhanced_adaptive_strategy_endpoints(self):
-        """Test enhanced Adaptive Strategy endpoints from review request"""
-        print("\n=== TESTING ENHANCED ADAPTIVE STRATEGY ENDPOINTS ===")
-        print("🎯 Testing optimal strategy, enhanced event predictions (10+ types), and predicted events")
-        
-        # 1. OPTIMAL STRATEGY ENDPOINT
-        print("\n--- 1. Optimal Strategy Recommendation ---")
-        optimal_strategy_result = await self.test_endpoint('GET', '/adaptive-strategy/optimal-strategy', 
-                                                         'Adaptive Strategy - Optimal Strategy')
-        
-        if optimal_strategy_result['success'] and optimal_strategy_result.get('data'):
-            data = optimal_strategy_result['data']
-            
-            # Check if we got a recommended strategy
-            if 'strategy' in str(data).lower() or 'recommended' in str(data).lower():
-                self.log_result('Optimal Strategy - Recommendation', True, 200,
-                              "✅ Returns recommended strategy")
-            else:
-                self.log_result('Optimal Strategy - Recommendation', False, 200, None,
-                              "❌ No strategy recommendation found")
-            
-            print(f"   📊 Optimal strategy response: {str(data)[:200]}...")
-        
-        # 2. PREDICT EVENTS ENDPOINT (Should return 10+ event types)
-        print("\n--- 2. Enhanced Event Predictions (10+ Types) ---")
-        predict_events_result = await self.test_endpoint('POST', '/adaptive-strategy/predict-events', 
-                                                       'Adaptive Strategy - Predict Events (Enhanced)',
-                                                       data={"days_ahead": 30})
-        
-        if predict_events_result['success'] and predict_events_result.get('data'):
-            data = predict_events_result['data']
-            events = data.get('events', [])
-            total_events = data.get('total_events', 0)
-            
-            print(f"   📊 Total predicted events: {total_events}")
-            
-            # Check for enhanced event types from review request
-            enhanced_event_types = [
-                'network_upgrade', 'etf_launch', 'defi_exploit', 'bitcoin_halving', 
-                'fomc_meeting', 'options_expiry', 'earnings_release', 'regulatory_announcement',
-                'exchange_listing', 'partnership_announcement'
-            ]
-            
-            found_event_types = []
-            events_str = str(events).lower()
-            
-            for event_type in enhanced_event_types:
-                if event_type in events_str or event_type.replace('_', '') in events_str.replace('_', ''):
-                    found_event_types.append(event_type)
-            
-            print(f"   📊 Enhanced event types found: {found_event_types}")
-            
-            # Check if we have 10+ event types as mentioned in review request
-            if len(found_event_types) >= 3:  # At least 3 of the enhanced types
-                self.log_result('Enhanced Event Predictions - Event Types', True, 200,
-                              f"✅ Found enhanced event types: {found_event_types}")
-            else:
-                self.log_result('Enhanced Event Predictions - Event Types', False, 200, None,
-                              f"❌ Limited event types. Found: {found_event_types}, Expected enhanced types like: network_upgrade, etf_launch, defi_exploit")
-            
-            # Check total event count
-            if total_events >= 5:  # Should have multiple events
-                self.log_result('Enhanced Event Predictions - Event Count', True, 200,
-                              f"✅ Predicted {total_events} events")
-            else:
-                self.log_result('Enhanced Event Predictions - Event Count', False, 200, None,
-                              f"❌ Only {total_events} events predicted (expected multiple events)")
-        
-        # 3. PREDICTED EVENTS ENDPOINT (Verify new event types)
-        print("\n--- 3. Get Predicted Events (Verify New Types) ---")
-        predicted_events_result = await self.test_endpoint('GET', '/adaptive-strategy/predicted-events', 
-                                                         'Adaptive Strategy - Get Predicted Events')
-        
-        if predicted_events_result['success'] and predicted_events_result.get('data'):
-            data = predicted_events_result['data']
-            events = data.get('events', [])
-            total = data.get('total', 0)
-            
-            print(f"   📊 Current predicted events: {total}")
-            
-            # Verify event structure includes new fields
-            if events:
-                sample_event = events[0]
-                required_event_fields = ['event_type', 'probability', 'expected_impact', 'affected_coins']
-                found_event_fields = []
-                
-                for field in required_event_fields:
-                    if field in sample_event:
-                        found_event_fields.append(field)
-                
-                print(f"   📊 Event structure fields: {found_event_fields}")
-                
-                if len(found_event_fields) >= 3:  # At least 3 out of 4 required fields
-                    self.log_result('Predicted Events - Event Structure', True, 200,
-                                  f"✅ Events contain required fields: {found_event_fields}")
-                else:
-                    self.log_result('Predicted Events - Event Structure', False, 200, None,
-                                  f"❌ Missing event fields. Found: {found_event_fields}, Expected: {required_event_fields}")
-                
-                # Check for new event types in current predictions
-                current_event_types = [event.get('event_type', '') for event in events]
-                new_types_found = []
-                
-                for event_type in current_event_types:
-                    if any(enhanced_type in event_type.lower() for enhanced_type in 
-                          ['network_upgrade', 'etf_launch', 'defi_exploit']):
-                        new_types_found.append(event_type)
-                
-                if new_types_found:
-                    self.log_result('Predicted Events - New Event Types', True, 200,
-                                  f"✅ Found new event types: {new_types_found}")
-                else:
-                    self.log_result('Predicted Events - New Event Types', True, 200,
-                                  f"✅ Standard event types present: {current_event_types[:3]}")
-            else:
-                self.log_result('Predicted Events - Data Available', False, 200, None,
-                              "❌ No predicted events available")
-        
-        # 4. TEST SPECIFIC NEW EVENT TYPES
-        print("\n--- 4. Test Specific Enhanced Event Types ---")
-        
-        # Test network upgrade events
-        await self.test_endpoint('GET', '/adaptive-strategy/predicted-events/network_upgrade', 
-                               'Get Network Upgrade Events',
-                               expected_status=[200, 404])  # 404 is OK if no events of this type
-        
-        # Test ETF launch events
-        await self.test_endpoint('GET', '/adaptive-strategy/predicted-events/etf_launch', 
-                               'Get ETF Launch Events',
-                               expected_status=[200, 404])  # 404 is OK if no events of this type
-        
-        # Test DeFi exploit events
-        await self.test_endpoint('GET', '/adaptive-strategy/predicted-events/defi_exploit', 
-                               'Get DeFi Exploit Events',
-                               expected_status=[200, 404])  # 404 is OK if no events of this type
-        
-        # 5. ADDITIONAL ADAPTIVE STRATEGY TESTS
-        print("\n--- 5. Additional Adaptive Strategy Features ---")
-        
-        # Test current regime (should work with enhanced predictions)
-        await self.test_endpoint('GET', '/adaptive-strategy/regime/current', 
-                               'Current Market Regime (Enhanced)')
-        
-        # Test adaptive strategy status
-        await self.test_endpoint('GET', '/adaptive-strategy/status', 
-                               'Adaptive Strategy Status (Enhanced)')
-        
-        print("\n🏁 ENHANCED ADAPTIVE STRATEGY ENDPOINTS TESTING COMPLETED")
-        
-        # Summary of expected results
-        print("\n📊 EXPECTED ENHANCED ADAPTIVE STRATEGY RESULTS:")
-        print("   • Optimal strategy returns recommended strategy for current conditions")
-        print("   • Event predictions include 10+ event types: network_upgrade, etf_launch, defi_exploit, etc.")
-        print("   • Predicted events show enhanced event structure with probability, impact, affected_coins")
-        print("   • New event types are properly categorized and filterable")
-
-    async def test_frontend_adaptive_strategy_page(self):
-        """Test frontend AdaptiveStrategy page accessibility"""
-        print("\n=== TESTING FRONTEND ADAPTIVE STRATEGY PAGE ===")
-        print("🌐 Testing /adaptive route accessibility")
-        
-        # Note: Since we're testing backend, we can't directly test frontend pages
-        # But we can verify the backend endpoints that the frontend would use
-        
-        print("\n--- Frontend Page Backend Dependencies ---")
-        
-        # Test the key endpoints that the AdaptiveStrategy page would need
-        backend_dependencies = [
-            ('/adaptive-strategy/status', 'Adaptive Strategy Status for Frontend'),
-            ('/adaptive-strategy/regime/current', 'Current Regime for Frontend'),
-            ('/adaptive-strategy/predicted-events', 'Predicted Events for Frontend'),
-            ('/adaptive-strategy/optimal-strategy', 'Optimal Strategy for Frontend'),
-            ('/adaptive-strategy/variants', 'Strategy Variants for Frontend')
+        endpoints_to_test = [
+            "/adaptive-strategy/status",
+            "/adaptive-strategy/regime/current", 
+            "/adaptive-strategy/optimal-strategy"
         ]
         
-        all_dependencies_working = True
-        
-        for endpoint, test_name in backend_dependencies:
-            result = await self.test_endpoint('GET', endpoint, test_name)
-            if not result['success']:
-                all_dependencies_working = False
-        
-        if all_dependencies_working:
-            self.log_result('Frontend AdaptiveStrategy Page - Backend Support', True, 200,
-                          "✅ All required backend endpoints working for /adaptive page")
-        else:
-            self.log_result('Frontend AdaptiveStrategy Page - Backend Support', False, 200, None,
-                          "❌ Some backend endpoints not working for /adaptive page")
-        
-        print("\n📊 FRONTEND PAGE VERIFICATION:")
-        print("   • Route: /adaptive should load AdaptiveStrategy.jsx component")
-        print("   • Backend endpoints required for page functionality are tested above")
-        print("   • Page should display regime detection, strategy recommendations, and event predictions")
-        
-        print("\n🏁 FRONTEND ADAPTIVE STRATEGY PAGE TESTING COMPLETED")
-
-    async def run_all_tests(self):
-        """Run all test suites"""
-        print(f"🚀 Starting Backend API Tests - ON-CHAIN DATA AND ENHANCED ADAPTIVE STRATEGY")
-        print(f"📡 Testing Backend URL: {BASE_URL}")
-        print(f"👤 User ID: {USER_ID}")
-        print("=" * 80)
-        
-        # Test new features from review request
-        print("\n🎯 TESTING NEW FEATURES FROM REVIEW REQUEST:")
-        print("1. Whale Alerts and Event Backtesting System")
-        print("2. On-Chain Data Endpoints")
-        print("3. Enhanced Adaptive Strategy")
-        print("4. Frontend AdaptiveStrategy Page Support")
-        print("=" * 80)
-        
-        # 1. Test Whale Alerts and Event Backtesting System (NEW)
-        await self.test_whale_alerts_and_backtesting_system()
-        
-        # 2. Test On-Chain Data Endpoints
-        await self.test_on_chain_data_endpoints()
-        
-        # 3. Test Enhanced Adaptive Strategy
-        await self.test_enhanced_adaptive_strategy_endpoints()
-        
-        # 4. Test Frontend Page Backend Support
-        await self.test_frontend_adaptive_strategy_page()
-        
-        # Run basic health checks
-        await self.test_health_endpoints()
-        
-        # Print summary
-        self.print_summary()
+        for endpoint in endpoints_to_test:
+            success, status, data = self.make_request("GET", endpoint)
+            
+            endpoint_name = endpoint.split("/")[-1].replace("-", " ").title()
+            
+            if success:
+                self.log_result(
+                    f"Existing: {endpoint_name}", 
+                    True, 
+                    f"Endpoint working correctly"
+                )
+            else:
+                self.log_result(
+                    f"Existing: {endpoint_name}", 
+                    False, 
+                    f"HTTP {status}: {data}"
+                )
     
-    def print_summary(self):
-        """Print test results summary"""
-        print("\n" + "=" * 60)
-        print("🏁 BACKEND API TEST RESULTS SUMMARY")
-        print("=" * 60)
+    def run_all_tests(self):
+        """Run comprehensive Enhanced Event Prediction Coverage tests"""
+        print("=" * 80)
+        print("🚀 ENHANCED EVENT PREDICTION COVERAGE TESTING")
+        print("=" * 80)
+        
+        # Main enhanced features
+        predict_data = self.test_predict_events_60_days()
+        coverage_data = self.test_event_coverage_stats()
+        calendar_data = self.test_event_calendar()
+        types_data = self.test_event_types()
+        scheduled_data = self.test_scheduled_events()
+        
+        # Filtering and specific endpoints
+        self.test_predicted_events_filter()
+        self.test_predicted_events_by_type()
+        
+        # Verify existing functionality  
+        self.test_existing_endpoints()
+        
+        # Results Summary
+        print("\n" + "=" * 80)
+        print("📊 ENHANCED EVENT PREDICTION COVERAGE TEST RESULTS")
+        print("=" * 80)
         
         total_tests = len(self.results)
-        passed = len(self.passed_tests)
-        failed = len(self.failed_tests)
+        passed_tests = sum(1 for r in self.results if r['success'])
+        failed_tests = total_tests - passed_tests
+        success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
         
-        print(f"📊 Total Tests: {total_tests}")
-        print(f"✅ Passed: {passed}")
-        print(f"❌ Failed: {failed}")
-        print(f"📈 Success Rate: {(passed/total_tests*100):.1f}%")
+        print(f"📈 Overall Success Rate: {success_rate:.1f}% ({passed_tests}/{total_tests})")
+        print(f"✅ Passed Tests: {passed_tests}")
+        print(f"❌ Failed Tests: {failed_tests}")
         
         if self.failed_tests:
-            print(f"\n❌ FAILED TESTS ({len(self.failed_tests)}):")
-            print("-" * 40)
-            for test in self.failed_tests:
-                print(f"• {test['test']}")
-                if test.get('status_code'):
-                    print(f"  Status: {test['status_code']}")
-                if test.get('error_details'):
-                    print(f"  Error: {test['error_details']}")
-                print()
+            print("\n❌ FAILED TESTS DETAILS:")
+            for i, failure in enumerate(self.failed_tests, 1):
+                print(f"   {i}. {failure['test']}: {failure['details']}")
         
-        if self.passed_tests:
-            print(f"\n✅ PASSED TESTS ({len(self.passed_tests)}):")
-            print("-" * 40)
-            for test in self.passed_tests:
-                print(f"• {test['test']} (Status: {test.get('status_code', 'N/A')})")
+        # Enhanced Event Coverage Analysis
+        print("\n" + "=" * 50)
+        print("🎯 ENHANCED EVENT PREDICTION ANALYSIS")
+        print("=" * 50)
         
-        print("\n" + "=" * 60)
+        if predict_data:
+            events = predict_data.get("events", [])
+            event_types = set(e.get("event_type") for e in events)
+            print(f"📊 Total Events Predicted: {len(events)}")
+            print(f"🏷️  Unique Event Types: {len(event_types)}")
+            print(f"🎲 High Probability Events: {predict_data.get('high_probability_events', 0)}")
         
-        # Critical issues summary
-        critical_failures = [
-            test for test in self.failed_tests 
-            if any(keyword in test['test'].lower() for keyword in 
-                  ['tethys', 'ensemble', 'portfolio', 'training'])
-        ]
+        if coverage_data:
+            print(f"📈 Event Coverage: {coverage_data.get('coverage_percentage', 0)}%")
+            print(f"🎯 Types Defined: {coverage_data.get('total_event_types_defined', 0)}")
+            print(f"⚡ Types with Predictions: {coverage_data.get('event_types_with_predictions', 0)}")
         
-        if critical_failures:
-            print("🚨 CRITICAL ISSUES FOUND:")
-            for test in critical_failures:
-                print(f"• {test['test']}: {test.get('error_details', 'Unknown error')}")
+        if scheduled_data:
+            print(f"📅 Scheduled Events (90 days): {scheduled_data.get('total', 0)}")
+            calendars = scheduled_data.get('calendars', [])
+            print(f"🗓️  Calendar Categories: {len(calendars)} ({', '.join(calendars[:3])}...)")
+        
+        # Final Assessment
+        if success_rate >= 90:
+            print(f"\n🎉 EXCELLENT: Enhanced Event Prediction Coverage working perfectly!")
+        elif success_rate >= 80:
+            print(f"\n✅ GOOD: Enhanced Event Prediction Coverage mostly working well")
+        elif success_rate >= 70:
+            print(f"\n⚠️  MODERATE: Enhanced Event Prediction Coverage needs some fixes")
         else:
-            print("✅ No critical issues found in core functionality")
-
-
-async def main():
-    """Main test runner"""
-    async with OnChainAndAdaptiveStrategyTester() as tester:
-        await tester.run_all_tests()
+            print(f"\n❌ POOR: Enhanced Event Prediction Coverage needs significant work")
+        
+        print("\n" + "=" * 80)
+        return success_rate >= 80
 
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("\n⚠️ Tests interrupted by user")
-        sys.exit(1)
-    except Exception as e:
-        print(f"\n💥 Test runner failed: {e}")
+    tester = EventPredictionTester()
+    success = tester.run_all_tests()
+    
+    if success:
+        print("🎯 Enhanced Event Prediction Coverage testing completed successfully!")
+        sys.exit(0)
+    else:
+        print("⚠️ Enhanced Event Prediction Coverage testing completed with issues.")
         sys.exit(1)
