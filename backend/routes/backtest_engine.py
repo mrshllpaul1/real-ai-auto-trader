@@ -143,11 +143,11 @@ async def generate_ml_based_signals(prices: List[float], symbol: str, db, strate
     """
     Generate ML-based signals using an enhanced multi-factor strategy.
     
-    Improved approach:
-    1. Trend-following with momentum confirmation
-    2. Mean reversion at extremes
-    3. Volatility-adjusted position sizing signals
-    4. Pattern recognition
+    Improved v2:
+    1. Strong trend-following with confirmation
+    2. Stricter entry conditions
+    3. Better risk management signals
+    4. Reduced false positives
     """
     signals = []
     n = len(prices)
@@ -155,147 +155,153 @@ async def generate_ml_based_signals(prices: List[float], symbol: str, db, strate
     
     # Strategy parameters
     lookback = params.get("lookback", 20)
-    momentum_threshold = params.get("momentum_threshold", 0.01)
-    rsi_oversold = params.get("rsi_oversold", 35)
-    rsi_overbought = params.get("rsi_overbought", 65)
     
-    # Track recent signals for trend following
-    last_signal = "hold"
-    consecutive_trend = 0
+    # State tracking
+    position_held = False
+    entry_price = 0
+    position_type = None  # "long" or "short"
+    holding_days = 0
     
     for i in range(n):
-        if i < lookback + 5:
+        if i < lookback + 10:
             signals.append("hold")
             continue
         
-        # Get recent price windows
+        # Calculate indicators
         short_window = prices[i-5:i+1]
         medium_window = prices[i-lookback:i+1]
-        long_window = prices[max(0, i-50):i+1]
+        long_window = prices[max(0, i-40):i+1]
         
         # Moving averages
         sma_5 = sum(short_window) / len(short_window)
         sma_20 = sum(medium_window) / len(medium_window)
-        sma_50 = sum(long_window) / len(long_window)
+        sma_40 = sum(long_window) / len(long_window)
         
-        # Exponential Moving Average
-        ema_12 = prices[i]
-        alpha_12 = 2 / 13
-        for j in range(12):
-            if i - j >= 0:
-                ema_12 = alpha_12 * prices[i-j] + (1 - alpha_12) * ema_12
-        
-        # Momentum / Rate of Change
+        # Momentum calculations
         momentum_5 = (prices[i] - prices[i-5]) / prices[i-5]
         momentum_10 = (prices[i] - prices[i-10]) / prices[i-10] if i >= 10 else 0
+        momentum_20 = (prices[i] - prices[i-20]) / prices[i-20] if i >= 20 else 0
         
-        # RSI calculation
+        # RSI
         gains = []
         losses = []
         for j in range(1, min(15, i+1)):
             diff = prices[i-j+1] - prices[i-j]
             if diff > 0:
                 gains.append(diff)
-                losses.append(0)
             else:
-                gains.append(0)
                 losses.append(abs(diff))
+        avg_gain = sum(gains) / max(len(gains), 1)
+        avg_loss = sum(losses) / max(len(losses), 1) + 1e-10
+        rsi = 100 - (100 / (1 + avg_gain / avg_loss))
         
-        avg_gain = sum(gains) / len(gains) if gains else 0
-        avg_loss = sum(losses) / len(losses) if losses else 0.001
-        rs = avg_gain / (avg_loss + 1e-10)
-        rsi = 100 - (100 / (1 + rs))
-        
-        # Volatility (standard deviation of returns)
+        # Volatility
         returns = [(prices[j] - prices[j-1]) / prices[j-1] for j in range(max(1, i-20), i+1)]
         volatility = (sum(r**2 for r in returns) / len(returns)) ** 0.5 if returns else 0.02
         
         # Trend detection
-        uptrend = sma_5 > sma_20 and sma_20 > sma_50 * 0.995
-        downtrend = sma_5 < sma_20 and sma_20 < sma_50 * 1.005
+        strong_uptrend = sma_5 > sma_20 * 1.01 and sma_20 > sma_40 * 1.01
+        strong_downtrend = sma_5 < sma_20 * 0.99 and sma_20 < sma_40 * 0.99
+        uptrend = sma_5 > sma_20 and sma_20 > sma_40
+        downtrend = sma_5 < sma_20 and sma_20 < sma_40
         
-        # Price position relative to moving average
-        price_vs_sma = (prices[i] - sma_20) / sma_20
+        # Price relative to MA
+        price_above_sma = prices[i] > sma_20
         
-        # Higher high, higher low detection (bullish pattern)
-        higher_high = prices[i] > max(prices[i-5:i]) if i >= 5 else False
-        lower_low = prices[i] < min(prices[i-5:i]) if i >= 5 else False
-        
-        # Scoring system
-        buy_score = 0
-        sell_score = 0
-        
-        # 1. Trend-following signals (main weight)
-        if uptrend:
-            buy_score += 3
-        elif downtrend:
-            sell_score += 3
-        
-        # 2. Momentum confirmation
-        if momentum_5 > momentum_threshold:
-            buy_score += 2
-        elif momentum_5 < -momentum_threshold:
-            sell_score += 2
-        
-        if momentum_10 > momentum_threshold * 2:
-            buy_score += 1
-        elif momentum_10 < -momentum_threshold * 2:
-            sell_score += 1
-        
-        # 3. RSI signals (mean reversion)
-        if rsi < rsi_oversold:
-            buy_score += 3
-        elif rsi > rsi_overbought:
-            sell_score += 3
-        elif rsi < 45 and uptrend:
-            buy_score += 1
-        elif rsi > 55 and downtrend:
-            sell_score += 1
-        
-        # 4. Pattern recognition
-        if higher_high and uptrend:
-            buy_score += 2
-        if lower_low and downtrend:
-            sell_score += 2
-        
-        # 5. Moving average crossover
-        if prices[i] > sma_20 and prices[i-1] <= sum(prices[i-1-lookback:i]) / lookback:
-            buy_score += 2
-        elif prices[i] < sma_20 and prices[i-1] >= sum(prices[i-1-lookback:i]) / lookback:
-            sell_score += 2
-        
-        # 6. Extreme price deviation (contrarian)
-        if price_vs_sma < -0.05 and volatility < 0.03:
-            buy_score += 2
-        elif price_vs_sma > 0.05 and volatility < 0.03:
-            sell_score += 2
-        
-        # 7. Volatility adjustment
-        if volatility > 0.04:
-            buy_score = int(buy_score * 0.7)
-            sell_score = int(sell_score * 0.7)
-        
-        # Generate signal with trend continuation bias
+        # Determine signal
         signal = "hold"
-        threshold = 4  # Lower threshold for more signals
         
-        if buy_score >= threshold and buy_score > sell_score:
-            signal = "buy"
-            consecutive_trend = consecutive_trend + 1 if last_signal == "buy" else 1
-        elif sell_score >= threshold and sell_score > buy_score:
-            signal = "sell"
-            consecutive_trend = consecutive_trend + 1 if last_signal == "sell" else 1
-        else:
-            # Trend continuation - stay with trend if strong
-            if consecutive_trend >= 3 and last_signal != "hold":
-                if last_signal == "buy" and uptrend and rsi < 70:
-                    signal = "buy"
-                elif last_signal == "sell" and downtrend and rsi > 30:
-                    signal = "sell"
-            consecutive_trend = 0
+        # If we have a position, check for exit conditions
+        if position_held:
+            holding_days += 1
+            pnl_pct = (prices[i] - entry_price) / entry_price * 100 if position_type == "long" else (entry_price - prices[i]) / entry_price * 100
+            
+            exit_signal = False
+            
+            # Exit on trend reversal
+            if position_type == "long":
+                if downtrend and momentum_5 < -0.02:
+                    exit_signal = True
+                elif rsi > 75:
+                    exit_signal = True
+                elif pnl_pct > 8:  # Take profit
+                    exit_signal = True
+                elif pnl_pct < -4:  # Stop loss
+                    exit_signal = True
+                elif holding_days > 20 and pnl_pct < 2:  # Time-based exit
+                    exit_signal = True
+            else:  # short
+                if uptrend and momentum_5 > 0.02:
+                    exit_signal = True
+                elif rsi < 25:
+                    exit_signal = True
+                elif pnl_pct > 8:
+                    exit_signal = True
+                elif pnl_pct < -4:
+                    exit_signal = True
+                elif holding_days > 20 and pnl_pct < 2:
+                    exit_signal = True
+            
+            if exit_signal:
+                signal = "sell" if position_type == "long" else "buy"
+                position_held = False
+                position_type = None
+                holding_days = 0
+        
+        # Check for entry conditions (only if not in position)
+        if not position_held:
+            buy_conditions = 0
+            sell_conditions = 0
+            
+            # Strong trend conditions
+            if strong_uptrend:
+                buy_conditions += 3
+            elif uptrend:
+                buy_conditions += 1
+            
+            if strong_downtrend:
+                sell_conditions += 3
+            elif downtrend:
+                sell_conditions += 1
+            
+            # Momentum confirmation
+            if momentum_5 > 0.015 and momentum_10 > 0.02:
+                buy_conditions += 2
+            elif momentum_5 < -0.015 and momentum_10 < -0.02:
+                sell_conditions += 2
+            
+            # RSI conditions
+            if rsi < 35 and uptrend:
+                buy_conditions += 2
+            elif rsi > 65 and downtrend:
+                sell_conditions += 2
+            
+            # Price action confirmation
+            if price_above_sma and prices[i] > prices[i-1] > prices[i-2]:
+                buy_conditions += 1
+            elif not price_above_sma and prices[i] < prices[i-1] < prices[i-2]:
+                sell_conditions += 1
+            
+            # Volatility filter
+            if volatility > 0.035:
+                buy_conditions -= 1
+                sell_conditions -= 1
+            
+            # Entry decision
+            if buy_conditions >= 4 and buy_conditions > sell_conditions + 1:
+                signal = "buy"
+                position_held = True
+                position_type = "long"
+                entry_price = prices[i]
+                holding_days = 0
+            elif sell_conditions >= 4 and sell_conditions > buy_conditions + 1:
+                signal = "sell"
+                position_held = True
+                position_type = "short"
+                entry_price = prices[i]
+                holding_days = 0
         
         signals.append(signal)
-        last_signal = signal
     
     return signals
 
