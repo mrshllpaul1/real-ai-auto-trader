@@ -437,6 +437,8 @@ const SpotTrading = () => {
       if (res.ok) {
         const data = await res.json();
         setPairs(data.pairs || []);
+      } else {
+        console.error('Pairs fetch failed with status:', res.status);
       }
     } catch (err) {
       console.error('Pairs fetch error:', err);
@@ -449,6 +451,8 @@ const SpotTrading = () => {
       const res = await fetch(`${API_URL}/api/spot/pair/${symbol}`);
       if (res.ok) {
         setPairDetails(await res.json());
+      } else {
+        console.error('Pair details fetch failed:', res.status);
       }
     } catch (err) {
       console.error('Pair details error:', err);
@@ -460,7 +464,11 @@ const SpotTrading = () => {
     try {
       const res = await fetch(`${API_URL}/api/spot/balance`);
       if (res.ok) {
-        setBalance(await res.json());
+        const data = await res.json();
+        setBalance(data);
+        console.log('Balance loaded:', data?.holdings?.length, 'holdings');
+      } else {
+        console.error('Balance fetch failed:', res.status);
       }
     } catch (err) {
       console.error('Balance fetch error:', err);
