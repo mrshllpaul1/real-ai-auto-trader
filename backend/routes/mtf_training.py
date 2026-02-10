@@ -355,3 +355,48 @@ async def get_model_info():
         "status": "ready",
         "model": model_doc
     }
+
+
+@router.get("/fear-greed")
+async def get_fear_greed():
+    """
+    Get current Fear & Greed Index data.
+    Proxies to the enhanced MTF training service or fetches directly from Alternative.me.
+    """
+    import aiohttp
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                "https://api.alternative.me/fng/?limit=1&format=json",
+                timeout=aiohttp.ClientTimeout(total=10)
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data and "data" in data and len(data["data"]) > 0:
+                        fng = data["data"][0]
+                        return {
+                            "value": int(fng.get("value", 50)),
+                            "classification": fng.get("value_classification", "Neutral"),
+                            "timestamp": fng.get("timestamp", ""),
+                            "time_until_update": fng.get("time_until_update", ""),
+                            "fetched_at": datetime.now(timezone.utc).isoformat()
+                        }
+        # Fallback if API doesn't return expected data
+        return {
+            "value": 50,
+            "classification": "Neutral",
+            "timestamp": "",
+            "time_until_update": "",
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
+            "note": "Fallback data - external API returned unexpected format"
+        }
+    except Exception as e:
+        # Graceful fallback on any error
+        return {
+            "value": 50,
+            "classification": "Neutral",
+            "timestamp": "",
+            "time_until_update": "",
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
+            "note": f"Fallback data - external API unavailable: {type(e).__name__}"
+        }
