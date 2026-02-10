@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 # Global service references
 _services: Dict[str, Any] = {}
 _initialized = False
+# Keep at least this many curated events seeded; frontend requests up to 200 for headroom
 MIN_HISTORICAL_EVENTS = 150
 
 
@@ -461,10 +462,11 @@ async def _init_phase6_scheduling(db):
             stats = await events_db.get_stats()
             if stats.get("total_events", 0) < MIN_HISTORICAL_EVENTS:
                 seed_result = await events_db.seed_major_events()
-                if not seed_result or seed_result.get("total_events", 0) == 0:
+                total_seeded = seed_result.get("total_events", 0) if seed_result else 0
+                if total_seeded == 0:
                     logger.warning("⚠️ Historical events auto-seed returned no events")
                 else:
-                    logger.info("🌐 Seeded historical events database with %s curated events", seed_result.get("total_events"))
+                    logger.info("🌐 Seeded historical events database with %s curated events", total_seeded)
         except Exception as e:
             logger.warning("⚠️ Auto-seed of historical events skipped: %s", e)
     
