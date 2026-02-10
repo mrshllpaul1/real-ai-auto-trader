@@ -161,6 +161,7 @@ def register_routes(api_router: APIRouter):
     api_router.include_router(kraken_expansion_routes.router, tags=["Kraken Data Expansion"])
     api_router.include_router(enhanced_mtf_training_routes.router, tags=["Enhanced MTF Training"])
     api_router.include_router(ml_optimization_routes.router, tags=["ML Optimization & A/B Testing"])
+    api_router.include_router(onchain_data_routes.router, tags=["On-Chain Data"])
     
     logger.info("✅ All routes registered")
     
