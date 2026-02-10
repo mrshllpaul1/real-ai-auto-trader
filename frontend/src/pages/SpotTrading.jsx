@@ -449,42 +449,26 @@ const SpotTrading = ({ embedded = false }) => {
     return null;
   };
 
-  // Fetch trading status
-  const fetchStatus = useCallback(async () => {
-    const data = await safeFetchJSON(`${API_URL}/api/spot/status`);
-    if (data) setTradingStatus(data);
-  }, []);
-  
-  // Fetch all pairs with prices
-  const fetchPairs = useCallback(async () => {
-    const data = await safeFetchJSON(`${API_URL}/api/spot/pairs`);
-    if (data?.pairs) {
-      setPairs(data.pairs);
-      console.log('Pairs loaded:', data.pairs.length);
+  // Refresh functions for manual refresh
+  const refreshData = async () => {
+    console.log('[SpotTrading] Manual refresh triggered');
+    const [pairsData, balanceData] = await Promise.all([
+      safeFetchJSON(`${API_URL}/api/spot/pairs`),
+      safeFetchJSON(`${API_URL}/api/spot/balance`)
+    ]);
+    
+    if (pairsData?.pairs) {
+      setPairs(pairsData.pairs);
     }
-  }, []);
+    if (balanceData) {
+      setBalance(balanceData);
+    }
+  };
   
   // Fetch selected pair details
   const fetchPairDetails = useCallback(async (symbol) => {
     const data = await safeFetchJSON(`${API_URL}/api/spot/pair/${symbol}`);
     if (data) setPairDetails(data);
-  }, []);
-  
-  // Fetch user balance
-  const fetchBalance = useCallback(async () => {
-    const data = await safeFetchJSON(`${API_URL}/api/spot/balance`);
-    if (data) {
-      setBalance(data);
-      console.log('Balance loaded:', data.holdings?.length, 'holdings');
-    }
-  }, []);
-  
-  // Fetch AI recommendations
-  const fetchRecommendations = useCallback(async () => {
-    const data = await safeFetchJSON(`${API_URL}/api/spot/ai-recommendations`);
-    if (data?.recommendations) {
-      setRecommendations(data.recommendations);
-    }
   }, []);
   
   // Initial load
