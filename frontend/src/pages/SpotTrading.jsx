@@ -603,54 +603,56 @@ const SpotTrading = ({ embedded = false }) => {
         )}
       </AnimatePresence>
       
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-6"
-      >
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
-              <Activity className="text-[#00FF94]" />
-              Spot Trading
-            </h1>
-            <p className="text-[#888] mt-1">Buy and sell crypto with AI-powered signals</p>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            {/* Trading Status */}
-            {tradingStatus?.budget && (
-              <div className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 ${
-                tradingStatus.budget.real_trading_enabled
-                  ? 'bg-[#00FF94]/20 text-[#00FF94] border border-[#00FF94]/30'
-                  : 'bg-[#FFB800]/20 text-[#FFB800] border border-[#FFB800]/30'
-              }`}>
-                {tradingStatus.budget.real_trading_enabled ? (
-                  <>
-                    <Zap size={14} />
-                    Live Trading
-                  </>
-                ) : (
-                  <>
-                    <AlertTriangle size={14} />
-                    Paper Mode
-                  </>
-                )}
-              </div>
-            )}
+      {/* Header - hidden when embedded */}
+      {!embedded && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+                <Activity className="text-[#00FF94]" />
+                Spot Trading
+              </h1>
+              <p className="text-[#888] mt-1">Buy and sell crypto with AI-powered signals</p>
+            </div>
             
-            <button
-              onClick={() => { fetchPairs(); fetchBalance(); }}
-              className="px-4 py-2 bg-[#222] rounded-xl text-white flex items-center gap-2 hover:bg-[#333] transition-colors"
-              data-testid="refresh-btn"
-            >
-              <RefreshCw size={16} />
-              Refresh
-            </button>
+            <div className="flex items-center gap-3">
+              {/* Trading Status */}
+              {tradingStatus?.budget && (
+                <div className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 ${
+                  tradingStatus.budget.real_trading_enabled
+                    ? 'bg-[#00FF94]/20 text-[#00FF94] border border-[#00FF94]/30'
+                    : 'bg-[#FFB800]/20 text-[#FFB800] border border-[#FFB800]/30'
+                }`}>
+                  {tradingStatus.budget.real_trading_enabled ? (
+                    <>
+                      <Zap size={14} />
+                      Live Trading
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle size={14} />
+                      Paper Mode
+                    </>
+                  )}
+                </div>
+              )}
+              
+              <button
+                onClick={() => { fetchPairs(); fetchBalance(); }}
+                className="px-4 py-2 bg-[#222] rounded-xl text-white flex items-center gap-2 hover:bg-[#333] transition-colors"
+                data-testid="refresh-btn"
+              >
+                <RefreshCw size={16} />
+                Refresh
+              </button>
+            </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
       
       {/* Balance Overview */}
       {balance && (
