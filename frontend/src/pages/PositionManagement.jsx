@@ -364,7 +364,7 @@ const PositionManagement = ({ embedded = false }) => {
                       <div className={`p-3 rounded-lg border ${
                         isProfit ? 'bg-[#00FF94]/5 border-[#00FF94]/20' : 'bg-[#FF0055]/5 border-[#FF0055]/20'
                       }`}>
-                        <p className="text-xs text-[#A1A1AA] mb-1">Unrealized P&L</p>
+                        <p className="text-xs text-[#A1A1AA] mb-1">24h P&L</p>
                         <p className={`text-xl font-data font-bold ${isProfit ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
                           {isProfit ? '+' : ''}${(pos.pnl || pnlUsd || 0).toFixed(2)}
                         </p>
