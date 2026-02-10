@@ -39,7 +39,11 @@ class EnhancedTrainingRequest(BaseModel):
     """Request model for enhanced MTF training"""
     symbols: Optional[List[str]] = Field(
         default=None,
-        description="List of coin symbols to train on. If None, uses default list."
+        description="List of coin symbols to train on. Use ['all'] for full Kraken universe (600+ coins). If None, uses default list."
+    )
+    use_all_kraken: Optional[bool] = Field(
+        default=False,
+        description="Set to true to train on all Kraken coins (600+)"
     )
     timeframes: Optional[List[str]] = Field(
         default=["1h", "4h", "1D"],
