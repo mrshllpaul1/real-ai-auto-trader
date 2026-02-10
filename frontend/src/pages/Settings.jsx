@@ -65,6 +65,8 @@ const Settings = () => {
     checkCryptoComCredentials();
     loadRiskSettings();
     loadNotificationSettings();
+    loadDataProviderStatus();
+    loadUniverseStats();
   }, []);
 
   const checkCredentials = async () => {
