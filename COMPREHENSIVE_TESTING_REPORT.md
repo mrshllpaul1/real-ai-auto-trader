@@ -372,8 +372,8 @@ nginx-code-proxy RUNNING   pid 45
 - All environment variables set ✅
 
 **URL:**
-- Deployment: https://ai-trading-trainer.preview.emergentagent.com ✅
-- Backend API: https://ai-trading-trainer.preview.emergentagent.com/api ✅
+- Deployment: https://coverage-enhancer.preview.emergentagent.com ✅
+- Backend API: https://coverage-enhancer.preview.emergentagent.com/api ✅
 
 ---
 
