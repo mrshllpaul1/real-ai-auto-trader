@@ -40,17 +40,22 @@ async def get_kraken_portfolio() -> List[Dict[str, Any]]:
             return []
     
     if _kraken_service is None:
+        print("DEBUG: _kraken_service is None, returning empty")
         return []
     
     try:
-        # Get balance
+        # Get balance - this returns {currency: amount}
         balance = await _kraken_service.get_balance()
+        print(f"DEBUG: balance type={type(balance)}, len={len(balance) if isinstance(balance, dict) else 'N/A'}")
+        
+        if not isinstance(balance, dict):
+            print(f"DEBUG: balance is not a dict, returning empty")
+            return []
         
         # Get prices for valuation
         holdings = []
-        total_usd = 0
         
-        # Kraken currency symbols
+        # Kraken currency symbols mapping
         crypto_symbols = {
             'XXBT': 'BTC', 'XETH': 'ETH', 'XXRP': 'XRP', 'XLTC': 'LTC',
             'XXLM': 'XLM', 'XETC': 'ETC', 'XXMR': 'XMR', 'XREP': 'REP',
@@ -61,6 +66,11 @@ async def get_kraken_portfolio() -> List[Dict[str, Any]]:
         }
         
         for currency, amount in balance.items():
+            try:
+                amount = float(amount)
+            except:
+                continue
+                
             if amount <= 0:
                 continue
             
@@ -74,6 +84,7 @@ async def get_kraken_portfolio() -> List[Dict[str, Any]]:
                 symbol = symbol[1:]
             
             # Try to get price from Kraken ticker
+            price = 0
             try:
                 # Build pair name
                 if symbol == 'BTC':
@@ -84,11 +95,14 @@ async def get_kraken_portfolio() -> List[Dict[str, Any]]:
                     pair = f"{symbol}USD"
                 
                 ticker = await _kraken_service.get_ticker(pair)
-                if ticker and 'c' in ticker:
-                    price = float(ticker['c'][0])
-                else:
-                    price = 0
-            except:
+                if ticker and isinstance(ticker, dict):
+                    # Get first ticker result
+                    for key, val in ticker.items():
+                        if isinstance(val, dict) and 'c' in val:
+                            price = float(val['c'][0])
+                            break
+            except Exception as te:
+                print(f"DEBUG: ticker error for {symbol}: {te}")
                 price = 0
             
             usd_value = amount * price if price > 0 else 0
@@ -105,10 +119,13 @@ async def get_kraken_portfolio() -> List[Dict[str, Any]]:
         
         # Sort by value
         holdings.sort(key=lambda x: x["usd_value"], reverse=True)
+        print(f"DEBUG: returning {len(holdings)} holdings")
         return holdings
         
     except Exception as e:
         print(f"Error fetching Kraken portfolio: {e}")
+        import traceback
+        traceback.print_exc()
         return []
 
 
