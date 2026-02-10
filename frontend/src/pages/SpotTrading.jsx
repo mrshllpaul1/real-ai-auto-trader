@@ -646,7 +646,7 @@ const SpotTrading = ({ embedded = false }) => {
               )}
               
               <button
-                onClick={() => { fetchPairs(); fetchBalance(); }}
+                onClick={refreshData}
                 className="px-4 py-2 bg-[#222] rounded-xl text-white flex items-center gap-2 hover:bg-[#333] transition-colors"
                 data-testid="refresh-btn"
               >
