@@ -953,6 +953,7 @@ class YearlyBacktestEngine:
 
 
 async def run_yearly_adaptive_backtest(
+    year: int = 2025,
     initial_capital: float = 100000,
     coins: List[str] = None,
     db = None
