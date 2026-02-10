@@ -1,331 +1,317 @@
 """
-Adaptive Strategy API Routes
-Real-time strategy adaptation endpoints for the trading system.
+Adaptive Strategy & Event Prediction API Routes
+================================================
+Auto-adjust parameters, regime detection, and event prediction.
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from typing import Optional, List
-from datetime import datetime
+from typing import Dict, List, Optional, Any
+from database import get_database
 
-router = APIRouter(prefix="/strategy", tags=["Adaptive Strategy"])
-
-# Global references
-db = None
-adaptive_strategy = None
+router = APIRouter(prefix="/adaptive-strategy", tags=["Adaptive Strategy"])
 
 
-def set_dependencies(database, strategy_engine):
-    """Set dependencies from main app"""
-    global db, adaptive_strategy
-    db = database
-    adaptive_strategy = strategy_engine
+class PredictEventsRequest(BaseModel):
+    days_ahead: int = 30
 
 
-class AdaptationRequest(BaseModel):
-    trigger_type: str  # flash_crash, major_news, exchange_issue, performance_drop, opportunity
-    data: Optional[dict] = None
+class RecordPerformanceRequest(BaseModel):
+    variant_id: str
+    regime: str
+    win_rate: float
+    sharpe_ratio: float
+    total_trades: int
 
 
-class PositionSizeRequest(BaseModel):
-    coin_id: str
-    ai_confidence: float
-    portfolio_value: float
-    current_exposure: float = 0
+# =============================================================================
+# MARKET REGIME DETECTION
+# =============================================================================
+
+@router.get("/regime/current")
+async def get_current_regime(db=Depends(get_database)):
+    """Get current market regime detection"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    service = get_adaptive_strategy_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="Adaptive strategy service not available")
+    
+    regime = await service.detect_market_regime()
+    
+    from dataclasses import asdict
+    return {
+        "status": "detected",
+        "regime": asdict(regime)
+    }
 
 
-class ExitCheckRequest(BaseModel):
-    coin_id: str
-    entry_price: float
-    current_price: float
-    current_confidence: float
-    position_age_hours: float
+@router.get("/regime/history")
+async def get_regime_history(limit: int = 50, db=Depends(get_database)):
+    """Get historical regime detections"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    service = get_adaptive_strategy_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="Adaptive strategy service not available")
+    
+    return {
+        "history": service.regime_history[-limit:],
+        "total": len(service.regime_history)
+    }
 
 
-class EntrySignalRequest(BaseModel):
-    coin_id: str
-    ai_confidence: float
-    technical_signal: str  # BUY, SELL, HOLD
-    news_sentiment: str = "neutral"
+# =============================================================================
+# REGIME-SPECIFIC VARIANTS
+# =============================================================================
+
+@router.post("/variants/initialize")
+async def initialize_regime_variants(db=Depends(get_database)):
+    """Initialize all regime-specific strategy variants"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    service = get_adaptive_strategy_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="Adaptive strategy service not available")
+    
+    return await service.initialize_regime_variants()
 
 
-class ParamUpdateRequest(BaseModel):
-    param_name: str
-    new_value: float
+@router.get("/variants")
+async def get_regime_variants(db=Depends(get_database)):
+    """Get all regime-specific variants"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    service = get_adaptive_strategy_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="Adaptive strategy service not available")
+    
+    from dataclasses import asdict
+    variants_by_regime = {}
+    
+    for vid, variant in service.regime_variants.items():
+        regime = variant.target_regime
+        if regime not in variants_by_regime:
+            variants_by_regime[regime] = []
+        variants_by_regime[regime].append(asdict(variant))
+    
+    return {
+        "total_variants": len(service.regime_variants),
+        "variants_by_regime": variants_by_regime
+    }
+
+
+@router.get("/variants/{regime}")
+async def get_variants_for_regime(regime: str, db=Depends(get_database)):
+    """Get variants optimized for a specific regime"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    service = get_adaptive_strategy_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="Adaptive strategy service not available")
+    
+    from dataclasses import asdict
+    variants = [
+        asdict(v) for v in service.regime_variants.values()
+        if v.target_regime == regime
+    ]
+    
+    if not variants:
+        raise HTTPException(status_code=404, detail=f"No variants found for regime: {regime}")
+    
+    return {
+        "regime": regime,
+        "variants": variants,
+        "count": len(variants)
+    }
+
+
+# =============================================================================
+# AUTO-ADJUSTMENT
+# =============================================================================
+
+@router.post("/auto-adjust")
+async def auto_adjust_parameters(db=Depends(get_database)):
+    """Auto-adjust strategy parameters based on current market conditions"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    service = get_adaptive_strategy_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="Adaptive strategy service not available")
+    
+    return await service.auto_adjust_parameters()
+
+
+@router.get("/optimal-strategy")
+async def get_optimal_strategy(db=Depends(get_database)):
+    """Get the optimal strategy for current market conditions"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    service = get_adaptive_strategy_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="Adaptive strategy service not available")
+    
+    return await service.get_optimal_strategy()
+
+
+# =============================================================================
+# EVENT PREDICTION
+# =============================================================================
+
+@router.post("/predict-events")
+async def predict_future_events(request: PredictEventsRequest, db=Depends(get_database)):
+    """Predict future market events"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    service = get_adaptive_strategy_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="Adaptive strategy service not available")
+    
+    events = await service.predict_future_events(days_ahead=request.days_ahead)
+    
+    from dataclasses import asdict
+    return {
+        "status": "predicted",
+        "days_ahead": request.days_ahead,
+        "events": [asdict(e) for e in events],
+        "total_events": len(events),
+        "high_probability_events": len([e for e in events if e.probability > 0.7])
+    }
+
+
+@router.get("/predicted-events")
+async def get_predicted_events(min_probability: float = 0.5, db=Depends(get_database)):
+    """Get currently predicted events"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    service = get_adaptive_strategy_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="Adaptive strategy service not available")
+    
+    from dataclasses import asdict
+    filtered_events = [
+        asdict(e) for e in service.predicted_events
+        if e.probability >= min_probability
+    ]
+    
+    return {
+        "events": filtered_events,
+        "total": len(filtered_events),
+        "min_probability_filter": min_probability
+    }
+
+
+@router.get("/predicted-events/{event_type}")
+async def get_events_by_type(event_type: str, db=Depends(get_database)):
+    """Get predicted events of a specific type"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    service = get_adaptive_strategy_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="Adaptive strategy service not available")
+    
+    from dataclasses import asdict
+    events = [
+        asdict(e) for e in service.predicted_events
+        if e.event_type == event_type
+    ]
+    
+    return {
+        "event_type": event_type,
+        "events": events,
+        "count": len(events)
+    }
+
+
+# =============================================================================
+# ADAPTIVE MONITORING
+# =============================================================================
+
+@router.post("/monitoring/start")
+async def start_adaptive_monitoring(db=Depends(get_database)):
+    """Start continuous adaptive monitoring"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    service = get_adaptive_strategy_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="Adaptive strategy service not available")
+    
+    return await service.start_adaptive_monitoring()
+
+
+@router.post("/monitoring/stop")
+async def stop_adaptive_monitoring(db=Depends(get_database)):
+    """Stop adaptive monitoring"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    service = get_adaptive_strategy_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="Adaptive strategy service not available")
+    
+    return await service.stop_adaptive_monitoring()
 
 
 @router.get("/status")
-async def get_strategy_status():
-    """
-    Get current adaptive strategy status.
+async def get_adaptation_status(db=Depends(get_database)):
+    """Get current adaptation status"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    service = get_adaptive_strategy_service(db)
     
-    Returns:
-    - Current market regime
-    - Risk mode
-    - Adapted parameters vs base
-    - Recent adaptations
-    - Regime history
-    """
-    if not adaptive_strategy:
-        raise HTTPException(status_code=503, detail="Adaptive strategy not initialized")
+    if not service:
+        return {"status": "not_initialized", "message": "Initialize service first"}
     
-    return await adaptive_strategy.get_strategy_status()
+    return await service.get_adaptation_status()
 
 
-@router.post("/detect-regime")
-async def detect_market_regime():
-    """
-    Detect current market regime based on BTC and market conditions.
+# =============================================================================
+# PERFORMANCE TRACKING
+# =============================================================================
+
+@router.post("/performance/record")
+async def record_variant_performance(request: RecordPerformanceRequest, db=Depends(get_database)):
+    """Record performance of a variant in a specific regime"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    service = get_adaptive_strategy_service(db)
     
-    Possible regimes:
-    - strong_bull: >20% monthly gain, low volatility
-    - bull: 5-20% monthly gain
-    - sideways: -5% to +5%
-    - bear: -20% to -5%
-    - strong_bear: <-20% loss
-    - high_volatility: >30% swings
-    - accumulation: Low volatility, range-bound
-    """
-    if not adaptive_strategy:
-        raise HTTPException(status_code=503, detail="Adaptive strategy not initialized")
+    if not service:
+        raise HTTPException(status_code=500, detail="Adaptive strategy service not available")
     
-    regime = await adaptive_strategy.detect_market_regime()
+    variant = service.regime_variants.get(request.variant_id)
+    if not variant:
+        raise HTTPException(status_code=404, detail="Variant not found")
+    
+    # Update performance
+    variant.performance_in_regime = request.win_rate * 0.4 + request.sharpe_ratio * 10 * 0.6
+    
+    # Update regime performance stats
+    perf = service.regime_performance[request.regime]
+    perf["total_trades"] += request.total_trades
+    perf["winning_trades"] += int(request.total_trades * request.win_rate / 100)
+    perf["sharpe_sum"] += request.sharpe_ratio
     
     return {
-        "regime": regime.value,
-        "detected_at": datetime.utcnow().isoformat(),
-        "description": {
-            "strong_bull": "Strong uptrend - aggressive positions recommended",
-            "bull": "Uptrend - normal long positions",
-            "sideways": "Range-bound - reduce position sizes",
-            "bear": "Downtrend - defensive positions",
-            "strong_bear": "Strong downtrend - minimal exposure",
-            "high_volatility": "High volatility - wider stops, smaller positions",
-            "accumulation": "Accumulation phase - good entry opportunities"
-        }.get(regime.value, "Unknown regime")
+        "status": "recorded",
+        "variant_id": request.variant_id,
+        "regime": request.regime,
+        "performance_score": variant.performance_in_regime
     }
 
 
-@router.post("/adapt")
-async def adapt_strategy(performance_data: Optional[dict] = None):
-    """
-    Adapt strategy based on current market regime and performance.
+@router.get("/performance/{regime}")
+async def get_regime_performance(regime: str, db=Depends(get_database)):
+    """Get performance statistics for a regime"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    service = get_adaptive_strategy_service(db)
     
-    Optional performance_data:
-    - recent_accuracy: float (0-100)
-    - win_rate: float (0-100)
+    if not service:
+        raise HTTPException(status_code=500, detail="Adaptive strategy service not available")
     
-    Returns adapted parameters and changes from base.
-    """
-    if not adaptive_strategy:
-        raise HTTPException(status_code=503, detail="Adaptive strategy not initialized")
-    
-    result = await adaptive_strategy.adapt_strategy(performance_data=performance_data)
-    return result
-
-
-@router.post("/emergency-adapt")
-async def emergency_adaptation(request: AdaptationRequest):
-    """
-    Trigger emergency strategy adaptation.
-    
-    Trigger types:
-    - flash_crash: Immediate defensive mode
-    - major_news: Wait for dust to settle
-    - exchange_issue: Reduce exchange risk
-    - performance_drop: Conservative mode
-    - opportunity: Increase exposure
-    """
-    if not adaptive_strategy:
-        raise HTTPException(status_code=503, detail="Adaptive strategy not initialized")
-    
-    valid_triggers = ["flash_crash", "major_news", "exchange_issue", "performance_drop", "opportunity"]
-    if request.trigger_type not in valid_triggers:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Invalid trigger type. Must be one of: {valid_triggers}"
-        )
-    
-    result = await adaptive_strategy.trigger_emergency_adaptation(
-        request.trigger_type, 
-        request.data
-    )
-    return result
-
-
-@router.post("/position-size")
-async def calculate_position_size(request: PositionSizeRequest):
-    """
-    Calculate dynamic position size based on:
-    - AI confidence
-    - Current market regime
-    - Portfolio value
-    - Current exposure
-    
-    Returns recommended position size with stop-loss and take-profit levels.
-    """
-    if not adaptive_strategy:
-        raise HTTPException(status_code=503, detail="Adaptive strategy not initialized")
-    
-    result = await adaptive_strategy.get_dynamic_position_size(
-        request.coin_id,
-        request.ai_confidence,
-        request.portfolio_value,
-        request.current_exposure
-    )
-    return result
-
-
-@router.post("/check-exit")
-async def check_exit_signal(request: ExitCheckRequest):
-    """
-    Check if a position should be exited based on adaptive rules.
-    
-    Checks:
-    - Stop loss
-    - Take profit
-    - Trailing stop
-    - Confidence drop
-    - Regime change
-    - Position age
-    """
-    if not adaptive_strategy:
-        raise HTTPException(status_code=503, detail="Adaptive strategy not initialized")
-    
-    result = await adaptive_strategy.should_exit_position(
-        request.coin_id,
-        request.entry_price,
-        request.current_price,
-        request.current_confidence,
-        request.position_age_hours
-    )
-    return result
-
-
-@router.post("/entry-signal")
-async def get_entry_signal(request: EntrySignalRequest):
-    """
-    Generate entry signal combining:
-    - AI confidence
-    - Technical analysis
-    - News sentiment
-    - Market regime
-    
-    Returns whether to enter and recommended position parameters.
-    """
-    if not adaptive_strategy:
-        raise HTTPException(status_code=503, detail="Adaptive strategy not initialized")
-    
-    result = await adaptive_strategy.get_entry_signal(
-        request.coin_id,
-        request.ai_confidence,
-        request.technical_signal,
-        request.news_sentiment
-    )
-    return result
-
-
-@router.post("/reset")
-async def reset_strategy():
-    """
-    Reset strategy to base parameters.
-    Use this to clear all adaptations and start fresh.
-    """
-    if not adaptive_strategy:
-        raise HTTPException(status_code=503, detail="Adaptive strategy not initialized")
-    
-    result = await adaptive_strategy.reset_to_base()
-    return result
-
-
-@router.get("/params")
-async def get_current_params():
-    """Get current adapted parameters"""
-    if not adaptive_strategy:
-        raise HTTPException(status_code=503, detail="Adaptive strategy not initialized")
+    perf = service.regime_performance.get(regime, {})
+    total_trades = perf.get("total_trades", 0)
     
     return {
-        "base_params": adaptive_strategy.base_params,
-        "adapted_params": adaptive_strategy.adapted_params,
-        "current_regime": adaptive_strategy.current_regime.value,
-        "risk_mode": adaptive_strategy.current_risk_mode.value
-    }
-
-
-@router.put("/params/{param_name}")
-async def update_param(param_name: str, request: ParamUpdateRequest):
-    """
-    Manually update a strategy parameter.
-    
-    Available parameters:
-    - max_position_pct
-    - min_position_pct
-    - max_total_exposure
-    - stop_loss_pct
-    - take_profit_pct
-    - trailing_stop_pct
-    - min_confidence
-    - exit_confidence
-    - rebalance_hours
-    - emergency_rebalance_drop
-    """
-    if not adaptive_strategy:
-        raise HTTPException(status_code=503, detail="Adaptive strategy not initialized")
-    
-    if param_name not in adaptive_strategy.base_params:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unknown parameter: {param_name}. Available: {list(adaptive_strategy.base_params.keys())}"
-        )
-    
-    old_value = adaptive_strategy.adapted_params.get(param_name)
-    adaptive_strategy.adapted_params[param_name] = request.new_value
-    
-    # Log the manual change
-    if db:
-        await db.strategy_adaptations.insert_one({
-            'timestamp': datetime.utcnow(),
-            'action': 'manual_update',
-            'param_name': param_name,
-            'old_value': old_value,
-            'new_value': request.new_value
-        })
-    
-    return {
-        "status": "updated",
-        "param": param_name,
-        "old_value": old_value,
-        "new_value": request.new_value
-    }
-
-
-@router.get("/adaptation-history")
-async def get_adaptation_history(limit: int = 20):
-    """Get history of strategy adaptations"""
-    if not db:
-        raise HTTPException(status_code=503, detail="Database not initialized")
-    
-    history = await db.strategy_adaptations.find(
-        {}, {'_id': 0}
-    ).sort('timestamp', -1).limit(limit).to_list(limit)
-    
-    return {
-        "count": len(history),
-        "history": history
-    }
-
-
-@router.get("/regime-history")
-async def get_regime_history(limit: int = 50):
-    """Get history of detected market regimes"""
-    if not db:
-        raise HTTPException(status_code=503, detail="Database not initialized")
-    
-    history = await db.regime_detections.find(
-        {}, {'_id': 0}
-    ).sort('timestamp', -1).limit(limit).to_list(limit)
-    
-    return {
-        "count": len(history),
-        "history": history
+        "regime": regime,
+        "total_trades": total_trades,
+        "win_rate": (perf.get("winning_trades", 0) / total_trades * 100) if total_trades > 0 else 0,
+        "avg_sharpe": perf.get("sharpe_sum", 0) / max(1, total_trades // 100)
     }
