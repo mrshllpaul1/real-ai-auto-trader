@@ -44,6 +44,19 @@ const Settings = () => {
     notify_medium_alerts: false,
     notify_ai_discoveries: true
   });
+  
+  // Data Provider API Keys
+  const [dataProviderKeys, setDataProviderKeys] = useState({
+    blockchair_api_key: '',
+    glassnode_api_key: '',
+    cryptoquant_api_key: '',
+    coinglass_api_key: '',
+    santiment_api_key: ''
+  });
+  const [dataProviderStatus, setDataProviderStatus] = useState({});
+  const [universeStats, setUniverseStats] = useState(null);
+  const [syncingUniverse, setSyncingUniverse] = useState(false);
+  
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
