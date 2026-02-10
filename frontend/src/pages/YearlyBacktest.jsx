@@ -161,14 +161,32 @@ const YearlyBacktest = () => {
       const res = await api.post('/spot/order', {
         symbol: signal.coin,
         side: signal.action.toLowerCase(),
-        type: 'market',
-        amount_usd: tradingConfig.amount_per_trade_usd,
+        order_type: 'market',
+        usd_amount: tradingConfig.amount_per_trade_usd,
         use_ai_timing: true
       });
       toast.success(`${signal.action} ${signal.coin} order placed!`);
     } catch (error) {
       console.error('Error executing signal:', error);
       toast.error(`Failed to execute ${signal.action} ${signal.coin}`);
+    }
+  };
+
+  const executeAllSignals = async () => {
+    setLiveTradingLoading(true);
+    try {
+      const res = await api.post('/yearly-backtest/live-trading/execute-all-signals');
+      if (res.data.executed?.length > 0) {
+        toast.success(`Executed ${res.data.executed.length} signals!`);
+      } else {
+        toast.info(res.data.message || 'No actionable signals at this time');
+      }
+      loadLiveTradingStatus();
+    } catch (error) {
+      console.error('Error executing all signals:', error);
+      toast.error(error.response?.data?.detail || 'Failed to execute signals');
+    } finally {
+      setLiveTradingLoading(false);
     }
   };
 
