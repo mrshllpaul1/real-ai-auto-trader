@@ -30,6 +30,7 @@ const YearlyBacktest = ({ embedded = false }) => {
   const [multiYearResult, setMultiYearResult] = useState(null);
   const [selectedYears, setSelectedYears] = useState([2020, 2021, 2022, 2023, 2024, 2025, 2026]);
   const [marketCalendar, setMarketCalendar] = useState(null);
+  const [calendarYear, setCalendarYear] = useState('2025'); // Separate state for calendar dropdown
   const [recommendedPortfolio, setRecommendedPortfolio] = useState(null);
   
   // Live Trading State
