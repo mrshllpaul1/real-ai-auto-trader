@@ -42,7 +42,11 @@ COINS_BY_YEAR = {
     2024: ["BTC", "ETH", "SOL", "XRP", "ADA", "AVAX", "DOT", "LINK", "MATIC", "ATOM",
            "UNI", "NEAR", "FIL", "ARB", "OP", "SUI", "APT", "INJ", "TIA", "SEI",
            "DOGE", "SHIB", "PEPE", "BONK", "WIF", "FLOKI", "LTC", "BCH", "AAVE", "MKR"],
-    2025: TOP_COINS[:30]
+    2025: TOP_COINS[:30],
+    2026: ["BTC", "ETH", "SOL", "XRP", "ADA", "AVAX", "DOT", "LINK", "MATIC", "ATOM",
+           "UNI", "NEAR", "FIL", "ARB", "OP", "SUI", "APT", "INJ", "TIA", "SEI",
+           "DOGE", "SHIB", "PEPE", "BONK", "WIF", "FLOKI", "LTC", "BCH", "AAVE", "MKR",
+           "CRV", "LDO", "SNX", "COMP", "SUSHI", "YFI", "BAL", "1INCH", "HBAR", "VET"]
 }
 
 # Market regime parameters
