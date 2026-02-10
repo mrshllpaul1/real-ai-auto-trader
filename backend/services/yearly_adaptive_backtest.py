@@ -283,65 +283,138 @@ def generate_trading_signal(indicators: Dict, params: Dict, position_held: bool 
     sell_score = 0
     reasons = []
     
-    # RSI signals
-    if indicators["rsi"] < params["rsi_oversold"]:
-        buy_score += 4
+    # TIER 1: RSI Extreme signals (high probability reversals) - 5 points
+    if indicators["rsi"] < 18:  # Very extreme oversold
+        buy_score += 5
+        reasons.append(f"RSI extreme oversold ({indicators['rsi']:.1f})")
+    elif indicators["rsi"] < params["rsi_oversold"]:
+        buy_score += 3
         reasons.append(f"RSI oversold ({indicators['rsi']:.1f})")
+    elif indicators["rsi"] > 82:  # Very extreme overbought
+        sell_score += 5
+        reasons.append(f"RSI extreme overbought ({indicators['rsi']:.1f})")
     elif indicators["rsi"] > params["rsi_overbought"]:
-        sell_score += 4
+        sell_score += 3
         reasons.append(f"RSI overbought ({indicators['rsi']:.1f})")
     
-    # Trend signals
-    if indicators["trend_up"]:
-        buy_score += 3
+    # TIER 2: Trend + MA alignment signals - 4 points for confirmed trends
+    if indicators["trend_up"] and indicators["sma_5"] > indicators["sma_50"]:
+        buy_score += 4
+        reasons.append("Strong uptrend with MA alignment")
+    elif indicators["trend_up"]:
+        buy_score += 2
         reasons.append("Uptrend confirmed")
+    elif indicators["trend_down"] and indicators["sma_5"] < indicators["sma_50"]:
+        sell_score += 4
+        reasons.append("Strong downtrend with MA alignment")
     elif indicators["trend_down"]:
-        sell_score += 3
+        sell_score += 2
         reasons.append("Downtrend confirmed")
     
-    # MACD
-    if indicators["macd"] > 0:
-        buy_score += 2
-    else:
-        sell_score += 2
-    
-    # Momentum
-    if indicators["momentum_5"] > params["trend_strength_min"]:
+    # TIER 3: MACD confirmation - 3 points for strong signals
+    macd_strength = abs(indicators["macd"]) / (indicators["sma_20"] * 0.001 + 1e-10)
+    if indicators["macd"] > 0 and macd_strength > 2:
         buy_score += 3
-        reasons.append(f"Strong momentum ({indicators['momentum_5']*100:.1f}%)")
-    elif indicators["momentum_5"] < -params["trend_strength_min"]:
+        reasons.append("Strong MACD bullish")
+    elif indicators["macd"] > 0:
+        buy_score += 1
+    elif indicators["macd"] < 0 and macd_strength > 2:
         sell_score += 3
-        reasons.append(f"Weak momentum ({indicators['momentum_5']*100:.1f}%)")
+        reasons.append("Strong MACD bearish")
+    else:
+        sell_score += 1
     
-    # Price position (mean reversion)
-    if indicators["price_position"] < 0.2:
+    # TIER 4: Strong momentum with multi-timeframe confirmation - 4 points
+    strong_momentum_up = (indicators["momentum_5"] > 0.02 and 
+                          indicators["momentum_10"] > 0.03)
+    strong_momentum_down = (indicators["momentum_5"] < -0.02 and 
+                            indicators["momentum_10"] < -0.03)
+    
+    if strong_momentum_up:
+        buy_score += 4
+        reasons.append(f"Strong multi-TF momentum ({indicators['momentum_5']*100:.1f}%)")
+    elif indicators["momentum_5"] > params["trend_strength_min"]:
         buy_score += 2
-        reasons.append("Near support")
-    elif indicators["price_position"] > 0.8:
+        reasons.append(f"Positive momentum ({indicators['momentum_5']*100:.1f}%)")
+    
+    if strong_momentum_down:
+        sell_score += 4
+        reasons.append(f"Strong downward momentum ({indicators['momentum_5']*100:.1f}%)")
+    elif indicators["momentum_5"] < -params["trend_strength_min"]:
         sell_score += 2
+        reasons.append(f"Negative momentum ({indicators['momentum_5']*100:.1f}%)")
+    
+    # TIER 5: Price position (mean reversion) - 3 points for extremes
+    if indicators["price_position"] < 0.15:  # Very near support
+        buy_score += 3
+        reasons.append("Near strong support")
+    elif indicators["price_position"] < 0.25:
+        buy_score += 1
+        reasons.append("Near support")
+    elif indicators["price_position"] > 0.85:  # Very near resistance
+        sell_score += 3
+        reasons.append("Near strong resistance")
+    elif indicators["price_position"] > 0.75:
+        sell_score += 1
         reasons.append("Near resistance")
     
-    # Volatility filter
-    if indicators["volatility"] > params["volatility_filter"]:
-        buy_score = int(buy_score * 0.5)
-        sell_score = int(sell_score * 0.5)
+    # VOLATILITY PENALTY - critical for high win rate
+    if indicators["volatility"] > params["volatility_filter"] * 1.5:  # Very high vol
+        buy_score = int(buy_score * 0.3)
+        sell_score = int(sell_score * 0.3)
+        reasons.append("Extreme volatility - heavy penalty")
+    elif indicators["volatility"] > params["volatility_filter"]:
+        buy_score = int(buy_score * 0.6)
+        sell_score = int(sell_score * 0.6)
         reasons.append("High volatility penalty")
     
-    # Determine signal
+    # COUNTER-TREND FILTER - don't buy in downtrends or sell in uptrends
+    if indicators["trend_down"] and buy_score > 0:
+        buy_score = int(buy_score * 0.5)  # Reduce buy signals in downtrend
+    if indicators["trend_up"] and sell_score > 0:
+        sell_score = int(sell_score * 0.5)  # Reduce sell signals in uptrend
+    
+    # QUALITY FILTER - require minimum confirmation count
+    buy_confirmations = sum([
+        indicators["rsi"] < params["rsi_oversold"],
+        indicators["trend_up"],
+        indicators["macd"] > 0,
+        indicators["momentum_5"] > 0,
+        indicators["price_position"] < 0.4
+    ])
+    
+    sell_confirmations = sum([
+        indicators["rsi"] > params["rsi_overbought"],
+        indicators["trend_down"],
+        indicators["macd"] < 0,
+        indicators["momentum_5"] < 0,
+        indicators["price_position"] > 0.6
+    ])
+    
+    # Require at least 3 confirmations for high-quality signals
+    if buy_confirmations < 3:
+        buy_score = int(buy_score * 0.5)
+    if sell_confirmations < 3:
+        sell_score = int(sell_score * 0.5)
+    
+    # Determine signal with ULTRA-STRICT threshold
     threshold = params["entry_threshold"]
     
-    if buy_score >= threshold and buy_score > sell_score + 2:
+    # Require clear winner with margin
+    if buy_score >= threshold and buy_score > sell_score + 4 and buy_confirmations >= 3:
         return {
             "signal": "buy",
-            "strength": min(1.0, buy_score / 15),
+            "strength": min(1.0, buy_score / 20),
             "score": buy_score,
+            "confirmations": buy_confirmations,
             "reason": "; ".join(reasons[:3])
         }
-    elif sell_score >= threshold and sell_score > buy_score + 2:
+    elif sell_score >= threshold and sell_score > buy_score + 4 and sell_confirmations >= 3:
         return {
             "signal": "sell",
-            "strength": min(1.0, sell_score / 15),
+            "strength": min(1.0, sell_score / 20),
             "score": sell_score,
+            "confirmations": sell_confirmations,
             "reason": "; ".join(reasons[:3])
         }
     
