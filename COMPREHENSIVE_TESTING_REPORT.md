@@ -372,8 +372,8 @@ nginx-code-proxy RUNNING   pid 45
 - All environment variables set ✅
 
 **URL:**
-- Deployment: https://learn-mtf.preview.emergentagent.com ✅
-- Backend API: https://learn-mtf.preview.emergentagent.com/api ✅
+- Deployment: https://mtf-retrain.preview.emergentagent.com ✅
+- Backend API: https://mtf-retrain.preview.emergentagent.com/api ✅
 
 ---
 
