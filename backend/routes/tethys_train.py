@@ -101,45 +101,103 @@ async def start_training(
     """Start Rainbow DQN training"""
     global _db
     
-    config = config or TrainConfig()
-    
-    from services.tethys_training import get_trainer
-    trainer = get_trainer(_db)
-    
-    if trainer.is_training:
-        return {"status": "already_training", "progress": trainer.get_training_status()}
-    
-    async def train_task():
-        await trainer.train(
-            episodes=config.episodes,
-            symbol=config.symbol,
-            save_every=config.save_every,
-            early_stopping_patience=config.early_stopping_patience
+    if not _db:
+        raise HTTPException(
+            status_code=503,
+            detail="Database not initialized. Please wait for system startup to complete."
         )
     
-    background_tasks.add_task(train_task)
+    config = config or TrainConfig()
     
-    return {
-        "status": "training_started",
-        "config": config.dict()
-    }
+    try:
+        from services.tethys_training import get_trainer
+        trainer = get_trainer(_db)
+        
+        if trainer.is_training:
+            return {"status": "already_training", "progress": trainer.get_training_status()}
+        
+        async def train_task():
+            try:
+                await trainer.train(
+                    episodes=config.episodes,
+                    symbol=config.symbol,
+                    save_every=config.save_every,
+                    early_stopping_patience=config.early_stopping_patience
+                )
+            except Exception as e:
+                logger.error(f"Training task failed: {str(e)}", exc_info=True)
+        
+        if background_tasks:
+            background_tasks.add_task(train_task)
+            return {
+                "status": "training_started",
+                "config": config.dict(),
+                "message": "Tethys training started successfully"
+            }
+        else:
+            raise HTTPException(
+                status_code=503,
+                detail="Background tasks not available. Service may be starting up."
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to start Tethys training: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to initialize training service: {str(e)}"
+        )
 
 
 @router.post("/stop")
 async def stop_training():
     """Stop training"""
-    from services.tethys_training import get_trainer
-    trainer = get_trainer(_db)
-    trainer.stop_training()
-    return {"status": "stop_requested"}
+    try:
+        from services.tethys_training import get_trainer
+        trainer = get_trainer(_db if _db else None)
+        
+        if not trainer.is_training:
+            return {
+                "status": "not_training",
+                "message": "Tethys is not currently training"
+            }
+        
+        trainer.stop_training()
+        return {
+            "status": "stop_requested",
+            "message": "Training stop signal sent successfully"
+        }
+    except Exception as e:
+        logger.error(f"Failed to stop training: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to stop training: {str(e)}"
+        )
 
 
 @router.get("/status")
 async def get_training_status():
     """Get training status"""
-    from services.tethys_training import get_trainer
-    trainer = get_trainer(_db)
-    return trainer.get_training_status()
+    try:
+        from services.tethys_training import get_trainer
+        trainer = get_trainer(_db if _db else None)
+        status = trainer.get_training_status()
+        
+        # Add database status
+        status['database_connected'] = bool(_db)
+        
+        return status
+    except Exception as e:
+        logger.error(f"Failed to get training status: {str(e)}", exc_info=True)
+        # Return a safe default status instead of throwing error
+        return {
+            "is_training": False,
+            "is_active": False,
+            "database_connected": bool(_db),
+            "status": "error",
+            "error": str(e),
+            "message": "Training service not fully initialized. Please wait or restart the service."
+        }
 
 
 # =============================================================================
