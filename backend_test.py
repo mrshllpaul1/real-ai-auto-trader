@@ -15,7 +15,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Any
 
 # Backend URL configuration
-BASE_URL = "https://crypto-trader-194.preview.emergentagent.com/api"
+BASE_URL = "https://crypto-bot-dashboard.preview.emergentagent.com/api"
 
 class ComprehensiveBackendTester:
     def __init__(self):

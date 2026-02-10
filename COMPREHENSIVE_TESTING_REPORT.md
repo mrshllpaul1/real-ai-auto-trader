@@ -372,8 +372,8 @@ nginx-code-proxy RUNNING   pid 45
 - All environment variables set ✅
 
 **URL:**
-- Deployment: https://crypto-trader-194.preview.emergentagent.com ✅
-- Backend API: https://crypto-trader-194.preview.emergentagent.com/api ✅
+- Deployment: https://crypto-bot-dashboard.preview.emergentagent.com ✅
+- Backend API: https://crypto-bot-dashboard.preview.emergentagent.com/api ✅
 
 ---
 

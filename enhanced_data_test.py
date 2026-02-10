@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend environment
-BASE_URL = "https://crypto-trader-194.preview.emergentagent.com/api"
+BASE_URL = "https://crypto-bot-dashboard.preview.emergentagent.com/api"
 
 class EnhancedDataTester:
     def __init__(self):
