@@ -443,10 +443,22 @@ async def get_kraken_portfolio():
         holdings = []
         total_usd = 0
         
-        # Symbol mapping for price lookup
+        # Symbol mapping for price lookup - Kraken uses different formats
         symbol_map = {
             'XXBT': 'BTC', 'XETH': 'ETH', 'XXRP': 'XRP', 'XLTC': 'LTC',
-            'XXLM': 'XLM', 'XDOGE': 'DOGE', 'ZUSD': 'USD', 'USDT': 'USDT'
+            'XXLM': 'XLM', 'XDOGE': 'DOGE', 'ZUSD': 'USD', 'USDT': 'USDT',
+            'XXDG': 'DOGE', 'XZEC': 'ZEC', 'XREP': 'REP', 'XMLN': 'MLN'
+        }
+        
+        # Kraken pair format mapping for price lookup
+        pair_formats = {
+            'BTC': 'XXBTZUSD', 'ETH': 'XETHZUSD', 'XRP': 'XXRPZUSD',
+            'LTC': 'XLTCZUSD', 'XLM': 'XXLMZUSD', 'DOGE': 'XDGUSD',
+            'SOL': 'SOLUSD', 'DOT': 'DOTUSD', 'AAVE': 'AAVEUSD',
+            'UNI': 'UNIUSD', 'LINK': 'LINKUSD', 'MATIC': 'MATICUSD',
+            'APT': 'APTUSD', 'SUI': 'SUIUSD', 'AVAX': 'AVAXUSD',
+            'ADA': 'ADAUSD', 'ATOM': 'ATOMUSD', 'NEAR': 'NEARUSD',
+            'ARB': 'ARBUSD', 'OP': 'OPUSD', 'FTM': 'FTMUSD'
         }
         
         for asset, amount in balance.items():
@@ -455,30 +467,39 @@ async def get_kraken_portfolio():
                 continue
             
             # Normalize asset symbol
-            normalized = symbol_map.get(asset, asset.replace('X', '').replace('Z', ''))
+            normalized = symbol_map.get(asset, asset.replace('X', '').replace('Z', '').replace('.S', ''))
             
             # USD and stablecoins are 1:1
-            if normalized in ['USD', 'USDT', 'USDC']:
+            if normalized in ['USD', 'USDT', 'USDC', 'USDG', 'DAI']:
                 value_usd = amount_float
                 price = 1.0
             else:
-                # Get price from Kraken
-                try:
-                    pair = f"{asset}ZUSD" if not asset.endswith('USD') else f"{asset}"
-                    async with httpx.AsyncClient(timeout=5.0) as client:
-                        response = await client.get(
-                            "https://api.kraken.com/0/public/Ticker",
-                            params={"pair": pair}
-                        )
-                        data = response.json()
-                        if data.get("result"):
-                            for key, ticker in data["result"].items():
-                                price = float(ticker['c'][0])
-                                break
-                        else:
-                            price = 0
-                except:
-                    price = 0
+                # Get price from Kraken - try multiple pair formats
+                price = 0
+                pairs_to_try = [
+                    pair_formats.get(normalized, f"{normalized}USD"),
+                    f"{normalized}USD",
+                    f"X{normalized}ZUSD",
+                    f"{asset}ZUSD",
+                    f"{asset}USD"
+                ]
+                
+                for pair in pairs_to_try:
+                    try:
+                        async with httpx.AsyncClient(timeout=5.0) as client:
+                            response = await client.get(
+                                "https://api.kraken.com/0/public/Ticker",
+                                params={"pair": pair}
+                            )
+                            data = response.json()
+                            if data.get("result") and not data.get("error"):
+                                for key, ticker in data["result"].items():
+                                    price = float(ticker['c'][0])
+                                    break
+                                if price > 0:
+                                    break
+                    except:
+                        continue
                 
                 value_usd = amount_float * price
             
