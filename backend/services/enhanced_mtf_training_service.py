@@ -1214,6 +1214,95 @@ class EnhancedMTFTrainingService:
         
         return result
     
+    async def predict_fast(
+        self,
+        symbol: str,
+        model_doc: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
+        """
+        Fast prediction for a single symbol using sentiment-only features.
+        """
+        if model_doc is None:
+            model_doc = await self.model_collection.find_one({"type": "sentiment_only_mtf"})
+            if not model_doc:
+                model_doc = await self.model_collection.find_one({"type": "enhanced_mtf"})
+        
+        if not model_doc:
+            return {"error": "No trained model found", "symbol": symbol}
+        
+        # Get sentiment
+        sentiment = await self.fetch_social_sentiment(symbol)
+        fear_greed = await self.fetch_fear_greed_index()
+        
+        # Create feature vector
+        feature_vector = np.array([
+            sentiment.get("twitter_sentiment", 0.5),
+            sentiment.get("twitter_volume_change", 0),
+            sentiment.get("reddit_sentiment", 0.5),
+            sentiment.get("reddit_activity", 0.3),
+            fear_greed.get("normalized", 0.5),
+            fear_greed.get("trend_7d", 0) / 100.0 if fear_greed.get("trend_7d") else 0,
+            sentiment.get("overall_signal_score", 0.5),
+            sentiment.get("signal_confidence", 0.3),
+            sentiment.get("fomo_score", 0.3),
+            sentiment.get("fear_score", 0.3),
+            sentiment.get("influencer_sentiment", 0.5),
+            sentiment.get("hype_phase", 0.5)
+        ])
+        
+        feature_vector = np.nan_to_num(feature_vector, nan=0.0, posinf=1.0, neginf=-1.0)
+        
+        # Normalize
+        X_mean = np.array(model_doc["normalization"]["mean"])
+        X_std = np.array(model_doc["normalization"]["std"])
+        X_normalized = (feature_vector - X_mean) / X_std
+        
+        # Predict
+        weights = np.array(model_doc["weights"])
+        
+        if "sklearn_lr" in self._models:
+            model = self._models["sklearn_lr"]
+            le = self._models["label_encoder"]
+            prediction = model.predict([X_normalized])[0]
+            probas = model.predict_proba([X_normalized])[0]
+            confidence = float(np.max(probas))
+            prediction = int(le.inverse_transform([prediction])[0])
+        else:
+            scores = X_normalized @ weights.T
+            exp_scores = np.exp(scores - np.max(scores))
+            probas = exp_scores / np.sum(exp_scores)
+            pred_index = np.argmax(probas)
+            index_to_label = {0: -1, 1: 0, 2: 1}
+            prediction = index_to_label.get(pred_index, 0)
+            confidence = float(np.max(probas))
+        
+        signal_map = {-1: "SELL", 0: "HOLD", 1: "BUY"}
+        
+        return {
+            "symbol": symbol,
+            "prediction": prediction,
+            "signal": signal_map.get(prediction, "HOLD"),
+            "confidence": confidence,
+            "confidence_pct": f"{confidence * 100:.1f}%",
+            "model_accuracy": model_doc.get("training_info", {}).get("accuracy", 0),
+            "mode": "fast_sentiment",
+            "analysis": {
+                "sentiment": {
+                    "twitter": sentiment.get("twitter_sentiment", 0.5),
+                    "reddit": sentiment.get("reddit_sentiment", 0.5),
+                    "overall_score": sentiment.get("overall_signal_score", 0.5),
+                    "fomo_score": sentiment.get("fomo_score", 0.3),
+                    "fear_score": sentiment.get("fear_score", 0.3)
+                },
+                "fear_greed": {
+                    "value": fear_greed.get("value", 50),
+                    "classification": fear_greed.get("classification", "Neutral"),
+                    "trend_7d": fear_greed.get("trend_7d", 0)
+                }
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    
     async def predict_all(
         self,
         symbols: List[str] = None,
