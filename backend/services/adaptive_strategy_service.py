@@ -904,9 +904,6 @@ class AdaptiveStrategyService:
         now = datetime.now(timezone.utc)
         
         for event_config in self.PREDICTABLE_EVENTS:
-            event_type = event_config["type"]
-            base_confidence = event_config["confidence"]
-            
             # Calculate event-specific predictions
             predicted_event = await self._predict_event(event_config, days_ahead, now)
             
