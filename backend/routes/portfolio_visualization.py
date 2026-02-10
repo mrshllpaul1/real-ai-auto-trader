@@ -410,6 +410,114 @@ async def create_portfolio_snapshot():
     return {"success": True, "snapshot": snapshot}
 
 
+
+@router.get("/kraken-portfolio")
+async def get_kraken_portfolio():
+    """
+    Get REAL Kraken portfolio balance with current prices.
+    Shows actual holdings from Kraken account.
+    """
+    import os
+    import httpx
+    
+    kraken_api_key = os.getenv('KRAKEN_API_KEY')
+    kraken_api_secret = os.getenv('KRAKEN_API_SECRET')
+    
+    if not kraken_api_key or not kraken_api_secret:
+        return {
+            "connected": False,
+            "message": "Kraken API keys not configured",
+            "total_value_usd": 0,
+            "holdings": []
+        }
+    
+    try:
+        from services.kraken_service import KrakenAuthenticator, KrakenTradeService
+        auth = KrakenAuthenticator(kraken_api_key, kraken_api_secret)
+        kraken = KrakenTradeService(auth)
+        
+        # Get balance
+        balance = await kraken.get_balance()
+        
+        # Filter out zero balances and format holdings
+        holdings = []
+        total_usd = 0
+        
+        # Symbol mapping for price lookup
+        symbol_map = {
+            'XXBT': 'BTC', 'XETH': 'ETH', 'XXRP': 'XRP', 'XLTC': 'LTC',
+            'XXLM': 'XLM', 'XDOGE': 'DOGE', 'ZUSD': 'USD', 'USDT': 'USDT'
+        }
+        
+        for asset, amount in balance.items():
+            amount_float = float(amount)
+            if amount_float < 0.00001:
+                continue
+            
+            # Normalize asset symbol
+            normalized = symbol_map.get(asset, asset.replace('X', '').replace('Z', ''))
+            
+            # USD and stablecoins are 1:1
+            if normalized in ['USD', 'USDT', 'USDC']:
+                value_usd = amount_float
+                price = 1.0
+            else:
+                # Get price from Kraken
+                try:
+                    pair = f"{asset}ZUSD" if not asset.endswith('USD') else f"{asset}"
+                    async with httpx.AsyncClient(timeout=5.0) as client:
+                        response = await client.get(
+                            "https://api.kraken.com/0/public/Ticker",
+                            params={"pair": pair}
+                        )
+                        data = response.json()
+                        if data.get("result"):
+                            for key, ticker in data["result"].items():
+                                price = float(ticker['c'][0])
+                                break
+                        else:
+                            price = 0
+                except:
+                    price = 0
+                
+                value_usd = amount_float * price
+            
+            total_usd += value_usd
+            
+            holdings.append({
+                "asset": normalized,
+                "original_asset": asset,
+                "amount": round(amount_float, 8),
+                "price_usd": round(price, 4),
+                "value_usd": round(value_usd, 2),
+                "percentage": 0  # Will be calculated below
+            })
+        
+        # Calculate percentages
+        for h in holdings:
+            h["percentage"] = round((h["value_usd"] / total_usd * 100) if total_usd > 0 else 0, 2)
+        
+        # Sort by value
+        holdings.sort(key=lambda x: x["value_usd"], reverse=True)
+        
+        return {
+            "connected": True,
+            "total_value_usd": round(total_usd, 2),
+            "holdings_count": len(holdings),
+            "holdings": holdings,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        return {
+            "connected": False,
+            "error": str(e),
+            "total_value_usd": 0,
+            "holdings": []
+        }
+
+
+
 # Global scheduler reference for snapshot management
 _scheduler = None
 
