@@ -90,7 +90,7 @@ const FloatingCommandHub = () => {
         fetchAIStatus();
       }
     }
-  }, [isOpen, cmdMessages.length, chatMessages.length]);
+  }, [isOpen, cmdMessages.length, chatMessages.length, deepAnalysis, activeTab]);
 
   // Command Center - Execute actions
   const executeCommand = async (message) => {
@@ -148,7 +148,8 @@ const FloatingCommandHub = () => {
       // Quick analysis
       if ((msgLower.includes('analyze') || msgLower.includes('analysis')) && 
           (msgLower.includes('btc') || msgLower.includes('eth') || msgLower.includes('sol'))) {
-        const coinMatch = msgLower.match(/\b(btc|eth|sol|ada|dot|avax|bnb|xrp)\b/);
+        const coinPattern = /\b(btc|eth|sol|ada|dot|avax|bnb|xrp)\b/;
+        const coinMatch = msgLower.match(coinPattern);
         if (coinMatch) {
           const coinMap = {
             'btc': 'bitcoin', 'eth': 'ethereum', 'sol': 'solana',
@@ -228,10 +229,11 @@ const FloatingCommandHub = () => {
         session_id: cmdSessionId
       }, { timeout: 30000 });
       
+      // Note: actions field is for future enhancement to show executed actions in UI
       setCmdMessages(prev => [...prev, { 
         type: 'ai', 
         content: response.data.response || 'Command processed.',
-        actions: response.data.actions_executed
+        actions: response.data.actions_executed // Reserved for future action display
       }]);
       
     } catch (error) {
@@ -583,11 +585,11 @@ const FloatingCommandHub = () => {
                     </div>
                     
                     {/* Smart Suggestions */}
-                    {suggestions.length > 0 && cmdMessages.length <= 1 && (
+                    {suggestions.length > 0 && cmdMessages.length <= 1 && suggestions[0]?.queries && (
                       <div className="space-y-1 mb-2 flex-shrink-0">
                         <p className="text-[9px] text-slate-500 uppercase tracking-wide">Try these:</p>
                         <div className="flex flex-wrap gap-1">
-                          {suggestions[0]?.queries?.slice(0, 3).map((query, i) => (
+                          {suggestions[0].queries.slice(0, 3).map((query, i) => (
                             <button
                               key={i}
                               onClick={() => executeCommand(query)}
@@ -647,7 +649,11 @@ const FloatingCommandHub = () => {
                             {msg.predictions && (
                               <div className="mt-2 p-2 bg-cyan-500/10 rounded border border-cyan-500/30">
                                 <div className="text-[10px] text-cyan-400 font-medium mb-1">📈 Predictions</div>
-                                <div className="text-[10px] text-slate-300">{JSON.stringify(msg.predictions).substring(0, 100)}...</div>
+                                <div className="text-[10px] text-slate-300">
+                                  {typeof msg.predictions === 'object' 
+                                    ? `Price: ${msg.predictions.price || 'N/A'}, Confidence: ${msg.predictions.confidence || 'N/A'}%`
+                                    : String(msg.predictions).substring(0, 100)}
+                                </div>
                               </div>
                             )}
                             {msg.gems && msg.gems.length > 0 && (
@@ -674,11 +680,11 @@ const FloatingCommandHub = () => {
                     </div>
                     
                     {/* Smart Suggestions for Chat */}
-                    {suggestions.length > 0 && chatMessages.length <= 1 && (
+                    {suggestions.length > 1 && chatMessages.length <= 1 && suggestions[1]?.queries && (
                       <div className="space-y-1 mb-2 flex-shrink-0">
                         <p className="text-[9px] text-slate-500 uppercase tracking-wide">Suggestions:</p>
                         <div className="flex flex-wrap gap-1">
-                          {suggestions[1]?.queries?.slice(0, 2).map((query, i) => (
+                          {suggestions[1].queries.slice(0, 2).map((query, i) => (
                             <button
                               key={i}
                               onClick={() => sendChatMessage(query)}
@@ -868,6 +874,13 @@ const FloatingCommandHub = () => {
                             <span className="text-slate-400">Total</span>
                             <span className="text-white font-medium">${tradePreview.total_usd?.toFixed(2)}</span>
                           </div>
+                          
+                          {/* Warning Banner */}
+                          <div className="flex items-center gap-2 p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+                            <AlertTriangle size={14} className="text-yellow-400 flex-shrink-0" />
+                            <p className="text-xs text-yellow-400 font-medium">Real money trade on Kraken!</p>
+                          </div>
+                          
                           <Button
                             onClick={executeTrade}
                             disabled={tradeLoading}
@@ -875,7 +888,6 @@ const FloatingCommandHub = () => {
                           >
                             <CheckCircle size={12} className="mr-1" /> Confirm & Execute
                           </Button>
-                          <p className="text-[10px] text-yellow-400 text-center">⚠️ Real trade on Kraken!</p>
                         </div>
                       )}
 
