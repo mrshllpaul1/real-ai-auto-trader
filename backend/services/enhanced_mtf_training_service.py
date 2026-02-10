@@ -1508,8 +1508,71 @@ class EnhancedMTFTrainingService:
         }
     
     async def get_training_status(self) -> Dict[str, Any]:
-        """Get current training status"""
-        return self._training_status
+        """Get current training status with persistence fallback"""
+        status = dict(self._training_status)
+        
+        # If actively training/failed, return live status without overrides
+        if status.get("status") in {"training", "failed"}:
+            return status
+        
+        needs_history = (
+            not status.get("last_trained") 
+            or status.get("coins_trained", 0) == 0 
+            or status.get("accuracy") in (None, 0, 0.0)
+        )
+        
+        if needs_history:
+            try:
+                latest_run = await self.training_collection.find_one(
+                    {},
+                    sort=[("timestamp", -1)]
+                )
+                
+                if latest_run:
+                    status["status"] = latest_run.get("status", "completed")
+                    status.setdefault("training_id", latest_run.get("training_id"))
+                    status["last_trained"] = latest_run.get("completed_at") or latest_run.get("timestamp")
+                    status["coins_trained"] = (
+                        latest_run.get("symbols_trained") 
+                        or latest_run.get("coins_trained") 
+                        or 0
+                    )
+                    
+                    if status.get("accuracy") in (None, 0, 0.0):
+                        status["accuracy"] = latest_run.get("accuracy", 0.0)
+                    
+                    if latest_run.get("mode"):
+                        status.setdefault("mode", latest_run.get("mode"))
+            except Exception as e:
+                logger.debug(f"Enhanced MTF status history lookup failed: {e}")
+        
+        # Fallback to model info when history isn't available
+        if status.get("accuracy") in (None, 0, 0.0) or not status.get("last_trained"):
+            try:
+                model_doc = await self.model_collection.find_one(
+                    {"type": "enhanced_mtf"},
+                    {"_id": 0, "weights": 0, "normalization": 0}
+                )
+                
+                if model_doc:
+                    training_info = model_doc.get("training_info", {})
+                    status.setdefault("status", "completed")
+                    status.setdefault(
+                        "last_trained", 
+                        model_doc.get("completed_at") or model_doc.get("created_at")
+                    )
+                    status.setdefault(
+                        "coins_trained", 
+                        training_info.get("symbols_trained", 0)
+                    )
+                    
+                    if status.get("accuracy") in (None, 0, 0.0):
+                        status["accuracy"] = training_info.get("accuracy", 0.0)
+            except Exception as e:
+                logger.debug(f"Enhanced MTF model status lookup failed: {e}")
+        
+        self._training_status = status
+        return status
     
     async def get_training_history(self, limit: int = 10) -> List[Dict[str, Any]]:
         """Get training history"""
