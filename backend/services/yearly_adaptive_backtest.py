@@ -125,20 +125,21 @@ class AdaptiveStrategy:
             self.params["stop_loss_pct"] = 2.5
             
         elif regime == "recovery":
-            # Cautiously optimistic
-            self.params["entry_threshold"] = 7
-            self.params["take_profit_pct"] = 10
-            self.params["position_size_pct"] = 10
+            # Cautiously optimistic in recovery - good for entries
+            self.params["entry_threshold"] = 11
+            self.params["take_profit_pct"] = 8
+            self.params["position_size_pct"] = 8
+            self.params["rsi_oversold"] = 22
         
-        # Performance-based adjustments
-        if recent_win_rate < 0.4:
-            # Tighten parameters if losing
-            self.params["entry_threshold"] = min(12, self.params["entry_threshold"] + 2)
-            self.params["stop_loss_pct"] = max(2, self.params["stop_loss_pct"] - 1)
-        elif recent_win_rate > 0.7:
-            # Loosen slightly if winning consistently
-            self.params["entry_threshold"] = max(5, self.params["entry_threshold"] - 1)
-            self.params["position_size_pct"] = min(15, self.params["position_size_pct"] + 1)
+        # Performance-based adjustments - CRITICAL for win rate
+        if recent_win_rate < 0.5:
+            # Tighten significantly if win rate drops
+            self.params["entry_threshold"] = min(16, self.params["entry_threshold"] + 3)
+            self.params["stop_loss_pct"] = max(2, self.params["stop_loss_pct"] - 0.5)
+            self.params["take_profit_pct"] = max(5, self.params["take_profit_pct"] - 1)
+        elif recent_win_rate > 0.65:
+            # Only slightly loosen if doing well
+            self.params["entry_threshold"] = max(10, self.params["entry_threshold"] - 1)
         
         return self.params
 
