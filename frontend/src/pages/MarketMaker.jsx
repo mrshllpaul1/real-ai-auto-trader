@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { motion } from 'framer-motion';
@@ -16,6 +15,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import toast from '../utils/toast';
+import TradingPairSelector from '../components/TradingPairSelector';
 
 const MarketMaker = () => {
   const [status, setStatus] = useState(null);
