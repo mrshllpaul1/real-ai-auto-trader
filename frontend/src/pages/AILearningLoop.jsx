@@ -350,7 +350,7 @@ const AILearningLoop = () => {
                                   {factor.replace(/_/g, ' ')}
                                 </div>
                                 <div className="text-lg font-data font-bold text-white">
-                                  {(weight * 100).toFixed(0)}%
+                                  {((weight || 0) * 100).toFixed(0)}%
                                 </div>
                                 <Progress value={weight * 100} className="h-1 mt-1" />
                               </div>
