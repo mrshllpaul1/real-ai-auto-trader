@@ -141,230 +141,217 @@ def generate_trend_following_signals(prices: List[float], fast_ma: int = 10, slo
 
 async def generate_ml_based_signals(prices: List[float], symbol: str, db, strategy_params: Dict = None) -> List[str]:
     """
-    Generate ML-based signals using the trained Enhanced MTF model.
+    Generate ML-based signals using the trained Enhanced MTF model combined
+    with technical analysis for high win rate and Sharpe ratio.
     
-    This version integrates with the Enhanced MTF Training Service to use
-    actual ML predictions with sentiment + technical analysis.
-    
-    Improved v6:
-    1. Uses actual Enhanced MTF model predictions
-    2. Enhanced multi-factor strategy with trend confirmation
-    3. Better position management with stop-loss and take-profit
-    4. Volatility-based signal filtering
-    5. Improved entry/exit conditions
+    Strategy v7 - Optimized for Performance:
+    1. Uses Enhanced MTF model predictions when available
+    2. Multi-factor trend-following with strict confirmation
+    3. RSI extremes for high-probability entries
+    4. Volatility filtering to avoid choppy markets
+    5. Proper position management with trailing stops
     """
     signals = []
     n = len(prices)
     params = strategy_params or {}
     
-    # Strategy parameters
+    # Strategy parameters - optimized for higher win rate
     lookback = params.get("lookback", 20)
+    min_trend_strength = params.get("min_trend_strength", 0.015)
+    rsi_oversold = params.get("rsi_oversold", 25)
+    rsi_overbought = params.get("rsi_overbought", 75)
     
-    # Try to get Enhanced MTF service for real ML predictions
-    enhanced_mtf_service = None
+    # Get ML prediction from Enhanced MTF service
+    ml_signal = 0  # -1 sell, 0 hold, 1 buy
+    ml_confidence = 0.5
+    
     try:
         from services.enhanced_mtf_training_service import get_enhanced_mtf_service
         enhanced_mtf_service = get_enhanced_mtf_service(db)
+        if enhanced_mtf_service:
+            # Get prediction for this symbol
+            coin_symbol = symbol.replace("/USD", "").replace("USD", "")
+            prediction = await enhanced_mtf_service.predict(coin_symbol)
+            if prediction and "prediction" in prediction:
+                ml_signal = prediction.get("prediction", 0)
+                ml_confidence = prediction.get("confidence", 0.5)
+                logger.info(f"ML Prediction for {coin_symbol}: signal={ml_signal}, confidence={ml_confidence:.2f}")
     except Exception as e:
-        logger.warning(f"Could not load Enhanced MTF service: {e}")
+        logger.debug(f"ML prediction not available: {e}")
     
-    # State tracking
+    # State tracking for position management
     position_held = False
     entry_price = 0
-    position_type = None  # "long" or "short"
+    position_type = None
     holding_days = 0
+    highest_since_entry = 0
+    lowest_since_entry = float('inf')
     
     for i in range(n):
         if i < lookback + 10:
             signals.append("hold")
             continue
         
-        # Calculate technical indicators for enhanced strategy
+        # Calculate technical indicators
         short_window = prices[i-5:i+1]
         medium_window = prices[i-lookback:i+1]
-        long_window = prices[max(0, i-40):i+1]
+        long_window = prices[max(0, i-50):i+1]
         
         # Moving averages
         sma_5 = sum(short_window) / len(short_window)
         sma_20 = sum(medium_window) / len(medium_window)
-        sma_40 = sum(long_window) / len(long_window)
+        sma_50 = sum(long_window) / len(long_window)
         
-        # Momentum calculations
+        # Momentum
         momentum_5 = (prices[i] - prices[i-5]) / prices[i-5]
-        momentum_10 = (prices[i] - prices[i-10]) / prices[i-10] if i >= 10 else 0
         momentum_20 = (prices[i] - prices[i-20]) / prices[i-20] if i >= 20 else 0
         
         # RSI calculation
-        gains = []
-        losses = []
+        gains, losses = [], []
         for j in range(1, min(15, i+1)):
             diff = prices[i-j+1] - prices[i-j]
-            if diff > 0:
-                gains.append(diff)
-            else:
-                losses.append(abs(diff))
+            gains.append(max(0, diff))
+            losses.append(max(0, -diff))
         avg_gain = sum(gains) / max(len(gains), 1)
         avg_loss = sum(losses) / max(len(losses), 1) + 1e-10
         rsi = 100 - (100 / (1 + avg_gain / avg_loss))
         
-        # Volatility calculation
+        # Volatility
         returns = [(prices[j] - prices[j-1]) / prices[j-1] for j in range(max(1, i-20), i+1)]
         volatility = (sum(r**2 for r in returns) / len(returns)) ** 0.5 if returns else 0.02
         
-        # Enhanced trend detection
-        strong_uptrend = sma_5 > sma_20 * 1.02 and sma_20 > sma_40 * 1.01 and momentum_5 > 0.01
-        strong_downtrend = sma_5 < sma_20 * 0.98 and sma_20 < sma_40 * 0.99 and momentum_5 < -0.01
-        uptrend = sma_5 > sma_20 and sma_20 > sma_40
-        downtrend = sma_5 < sma_20 and sma_20 < sma_40
+        # Trend detection
+        strong_uptrend = sma_5 > sma_20 * 1.005 and sma_20 > sma_50 * 1.005 and momentum_5 > min_trend_strength
+        strong_downtrend = sma_5 < sma_20 * 0.995 and sma_20 < sma_50 * 0.995 and momentum_5 < -min_trend_strength
+        uptrend = sma_5 > sma_20 and sma_20 > sma_50
+        downtrend = sma_5 < sma_20 and sma_20 < sma_50
         
-        # Price action signals
-        price_above_sma = prices[i] > sma_20
-        bullish_momentum = momentum_5 > 0.02 and momentum_10 > 0.03
-        bearish_momentum = momentum_5 < -0.02 and momentum_10 < -0.03
+        # Higher highs / Lower lows pattern
+        recent_high = max(prices[i-5:i]) if i >= 5 else prices[i]
+        recent_low = min(prices[i-5:i]) if i >= 5 else prices[i]
+        breakout_up = prices[i] > recent_high * 1.01
+        breakout_down = prices[i] < recent_low * 0.99
         
-        # Get ML prediction if available (simulate since we can't make async calls in backtest)
-        ml_signal = "hold"
-        ml_confidence = 0.5
-        
-        # Simulate ML predictions based on technical conditions
-        # In a real implementation, this would call the Enhanced MTF service
-        if enhanced_mtf_service:
-            # Simulate ML prediction based on current market conditions
-            if strong_uptrend and rsi < 70 and volatility < 0.04:
-                ml_signal = "buy"
-                ml_confidence = 0.85
-            elif strong_downtrend and rsi > 30 and volatility < 0.04:
-                ml_signal = "sell" 
-                ml_confidence = 0.85
-            elif uptrend and rsi < 60 and momentum_5 > 0.015:
-                ml_signal = "buy"
-                ml_confidence = 0.70
-            elif downtrend and rsi > 40 and momentum_5 < -0.015:
-                ml_signal = "sell"
-                ml_confidence = 0.70
-            else:
-                ml_signal = "hold"
-                ml_confidence = 0.60
-        
-        # Determine signal using enhanced multi-factor approach
         signal = "hold"
         
-        # Position management - check for exit conditions first
+        # Position management for existing positions
         if position_held:
             holding_days += 1
-            pnl_pct = (prices[i] - entry_price) / entry_price * 100 if position_type == "long" else (entry_price - prices[i]) / entry_price * 100
+            current_price = prices[i]
             
-            exit_signal = False
-            
-            # Enhanced exit conditions
             if position_type == "long":
-                # Exit long positions
-                if strong_downtrend or (downtrend and momentum_5 < -0.025):
-                    exit_signal = True  # Trend reversal
-                elif rsi > 75 and momentum_5 < 0:
-                    exit_signal = True  # Overbought with momentum loss
-                elif pnl_pct > 12:  # Take profit (increased)
+                highest_since_entry = max(highest_since_entry, current_price)
+                pnl_pct = (current_price - entry_price) / entry_price * 100
+                drawdown_from_high = (highest_since_entry - current_price) / highest_since_entry * 100
+                
+                exit_signal = False
+                # Exit conditions for long
+                if pnl_pct >= 15:  # Take profit
                     exit_signal = True
-                elif pnl_pct < -6:  # Stop loss (tighter)
+                elif pnl_pct <= -5:  # Stop loss
                     exit_signal = True
-                elif holding_days > 15 and pnl_pct < 3:  # Time-based exit
+                elif drawdown_from_high > 4 and pnl_pct > 3:  # Trailing stop
                     exit_signal = True
-                elif ml_signal == "sell" and ml_confidence > 0.75:  # ML exit signal
+                elif strong_downtrend and pnl_pct > 0:  # Trend reversal with profit
                     exit_signal = True
-            else:  # short position
-                # Exit short positions
-                if strong_uptrend or (uptrend and momentum_5 > 0.025):
-                    exit_signal = True  # Trend reversal
-                elif rsi < 25 and momentum_5 > 0:
-                    exit_signal = True  # Oversold with momentum gain
-                elif pnl_pct > 12:  # Take profit
+                elif rsi > 80:  # Overbought
                     exit_signal = True
-                elif pnl_pct < -6:  # Stop loss
+                elif holding_days > 30 and pnl_pct < 5:  # Time decay
                     exit_signal = True
-                elif holding_days > 15 and pnl_pct < 3:  # Time-based exit
-                    exit_signal = True
-                elif ml_signal == "buy" and ml_confidence > 0.75:  # ML exit signal
-                    exit_signal = True
+                
+                if exit_signal:
+                    signal = "sell"
+                    position_held = False
+                    position_type = None
+                    holding_days = 0
+                    highest_since_entry = 0
             
-            if exit_signal:
-                signal = "sell" if position_type == "long" else "buy"
-                position_held = False
-                position_type = None
-                holding_days = 0
+            elif position_type == "short":
+                lowest_since_entry = min(lowest_since_entry, current_price)
+                pnl_pct = (entry_price - current_price) / entry_price * 100
+                drawup_from_low = (current_price - lowest_since_entry) / lowest_since_entry * 100 if lowest_since_entry > 0 else 0
+                
+                exit_signal = False
+                # Exit conditions for short
+                if pnl_pct >= 15:
+                    exit_signal = True
+                elif pnl_pct <= -5:
+                    exit_signal = True
+                elif drawup_from_low > 4 and pnl_pct > 3:
+                    exit_signal = True
+                elif strong_uptrend and pnl_pct > 0:
+                    exit_signal = True
+                elif rsi < 20:
+                    exit_signal = True
+                elif holding_days > 30 and pnl_pct < 5:
+                    exit_signal = True
+                
+                if exit_signal:
+                    signal = "buy"
+                    position_held = False
+                    position_type = None
+                    holding_days = 0
+                    lowest_since_entry = float('inf')
         
-        # Entry conditions (only if not in position)
+        # Entry logic for new positions
         if not position_held:
             buy_score = 0
             sell_score = 0
             
-            # Trend-following signals (weighted heavily)
-            if strong_uptrend:
+            # ML model signal (high weight)
+            if ml_signal == 1 and ml_confidence > 0.7:
                 buy_score += 4
-            elif uptrend:
-                buy_score += 2
-            
-            if strong_downtrend:
+            elif ml_signal == -1 and ml_confidence > 0.7:
                 sell_score += 4
+            
+            # Strong trend signals
+            if strong_uptrend:
+                buy_score += 3
+            elif strong_downtrend:
+                sell_score += 3
+            elif uptrend:
+                buy_score += 1
             elif downtrend:
+                sell_score += 1
+            
+            # RSI extremes (high probability)
+            if rsi < rsi_oversold:
+                buy_score += 4
+            elif rsi > rsi_overbought:
+                sell_score += 4
+            
+            # Breakout signals
+            if breakout_up and uptrend:
+                buy_score += 2
+            elif breakout_down and downtrend:
                 sell_score += 2
             
             # Momentum confirmation
-            if bullish_momentum:
-                buy_score += 3
-            elif momentum_5 > 0.01 and momentum_10 > 0.015:
+            if momentum_5 > 0.02 and momentum_20 > 0.03:
                 buy_score += 2
-            
-            if bearish_momentum:
-                sell_score += 3
-            elif momentum_5 < -0.01 and momentum_10 < -0.015:
+            elif momentum_5 < -0.02 and momentum_20 < -0.03:
                 sell_score += 2
             
-            # RSI conditions (mean reversion + trend confirmation)
-            if rsi < 35 and uptrend:
-                buy_score += 2  # Oversold in uptrend
-            elif rsi < 50 and strong_uptrend:
-                buy_score += 1  # Not overbought in strong uptrend
+            # Volatility filter - avoid high volatility entries
+            if volatility > 0.04:
+                buy_score = int(buy_score * 0.5)
+                sell_score = int(sell_score * 0.5)
             
-            if rsi > 65 and downtrend:
-                sell_score += 2  # Overbought in downtrend
-            elif rsi > 50 and strong_downtrend:
-                sell_score += 1  # Not oversold in strong downtrend
-            
-            # Price action confirmation
-            if price_above_sma and prices[i] > prices[i-1] * 1.001:
-                buy_score += 1
-            elif not price_above_sma and prices[i] < prices[i-1] * 0.999:
-                sell_score += 1
-            
-            # ML signal integration (high weight)
-            if ml_signal == "buy" and ml_confidence > 0.7:
-                buy_score += int(ml_confidence * 4)  # 2.8-3.4 points
-            elif ml_signal == "sell" and ml_confidence > 0.7:
-                sell_score += int(ml_confidence * 4)  # 2.8-3.4 points
-            
-            # Volatility filter (reduce signals in high volatility)
-            if volatility > 0.045:
-                buy_score -= 2
-                sell_score -= 2
-            elif volatility > 0.035:
-                buy_score -= 1
-                sell_score -= 1
-            
-            # Entry decision with higher thresholds
-            min_score = 5  # Increased threshold for better selectivity
-            
-            if buy_score >= min_score and buy_score > sell_score + 2:
+            # Entry decision - require strong conviction
+            if buy_score >= 5 and buy_score > sell_score + 2:
                 signal = "buy"
                 position_held = True
                 position_type = "long"
                 entry_price = prices[i]
                 holding_days = 0
-            elif sell_score >= min_score and sell_score > buy_score + 2:
+                highest_since_entry = prices[i]
+            elif sell_score >= 5 and sell_score > buy_score + 2:
                 signal = "sell"
                 position_held = True
                 position_type = "short"
                 entry_price = prices[i]
                 holding_days = 0
+                lowest_since_entry = prices[i]
         
         signals.append(signal)
     
