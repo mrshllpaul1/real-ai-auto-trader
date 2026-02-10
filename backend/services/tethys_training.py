@@ -148,6 +148,9 @@ class TethysModelRegistry:
     
     def promote_model(self, model_name: str, version: str, stage: str = "Production"):
         """Promote model to a stage (Staging/Production)"""
+        if not self.mlflow_enabled or not self.client:
+            logger.warning("MLflow not available - skipping promotion")
+            return
         self.client.transition_model_version_stage(
             name=model_name,
             version=version,
@@ -157,15 +160,37 @@ class TethysModelRegistry:
     
     def get_registry_status(self) -> Dict[str, Any]:
         """Get registry status"""
-        experiments = self.client.search_experiments()
+        if not self.mlflow_enabled or not self.client:
+            return {
+                'tracking_uri': MLFLOW_TRACKING_URI,
+                'experiment_name': EXPERIMENT_NAME,
+                'experiment_id': None,
+                'total_experiments': 0,
+                'registered_models': [],
+                'mlflow_available': False
+            }
         
-        return {
-            'tracking_uri': MLFLOW_TRACKING_URI,
-            'experiment_name': EXPERIMENT_NAME,
-            'experiment_id': self.experiment_id,
-            'total_experiments': len(experiments),
-            'registered_models': self.get_model_versions()
-        }
+        try:
+            experiments = self.client.search_experiments()
+            return {
+                'tracking_uri': MLFLOW_TRACKING_URI,
+                'experiment_name': EXPERIMENT_NAME,
+                'experiment_id': self.experiment_id,
+                'total_experiments': len(experiments),
+                'registered_models': self.get_model_versions(),
+                'mlflow_available': True
+            }
+        except Exception as e:
+            logger.warning(f"Failed to get registry status: {e}")
+            return {
+                'tracking_uri': MLFLOW_TRACKING_URI,
+                'experiment_name': EXPERIMENT_NAME,
+                'experiment_id': None,
+                'total_experiments': 0,
+                'registered_models': [],
+                'mlflow_available': False,
+                'error': str(e)
+            }
 
 
 # =============================================================================
