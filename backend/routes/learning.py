@@ -1,8 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from typing import Dict, Any
 from datetime import datetime, timezone
+import logging
 
 router = APIRouter()
+
+logger = logging.getLogger(__name__)
 
 # Global reference for learning service
 _learning_service = None
@@ -19,9 +22,30 @@ async def get_database():
     return db
 
 async def get_learning_engine():
-    from services.learning_engine import AILearningEngine
-    from server import db
-    return AILearningEngine(db)
+    """Get learning engine with proper error handling"""
+    try:
+        from services.learning_engine import AILearningEngine
+        from server import db
+        
+        if not db:
+            raise HTTPException(
+                status_code=503,
+                detail="Database not initialized. Please wait for system startup."
+            )
+        
+        return AILearningEngine(db)
+    except ImportError as e:
+        logger.error(f"Failed to import AILearningEngine: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Learning engine module not available"
+        )
+    except Exception as e:
+        logger.error(f"Failed to initialize learning engine: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=503,
+            detail=f"Learning engine initialization failed: {str(e)}"
+        )
 
 @router.get("/insights/{strategy_id}")
 async def get_strategy_learning_insights(
@@ -66,13 +90,34 @@ async def trigger_continuous_learning(
 ):
     """Manually trigger AI continuous learning update"""
     try:
+        if not learning_engine:
+            raise HTTPException(
+                status_code=503,
+                detail="Learning engine not initialized. Please wait for system startup or check database connection."
+            )
+        
+        # Perform the learning update
         await learning_engine.continuous_learning_update()
+        
         return {
-            "message": "Continuous learning update completed",
-            "status": "success"
+            "message": "AI learning update completed successfully",
+            "status": "success",
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
+    except HTTPException:
+        raise
+    except AttributeError as e:
+        logger.error(f"Learning engine method not found: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Learning engine is not fully initialized. The continuous_learning_update method may not be available."
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Learning training failed: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Training failed: {str(e)}. Please check the logs for more details."
+        )
 
 @router.post("/record-outcome")
 async def record_trade_outcome(
