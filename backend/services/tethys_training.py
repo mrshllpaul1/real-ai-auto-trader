@@ -132,6 +132,8 @@ class TethysModelRegistry:
     
     def get_model_versions(self, model_name: str = "tethys_rainbow_dqn"):
         """Get all versions of a registered model"""
+        if not self.mlflow_enabled or not self.client:
+            return []
         try:
             versions = self.client.search_model_versions(f"name='{model_name}'")
             return [
