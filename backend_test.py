@@ -1846,7 +1846,7 @@ class OnChainAndAdaptiveStrategyTester:
 
 async def main():
     """Main test runner"""
-    async with AdaptiveStrategyTester() as tester:
+    async with OnChainAndAdaptiveStrategyTester() as tester:
         await tester.run_all_tests()
 
 
