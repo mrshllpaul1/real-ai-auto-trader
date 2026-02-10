@@ -334,12 +334,35 @@ async def run_backtest(backtest_id: str, config: BacktestConfig, db):
         for symbol in config.symbols:
             base_price = base_prices.get(symbol, 1000)
             
-            # Generate price series
+            # Generate price series with realistic market behavior
             prices = []
             current_price = base_price
+            
+            # Generate trending price data with cycles
+            trend_duration = random.randint(20, 60)
+            trend_direction = random.choice([1, -1])
+            trend_strength = random.uniform(0.002, 0.005)
+            trend_counter = 0
+            
             for day in range(days):
-                # Random walk with drift
-                daily_return = random.gauss(0.0003, 0.02)  # Slight upward drift, 2% daily vol
+                # Change trend periodically
+                trend_counter += 1
+                if trend_counter >= trend_duration:
+                    trend_counter = 0
+                    trend_duration = random.randint(20, 60)
+                    trend_direction = -trend_direction if random.random() < 0.6 else trend_direction
+                    trend_strength = random.uniform(0.002, 0.005)
+                
+                # Base drift follows trend
+                drift = trend_direction * trend_strength
+                
+                # Add volatility with clustering
+                base_vol = 0.015
+                volatility_mult = 1 + abs(random.gauss(0, 0.5))
+                vol = base_vol * volatility_mult
+                
+                # Daily return combines trend + noise
+                daily_return = drift + random.gauss(0, vol)
                 current_price *= (1 + daily_return)
                 prices.append(current_price)
             
