@@ -303,6 +303,12 @@ PREDICTABLE_PATTERNS = [
     },
 ]
 
+UPCOMING_TOKEN_UNLOCKS = [
+    {"date": "2026-02-24", "token": "APT", "amount": "25M APT unlocking"},
+    {"date": "2026-03-10", "token": "ARB", "amount": "50M ARB unlocking"},
+    {"date": "2026-03-27", "token": "OP", "amount": "35M OP unlocking"},
+]
+
 
 class HistoricalEventsDatabase:
     """
@@ -802,17 +808,14 @@ class HistoricalEventsDatabase:
                 })
 
         # Large token unlocks (known schedules)
-        token_unlocks = [
-            {"days_from_now": 14, "token": "APT", "amount": "25M APT unlocking"},
-            {"days_from_now": 28, "token": "ARB", "amount": "50M ARB unlocking"},
-            {"days_from_now": 45, "token": "OP", "amount": "35M OP unlocking"},
-        ]
-        for unlock in token_unlocks:
-            unlock_dt = now + timedelta(days=unlock["days_from_now"])
-            days_until = unlock["days_from_now"]
+        for unlock in UPCOMING_TOKEN_UNLOCKS:
+            unlock_dt = datetime.strptime(unlock["date"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            if unlock_dt <= now:
+                continue
+            days_until = (unlock_dt - now).days
             upcoming.append({
                 "event_type": f"{unlock['token']} Token Unlock",
-                "predicted_date": unlock_dt.strftime("%Y-%m-%d"),
+                "predicted_date": unlock["date"],
                 "days_until": days_until,
                 "predictability": "HIGH",
                 "expected_impact": "negative",
