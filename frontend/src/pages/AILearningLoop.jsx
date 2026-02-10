@@ -612,8 +612,8 @@ const AILearningLoop = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <span className="uppercase">{model}</span>
-                      <Badge className={getAccuracyBadge(stats.accuracy_rate).color}>
-                        {stats.accuracy_rate.toFixed(1)}% Accuracy
+                      <Badge className={getAccuracyBadge(stats?.accuracy_rate || 0).color}>
+                        {(stats?.accuracy_rate || 0).toFixed(1)}% Accuracy
                       </Badge>
                     </CardTitle>
                     <CardDescription>
