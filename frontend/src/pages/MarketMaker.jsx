@@ -302,16 +302,11 @@ const MarketMaker = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
                   <Label className="text-[#A1A1AA]">Trading Pair</Label>
-                  <Select value={config.symbol} onValueChange={(v) => setConfig({ ...config, symbol: v })}>
-                    <SelectTrigger className="bg-[#121212] border-[#1F1F1F] mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#121212] border-[#1F1F1F]">
-                      <SelectItem value="BTC/USD">BTC/USD</SelectItem>
-                      <SelectItem value="ETH/USD">ETH/USD</SelectItem>
-                      <SelectItem value="SOL/USD">SOL/USD</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <TradingPairSelector 
+                    value={config.symbol} 
+                    onValueChange={(v) => setConfig({ ...config, symbol: v })}
+                    className="mt-1"
+                  />
                 </div>
 
                 <div>
