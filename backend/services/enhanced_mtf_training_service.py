@@ -1272,6 +1272,144 @@ class EnhancedMTFTrainingService:
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
     
+    async def predict_all_fast(
+        self,
+        symbols: List[str],
+        batch_size: int = 100
+    ) -> Dict[str, Any]:
+        """
+        Fast batch predictions using sentiment-only features.
+        """
+        # Get model
+        model_doc = await self.model_collection.find_one({"type": "enhanced_mtf"})
+        
+        if not model_doc:
+            return {
+                "error": "No trained model found. Run training first.",
+                "total_predictions": 0
+            }
+        
+        # Get global fear & greed
+        fear_greed = await self.fetch_fear_greed_index()
+        
+        predictions = []
+        errors = []
+        
+        logger.info(f"⚡ Fast predictions for {len(symbols)} symbols...")
+        
+        X_mean = np.array(model_doc["normalization"]["mean"])
+        X_std = np.array(model_doc["normalization"]["std"])
+        weights = np.array(model_doc["weights"])
+        
+        # Process in batches
+        for i in range(0, len(symbols), batch_size):
+            batch = symbols[i:i+batch_size]
+            
+            # Fetch sentiments concurrently
+            tasks = [self.fetch_social_sentiment(sym) for sym in batch]
+            sentiments = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            for sym, sentiment in zip(batch, sentiments):
+                try:
+                    if isinstance(sentiment, Exception):
+                        sentiment = self._get_neutral_sentiment()
+                    
+                    # Create feature vector (sentiment only - 12 features)
+                    feature_vector = np.array([
+                        sentiment.get("twitter_sentiment", 0.5),
+                        sentiment.get("twitter_volume_change", 0),
+                        sentiment.get("reddit_sentiment", 0.5),
+                        sentiment.get("reddit_activity", 0.3),
+                        fear_greed.get("normalized", 0.5),
+                        fear_greed.get("trend_7d", 0) / 100.0 if fear_greed.get("trend_7d") else 0,
+                        sentiment.get("overall_signal_score", 0.5),
+                        sentiment.get("signal_confidence", 0.3),
+                        sentiment.get("fomo_score", 0.3),
+                        sentiment.get("fear_score", 0.3),
+                        sentiment.get("influencer_sentiment", 0.5),
+                        sentiment.get("hype_phase", 0.5)
+                    ])
+                    
+                    feature_vector = np.nan_to_num(feature_vector, nan=0.0, posinf=1.0, neginf=-1.0)
+                    
+                    # Normalize
+                    X_normalized = (feature_vector - X_mean) / X_std
+                    
+                    # Predict
+                    if "sklearn_lr" in self._models:
+                        model = self._models["sklearn_lr"]
+                        le = self._models["label_encoder"]
+                        prediction = model.predict([X_normalized])[0]
+                        probas = model.predict_proba([X_normalized])[0]
+                        confidence = float(np.max(probas))
+                        prediction = int(le.inverse_transform([prediction])[0])
+                    else:
+                        scores = X_normalized @ weights.T
+                        exp_scores = np.exp(scores - np.max(scores))
+                        probas = exp_scores / np.sum(exp_scores)
+                        pred_index = np.argmax(probas)
+                        index_to_label = {0: -1, 1: 0, 2: 1}
+                        prediction = index_to_label.get(pred_index, 0)
+                        confidence = float(np.max(probas))
+                    
+                    signal_map = {-1: "SELL", 0: "HOLD", 1: "BUY"}
+                    
+                    predictions.append({
+                        "symbol": sym,
+                        "prediction": prediction,
+                        "signal": signal_map.get(prediction, "HOLD"),
+                        "confidence": confidence,
+                        "confidence_pct": f"{confidence * 100:.1f}%",
+                        "model_accuracy": model_doc.get("training_info", {}).get("accuracy", 0),
+                        "analysis": {
+                            "sentiment": {
+                                "twitter": sentiment.get("twitter_sentiment", 0.5),
+                                "reddit": sentiment.get("reddit_sentiment", 0.5),
+                                "overall_score": sentiment.get("overall_signal_score", 0.5),
+                                "fomo_score": sentiment.get("fomo_score", 0.3),
+                                "fear_score": sentiment.get("fear_score", 0.3)
+                            },
+                            "fear_greed": {
+                                "value": fear_greed.get("value", 50),
+                                "classification": fear_greed.get("classification", "Neutral")
+                            }
+                        }
+                    })
+                    
+                except Exception as e:
+                    errors.append({"symbol": sym, "error": str(e)})
+            
+            await asyncio.sleep(0.05)  # Small delay between batches
+        
+        # Sort by confidence
+        predictions.sort(key=lambda x: x.get("confidence", 0), reverse=True)
+        
+        # Separate by signal
+        buy_signals = [p for p in predictions if p.get("signal") == "BUY"]
+        sell_signals = [p for p in predictions if p.get("signal") == "SELL"]
+        hold_signals = [p for p in predictions if p.get("signal") == "HOLD"]
+        
+        logger.info(f"✅ Fast predictions complete: {len(predictions)} predictions")
+        
+        return {
+            "total_predictions": len(predictions),
+            "buy_signals": len(buy_signals),
+            "sell_signals": len(sell_signals),
+            "hold_signals": len(hold_signals),
+            "top_buys": buy_signals[:10],
+            "top_sells": sell_signals[:10],
+            "all_predictions": predictions,
+            "errors": errors,
+            "model_info": {
+                "accuracy": model_doc.get("training_info", {}).get("accuracy", 0),
+                "trained_at": model_doc.get("completed_at"),
+                "features_used": model_doc.get("feature_info", {}),
+                "mode": "fast_sentiment"
+            },
+            "fear_greed": fear_greed,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    
     async def get_training_status(self) -> Dict[str, Any]:
         """Get current training status"""
         return self._training_status
