@@ -584,23 +584,61 @@ async def get_account_summary(
     user_id: str = "default_user",
     db = Depends(get_database)
 ):
-    """Get perpetuals account summary"""
+    """Get perpetuals account summary with REAL Kraken balance"""
+    import os
     
-    # Simulated account data
+    account_balance = 0
+    available_balance = 0
+    
+    # Try to get REAL balance from Kraken
+    kraken_api_key = os.getenv('KRAKEN_API_KEY')
+    kraken_api_secret = os.getenv('KRAKEN_API_SECRET')
+    
+    if kraken_api_key and kraken_api_secret:
+        try:
+            from services.kraken_service import KrakenAuthenticator, KrakenTradeService
+            auth = KrakenAuthenticator(kraken_api_key, kraken_api_secret)
+            kraken = KrakenTradeService(auth)
+            balance = await kraken.get_balance()
+            
+            # Sum up USD and stablecoin balances
+            for asset, amount in balance.items():
+                if asset in ['ZUSD', 'USD', 'USDT', 'USDC']:
+                    account_balance += float(amount)
+            
+            available_balance = account_balance
+        except Exception as e:
+            logger.warning(f"Failed to get Kraken balance: {e}")
+            account_balance = 0
+    
+    # Get positions to calculate margin used
+    positions = await db.perp_positions.find(
+        {"user_id": user_id, "status": "open"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    margin_used = sum(p.get("margin", 0) for p in positions)
+    unrealized_pnl = sum(p.get("unrealized_pnl", 0) for p in positions)
+    available_balance = max(0, account_balance - margin_used)
+    
+    # Calculate margin ratio
+    margin_ratio = (margin_used / account_balance * 100) if account_balance > 0 else 0
+    
     return {
-        "account_balance": 10000,
-        "available_balance": 7500,
-        "margin_used": 2500,
-        "unrealized_pnl": 150,
-        "realized_pnl_today": 85,
-        "margin_ratio": 25,
-        "maintenance_margin": 250,
-        "max_withdrawable": 7250,
-        "positions_count": 3,
-        "open_orders_count": 2,
-        "leverage_tier": "VIP1",
+        "account_balance": round(account_balance, 2),
+        "available_balance": round(available_balance, 2),
+        "margin_used": round(margin_used, 2),
+        "unrealized_pnl": round(unrealized_pnl, 2),
+        "realized_pnl_today": 0,
+        "margin_ratio": round(margin_ratio, 2),
+        "maintenance_margin": round(margin_used * 0.1, 2),
+        "max_withdrawable": round(available_balance * 0.95, 2),
+        "positions_count": len(positions),
+        "open_orders_count": 0,
+        "leverage_tier": "Standard",
         "fee_tier": {
             "maker": 0.02,
             "taker": 0.05
-        }
+        },
+        "data_source": "kraken_live" if kraken_api_key else "database"
     }
