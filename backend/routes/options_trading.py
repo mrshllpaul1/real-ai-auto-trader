@@ -19,6 +19,13 @@ router = APIRouter(prefix="/options", tags=["Options Trading"])
 # Global database reference
 _db = None
 
+# Current prices (centralized for consistency across all endpoints)
+CURRENT_PRICES = {
+    "BTC": 45000,
+    "ETH": 2500,
+    "SOL": 100
+}
+
 
 def set_db(db):
     global _db
@@ -43,6 +50,7 @@ class OptionOrder(BaseModel):
     strike_price: float
     expiry_date: str  # ISO format
     quantity: float
+    action: str = "buy"  # "buy" or "sell"
     order_type: str = "market"  # market, limit
     limit_price: Optional[float] = None
 
@@ -150,11 +158,7 @@ async def get_option_chain(
 ):
     """Get available options chain for a symbol"""
     # Generate simulated option chain
-    current_price = {
-        "BTC": 45000,
-        "ETH": 2500,
-        "SOL": 100
-    }.get(symbol.upper(), 1000)
+    current_price = CURRENT_PRICES.get(symbol.upper(), 1000)
     
     # Generate strikes around current price
     strikes = []
@@ -259,8 +263,7 @@ async def place_option_order(
 ):
     """Place an option order (simulated)"""
     # Get current price
-    current_prices = {"BTC": 45000, "ETH": 2500, "SOL": 100}
-    current_price = current_prices.get(order.symbol.upper(), 1000)
+    current_price = CURRENT_PRICES.get(order.symbol.upper(), 1000)
     
     # Calculate days to expiry
     expiry = datetime.fromisoformat(order.expiry_date.replace('Z', '+00:00'))
@@ -283,13 +286,14 @@ async def place_option_order(
         "user_id": user_id,
         "symbol": order.symbol.upper(),
         "option_type": order.option_type,
+        "action": order.action,
         "strike_price": order.strike_price,
         "expiry_date": order.expiry_date,
         "quantity": order.quantity,
         "order_type": order.order_type,
         "limit_price": order.limit_price,
         "fill_price": greeks["price"],
-        "total_cost": greeks["price"] * order.quantity,
+        "total_cost": greeks["price"] * order.quantity if order.action == "buy" else -greeks["price"] * order.quantity,
         "greeks": greeks,
         "status": "filled",  # Simulated instant fill
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -304,15 +308,18 @@ async def place_option_order(
         "user_id": user_id,
         "symbol": order.symbol.upper(),
         "option_type": order.option_type,
+        "action": order.action,
         "strike_price": order.strike_price,
         "expiry_date": order.expiry_date,
-        "quantity": order.quantity,
+        "quantity": order.quantity if order.action == "buy" else -order.quantity,  # Negative for sold options
         "entry_price": greeks["price"],
+        "entry_underlying_price": current_price,
         "current_price": greeks["price"],
         "pnl": 0,
         "greeks": greeks,
         "status": "open",
-        "opened_at": datetime.now(timezone.utc).isoformat()
+        "opened_at": datetime.now(timezone.utc).isoformat(),
+        "days_held": 0
     }
     
     await db.option_positions.insert_one(position)
@@ -337,10 +344,8 @@ async def get_option_positions(
     ).to_list(100)
     
     # Update greeks and P&L for each position
-    current_prices = {"BTC": 45000, "ETH": 2500, "SOL": 100}
-    
     for pos in positions:
-        current_price = current_prices.get(pos["symbol"], 1000)
+        current_price = CURRENT_PRICES.get(pos["symbol"], 1000)
         expiry = datetime.fromisoformat(pos["expiry_date"].replace('Z', '+00:00'))
         days_to_expiry = max((expiry - datetime.now(timezone.utc)).days, 0)
         T = max(days_to_expiry, 0.01) / 365
@@ -357,18 +362,38 @@ async def get_option_positions(
         
         pos["current_price"] = greeks["price"]
         pos["greeks"] = greeks
-        pos["pnl"] = round((greeks["price"] - pos["entry_price"]) * pos["quantity"], 2)
-        pos["pnl_pct"] = round((greeks["price"] - pos["entry_price"]) / pos["entry_price"] * 100, 2) if pos["entry_price"] > 0 else 0
+        
+        # Calculate days held
+        opened_at = datetime.fromisoformat(pos.get("opened_at", datetime.now(timezone.utc).isoformat()).replace('Z', '+00:00'))
+        days_held = (datetime.now(timezone.utc) - opened_at).days
+        pos["days_held"] = days_held
+        
+        # Calculate P&L based on whether option was bought or sold
+        quantity = pos.get("quantity", 0)
+        is_short = quantity < 0  # Negative quantity means sold/short position
+        
+        if is_short:
+            # For sold options, profit when price goes down
+            pos["pnl"] = round((pos["entry_price"] - greeks["price"]) * abs(quantity), 2)
+        else:
+            # For bought options, profit when price goes up
+            pos["pnl"] = round((greeks["price"] - pos["entry_price"]) * quantity, 2)
+            
+        pos["pnl_pct"] = round(pos["pnl"] / (pos["entry_price"] * abs(quantity)) * 100, 2) if pos["entry_price"] > 0 else 0
         pos["days_to_expiry"] = days_to_expiry
     
     # Calculate totals
-    total_value = sum(p["current_price"] * p["quantity"] for p in positions)
+    total_value = sum(abs(p["current_price"] * p.get("quantity", 0)) for p in positions)
     total_pnl = sum(p["pnl"] for p in positions)
+    long_positions = sum(1 for p in positions if p.get("quantity", 0) > 0)
+    short_positions = sum(1 for p in positions if p.get("quantity", 0) < 0)
     
     return {
         "positions": positions,
         "summary": {
             "total_positions": len(positions),
+            "long_positions": long_positions,
+            "short_positions": short_positions,
             "total_value": round(total_value, 2),
             "total_pnl": round(total_pnl, 2),
             "calls": sum(1 for p in positions if p["option_type"] == "call"),
@@ -394,8 +419,7 @@ async def close_option_position(
         raise HTTPException(status_code=404, detail="Position not found")
     
     # Calculate final P&L
-    current_prices = {"BTC": 45000, "ETH": 2500, "SOL": 100}
-    current_price = current_prices.get(position["symbol"], 1000)
+    current_price = CURRENT_PRICES.get(position["symbol"], 1000)
     
     expiry = datetime.fromisoformat(position["expiry_date"].replace('Z', '+00:00'))
     days_to_expiry = max((expiry - datetime.now(timezone.utc)).days, 0)
@@ -410,7 +434,20 @@ async def close_option_position(
         option_type=position["option_type"]
     )
     
-    final_pnl = (greeks["price"] - position["entry_price"]) * position["quantity"]
+    # Calculate final P&L based on position type
+    quantity = position.get("quantity", 0)
+    is_short = quantity < 0
+    
+    if is_short:
+        # For sold options, profit when buying back cheaper
+        final_pnl = (position["entry_price"] - greeks["price"]) * abs(quantity)
+    else:
+        # For bought options, profit when selling higher
+        final_pnl = (greeks["price"] - position["entry_price"]) * quantity
+    
+    # Calculate days held
+    opened_at = datetime.fromisoformat(position.get("opened_at", datetime.now(timezone.utc).isoformat()).replace('Z', '+00:00'))
+    days_held = (datetime.now(timezone.utc) - opened_at).days
     
     # Update position
     await db.option_positions.update_one(
@@ -420,6 +457,7 @@ async def close_option_position(
                 "status": "closed",
                 "exit_price": greeks["price"],
                 "final_pnl": round(final_pnl, 2),
+                "days_held": days_held,
                 "closed_at": datetime.now(timezone.utc).isoformat()
             }
         }
@@ -531,5 +569,91 @@ async def get_options_pnl_history(
             "total_pnl": round(total_pnl, 2),
             "win_rate": round(wins / len(closed) * 100, 1) if closed else 0,
             "avg_pnl": round(total_pnl / len(closed), 2) if closed else 0
+        }
+    }
+
+
+@router.get("/position-analytics/{position_id}")
+async def get_position_analytics(
+    position_id: str,
+    user_id: str = "default_user",
+    db = Depends(get_database)
+):
+    """Get detailed P&L breakdown by Greeks for a position"""
+    position = await db.option_positions.find_one({
+        "position_id": position_id,
+        "user_id": user_id
+    })
+    
+    if not position:
+        raise HTTPException(status_code=404, detail="Position not found")
+    
+    # Get current or final price
+    current_price = CURRENT_PRICES.get(position["symbol"], 1000)
+    
+    # Calculate Greeks at entry and current/exit
+    expiry = datetime.fromisoformat(position["expiry_date"].replace('Z', '+00:00'))
+    days_to_expiry = max((expiry - datetime.now(timezone.utc)).days, 0)
+    T_current = max(days_to_expiry, 0.01) / 365
+    
+    # Greeks at entry (estimate by working backwards)
+    entry_greeks = position.get("greeks", {})
+    
+    # Current Greeks
+    current_greeks = calculate_greeks(
+        S=current_price,
+        K=position["strike_price"],
+        T=T_current,
+        r=0.05,
+        sigma=0.65,
+        option_type=position["option_type"]
+    )
+    
+    # Calculate P&L attribution
+    quantity = position.get("quantity", 0)
+    is_short = quantity < 0
+    abs_qty = abs(quantity)
+    
+    price_change = current_greeks["price"] - position["entry_price"]
+    # Use consistent P&L calculation formula (same as in get_option_positions)
+    if is_short:
+        total_pnl = (position["entry_price"] - current_greeks["price"]) * abs_qty
+    else:
+        total_pnl = price_change * abs_qty
+    
+    # Estimate P&L by Greek (simplified)
+    # Delta P&L: change in underlying price * delta (adjusted for short positions)
+    underlying_move = current_price - position.get("entry_underlying_price", current_price)
+    delta_multiplier = -1 if is_short else 1
+    delta_pnl = underlying_move * entry_greeks.get("delta", 0) * abs_qty * delta_multiplier
+    
+    # Theta P&L: time decay
+    days_passed = position.get("days_held", 0)
+    theta_pnl = entry_greeks.get("theta", 0) * days_passed * abs_qty
+    
+    # Vega P&L: IV change (NOTE: This is a placeholder calculation using assumed 5% IV change)
+    # TODO: Store entry IV and calculate actual IV change for accurate attribution
+    vega_pnl = entry_greeks.get("vega", 0) * 5 * abs_qty
+    
+    # Gamma P&L: second order effect (calculated as remainder)
+    gamma_pnl = total_pnl - delta_pnl - theta_pnl - vega_pnl
+    
+    return {
+        "position_id": position_id,
+        "symbol": position["symbol"],
+        "option_type": position["option_type"],
+        "strike": position["strike_price"],
+        "entry_price": position["entry_price"],
+        "current_price": current_greeks["price"],
+        "total_pnl": round(total_pnl, 2),
+        "pnl_breakdown": {
+            "delta_pnl": round(delta_pnl, 2),
+            "theta_pnl": round(theta_pnl, 2),
+            "vega_pnl": round(vega_pnl, 2),
+            "gamma_other": round(gamma_pnl, 2)
+        },
+        "greeks_comparison": {
+            "entry": entry_greeks,
+            "current": current_greeks
         }
     }
