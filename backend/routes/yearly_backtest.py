@@ -274,12 +274,12 @@ async def get_available_coins():
     from services.yearly_adaptive_backtest import TOP_COINS
     
     kraken_coins = []
-    if _db:
+    if _db is not None:
         try:
             universe = await _db.kraken_universe.find_one({"type": "universe"})
             if universe and "crypto_coins" in universe:
                 kraken_coins = universe["crypto_coins"]
-        except:
+        except Exception:
             pass
     
     return {
