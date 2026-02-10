@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { 
-  Wallet, Briefcase, PieChart, Layers, Target, LineChart, Activity
+  Wallet, Briefcase, PieChart, Layers, Target, LineChart, Activity, BarChart3
 } from 'lucide-react';
 import { 
   Breadcrumb, 
@@ -22,13 +22,15 @@ const AdvancedOrders = lazy(() => import('./AdvancedOrders'));
 const OptionsTrading = lazy(() => import('./OptionsTrading'));
 const PerpetualFutures = lazy(() => import('./PerpetualFutures'));
 const MarketMaker = lazy(() => import('./MarketMaker'));
+const PerformanceDashboard = lazy(() => import('./PerformanceDashboard'));
 
-const TABS = ['spot', 'positions', 'portfolio', 'advanced', 'options', 'perpetuals', 'market-maker'];
+const TABS = ['spot', 'positions', 'portfolio', 'performance', 'advanced', 'options', 'perpetuals', 'market-maker'];
 
 const TAB_LABELS = {
   'spot': 'Spot',
   'positions': 'Positions',
   'portfolio': 'Portfolio',
+  'performance': 'Performance',
   'advanced': 'Advanced',
   'options': 'Options',
   'perpetuals': 'Perpetuals',
@@ -39,6 +41,7 @@ const TAB_CONFIG = [
   { value: 'spot', icon: Wallet, label: 'Spot', color: 'green' },
   { value: 'positions', icon: Briefcase, label: 'Positions', color: 'blue' },
   { value: 'portfolio', icon: PieChart, label: 'Portfolio', color: 'purple' },
+  { value: 'performance', icon: BarChart3, label: 'Performance', color: 'emerald' },
   { value: 'advanced', icon: Layers, label: 'Advanced', color: 'amber' },
   { value: 'options', icon: Target, label: 'Options', color: 'cyan' },
   { value: 'perpetuals', icon: LineChart, label: 'Perpetuals', color: 'pink' },
