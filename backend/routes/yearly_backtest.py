@@ -164,17 +164,25 @@ async def get_backtest_results(backtest_id: str):
 
 
 @router.post("/quick-test")
-async def run_quick_yearly_test():
+async def run_quick_yearly_test(year: int = 2025):
     """
     Run a quick synchronous yearly backtest with top 20 coins.
     Returns results immediately (may take 5-10 seconds).
+    
+    Supported years: 2020, 2021, 2022, 2023, 2024, 2025
     """
+    if year < 2020 or year > 2025:
+        raise HTTPException(status_code=400, detail="Year must be between 2020 and 2025")
+    
     try:
-        from services.yearly_adaptive_backtest import run_yearly_adaptive_backtest, TOP_COINS
+        from services.yearly_adaptive_backtest import run_yearly_adaptive_backtest, COINS_BY_YEAR
+        
+        coins = COINS_BY_YEAR.get(year, COINS_BY_YEAR[2025])[:20]
         
         results = await run_yearly_adaptive_backtest(
+            year=year,
             initial_capital=100000,
-            coins=TOP_COINS[:20],
+            coins=coins,
             db=_db
         )
         
@@ -182,6 +190,35 @@ async def run_quick_yearly_test():
         
     except Exception as e:
         logger.error(f"Quick test failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/multi-year")
+async def run_multi_year_backtest_endpoint(request: MultiYearBacktestRequest):
+    """
+    Run backtests across multiple years (2020-2025).
+    
+    This runs each year sequentially, compounding capital from year to year.
+    Returns aggregate metrics including CAGR and overall win rate.
+    """
+    for year in request.years:
+        if year < 2020 or year > 2025:
+            raise HTTPException(status_code=400, detail=f"Year {year} not supported. Must be between 2020 and 2025")
+    
+    try:
+        from services.yearly_adaptive_backtest import run_multi_year_backtest
+        
+        results = await run_multi_year_backtest(
+            years=request.years,
+            initial_capital=request.initial_capital,
+            coins=request.coins,
+            db=_db
+        )
+        
+        return results
+        
+    except Exception as e:
+        logger.error(f"Multi-year backtest failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
