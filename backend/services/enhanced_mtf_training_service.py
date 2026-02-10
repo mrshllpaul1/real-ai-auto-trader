@@ -468,8 +468,11 @@ class EnhancedMTFTrainingService:
                 epochs = min(epochs, 20)
                 logger.info("🔋 Running in lightweight mode - limited epochs")
             
-            if symbols is None:
-                symbols = self.DEFAULT_COINS
+            # Handle "all" or None to use full Kraken universe
+            if symbols is None or symbols == ["all"] or (isinstance(symbols, list) and len(symbols) == 1 and symbols[0].lower() == "all"):
+                self._training_status["current_phase"] = "fetching_kraken_universe"
+                symbols = await self.fetch_all_kraken_coins()
+                logger.info(f"📊 Using full Kraken universe: {len(symbols)} coins")
             
             if timeframes is None:
                 timeframes = self.TRAINING_TIMEFRAMES
