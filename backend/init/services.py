@@ -462,6 +462,11 @@ async def _init_phase6_scheduling(db):
             stats = await events_db.get_stats()
             current_total_events = stats.get("total_events", 0)
             if current_total_events >= MIN_HISTORICAL_EVENTS:
+                logger.info(
+                    "ℹ️ Historical events already populated (%s >= threshold %s)",
+                    current_total_events,
+                    MIN_HISTORICAL_EVENTS,
+                )
                 return
 
             seed_result = await events_db.seed_major_events()
@@ -476,7 +481,7 @@ async def _init_phase6_scheduling(db):
             updated = seed_result.get("updated", 0)
             total_seeded = seed_result.get("total_events", 0)
             # Upsert-based seeding is idempotent; concurrent startup calls should not create duplicates
-            if (inserted + updated) == 0:
+            if inserted + updated == 0:
                 logger.warning(
                     "⚠️ Historical events auto-seed made no database changes (existing: %s, curated total: %s)",
                     current_total_events,
