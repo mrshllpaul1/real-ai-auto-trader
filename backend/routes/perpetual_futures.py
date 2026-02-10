@@ -143,20 +143,6 @@ async def get_perpetual_markets(db = Depends(get_database)):
     if not markets:
         raise HTTPException(status_code=503, detail="Unable to fetch real market data from Kraken")
     
-    return {"markets": markets}
-            "mark_price": 15.50,
-            "index_price": 15.48,
-            "24h_change": 4.2,
-            "24h_volume": 95000000,
-            "open_interest": 35000000,
-            "funding_rate": 0.0018,
-            "next_funding": (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat(),
-            "max_leverage": 50,
-            "maintenance_margin": 1.0,
-            "initial_margin": 2.0
-        }
-    ]
-    
     return {
         "markets": markets,
         "total": len(markets),
