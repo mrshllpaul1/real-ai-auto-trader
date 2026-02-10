@@ -385,7 +385,8 @@ Be objective and focus on market-moving information.
                 else 'neutral'
             )
             
-            coverage_factor = min(1.0, len(relevant_news) / 8)  # more articles -> higher confidence
+            TARGET_ARTICLE_COUNT = 8  # ideal sample size for stable sentiment
+            coverage_factor = min(1.0, len(relevant_news) / TARGET_ARTICLE_COUNT)
             confidence = round(
                 min(1.0, abs(sentiment_score) * 0.7 + coverage_factor * 0.3) * 100,
                 1
@@ -444,22 +445,27 @@ Be objective and focus on market-moving information.
         text = f"{item.get('title', '')} {item.get('description', '')}".lower()
         base_score = sentiment_map.get(item.get('sentiment', 'neutral'), 0.0)
         
-        keyword_score = 0.0
-        if any(kw in text for kw in positive_keywords):
-            keyword_score += 0.25
-        if any(kw in text for kw in negative_keywords):
-            keyword_score -= 0.25
+        KEYWORD_WEIGHT = 0.15
+        keyword_positive_hits = sum(1 for kw in positive_keywords if kw in text)
+        keyword_negative_hits = sum(1 for kw in negative_keywords if kw in text)
+
+        keyword_score = min(keyword_positive_hits, 2) * KEYWORD_WEIGHT
+        keyword_score -= min(keyword_negative_hits, 2) * KEYWORD_WEIGHT
         
         combined = max(-1.0, min(1.0, base_score + keyword_score))
         
         # Recency weighting (newer news gets higher weight)
+        MIN_RECENCY_WEIGHT = 0.4
+        MAX_DECAY_HOURS = 72
+        DECAY_DIVISOR = 120
         weight = 1.0
         published_at = item.get('published_at') or item.get('pubDate')
         if published_at:
             try:
                 news_time = datetime.fromisoformat(published_at.replace('Z', '+00:00'))
-                hours_old = max(0, (datetime.now(news_time.tzinfo) - news_time).total_seconds() / 3600)
-                weight = max(0.4, 1 - min(hours_old, 72) / 120)  # decay over 3 days
+                now = datetime.now(news_time.tzinfo) if news_time.tzinfo else datetime.now()
+                hours_old = max(0, (now - news_time).total_seconds() / 3600)
+                weight = max(MIN_RECENCY_WEIGHT, 1 - min(hours_old, MAX_DECAY_HOURS) / DECAY_DIVISOR)  # decay over 3 days
             except Exception:
                 weight = 1.0
         
