@@ -104,103 +104,104 @@ async def get_performance_dashboard():
         entry_data = await _entry_tracker.get_all_entries()
         entry_prices = {e["symbol"]: e for e in entry_data}
         
-        # Calculate total cost basis and realized P&L
+        # Calculate metrics per position based on CURRENT holdings
+        winning = 0
+        losing = 0
+        positions = []
         total_cost_basis = 0
         total_realized_pnl = 0
         
-        for entry in entry_data:
-            cost = (entry.get("entry_price", 0) or 0) * (entry.get("quantity", 0) or 0)
-            total_cost_basis += cost
+        for h in holdings:
+            symbol = h["symbol"]
+            entry = entry_prices.get(symbol, {})
+            entry_price = entry.get("entry_price", 0)
+            current_quantity = h["quantity"]
+            
+            # Add to total realized P&L
             total_realized_pnl += entry.get("realized_pnl", 0) or 0
-        
-        # Calculate performance metrics
-        if _performance_service:
-            metrics = await _performance_service.get_performance_metrics(
-                current_portfolio_value=total_value,
-                total_cost_basis=total_cost_basis,
-                total_realized_pnl=total_realized_pnl,
-                holdings=holdings,
-                entry_prices=entry_prices
-            )
-        else:
-            # Calculate basic metrics without service
-            unrealized_pnl = total_value - total_cost_basis if total_cost_basis > 0 else 0
-            total_pnl = unrealized_pnl + total_realized_pnl
             
-            # Calculate per-position
-            winning = 0
-            losing = 0
-            positions = []
-            
-            for h in holdings:
-                entry = entry_prices.get(h["symbol"], {})
-                entry_price = entry.get("entry_price", 0)
+            if entry_price > 0 and current_quantity > 0:
+                # Calculate cost basis for CURRENT quantity only
+                cost_basis = entry_price * current_quantity
+                total_cost_basis += cost_basis
                 
-                if entry_price > 0:
-                    pnl_pct = ((h["price"] - entry_price) / entry_price * 100)
-                    pnl_usd = (h["price"] - entry_price) * h["quantity"]
-                    
-                    if pnl_pct >= 0:
-                        winning += 1
-                    else:
-                        losing += 1
-                    
-                    positions.append({
-                        "symbol": h["symbol"],
-                        "entry_price": entry_price,
-                        "current_price": h["price"],
-                        "quantity": h["quantity"],
-                        "pnl_percent": round(pnl_pct, 2),
-                        "pnl_usd": round(pnl_usd, 2),
-                        "cost_basis": entry_price * h["quantity"],
-                        "current_value": h["usd_value"],
-                        "realized_pnl": entry.get("realized_pnl", 0)
-                    })
-            
-            total_positions = winning + losing
-            win_rate = (winning / total_positions * 100) if total_positions > 0 else 0
-            
-            # Sort by P&L
-            positions.sort(key=lambda x: x["pnl_percent"], reverse=True)
-            
-            metrics = {
-                "summary": {
-                    "current_portfolio_value": round(total_value, 2),
-                    "usd_balance": round(usd_balance, 2),
-                    "total_portfolio_value": round(total_value + usd_balance, 2),
-                    "total_cost_basis": round(total_cost_basis, 2),
-                    "unrealized_pnl": round(unrealized_pnl, 2),
-                    "unrealized_pnl_percent": round((unrealized_pnl / total_cost_basis * 100) if total_cost_basis > 0 else 0, 2),
-                    "realized_pnl": round(total_realized_pnl, 2),
-                    "total_pnl": round(total_pnl, 2),
-                    "total_pnl_percent": round((total_pnl / total_cost_basis * 100) if total_cost_basis > 0 else 0, 2)
-                },
-                "win_loss": {
-                    "winning_positions": winning,
-                    "losing_positions": losing,
-                    "total_positions": total_positions,
-                    "win_rate": round(win_rate, 2)
-                },
-                "comparison": {
-                    "buy_hold_value": round(total_cost_basis, 2),
-                    "buy_hold_current": round(total_value, 2),
-                    "buy_hold_pnl": round(unrealized_pnl, 2),
-                    "buy_hold_pnl_percent": round((unrealized_pnl / total_cost_basis * 100) if total_cost_basis > 0 else 0, 2),
-                    "alpha": 0,
-                    "outperforming": False
-                },
-                "best_performer": positions[0] if positions else None,
-                "worst_performer": positions[-1] if positions else None,
-                "positions": positions,
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            }
+                pnl_usd = (h["price"] - entry_price) * current_quantity
+                pnl_pct = ((h["price"] - entry_price) / entry_price * 100)
+                
+                if pnl_pct >= 0:
+                    winning += 1
+                else:
+                    losing += 1
+                
+                positions.append({
+                    "symbol": symbol,
+                    "entry_price": entry_price,
+                    "current_price": h["price"],
+                    "quantity": current_quantity,
+                    "pnl_percent": round(pnl_pct, 2),
+                    "pnl_usd": round(pnl_usd, 2),
+                    "cost_basis": round(cost_basis, 2),
+                    "current_value": round(h["usd_value"], 2),
+                    "realized_pnl": round(entry.get("realized_pnl", 0) or 0, 2),
+                    "total_buys": entry.get("total_buys", 0),
+                    "total_sells": entry.get("total_sells", 0)
+                })
+            else:
+                # No entry price tracked
+                positions.append({
+                    "symbol": symbol,
+                    "entry_price": None,
+                    "current_price": h["price"],
+                    "quantity": current_quantity,
+                    "pnl_percent": None,
+                    "pnl_usd": None,
+                    "cost_basis": None,
+                    "current_value": round(h["usd_value"], 2),
+                    "realized_pnl": 0,
+                    "has_entry": False
+                })
         
-        # Add extra context
-        metrics["has_entry_data"] = len(entry_prices) > 0
-        metrics["positions_with_entry"] = len([p for p in metrics.get("positions", []) if p.get("entry_price")])
-        metrics["positions_without_entry"] = len(holdings) - metrics["positions_with_entry"]
+        # Sort by P&L (positions with entry prices first, then by P&L)
+        positions_with_entry = [p for p in positions if p.get("pnl_percent") is not None]
+        positions_without_entry = [p for p in positions if p.get("pnl_percent") is None]
+        positions_with_entry.sort(key=lambda x: x["pnl_percent"], reverse=True)
+        positions = positions_with_entry + positions_without_entry
         
-        return metrics
+        total_positions = winning + losing
+        win_rate = (winning / total_positions * 100) if total_positions > 0 else 0
+        
+        # Calculate P&L
+        unrealized_pnl = total_value - total_cost_basis if total_cost_basis > 0 else 0
+        unrealized_pnl_pct = (unrealized_pnl / total_cost_basis * 100) if total_cost_basis > 0 else 0
+        total_pnl = unrealized_pnl + total_realized_pnl
+        total_pnl_pct = (total_pnl / total_cost_basis * 100) if total_cost_basis > 0 else 0
+        
+        return {
+            "summary": {
+                "current_portfolio_value": round(total_value, 2),
+                "usd_balance": round(usd_balance, 2),
+                "total_portfolio_value": round(total_value + usd_balance, 2),
+                "total_cost_basis": round(total_cost_basis, 2),
+                "unrealized_pnl": round(unrealized_pnl, 2),
+                "unrealized_pnl_percent": round(unrealized_pnl_pct, 2),
+                "realized_pnl": round(total_realized_pnl, 2),
+                "total_pnl": round(total_pnl, 2),
+                "total_pnl_percent": round(total_pnl_pct, 2)
+            },
+            "win_loss": {
+                "winning_positions": winning,
+                "losing_positions": losing,
+                "total_positions": total_positions,
+                "win_rate": round(win_rate, 2)
+            },
+            "best_performer": positions_with_entry[0] if positions_with_entry else None,
+            "worst_performer": positions_with_entry[-1] if positions_with_entry else None,
+            "positions": positions,
+            "has_entry_data": len(entry_prices) > 0,
+            "positions_with_entry": len(positions_with_entry),
+            "positions_without_entry": len(positions_without_entry),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
         
     except Exception as e:
         logger.error(f"Performance dashboard error: {e}")
