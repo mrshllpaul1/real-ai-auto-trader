@@ -89,30 +89,41 @@ class TethysModelRegistry:
         self.active_run = mlflow.start_run(run_name=run_name)
         
         # Log system info
-        mlflow.log_param("agent", "Tethys")
-        mlflow.log_param("model_type", "Rainbow DQN + Transformer")
-        mlflow.log_param("timestamp", datetime.utcnow().isoformat())
+        if self.mlflow_enabled and mlflow:
+            mlflow.log_param("agent", "Tethys")
+            mlflow.log_param("model_type", "Rainbow DQN + Transformer")
+            mlflow.log_param("timestamp", datetime.utcnow().isoformat())
         
-        return self.active_run.info.run_id
+        return self.active_run.info.run_id if self.active_run else None
     
     def log_hyperparameters(self, params: Dict[str, Any]):
         """Log hyperparameters"""
+        if not self.mlflow_enabled or not mlflow:
+            return
         for key, value in params.items():
             mlflow.log_param(key, value)
     
     def log_metrics(self, metrics: Dict[str, float], step: int = None):
         """Log training metrics"""
+        if not self.mlflow_enabled or not mlflow:
+            return
         for key, value in metrics.items():
             mlflow.log_metric(key, value, step=step)
     
     def log_model(self, model, model_name: str = "rainbow_dqn"):
         """Log and register model"""
+        if not self.mlflow_enabled or not mlflow:
+            logger.info(f"MLflow not available - model {model_name} not registered")
+            return
         # Log model artifact
-        mlflow.keras.log_model(
-            model,
-            model_name,
-            registered_model_name=f"tethys_{model_name}"
-        )
+        try:
+            mlflow.keras.log_model(
+                model,
+                model_name,
+                registered_model_name=f"tethys_{model_name}"
+            )
+        except Exception as e:
+            logger.warning(f"Failed to log model to MLflow: {e}")
     
     def end_run(self, status: str = "FINISHED"):
         """End current run"""
