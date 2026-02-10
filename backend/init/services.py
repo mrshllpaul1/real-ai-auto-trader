@@ -570,6 +570,11 @@ async def _init_phase7_wire_dependencies(db):
         db, _services['kraken'], _services['isolated_portfolio'], _services['auto_trader'],
         prediction_services=_services['prediction_services']
     )
+    
+    # Portfolio Visualization - pass kraken service for real portfolio data
+    from routes import portfolio_visualization
+    portfolio_visualization.set_dependencies(db, _services['isolated_portfolio'], _services['kraken'])
+    
     ai_selection.set_dependencies(db, _services['coin_selector'], _services['simulation_runner'])
     gems.set_dependencies(db, _services['gem_finder'])
     auto_trade.set_dependencies(db, _services['auto_trader'], _services['alerts'], _services['sentiment_scraper'])
