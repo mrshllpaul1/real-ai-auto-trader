@@ -961,7 +961,6 @@ class AdaptiveStrategyService:
         if event_type == "fomc_meeting":
             scheduled = _next_scheduled("fomc_meetings")
             if scheduled:
-                ev_date = datetime.strptime(scheduled["date"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
                 # Impact prediction based on regime
                 if regime in ["high_volatility", "bear"]:
                     expected_impact = "negative"
