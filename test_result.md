@@ -368,11 +368,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "ML Optimization and A/B Testing System"
+    - "Adaptive Strategy and Event Prediction System"
   stuck_tasks:
-    - "Tethys Execute Trade Endpoint"
-    - "Market Data Endpoints"
-    - "TensorFlow ML Integration"
+    - "Enhanced MTF Training API Service Availability"
   test_all: true
   test_priority: "high_first"
 
