@@ -35,6 +35,8 @@ const OptionsTrading = () => {
   const [sortBy, setSortBy] = useState('strike'); // 'strike', 'volume', 'delta'
   const [showFilters, setShowFilters] = useState(false);
   const [estimatedGreeks, setEstimatedGreeks] = useState(null);
+  const [strategyLegs, setStrategyLegs] = useState([]);
+  const [selectedStrategy, setSelectedStrategy] = useState(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -115,6 +117,133 @@ const OptionsTrading = () => {
       }
     }
   }, [orderForm.strike_price, orderForm.expiry_date, orderForm.option_type, orderForm.quantity, chain]);
+
+  // Strategy builder functions
+  const addLegToStrategy = () => {
+    setStrategyLegs([...strategyLegs, {
+      id: Date.now(),
+      action: 'buy',
+      option_type: 'call',
+      strike_price: chain?.current_price || 45000,
+      expiry_date: selectedExpiry,
+      quantity: 1
+    }]);
+  };
+
+  const removeLegFromStrategy = (legId) => {
+    setStrategyLegs(strategyLegs.filter(leg => leg.id !== legId));
+  };
+
+  const updateStrategyLeg = (legId, field, value) => {
+    setStrategyLegs(strategyLegs.map(leg => 
+      leg.id === legId ? { ...leg, [field]: value } : leg
+    ));
+  };
+
+  const calculateStrategyPayoff = () => {
+    if (strategyLegs.length === 0 || !chain) return null;
+    
+    let totalCost = 0;
+    let netGreeks = { delta: 0, gamma: 0, theta: 0, vega: 0 };
+    
+    strategyLegs.forEach(leg => {
+      const option = chain.options?.find(opt => 
+        opt.strike === leg.strike_price && opt.expiry === leg.expiry_date
+      );
+      
+      if (option) {
+        const optionData = leg.option_type === 'call' ? option.call : option.put;
+        const price = leg.action === 'buy' ? optionData.ask : optionData.bid;
+        const multiplier = leg.action === 'buy' ? 1 : -1;
+        
+        totalCost += price * leg.quantity * multiplier;
+        netGreeks.delta += optionData.greeks.delta * leg.quantity * multiplier;
+        netGreeks.gamma += optionData.greeks.gamma * leg.quantity * multiplier;
+        netGreeks.theta += optionData.greeks.theta * leg.quantity * multiplier;
+        netGreeks.vega += optionData.greeks.vega * leg.quantity * multiplier;
+      }
+    });
+    
+    return { totalCost: totalCost.toFixed(2), netGreeks };
+  };
+
+  const executeStrategy = async () => {
+    if (strategyLegs.length === 0) {
+      toast.error('No legs in strategy');
+      return;
+    }
+
+    const loadingToast = toast.loading('Executing multi-leg strategy...');
+    try {
+      // Execute each leg
+      for (const leg of strategyLegs) {
+        await api.post('/options/order', {
+          symbol: selectedSymbol,
+          ...leg
+        });
+      }
+      
+      toast.dismiss(loadingToast);
+      toast.success('Multi-leg strategy executed!', {
+        description: `${strategyLegs.length} legs opened successfully`
+      });
+      
+      setStrategyLegs([]);
+      loadData();
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error('Failed to execute strategy', {
+        description: error.response?.data?.detail || 'Please try again'
+      });
+    }
+  };
+
+  const loadPredefinedStrategy = (strategyName) => {
+    if (!chain || !selectedExpiry) {
+      toast.error('Please select a symbol and expiry first');
+      return;
+    }
+
+    const currentPrice = chain.current_price;
+    const atm = Math.round(currentPrice / 1000) * 1000;
+    
+    let legs = [];
+    
+    switch(strategyName) {
+      case 'Bull Call Spread':
+        legs = [
+          { id: Date.now(), action: 'buy', option_type: 'call', strike_price: atm, expiry_date: selectedExpiry, quantity: 1 },
+          { id: Date.now() + 1, action: 'sell', option_type: 'call', strike_price: atm + (currentPrice * 0.1), expiry_date: selectedExpiry, quantity: 1 }
+        ];
+        break;
+      case 'Bear Put Spread':
+        legs = [
+          { id: Date.now(), action: 'buy', option_type: 'put', strike_price: atm, expiry_date: selectedExpiry, quantity: 1 },
+          { id: Date.now() + 1, action: 'sell', option_type: 'put', strike_price: atm - (currentPrice * 0.1), expiry_date: selectedExpiry, quantity: 1 }
+        ];
+        break;
+      case 'Straddle':
+        legs = [
+          { id: Date.now(), action: 'buy', option_type: 'call', strike_price: atm, expiry_date: selectedExpiry, quantity: 1 },
+          { id: Date.now() + 1, action: 'buy', option_type: 'put', strike_price: atm, expiry_date: selectedExpiry, quantity: 1 }
+        ];
+        break;
+      case 'Iron Condor':
+        legs = [
+          { id: Date.now(), action: 'sell', option_type: 'put', strike_price: atm - (currentPrice * 0.05), expiry_date: selectedExpiry, quantity: 1 },
+          { id: Date.now() + 1, action: 'buy', option_type: 'put', strike_price: atm - (currentPrice * 0.1), expiry_date: selectedExpiry, quantity: 1 },
+          { id: Date.now() + 2, action: 'sell', option_type: 'call', strike_price: atm + (currentPrice * 0.05), expiry_date: selectedExpiry, quantity: 1 },
+          { id: Date.now() + 3, action: 'buy', option_type: 'call', strike_price: atm + (currentPrice * 0.1), expiry_date: selectedExpiry, quantity: 1 }
+        ];
+        break;
+      default:
+        return;
+    }
+    
+    setStrategyLegs(legs);
+    setSelectedStrategy(strategyName);
+    toast.success(`Loaded ${strategyName} strategy`);
+  };
 
   const handleClosePosition = async (positionId) => {
     const loadingToast = toast.loading('Closing position...');
@@ -245,6 +374,10 @@ const OptionsTrading = () => {
           </TabsTrigger>
           <TabsTrigger value="trade" className="data-[state=active]:bg-[#FF9500] data-[state=active]:text-black">
             Place Order
+          </TabsTrigger>
+          <TabsTrigger value="builder" className="data-[state=active]:bg-[#FF9500] data-[state=active]:text-black">
+            <Zap size={16} className="mr-1" />
+            Strategy Builder
           </TabsTrigger>
           <TabsTrigger value="positions" className="data-[state=active]:bg-[#FF9500] data-[state=active]:text-black">
             Positions ({positions.length})
@@ -551,6 +684,198 @@ const OptionsTrading = () => {
               >
                 {orderForm.action === 'buy' ? 'Buy' : 'Sell'} {orderForm.option_type.toUpperCase()} Option
               </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Strategy Builder Tab */}
+        <TabsContent value="builder" className="space-y-4">
+          <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="text-[#FF9500]" />
+                Multi-Leg Strategy Builder
+              </CardTitle>
+              <CardDescription>
+                Build complex options strategies with multiple legs
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Quick Strategy Templates */}
+              <div>
+                <Label className="text-[#A1A1AA] mb-2 block">Quick Load Strategy</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {['Bull Call Spread', 'Bear Put Spread', 'Straddle', 'Iron Condor'].map(strat => (
+                    <Button
+                      key={strat}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => loadPredefinedStrategy(strat)}
+                      className="border-[#1F1F1F]"
+                    >
+                      {strat}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Strategy Legs */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <Label className="text-[#A1A1AA]">Strategy Legs</Label>
+                  <Button
+                    onClick={addLegToStrategy}
+                    size="sm"
+                    variant="outline"
+                    className="border-[#FF9500] text-[#FF9500]"
+                  >
+                    <BookOpen size={16} className="mr-2" />
+                    Add Leg
+                  </Button>
+                </div>
+
+                {strategyLegs.length === 0 ? (
+                  <Card className="bg-[#121212] border-[#1F1F1F]">
+                    <CardContent className="py-8 text-center">
+                      <p className="text-[#666] mb-3">No legs added yet</p>
+                      <Button
+                        onClick={addLegToStrategy}
+                        size="sm"
+                        className="bg-[#FF9500] text-black"
+                      >
+                        Add First Leg
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {strategyLegs.map((leg, index) => (
+                      <Card key={leg.id} className="bg-[#121212] border-[#1F1F1F]">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-bold text-[#FF9500]">Leg {index + 1}</span>
+                            <Button
+                              onClick={() => removeLegFromStrategy(leg.id)}
+                              size="sm"
+                              variant="ghost"
+                              className="text-[#FF0055] h-6"
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                            <Select
+                              value={leg.action}
+                              onValueChange={(v) => updateStrategyLeg(leg.id, 'action', v)}
+                            >
+                              <SelectTrigger className="bg-[#0A0A0A] border-[#1F1F1F] h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-[#121212] border-[#1F1F1F]">
+                                <SelectItem value="buy">Buy</SelectItem>
+                                <SelectItem value="sell">Sell</SelectItem>
+                              </SelectContent>
+                            </Select>
+
+                            <Select
+                              value={leg.option_type}
+                              onValueChange={(v) => updateStrategyLeg(leg.id, 'option_type', v)}
+                            >
+                              <SelectTrigger className="bg-[#0A0A0A] border-[#1F1F1F] h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-[#121212] border-[#1F1F1F]">
+                                <SelectItem value="call">Call</SelectItem>
+                                <SelectItem value="put">Put</SelectItem>
+                              </SelectContent>
+                            </Select>
+
+                            <Input
+                              type="number"
+                              value={leg.strike_price}
+                              onChange={(e) => updateStrategyLeg(leg.id, 'strike_price', parseFloat(e.target.value))}
+                              className="bg-[#0A0A0A] border-[#1F1F1F] h-8 text-xs"
+                              placeholder="Strike"
+                            />
+
+                            <Select
+                              value={leg.expiry_date}
+                              onValueChange={(v) => updateStrategyLeg(leg.id, 'expiry_date', v)}
+                            >
+                              <SelectTrigger className="bg-[#0A0A0A] border-[#1F1F1F] h-8 text-xs">
+                                <SelectValue placeholder="Expiry" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-[#121212] border-[#1F1F1F]">
+                                {chain?.expiries?.map((exp) => (
+                                  <SelectItem key={exp.date} value={exp.date}>
+                                    {exp.date}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+
+                            <Input
+                              type="number"
+                              value={leg.quantity}
+                              onChange={(e) => updateStrategyLeg(leg.id, 'quantity', parseFloat(e.target.value))}
+                              className="bg-[#0A0A0A] border-[#1F1F1F] h-8 text-xs"
+                              placeholder="Qty"
+                              min={0.1}
+                              step={0.1}
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Strategy Summary */}
+              {strategyLegs.length > 0 && (() => {
+                const payoff = calculateStrategyPayoff();
+                return payoff ? (
+                  <Card className="bg-[#121212] border-[#FF9500]/30">
+                    <CardContent className="p-4">
+                      <h4 className="text-sm font-bold text-[#FF9500] mb-3">Strategy Summary</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                        <div>
+                          <p className="text-[#666]">Net Cost</p>
+                          <p className={`font-data font-bold ${parseFloat(payoff.totalCost) < 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                            ${payoff.totalCost}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[#666]">Net Delta</p>
+                          <p className="font-data text-white">{payoff.netGreeks.delta.toFixed(4)}</p>
+                        </div>
+                        <div>
+                          <p className="text-[#666]">Net Gamma</p>
+                          <p className="font-data text-white">{payoff.netGreeks.gamma.toFixed(6)}</p>
+                        </div>
+                        <div>
+                          <p className="text-[#666]">Net Theta</p>
+                          <p className="font-data text-[#FF0055]">{payoff.netGreeks.theta.toFixed(4)}</p>
+                        </div>
+                        <div>
+                          <p className="text-[#666]">Net Vega</p>
+                          <p className="font-data text-white">{payoff.netGreeks.vega.toFixed(4)}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : null;
+              })()}
+
+              {/* Execute Strategy */}
+              {strategyLegs.length > 0 && (
+                <Button
+                  onClick={executeStrategy}
+                  className="w-full bg-[#FF9500] text-black font-bold"
+                >
+                  Execute Strategy ({strategyLegs.length} legs)
+                </Button>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
