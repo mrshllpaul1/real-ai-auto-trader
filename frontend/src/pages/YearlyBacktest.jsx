@@ -1106,6 +1106,48 @@ const YearlyBacktest = ({ embedded = false }) => {
                         </div>
                       </div>
                     )}
+                    
+                    {/* Sentiment Distribution Summary - NEW */}
+                    {marketCalendar.sentiment_distribution && (
+                      <div className="p-4 rounded-lg bg-slate-800/30 border border-slate-700">
+                        <h4 className="text-sm font-medium text-slate-400 mb-3">Market Sentiment Distribution for {marketCalendar.year}</h4>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {Object.entries(marketCalendar.sentiment_distribution).map(([category, count]) => (
+                            <Badge
+                              key={category}
+                              className={`px-3 py-1 ${
+                                category === 'extreme_fear' ? 'bg-red-600/20 text-red-400' :
+                                category === 'fear' ? 'bg-orange-500/20 text-orange-400' :
+                                category === 'neutral' ? 'bg-gray-500/20 text-gray-400' :
+                                category === 'greed' ? 'bg-green-500/20 text-green-400' :
+                                'bg-emerald-600/20 text-emerald-400'
+                              }`}
+                            >
+                              {category.replace('_', ' ')}: {count} weeks
+                            </Badge>
+                          ))}
+                        </div>
+                        {/* Sentiment by Quarter */}
+                        {marketCalendar.sentiment_by_quarter && (
+                          <div className="grid grid-cols-4 gap-2 mt-2">
+                            {Object.entries(marketCalendar.sentiment_by_quarter).map(([quarter, data]) => (
+                              <div key={quarter} className="p-2 bg-slate-700/30 rounded text-center">
+                                <span className="text-xs text-slate-500">{quarter}</span>
+                                <p className={`text-lg font-bold ${
+                                  data.average_sentiment >= 75 ? 'text-emerald-400' :
+                                  data.average_sentiment >= 50 ? 'text-green-400' :
+                                  data.average_sentiment >= 25 ? 'text-orange-400' :
+                                  'text-red-400'
+                                }`}>
+                                  {data.average_sentiment}
+                                </p>
+                                <span className="text-xs text-slate-500">avg sentiment</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Month-by-Month View */}
                     {marketCalendar.events_by_month && (
