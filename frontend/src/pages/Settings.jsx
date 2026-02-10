@@ -266,6 +266,92 @@ const Settings = () => {
     }
   };
 
+  // Data Provider Functions
+  const loadDataProviderStatus = async () => {
+    try {
+      const response = await api.get('/enhanced-data/provider-keys/status');
+      setDataProviderStatus(response.data);
+    } catch (error) {
+      console.error('Error loading data provider status:', error);
+    }
+  };
+
+  const loadUniverseStats = async () => {
+    try {
+      const response = await api.get('/enhanced-data/kraken-universe/stats');
+      setUniverseStats(response.data);
+    } catch (error) {
+      console.error('Error loading universe stats:', error);
+    }
+  };
+
+  const saveDataProviderKeys = async () => {
+    const loadingToast = toast.loading('Saving data provider API keys...');
+    try {
+      setLoading(true);
+      // Only send non-empty keys
+      const keysToSave = {};
+      Object.entries(dataProviderKeys).forEach(([key, value]) => {
+        if (value && value.trim()) {
+          keysToSave[key] = value.trim();
+        }
+      });
+      
+      if (Object.keys(keysToSave).length === 0) {
+        toast.dismiss(loadingToast);
+        toast.warning('No API keys to save', {
+          description: 'Enter at least one API key to save',
+        });
+        return;
+      }
+      
+      await api.post('/enhanced-data/provider-keys/save', keysToSave);
+      toast.dismiss(loadingToast);
+      toast.success('Data provider API keys saved!', {
+        description: 'Enhanced on-chain data will now be available',
+        duration: 4000,
+      });
+      
+      // Clear inputs and reload status
+      setDataProviderKeys({
+        blockchair_api_key: '',
+        glassnode_api_key: '',
+        cryptoquant_api_key: '',
+        coinglass_api_key: '',
+        santiment_api_key: ''
+      });
+      loadDataProviderStatus();
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error('Failed to save API keys', {
+        description: error.response?.data?.detail || 'Please try again',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const syncKrakenUniverse = async () => {
+    const loadingToast = toast.loading('Syncing Kraken universe...');
+    try {
+      setSyncingUniverse(true);
+      await api.get('/enhanced-data/kraken-universe/sync-now');
+      toast.dismiss(loadingToast);
+      toast.success('Kraken universe synced!', {
+        description: 'All tradeable coins have been updated',
+        duration: 4000,
+      });
+      loadUniverseStats();
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error('Failed to sync universe', {
+        description: error.response?.data?.detail || 'Please try again',
+      });
+    } finally {
+      setSyncingUniverse(false);
+    }
+  };
+
   return (
     <div className="p-6 lg:p-12 space-y-6" data-testid="settings">
       <motion.div
