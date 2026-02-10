@@ -195,6 +195,80 @@ async def get_trading_pairs():
     }
 
 
+@router.get("/pairs/all")
+async def get_all_kraken_pairs():
+    """
+    Get ALL available USD trading pairs from Kraken.
+    This fetches the complete list directly from Kraken's AssetPairs API.
+    """
+    import httpx
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get("https://api.kraken.com/0/public/AssetPairs")
+            data = response.json()
+            
+            if data.get("error") and len(data["error"]) > 0:
+                raise HTTPException(status_code=503, detail=f"Kraken API error: {data['error']}")
+            
+            result = data.get("result", {})
+            
+            # Filter for USD pairs only
+            usd_pairs = []
+            seen_bases = set()
+            
+            for pair_name, pair_info in result.items():
+                # Skip darkpool pairs
+                if pair_name.endswith('.d'):
+                    continue
+                
+                quote = pair_info.get("quote", "")
+                base = pair_info.get("base", "")
+                wsname = pair_info.get("wsname", pair_name)
+                altname = pair_info.get("altname", pair_name)
+                
+                # Check if it's a USD pair
+                is_usd = quote in ["ZUSD", "USD"] or pair_name.endswith("USD") or wsname.endswith("/USD")
+                
+                if is_usd:
+                    # Normalize base symbol (remove X prefix and Z suffix)
+                    base_clean = base.replace("X", "").replace("Z", "").upper()
+                    if base_clean.startswith("X"):
+                        base_clean = base_clean[1:]
+                    
+                    # Skip duplicates (prefer shorter pair names)
+                    if base_clean in seen_bases:
+                        continue
+                    seen_bases.add(base_clean)
+                    
+                    usd_pairs.append({
+                        "symbol": base_clean,
+                        "pair": pair_name,
+                        "wsname": wsname,
+                        "altname": altname,
+                        "base": base,
+                        "quote": quote,
+                        "lot_decimals": pair_info.get("lot_decimals", 8),
+                        "pair_decimals": pair_info.get("pair_decimals", 5),
+                        "ordermin": pair_info.get("ordermin", "0.0001"),
+                        "display": f"{base_clean}/USD"
+                    })
+            
+            # Sort alphabetically by symbol
+            usd_pairs.sort(key=lambda x: x["symbol"])
+            
+            return {
+                "pairs": usd_pairs,
+                "count": len(usd_pairs),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "source": "kraken_api"
+            }
+            
+    except httpx.RequestError as e:
+        logger.error(f"Failed to fetch Kraken pairs: {e}")
+        raise HTTPException(status_code=503, detail="Failed to connect to Kraken API")
+
+
 @router.get("/pair/{symbol}")
 async def get_pair_details(symbol: str):
     """Get detailed information for a specific trading pair"""
