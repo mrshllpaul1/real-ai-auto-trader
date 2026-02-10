@@ -507,8 +507,8 @@ async def _init_phase6_scheduling(db):
                 inserted,
                 updated,
             )
-        except Exception as e:
-            logger.warning("⚠️ Auto-seed of historical events failed: %s", e)
+        except Exception:
+            logger.exception("⚠️ Auto-seed of historical events failed")
 
     await ensure_historical_events_ready()
     
