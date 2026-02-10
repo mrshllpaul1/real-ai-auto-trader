@@ -167,6 +167,11 @@ def register_routes(api_router: APIRouter):
     api_router.include_router(onchain_data_routes.router, tags=["On-Chain Data"])
     api_router.include_router(whale_alerts_routes.router, tags=["Whale Alerts & Backtesting"])
     
+    # AI Teaching Service
+    from routes import ai_teaching as ai_teaching_routes
+    api_router.include_router(ai_teaching_routes.router, tags=["AI Teaching"])
+    ai_teaching_routes.set_dependencies(db)
+    
     logger.info("✅ All routes registered")
     
     return api_router
