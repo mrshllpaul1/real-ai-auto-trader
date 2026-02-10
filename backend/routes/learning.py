@@ -89,8 +89,6 @@ async def trigger_continuous_learning(
     learning_engine = Depends(get_learning_engine)
 ):
     """Manually trigger AI continuous learning update"""
-    # Note: learning_engine dependency already handles initialization errors
-    # and raises HTTPException if unavailable
     try:
         # Perform the learning update
         await learning_engine.continuous_learning_update()
