@@ -932,7 +932,6 @@ class AdaptiveStrategyService:
     async def _predict_event(self, event_config: Dict, days_ahead: int, now: datetime) -> Optional[PredictedEvent]:
         """Predict a specific event type using scheduled data and market analysis"""
         event_type = event_config["type"]
-        base_confidence = event_config.get("confidence", 0.5)
         
         # Helper: find next scheduled event from calendar
         def _next_scheduled(calendar_key: str) -> Optional[Dict]:
