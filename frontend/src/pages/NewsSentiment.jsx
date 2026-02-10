@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Newspaper, TrendingUp, TrendingDown, AlertCircle, RefreshCw, Filter,
   Clock, ExternalLink, ThumbsUp, ThumbsDown, MessageSquare, Flame,
@@ -18,7 +18,9 @@ const NewsSentiment = () => {
   const [coinSentiment, setCoinSentiment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedCoin, setSelectedCoin] = useState('bitcoin');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [trendingSearch, setTrendingSearch] = useState('');
+  const [bullishSearch, setBullishSearch] = useState('');
+  const [bearishSearch, setBearishSearch] = useState('');
   const [lastUpdated, setLastUpdated] = useState(null);
   const [error, setError] = useState('');
 
@@ -130,9 +132,9 @@ const NewsSentiment = () => {
     { id: 'coin', label: 'Coin Analysis', icon: BarChart3 }
   ];
 
-  const filterNews = (items = []) => {
-    if (!searchTerm) return items;
-    const term = searchTerm.toLowerCase();
+  const filterNews = (items = [], termValue = '') => {
+    if (!termValue) return items;
+    const term = termValue.toLowerCase();
     return items.filter((n) =>
       (n.title || '').toLowerCase().includes(term) ||
       (n.source || '').toLowerCase().includes(term) ||
@@ -140,20 +142,35 @@ const NewsSentiment = () => {
     );
   };
 
-  const renderSearchBar = (items = []) => (
+  const filteredTrending = useMemo(
+    () => filterNews(trendingNews, trendingSearch),
+    [trendingNews, trendingSearch]
+  );
+
+  const filteredBullish = useMemo(
+    () => filterNews(bullishNews, bullishSearch),
+    [bullishNews, bullishSearch]
+  );
+
+  const filteredBearish = useMemo(
+    () => filterNews(bearishNews, bearishSearch),
+    [bearishNews, bearishSearch]
+  );
+
+  const renderSearchBar = (value, onChange, count) => (
     <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
       <div className="flex items-center gap-2 bg-[#1F1F1F] border border-[#333] rounded-lg px-3 py-2 w-full md:w-1/2">
         <Filter size={16} className="text-[#A1A1AA]" />
         <input
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           placeholder="Filter by keyword, source, or coin (e.g., bitcoin, ETF, SEC)"
           className="bg-transparent text-white text-sm outline-none flex-1 placeholder:text-[#555]"
           data-testid="news-filter-input"
         />
       </div>
       <div className="text-xs text-[#A1A1AA]">
-        Showing {filterNews(items).length} articles
+        Showing {count} articles
       </div>
     </div>
   );
@@ -333,9 +350,9 @@ const NewsSentiment = () => {
               <Flame className="text-orange-400" />
               <h2 className="text-lg font-semibold text-white">Trending News</h2>
             </div>
-            {renderSearchBar(trendingNews)}
+            {renderSearchBar(trendingSearch, setTrendingSearch, filteredTrending.length)}
             <div className="space-y-3">
-              {filterNews(trendingNews).map((news, i) => (
+              {filteredTrending.map((news, i) => (
                 <div
                   key={i}
                   className="p-4 bg-[#0A0A0A] border border-[#333] rounded-lg hover:border-[#555] transition"
@@ -393,12 +410,12 @@ const NewsSentiment = () => {
               <h2 className="text-lg font-semibold text-white">Bullish News</h2>
               <span className="text-sm text-[#A1A1AA]">({bullishNews.length} articles)</span>
             </div>
-            {renderSearchBar(bullishNews)}
-            {bullishNews.length === 0 ? (
+            {renderSearchBar(bullishSearch, setBullishSearch, filteredBullish.length)}
+            {filteredBullish.length === 0 ? (
               <div className="text-center py-8 text-[#A1A1AA]">No bullish news at the moment</div>
             ) : (
               <div className="space-y-3">
-                {filterNews(bullishNews).map((news, i) => (
+                {filteredBullish.map((news, i) => (
                   <div
                     key={i}
                     className="p-4 bg-[#00FF94]/5 border border-[#00FF94]/20 rounded-lg"
@@ -432,12 +449,12 @@ const NewsSentiment = () => {
               <h2 className="text-lg font-semibold text-white">Bearish News</h2>
               <span className="text-sm text-[#A1A1AA]">({bearishNews.length} articles)</span>
             </div>
-            {renderSearchBar(bearishNews)}
-            {bearishNews.length === 0 ? (
+            {renderSearchBar(bearishSearch, setBearishSearch, filteredBearish.length)}
+            {filteredBearish.length === 0 ? (
               <div className="text-center py-8 text-[#A1A1AA]">No bearish news at the moment</div>
             ) : (
               <div className="space-y-3">
-                {filterNews(bearishNews).map((news, i) => (
+                {filteredBearish.map((news, i) => (
                   <div
                     key={i}
                     className="p-4 bg-red-500/5 border border-red-500/20 rounded-lg"
