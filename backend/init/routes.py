@@ -51,6 +51,7 @@ def register_routes(api_router: APIRouter):
     from routes import master_orchestrator as master_routes
     from routes import upgrades as upgrades_routes
     from routes import onchain_data as onchain_data_routes
+    from routes import whale_alerts as whale_alerts_routes
     from routes import copy_trading as copy_trading_routes
     from routes import market_maker as market_maker_routes
     from routes import dashboard_customization as dashboard_routes
