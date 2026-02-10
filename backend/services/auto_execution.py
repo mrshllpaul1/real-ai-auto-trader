@@ -360,7 +360,7 @@ class AutoExecutionEngine:
         print("🛑 Auto-execution stopped")
     
     async def get_status(self) -> Dict[str, Any]:
-        """Get current auto-execution status"""
+        """Get current auto-execution status with enhanced analytics"""
         await self.load_open_positions()
         
         # Get trade history
@@ -369,10 +369,48 @@ class AutoExecutionEngine:
             {'_id': 0}
         ).sort('opened_at', -1).limit(10).to_list(10)
         
-        # Calculate stats
+        # Calculate comprehensive stats
         all_trades = await self.db.auto_positions.find({'status': 'CLOSED'}, {'_id': 0}).to_list(1000)
         total_profit = sum(t.get('profit_pct', 0) for t in all_trades)
         wins = sum(1 for t in all_trades if t.get('profit_pct', 0) > 0)
+        losses = sum(1 for t in all_trades if t.get('profit_pct', 0) < 0)
+        
+        # Enhanced metrics
+        avg_win = sum(t.get('profit_pct', 0) for t in all_trades if t.get('profit_pct', 0) > 0) / wins if wins > 0 else 0
+        avg_loss = sum(t.get('profit_pct', 0) for t in all_trades if t.get('profit_pct', 0) < 0) / losses if losses > 0 else 0
+        profit_factor = abs(avg_win * wins / (avg_loss * losses)) if losses > 0 and avg_loss != 0 else 0
+        
+        # Signal performance breakdown
+        signal_performance = {}
+        for trade in all_trades:
+            for signal in trade.get('signals', []):
+                signal_name = signal.get('signal') if isinstance(signal, dict) else signal
+                if signal_name not in signal_performance:
+                    signal_performance[signal_name] = {'wins': 0, 'losses': 0, 'total_profit': 0}
+                
+                profit = trade.get('profit_pct', 0)
+                if profit > 0:
+                    signal_performance[signal_name]['wins'] += 1
+                else:
+                    signal_performance[signal_name]['losses'] += 1
+                signal_performance[signal_name]['total_profit'] += profit
+        
+        # Calculate win rates per signal
+        for signal in signal_performance:
+            total = signal_performance[signal]['wins'] + signal_performance[signal]['losses']
+            signal_performance[signal]['win_rate'] = (signal_performance[signal]['wins'] / total * 100) if total > 0 else 0
+        
+        # Current drawdown calculation
+        max_profit = 0
+        current_drawdown = 0
+        running_profit = 0
+        for trade in sorted(all_trades, key=lambda x: x.get('closed_at', '')):
+            running_profit += trade.get('profit_pct', 0)
+            if running_profit > max_profit:
+                max_profit = running_profit
+            drawdown = max_profit - running_profit
+            if drawdown > current_drawdown:
+                current_drawdown = drawdown
         
         return {
             'running': self.is_running,
@@ -386,7 +424,20 @@ class AutoExecutionEngine:
             'total_profit_pct': total_profit,
             'win_rate': (wins / len(all_trades) * 100) if all_trades else 0,
             'recent_trades': recent_trades,
-            'risk_profile': self.risk_profile
+            'risk_profile': self.risk_profile,
+            # Enhanced analytics
+            'analytics': {
+                'wins': wins,
+                'losses': losses,
+                'avg_win_pct': avg_win,
+                'avg_loss_pct': avg_loss,
+                'profit_factor': profit_factor,
+                'max_drawdown_pct': current_drawdown,
+                'avg_profit_per_trade': total_profit / len(all_trades) if all_trades else 0,
+                'signal_performance': signal_performance,
+                'best_signal': max(signal_performance.items(), key=lambda x: x[1]['win_rate'])[0] if signal_performance else None,
+                'worst_signal': min(signal_performance.items(), key=lambda x: x[1]['win_rate'])[0] if signal_performance else None,
+            }
         }
     
     async def get_positions(self, status: str = None) -> List[Dict[str, Any]]:

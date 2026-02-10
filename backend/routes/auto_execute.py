@@ -304,3 +304,109 @@ async def stop_continuous_learning(ai = Depends(get_ai_engine)):
         return {"message": "AI learning stopped", "status": "stopped"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# ============= ANALYTICS ENDPOINTS =============
+
+@router.get("/analytics/performance")
+async def get_performance_analytics(
+    timeframe: str = 'all',  # all, 7d, 30d, 90d
+    executor = Depends(get_auto_executor)
+):
+    """Get detailed performance analytics over time"""
+    try:
+        from datetime import datetime, timedelta, timezone
+        
+        # Calculate date filter
+        date_filter = {}
+        if timeframe != 'all':
+            days_map = {'7d': 7, '30d': 30, '90d': 90}
+            days = days_map.get(timeframe, 0)
+            if days > 0:
+                cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+                date_filter['closed_at'] = {'$gte': cutoff}
+        
+        # Get trades
+        query = {'status': 'CLOSED', **date_filter}
+        trades = await executor.db.auto_positions.find(query, {'_id': 0}).to_list(1000)
+        
+        # Daily performance breakdown
+        daily_stats = {}
+        for trade in trades:
+            date = trade.get('closed_at', '')[:10]  # YYYY-MM-DD
+            if date not in daily_stats:
+                daily_stats[date] = {'trades': 0, 'profit': 0, 'wins': 0}
+            daily_stats[date]['trades'] += 1
+            daily_stats[date]['profit'] += trade.get('profit_pct', 0)
+            if trade.get('profit_pct', 0) > 0:
+                daily_stats[date]['wins'] += 1
+        
+        # Calculate daily win rates
+        for date in daily_stats:
+            total = daily_stats[date]['trades']
+            daily_stats[date]['win_rate'] = (daily_stats[date]['wins'] / total * 100) if total > 0 else 0
+        
+        return {
+            "timeframe": timeframe,
+            "total_trades": len(trades),
+            "daily_performance": daily_stats,
+            "trades": trades[:50]  # Return last 50 trades
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/analytics/signals")
+async def get_signal_analytics(executor = Depends(get_auto_executor)):
+    """Get performance breakdown by signal type"""
+    try:
+        trades = await executor.db.auto_positions.find(
+            {'status': 'CLOSED'}, 
+            {'_id': 0}
+        ).to_list(1000)
+        
+        signal_stats = {}
+        for trade in trades:
+            for signal in trade.get('signals', []):
+                signal_name = signal.get('signal') if isinstance(signal, dict) else signal
+                if signal_name not in signal_stats:
+                    signal_stats[signal_name] = {
+                        'total_trades': 0,
+                        'wins': 0,
+                        'losses': 0,
+                        'total_profit_pct': 0,
+                        'avg_profit_pct': 0,
+                        'win_rate': 0,
+                        'best_trade': 0,
+                        'worst_trade': 0
+                    }
+                
+                profit = trade.get('profit_pct', 0)
+                signal_stats[signal_name]['total_trades'] += 1
+                signal_stats[signal_name]['total_profit_pct'] += profit
+                
+                if profit > 0:
+                    signal_stats[signal_name]['wins'] += 1
+                else:
+                    signal_stats[signal_name]['losses'] += 1
+                
+                if profit > signal_stats[signal_name]['best_trade']:
+                    signal_stats[signal_name]['best_trade'] = profit
+                if profit < signal_stats[signal_name]['worst_trade']:
+                    signal_stats[signal_name]['worst_trade'] = profit
+        
+        # Calculate averages and win rates
+        for signal in signal_stats:
+            stats = signal_stats[signal]
+            total = stats['total_trades']
+            if total > 0:
+                stats['avg_profit_pct'] = stats['total_profit_pct'] / total
+                stats['win_rate'] = (stats['wins'] / total * 100)
+        
+        # Sort by win rate
+        sorted_signals = dict(sorted(signal_stats.items(), key=lambda x: x[1]['win_rate'], reverse=True))
+        
+        return {
+            "total_signals_tracked": len(signal_stats),
+            "signal_performance": sorted_signals
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

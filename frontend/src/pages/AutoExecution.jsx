@@ -10,17 +10,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Bot, Play, Square, Brain, TrendingUp, TrendingDown, 
   Zap, Target, AlertTriangle, RefreshCw, Settings2,
-  DollarSign, Shield, Activity, Lightbulb
+  DollarSign, Shield, Activity, Lightbulb, BarChart3,
+  PieChart, Award
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
-import { toast } from 'sonner';
+import toast from '../utils/toast';
 import { useTradingMode } from '../context/TradingModeContext';
 
 const AutoExecution = () => {
   const [status, setStatus] = useState(null);
   const [aiStatus, setAiStatus] = useState(null);
   const [aiPerformance, setAiPerformance] = useState(null);
+  const [signalAnalytics, setSignalAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   
   // Use global trading mode context
@@ -59,16 +61,18 @@ const AutoExecution = () => {
 
   const loadData = useCallback(async () => {
     try {
-      const [statusRes, aiRes, perfRes, profileRes] = await Promise.all([
+      const [statusRes, aiRes, perfRes, profileRes, signalsRes] = await Promise.all([
         timeoutPromise(api.get('/auto-exec/status'), 8000).catch(() => ({ data: {} })),
         timeoutPromise(api.get('/auto-exec/ai/status'), 8000).catch(() => ({ data: {} })),
         timeoutPromise(api.get('/auto-exec/ai/performance'), 8000).catch(() => ({ data: {} })),
-        timeoutPromise(api.get('/auto-exec/risk-profile'), 8000).catch(() => ({ data: {} }))
+        timeoutPromise(api.get('/auto-exec/risk-profile'), 8000).catch(() => ({ data: {} })),
+        timeoutPromise(api.get('/auto-exec/analytics/signals'), 8000).catch(() => ({ data: {} }))
       ]);
       
       setStatus(statusRes.data);
       setAiStatus(aiRes.data);
       setAiPerformance(perfRes.data);
+      setSignalAnalytics(signalsRes.data);
       if (profileRes.data) {
         // Apply API config but preserve global trading mode
         setRiskProfile(prev => ({ ...prev, ...profileRes.data, mode: isRealMode ? 'live' : 'paper' }));
@@ -90,12 +94,12 @@ const AutoExecution = () => {
     try {
       if (riskProfile.enabled) {
         await api.post('/auto-exec/disable');
-        toast.success('Auto-execution disabled');
+        toast.execution.disabled();
       } else {
         await api.post('/auto-exec/enable', null, { 
           params: { mode: riskProfile.mode }
         });
-        toast.success(`Auto-execution enabled in ${riskProfile.mode.toUpperCase()} mode`);
+        toast.execution.enabled(riskProfile.mode);
       }
       await loadData();
     } catch (error) {
@@ -105,49 +109,43 @@ const AutoExecution = () => {
 
   const startExecution = async () => {
     try {
-      toast.loading('Starting auto-execution engine...');
+      const loadingId = toast.loading('Starting auto-execution engine...');
       await api.post('/auto-exec/start');
-      toast.dismiss();
-      toast.success('Auto-execution engine started!');
+      toast.dismiss(loadingId);
+      toast.execution.started(riskProfile.mode);
       await loadData();
     } catch (error) {
-      toast.dismiss();
-      toast.error('Failed to start');
+      toast.error('Failed to start execution engine');
     }
   };
 
   const stopExecution = async () => {
     try {
       await api.post('/auto-exec/stop');
-      toast.success('Auto-execution stopped');
+      toast.execution.stopped();
       await loadData();
     } catch (error) {
-      toast.error('Failed to stop');
+      toast.error('Failed to stop execution engine');
     }
   };
 
   const executeNow = async () => {
     try {
-      toast.loading('Scanning and executing...');
+      const loadingId = toast.loading('Scanning market for opportunities...');
       const res = await api.post('/auto-exec/execute-now');
-      toast.dismiss();
+      toast.dismiss(loadingId);
       
-      if (res.data.executed > 0) {
-        toast.success(`Executed ${res.data.executed} trade(s)!`);
-      } else {
-        toast.info('No trades executed - no matching HIGH priority gems');
-      }
+      toast.execution.scanComplete(res.data.executed || 0, res.data.scanned || 0);
       await loadData();
     } catch (error) {
-      toast.dismiss();
-      toast.error('Execution failed');
+      toast.error('Execution scan failed');
     }
   };
 
   const saveRiskProfile = async () => {
     try {
       await api.post('/auto-exec/risk-profile', riskProfile);
-      toast.success('Risk profile saved!');
+      toast.execution.riskProfileSaved();
     } catch (error) {
       toast.error('Failed to save risk profile');
     }
@@ -156,7 +154,7 @@ const AutoExecution = () => {
   const startAILearning = async () => {
     try {
       await api.post('/auto-exec/ai/start-learning');
-      toast.success('AI continuous learning started!');
+      toast.ai.started('AI Continuous Learning');
       await loadData();
     } catch (error) {
       toast.error('Failed to start AI learning');
@@ -165,10 +163,10 @@ const AutoExecution = () => {
 
   const optimizeStrategy = async () => {
     try {
-      toast.loading('AI optimizing strategy...');
+      const loadingId = toast.loading('AI optimizing strategy...');
       const res = await api.post('/auto-exec/ai/optimize');
-      toast.dismiss();
-      toast.success(`Made ${res.data.optimizations_made?.length || 0} optimizations`);
+      toast.dismiss(loadingId);
+      toast.execution.aiOptimized(res.data.optimizations_made?.length || 0);
       await loadData();
     } catch (error) {
       toast.dismiss();
@@ -208,6 +206,10 @@ const AutoExecution = () => {
           <TabsTrigger value="execution" data-testid="tab-execution">
             <Zap size={16} className="mr-2" />
             Auto Execution
+          </TabsTrigger>
+          <TabsTrigger value="analytics" data-testid="tab-analytics">
+            <BarChart3 size={16} className="mr-2" />
+            Analytics
           </TabsTrigger>
           <TabsTrigger value="ai" data-testid="tab-ai">
             <Brain size={16} className="mr-2" />
@@ -362,6 +364,181 @@ const AutoExecution = () => {
                     </div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* ANALYTICS TAB */}
+        <TabsContent value="analytics" className="space-y-6">
+          {/* Enhanced Performance Metrics */}
+          {status?.analytics && (
+            <Card className="bg-[#0A0A0A] border-[#007AFF]/30" data-testid="performance-metrics">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <BarChart3 className="text-[#007AFF]" size={32} />
+                  <div>
+                    <CardTitle className="text-2xl font-heading">Performance Metrics</CardTitle>
+                    <CardDescription>
+                      Comprehensive execution analytics and statistics
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Key Metrics Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]">
+                    <div className="text-xs text-[#A1A1AA] mb-1">Total Trades</div>
+                    <div className="text-3xl font-data font-bold text-white">
+                      {status.total_closed_trades || 0}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]">
+                    <div className="text-xs text-[#A1A1AA] mb-1">Win Rate</div>
+                    <div className={`text-3xl font-data font-bold ${(status.win_rate || 0) > 50 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                      {(status.win_rate || 0).toFixed(1)}%
+                    </div>
+                  </div>
+                  <div className="p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]">
+                    <div className="text-xs text-[#A1A1AA] mb-1">Profit Factor</div>
+                    <div className={`text-3xl font-data font-bold ${(status.analytics.profit_factor || 0) > 1 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                      {(status.analytics.profit_factor || 0).toFixed(2)}x
+                    </div>
+                  </div>
+                  <div className="p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]">
+                    <div className="text-xs text-[#A1A1AA] mb-1">Max Drawdown</div>
+                    <div className="text-3xl font-data font-bold text-[#FF0055]">
+                      -{(status.analytics.max_drawdown_pct || 0).toFixed(2)}%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Win/Loss Breakdown */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 bg-[#121212] rounded-lg border border-[#00FF94]/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-[#A1A1AA]">Winning Trades</span>
+                      <TrendingUp className="text-[#00FF94]" size={20} />
+                    </div>
+                    <div className="text-2xl font-data font-bold text-[#00FF94]">
+                      {status.analytics.wins || 0}
+                    </div>
+                    <div className="text-sm text-[#A1A1AA] mt-1">
+                      Avg: +{(status.analytics.avg_win_pct || 0).toFixed(2)}%
+                    </div>
+                  </div>
+                  <div className="p-4 bg-[#121212] rounded-lg border border-[#FF0055]/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-[#A1A1AA]">Losing Trades</span>
+                      <TrendingDown className="text-[#FF0055]" size={20} />
+                    </div>
+                    <div className="text-2xl font-data font-bold text-[#FF0055]">
+                      {status.analytics.losses || 0}
+                    </div>
+                    <div className="text-sm text-[#A1A1AA] mt-1">
+                      Avg: {(status.analytics.avg_loss_pct || 0).toFixed(2)}%
+                    </div>
+                  </div>
+                  <div className="p-4 bg-[#121212] rounded-lg border border-[#007AFF]/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-[#A1A1AA]">Avg per Trade</span>
+                      <DollarSign className="text-[#007AFF]" size={20} />
+                    </div>
+                    <div className={`text-2xl font-data font-bold ${(status.analytics.avg_profit_per_trade || 0) >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                      {(status.analytics.avg_profit_per_trade || 0) >= 0 ? '+' : ''}{(status.analytics.avg_profit_per_trade || 0).toFixed(2)}%
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Signal Performance Analysis */}
+          {signalAnalytics?.signal_performance && Object.keys(signalAnalytics.signal_performance).length > 0 && (
+            <Card className="bg-[#0A0A0A] border-[#9D00FF]/30">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <PieChart className="text-[#9D00FF]" size={32} />
+                  <div>
+                    <CardTitle className="text-2xl font-heading">Signal Performance</CardTitle>
+                    <CardDescription>
+                      Win rate and profit breakdown by signal type
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {Object.entries(signalAnalytics.signal_performance)
+                    .sort((a, b) => b[1].win_rate - a[1].win_rate)
+                    .slice(0, 10)
+                    .map(([signal, stats]) => (
+                      <div key={signal} className="p-3 bg-[#121212] rounded-lg border border-[#1F1F1F]">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-bold text-white">{signal.replace(/_/g, ' ')}</span>
+                          <Badge className={
+                            stats.win_rate > 60 ? 'bg-[#00FF94]/20 text-[#00FF94]' :
+                            stats.win_rate > 40 ? 'bg-[#007AFF]/20 text-[#007AFF]' :
+                            'bg-[#FF0055]/20 text-[#FF0055]'
+                          }>
+                            {stats.win_rate.toFixed(1)}% WR
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2 text-sm">
+                          <div>
+                            <span className="text-[#A1A1AA]">Trades: </span>
+                            <span className="font-data text-white">{stats.total_trades}</span>
+                          </div>
+                          <div>
+                            <span className="text-[#A1A1AA]">Wins: </span>
+                            <span className="font-data text-[#00FF94]">{stats.wins}</span>
+                          </div>
+                          <div>
+                            <span className="text-[#A1A1AA]">Losses: </span>
+                            <span className="font-data text-[#FF0055]">{stats.losses}</span>
+                          </div>
+                          <div>
+                            <span className="text-[#A1A1AA]">Profit: </span>
+                            <span className={`font-data ${stats.total_profit_pct >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                              {stats.total_profit_pct >= 0 ? '+' : ''}{stats.total_profit_pct.toFixed(2)}%
+                            </span>
+                          </div>
+                        </div>
+                        {/* Progress bar for win rate */}
+                        <div className="mt-2 h-2 bg-[#1F1F1F] rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full transition-all ${
+                              stats.win_rate > 60 ? 'bg-[#00FF94]' :
+                              stats.win_rate > 40 ? 'bg-[#007AFF]' :
+                              'bg-[#FF0055]'
+                            }`}
+                            style={{ width: `${stats.win_rate}%` }}
+                          />
+                        </div>
+                      </div>
+                  ))}
+                </div>
+
+                {/* Best and Worst Signals */}
+                {status?.analytics?.best_signal && status?.analytics?.worst_signal && (
+                  <div className="grid grid-cols-2 gap-4 mt-6">
+                    <div className="p-4 bg-[#00FF94]/10 border border-[#00FF94]/30 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Award className="text-[#00FF94]" size={20} />
+                        <span className="font-bold text-[#00FF94]">Best Signal</span>
+                      </div>
+                      <p className="text-white">{status.analytics.best_signal.replace(/_/g, ' ')}</p>
+                    </div>
+                    <div className="p-4 bg-[#FF0055]/10 border border-[#FF0055]/30 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle className="text-[#FF0055]" size={20} />
+                        <span className="font-bold text-[#FF0055]">Worst Signal</span>
+                      </div>
+                      <p className="text-white">{status.analytics.worst_signal.replace(/_/g, ' ')}</p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
