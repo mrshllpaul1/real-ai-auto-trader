@@ -230,7 +230,7 @@ class AdaptiveStrategy:
             "volatility_filter": 0.028,  # Moderate volatility filter
             "trend_strength_min": 0.018,  # Require strong trends
             "position_size_pct": 8,  # Conservative positions
-            "max_positions": 4  # Moderate diversification
+            "max_positions": 10  # Maximum 10 positions as requested
         }
         self.performance_history = []
         self.regime_params = {}
