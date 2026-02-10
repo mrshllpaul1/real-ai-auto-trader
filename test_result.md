@@ -739,3 +739,33 @@ frontend:
 4. Consider implementing missing execute-trade endpoint or update documentation to use alternatives
 
 ---
+
+## Enhanced MTF Training - July 2025
+
+### Task: Re-train MTF Model with Media/Sentiment Data
+
+**Feature Request:**
+1. Re-train the MTF (Multi-Timeframe) model
+2. Test predictions on the full database
+3. Train on historical media data (sentiment from all available sources)
+
+**Implementation:**
+- Created `EnhancedMTFTrainingService` combining technical + sentiment features
+- Data sources integrated:
+  - Multi-timeframe OHLCV data (1h, 4h, 1D) from Kraken
+  - Twitter sentiment analysis
+  - Reddit sentiment analysis  
+  - Fear & Greed Index from Alternative.me
+  - FOMO/Fear indicators
+  - Hype cycle analysis
+  - Influencer sentiment tracking
+- Total features: 45 (33 technical + 12 sentiment)
+- Frontend: New "MTF AI Predictions" page at /mtf-predictions
+
+**Backend Testing Required:**
+- Test /api/enhanced-mtf-training/status
+- Test /api/enhanced-mtf-training/train (POST)
+- Test /api/enhanced-mtf-training/predict-all (GET)
+- Test /api/enhanced-mtf-training/predict/{symbol} (GET)
+- Test /api/enhanced-mtf-training/fear-greed (GET)
+- Test /api/enhanced-mtf-training/sentiment/{symbol} (GET)
