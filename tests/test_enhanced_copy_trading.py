@@ -114,7 +114,7 @@ async def test_copy_trade_execution(copy_service, test_db):
     )
     
     # Verify trade was copied with scaling
-    assert result["success"] == True
+    assert result["success"] is True
     assert result["copier_id"] == "test_copier_1"
     assert "trade_id" in result
     # Amount should be scaled: 1000 * 50% = 500 (within max_trade_size)
@@ -156,7 +156,7 @@ async def test_drawdown_protection(copy_service, test_db):
     # Should fail risk check due to exceeded drawdown
     passed = await copy_service._check_copier_risk_limits(copier)
     
-    assert passed == False
+    assert not passed
     
     # Verify copy relationship was disabled
     updated = await test_db.copy_relationships.find_one(
@@ -192,7 +192,7 @@ async def test_daily_trade_limit(copy_service, test_db):
     # Should fail risk check due to daily limit
     passed = await copy_service._check_copier_risk_limits(copier)
     
-    assert passed == False
+    assert not passed
 
 
 # === Performance Analytics Tests ===
@@ -383,7 +383,7 @@ async def test_trader_verification_legitimate(copy_service, test_db):
     verification = await copy_service.verify_trader_performance(trader_id)
     
     # Should pass verification
-    assert verification["verified"] == True
+    assert verification["verified"] is True
     assert verification["confidence_score"] >= 50
     assert len(verification["issues"]) == 0 or "Low trade count" not in verification["issues"]
 
@@ -409,7 +409,7 @@ async def test_trader_verification_suspicious(copy_service, test_db):
     verification = await copy_service.verify_trader_performance(trader_id)
     
     # Should fail verification
-    assert verification["verified"] == False
+    assert not verification["verified"]
     assert "Suspiciously high win rate" in str(verification["issues"])
     assert verification["confidence_score"] < 100
 

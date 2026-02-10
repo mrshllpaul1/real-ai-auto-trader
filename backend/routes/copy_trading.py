@@ -12,6 +12,9 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 import uuid
 
+# WebSocket handler import
+from services.copy_trading_websocket import handle_copy_trading_websocket, get_websocket_manager
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/copy-trading", tags=["Copy Trading"])
@@ -832,16 +835,12 @@ async def websocket_trade_signals(
         - ping: Keepalive (receives pong)
         - update_subscriptions: Change followed traders
     """
-    from services.copy_trading_websocket import handle_copy_trading_websocket
-    
     await handle_copy_trading_websocket(websocket, copier_id, trader_ids)
 
 
 @router.get("/ws/stats")
 async def get_websocket_stats():
     """Get WebSocket connection statistics"""
-    from services.copy_trading_websocket import get_websocket_manager
-    
     manager = get_websocket_manager()
     stats = manager.get_connection_stats()
     
