@@ -401,7 +401,17 @@ test_plan:
         - agent: "testing"
         - comment: "✅ ENHANCED EVENT PREDICTION COVERAGE 100% FUNCTIONAL - COMPREHENSIVE TESTING COMPLETED: Perfect 100% success rate (11/11 tests passed). ✅ EVENT PREDICTION SCALE: POST /api/adaptive-strategy/predict-events returns 26 events across 26 unique event types with 13 high-probability events (exceeds 20+ events requirement). All 8 NEW EVENT TYPES confirmed working: token_unlock, quarterly_earnings, governance_vote, airdrop_event, geopolitical_event, protocol_launch, futures_expiry, tax_deadline. ✅ COVERAGE STATISTICS: GET /api/adaptive-strategy/event-coverage-stats shows 78.8% coverage (exceeds 60% requirement), 33 total event types defined, 26 types with active predictions (exceeds 20+ requirement), proper upcoming_events structure with next_30_days/60_days/90_days periods, comprehensive type_details array. ✅ EVENT CALENDAR: GET /api/adaptive-strategy/event-calendar returns organized calendar with all required categories (scheduled_certain, highly_likely, probable, possible, monitoring), 21 scheduled events with real 2025-2026 dates confirmed, proper category_breakdown structure. ✅ REAL SCHEDULED EVENTS: GET /api/adaptive-strategy/scheduled-events returns 21 events sorted by date with proper structure (date, days_until, description, calendar_category). Verified real dates including FOMC meetings, options expiry, token unlocks, earnings reports, SEC deadlines. ✅ EVENT FILTERING: All probability filtering working correctly (min_probability=0.3 properly applied). Event type-specific endpoints operational (/fomc_meeting, /token_unlock). ✅ EXISTING ENDPOINTS COMPATIBILITY: All existing adaptive strategy endpoints still working perfectly (/status, /regime/current, /optimal-strategy). Enhanced Event Prediction Coverage feature is production-ready and exceeds all requirements specified in review request."
 
-  - task: "On-Chain Data Endpoints"
+  - task: "Hardened Hidden Gem Prediction (LLM Fallback)"
+    implemented: true
+    working: true
+    file: "/app/backend/services/hidden_gem_predictor.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+        - agent: "main"
+        - comment: "Hardened predict_next_gems to work fully without LLM. Added 5 helper methods: _generate_fallback_catalyst (rule-based catalyst from scores), _compute_rule_based_confidence (quantitative confidence), _estimate_expected_move (score-based move estimate), _generate_fallback_analysis (full text analysis), plus comprehensive response metadata (llm_enhanced, llm_status, model_version, analysis_source per prediction). Fallback predictions now include all 15 fields (name, current_price, market_cap, scores, catalyst, expected_move, etc.) vs previous 4 fields. Test: POST /api/gems/predict with body {days_ahead: 7}. Note: No live market data in test env so scan returns 0 gems, but all code paths are hardened."
     implemented: true
     working: true
     file: "/app/backend/routes/onchain_data.py"
