@@ -462,11 +462,18 @@ async def _init_phase6_scheduling(db):
             stats = await events_db.get_stats()
             if stats.get("total_events", 0) < MIN_HISTORICAL_EVENTS:
                 seed_result = await events_db.seed_major_events()
+                inserted = seed_result.get("inserted", 0) if seed_result else 0
+                updated = seed_result.get("updated", 0) if seed_result else 0
                 total_seeded = seed_result.get("total_events", 0) if seed_result else 0
-                if total_seeded == 0:
-                    logger.warning("⚠️ Historical events auto-seed returned no events")
+                if not seed_result or (inserted + updated) == 0:
+                    logger.warning("⚠️ Historical events auto-seed made no changes")
                 else:
-                    logger.info("🌐 Seeded historical events database with %s curated events", total_seeded)
+                    logger.info(
+                        "🌐 Seeded historical events database with %s curated events (%s inserted, %s updated)",
+                        total_seeded,
+                        inserted,
+                        updated,
+                    )
         except Exception as e:
             logger.warning("⚠️ Auto-seed of historical events skipped: %s", e)
     
