@@ -7,6 +7,25 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ## Session Update - Feb 10, 2026 (Latest)
 
+### ✅ NEW FEATURE: Live Auto-Trading with Adaptive Strategy
+
+**Implemented:**
+- Live trading activation API based on backtested adaptive strategy
+- Regime-aware trading parameters (stop-loss, take-profit, position sizing)
+- Current market regime detection using 52-week calendar
+- Trading signals generation based on regime and market conditions
+- Paper mode and real money mode support
+
+**API Endpoints:**
+- `POST /api/yearly-backtest/live-trading/activate` - Start adaptive trading
+- `POST /api/yearly-backtest/live-trading/deactivate` - Stop trading
+- `GET /api/yearly-backtest/live-trading/status` - Current regime and config
+- `GET /api/yearly-backtest/live-trading/signals` - Live trading signals
+
+**Files Modified:**
+- `backend/routes/yearly_backtest.py` - Added live trading endpoints
+- `backend/services/yearly_adaptive_backtest.py` - Added REGIME_PARAMS export
+
 ### ✅ COMPLETED: Enhanced Adaptive Backtesting with Month & Week Granularity
 
 **Added:**
@@ -18,20 +37,12 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 - Regime distribution summary (bull, bear, crash, euphoria, etc.)
 - Key events highlighting (crashes, euphoria periods)
 
-**Files Modified:**
-- `backend/services/yearly_adaptive_backtest.py` - Added complete week-by-week calendars for all years
-- `backend/routes/yearly_backtest.py` - Enhanced calendar API with year parameter
-- `frontend/src/pages/YearlyBacktest.jsx` - Updated UI with monthly breakdown view
-
 ### ✅ FIXED: Portfolio Dashboard & Position Manager
 
 **Issues Resolved:**
 - Portfolio Dashboard now loads correctly (was stuck in infinite loading loop)
 - Position Manager displays actual Kraken portfolio values (BTC $558.90, ETH $93.13, SOL $60.31, etc.)
 - Total P&L calculation fixed (+$41.61 across 7 positions)
-
-**Files Modified:**
-- `frontend/src/pages/PositionManagement.jsx` - Fixed `usd_value` and `pnl` field mappings
 
 ### ✅ VERIFIED: Refresh Buttons Across App
 
