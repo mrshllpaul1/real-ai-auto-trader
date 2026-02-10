@@ -436,7 +436,10 @@ const SpotTrading = ({ embedded = false }) => {
             await new Promise(r => setTimeout(r, 1000 * (i + 1)));
           }
         } else {
-          console.warn(`[SpotTrading] Invalid content type for ${url}:`, contentType);
+          // Log what we actually received for debugging
+          const text = await res.text();
+          console.warn(`[SpotTrading] Invalid content type for ${url}: ${contentType}, body length: ${text.length}`);
+          console.warn(`[SpotTrading] Response preview:`, text.substring(0, 200));
         }
       } catch (err) {
         console.error(`[SpotTrading] Fetch ${url} error:`, err.message);
