@@ -89,13 +89,9 @@ async def trigger_continuous_learning(
     learning_engine = Depends(get_learning_engine)
 ):
     """Manually trigger AI continuous learning update"""
+    # Note: learning_engine dependency already handles initialization errors
+    # and raises HTTPException if unavailable
     try:
-        if learning_engine is None:
-            raise HTTPException(
-                status_code=503,
-                detail="Learning engine not initialized. Please wait for system startup or check database connection."
-            )
-        
         # Perform the learning update
         await learning_engine.continuous_learning_update()
         
@@ -104,8 +100,6 @@ async def trigger_continuous_learning(
             "status": "success",
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
-    except HTTPException:
-        raise
     except AttributeError as e:
         logger.error(f"Learning engine method not found: {str(e)}", exc_info=True)
         raise HTTPException(

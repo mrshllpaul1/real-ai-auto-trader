@@ -154,7 +154,7 @@ async def stop_training():
     """Stop training"""
     try:
         from services.tethys_training import get_trainer
-        trainer = get_trainer(_db if _db else None)
+        trainer = get_trainer(_db)
         
         if not trainer.is_training:
             return {
@@ -180,7 +180,7 @@ async def get_training_status():
     """Get training status"""
     try:
         from services.tethys_training import get_trainer
-        trainer = get_trainer(_db if _db else None)
+        trainer = get_trainer(_db)
         status = trainer.get_training_status()
         
         # Add database status
