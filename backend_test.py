@@ -2070,18 +2070,22 @@ class OnChainAndAdaptiveStrategyTester:
         
         # Test new features from review request
         print("\n🎯 TESTING NEW FEATURES FROM REVIEW REQUEST:")
-        print("1. On-Chain Data Endpoints")
-        print("2. Enhanced Adaptive Strategy")
-        print("3. Frontend AdaptiveStrategy Page Support")
+        print("1. Whale Alerts and Event Backtesting System")
+        print("2. On-Chain Data Endpoints")
+        print("3. Enhanced Adaptive Strategy")
+        print("4. Frontend AdaptiveStrategy Page Support")
         print("=" * 80)
         
-        # 1. Test On-Chain Data Endpoints
+        # 1. Test Whale Alerts and Event Backtesting System (NEW)
+        await self.test_whale_alerts_and_backtesting_system()
+        
+        # 2. Test On-Chain Data Endpoints
         await self.test_on_chain_data_endpoints()
         
-        # 2. Test Enhanced Adaptive Strategy
+        # 3. Test Enhanced Adaptive Strategy
         await self.test_enhanced_adaptive_strategy_endpoints()
         
-        # 3. Test Frontend Page Backend Support
+        # 4. Test Frontend Page Backend Support
         await self.test_frontend_adaptive_strategy_page()
         
         # Run basic health checks
