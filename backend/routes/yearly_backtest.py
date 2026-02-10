@@ -725,3 +725,140 @@ def _generate_regime_signal(coin: str, regime: str, params: dict, change_24h: fl
         "reason": reason,
         "change_24h": change_24h
     }
+
+
+
+# Track last known regime for change detection
+_last_known_regime = None
+
+
+@router.get("/live-trading/check-regime-change")
+async def check_regime_change():
+    """
+    Check if market regime has changed since last check.
+    If changed, sends a notification.
+    """
+    global _last_known_regime
+    
+    from services.yearly_adaptive_backtest import (
+        MARKET_EVENTS_2025, MARKET_EVENTS_2026, REGIME_PARAMS
+    )
+    
+    # Get current regime
+    now = datetime.now(timezone.utc)
+    current_week = now.isocalendar()[1]
+    current_year = now.year
+    
+    events = MARKET_EVENTS_2026 if current_year >= 2026 else MARKET_EVENTS_2025
+    current_event = next((e for e in events if e["week"] == current_week), None)
+    current_regime = current_event["regime"] if current_event else "sideways"
+    
+    changed = False
+    old_regime = _last_known_regime
+    
+    if _last_known_regime and _last_known_regime != current_regime:
+        changed = True
+        
+        # Send notification if DB is available
+        if _db is not None:
+            try:
+                from services.notification_service import NotificationService
+                notif_service = NotificationService(_db)
+                await notif_service.notify_regime_change(
+                    old_regime=_last_known_regime,
+                    new_regime=current_regime,
+                    week=current_week,
+                    event=current_event.get("event") if current_event else "Unknown"
+                )
+            except Exception as e:
+                logger.error(f"Failed to send regime change notification: {e}")
+    
+    _last_known_regime = current_regime
+    
+    return {
+        "changed": changed,
+        "old_regime": old_regime,
+        "current_regime": current_regime,
+        "week": current_week,
+        "event": current_event.get("event") if current_event else "Unknown",
+        "checked_at": now.isoformat()
+    }
+
+
+@router.post("/live-trading/execute-all-signals")
+async def execute_all_signals():
+    """
+    Execute all actionable trading signals at once.
+    Only executes BUY/SELL signals, not HOLD.
+    Requires live trading to be active.
+    """
+    global _live_trading_active, _live_trading_config
+    
+    if not _live_trading_active:
+        raise HTTPException(status_code=400, detail="Live trading is not active")
+    
+    if not _live_trading_config:
+        raise HTTPException(status_code=400, detail="No trading configuration")
+    
+    # Get current signals
+    signals_response = await get_live_trading_signals()
+    signals = signals_response.get("signals", [])
+    
+    # Filter to actionable signals only
+    actionable = [s for s in signals if s["action"] in ["BUY", "SELL"]]
+    
+    if not actionable:
+        return {
+            "success": True,
+            "message": "No actionable signals at this time",
+            "executed": 0,
+            "signals_checked": len(signals)
+        }
+    
+    # Execute each signal
+    executed = []
+    errors = []
+    
+    from routes.spot_trading import place_spot_order, SpotOrderRequest
+    
+    for signal in actionable:
+        try:
+            order = SpotOrderRequest(
+                symbol=signal["coin"],
+                side=signal["action"].lower(),
+                order_type="market",
+                usd_amount=_live_trading_config.get("amount_per_trade_usd", 25) if signal["action"] == "BUY" else None,
+                use_ai_timing=True
+            )
+            
+            # Only execute if not in paper mode (or execute paper trades)
+            if _live_trading_config.get("paper_mode", True):
+                executed.append({
+                    "coin": signal["coin"],
+                    "action": signal["action"],
+                    "status": "paper_executed",
+                    "amount_usd": _live_trading_config.get("amount_per_trade_usd", 25)
+                })
+            else:
+                result = await place_spot_order(order)
+                executed.append({
+                    "coin": signal["coin"],
+                    "action": signal["action"],
+                    "status": "executed",
+                    "result": result
+                })
+        except Exception as e:
+            errors.append({
+                "coin": signal["coin"],
+                "action": signal["action"],
+                "error": str(e)
+            })
+    
+    return {
+        "success": True,
+        "message": f"Executed {len(executed)} signals",
+        "executed": executed,
+        "errors": errors,
+        "regime": signals_response.get("regime"),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
