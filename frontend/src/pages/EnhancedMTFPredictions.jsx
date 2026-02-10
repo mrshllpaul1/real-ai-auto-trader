@@ -159,19 +159,18 @@ const EnhancedMTFPredictions = () => {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  // Train model
+  // Train model on all Kraken coins (fast mode)
   const handleTrain = async () => {
     setIsTraining(true);
-    toast.loading('Starting Enhanced MTF Training...', { id: 'train' });
+    toast.loading('Training on ALL 634 Kraken coins...', { id: 'train' });
     
     try {
-      const response = await api.post('/enhanced-mtf-training/train', {
-        epochs: 100,
-        download_data: true
+      const response = await api.post('/enhanced-mtf-training/train-fast', null, {
+        params: { epochs: 100, batch_size: 100 }
       });
       
       if (response.data.status === 'completed') {
-        toast.success(`Training completed! Accuracy: ${response.data.accuracy_pct}`, { id: 'train' });
+        toast.success(`Training completed! ${response.data.symbols_trained} coins, Accuracy: ${response.data.accuracy_pct}`, { id: 'train' });
         fetchData();
       } else {
         toast.error(`Training failed: ${response.data.error}`, { id: 'train' });
@@ -183,13 +182,15 @@ const EnhancedMTFPredictions = () => {
     }
   };
 
-  // Get predictions
+  // Get predictions for ALL Kraken coins
   const handlePredict = async () => {
     setIsPredicting(true);
-    toast.loading('Running predictions on all coins...', { id: 'predict' });
+    toast.loading('Running predictions on ALL 634 Kraken coins...', { id: 'predict' });
     
     try {
-      const response = await api.get('/enhanced-mtf-training/predict-all');
+      const response = await api.post('/enhanced-mtf-training/predict-all', {
+        symbols: ["all"]
+      });
       setPredictions(response.data);
       toast.success(`Predictions complete! ${response.data.total_predictions} coins analyzed`, { id: 'predict' });
     } catch (err) {
