@@ -547,7 +547,7 @@ async def get_enhanced_data_status():
         status["services"]["multitimeframe"] = {"status": "not_initialized"}
     
     # Provider Keys
-    if _db:
+    if _db is not None:
         keys_doc = await _db.data_provider_keys.find_one({"_id": "provider_keys"})
         configured_count = 0
         if keys_doc:
