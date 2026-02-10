@@ -37,6 +37,8 @@ const OptionsTrading = () => {
   const [estimatedGreeks, setEstimatedGreeks] = useState(null);
   const [strategyLegs, setStrategyLegs] = useState([]);
   const [selectedStrategy, setSelectedStrategy] = useState(null);
+  const [expandedPosition, setExpandedPosition] = useState(null);
+  const [positionAnalytics, setPositionAnalytics] = useState(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -243,6 +245,23 @@ const OptionsTrading = () => {
     setStrategyLegs(legs);
     setSelectedStrategy(strategyName);
     toast.success(`Loaded ${strategyName} strategy`);
+  };
+
+  const togglePositionDetails = async (positionId) => {
+    if (expandedPosition === positionId) {
+      setExpandedPosition(null);
+      setPositionAnalytics(null);
+    } else {
+      setExpandedPosition(positionId);
+      // Fetch analytics
+      try {
+        const res = await api.get(`/options/position-analytics/${positionId}`);
+        setPositionAnalytics(res.data);
+      } catch (error) {
+        console.error('Failed to fetch position analytics:', error);
+        toast.error('Failed to load position details');
+      }
+    }
   };
 
   const handleClosePosition = async (positionId) => {
@@ -932,28 +951,88 @@ const OptionsTrading = () => {
                         </Button>
                       </div>
                       {/* Greeks */}
-                      <div className="mt-3 pt-3 border-t border-[#1F1F1F] grid grid-cols-5 gap-4 text-center text-sm">
-                        <div>
-                          <p className="text-[#666]">Delta</p>
-                          <p className="font-data text-white">{pos.greeks?.delta}</p>
+                      <div className="mt-3 pt-3 border-t border-[#1F1F1F]">
+                        <div className="grid grid-cols-5 gap-4 text-center text-sm">
+                          <div>
+                            <p className="text-[#666]">Delta</p>
+                            <p className="font-data text-white">{pos.greeks?.delta}</p>
+                          </div>
+                          <div>
+                            <p className="text-[#666]">Gamma</p>
+                            <p className="font-data text-white">{pos.greeks?.gamma}</p>
+                          </div>
+                          <div>
+                            <p className="text-[#666]">Theta</p>
+                            <p className="font-data text-[#FF0055]">{pos.greeks?.theta}</p>
+                          </div>
+                          <div>
+                            <p className="text-[#666]">Vega</p>
+                            <p className="font-data text-white">{pos.greeks?.vega}</p>
+                          </div>
+                          <div>
+                            <p className="text-[#666]">Rho</p>
+                            <p className="font-data text-white">{pos.greeks?.rho}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-[#666]">Gamma</p>
-                          <p className="font-data text-white">{pos.greeks?.gamma}</p>
-                        </div>
-                        <div>
-                          <p className="text-[#666]">Theta</p>
-                          <p className="font-data text-[#FF0055]">{pos.greeks?.theta}</p>
-                        </div>
-                        <div>
-                          <p className="text-[#666]">Vega</p>
-                          <p className="font-data text-white">{pos.greeks?.vega}</p>
-                        </div>
-                        <div>
-                          <p className="text-[#666]">Rho</p>
-                          <p className="font-data text-white">{pos.greeks?.rho}</p>
+                        
+                        {/* Analytics Toggle */}
+                        <div className="mt-3 text-center">
+                          <Button
+                            onClick={() => togglePositionDetails(pos.position_id)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-[#FF9500] text-xs"
+                          >
+                            {expandedPosition === pos.position_id ? 'Hide' : 'Show'} P&L Breakdown
+                            <ChevronDown 
+                              size={14} 
+                              className={`ml-1 transition-transform ${expandedPosition === pos.position_id ? 'rotate-180' : ''}`}
+                            />
+                          </Button>
                         </div>
                       </div>
+
+                      {/* Expanded Analytics */}
+                      {expandedPosition === pos.position_id && positionAnalytics && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mt-3 pt-3 border-t border-[#1F1F1F]"
+                        >
+                          <h4 className="text-sm font-bold text-[#FF9500] mb-3">P&L Attribution by Greeks</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                            <div className="bg-[#121212] p-3 rounded border border-[#1F1F1F]">
+                              <p className="text-[#666] text-xs mb-1">Delta P&L</p>
+                              <p className={`font-data font-bold ${positionAnalytics.pnl_breakdown.delta_pnl >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                                ${positionAnalytics.pnl_breakdown.delta_pnl}
+                              </p>
+                              <p className="text-[#666] text-xs mt-1">Price movement</p>
+                            </div>
+                            <div className="bg-[#121212] p-3 rounded border border-[#1F1F1F]">
+                              <p className="text-[#666] text-xs mb-1">Theta P&L</p>
+                              <p className={`font-data font-bold ${positionAnalytics.pnl_breakdown.theta_pnl >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                                ${positionAnalytics.pnl_breakdown.theta_pnl}
+                              </p>
+                              <p className="text-[#666] text-xs mt-1">Time decay ({pos.days_held}d)</p>
+                            </div>
+                            <div className="bg-[#121212] p-3 rounded border border-[#1F1F1F]">
+                              <p className="text-[#666] text-xs mb-1">Vega P&L</p>
+                              <p className={`font-data font-bold ${positionAnalytics.pnl_breakdown.vega_pnl >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                                ${positionAnalytics.pnl_breakdown.vega_pnl}
+                              </p>
+                              <p className="text-[#666] text-xs mt-1">IV change</p>
+                            </div>
+                            <div className="bg-[#121212] p-3 rounded border border-[#1F1F1F]">
+                              <p className="text-[#666] text-xs mb-1">Gamma/Other</p>
+                              <p className={`font-data font-bold ${positionAnalytics.pnl_breakdown.gamma_other >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                                ${positionAnalytics.pnl_breakdown.gamma_other}
+                              </p>
+                              <p className="text-[#666] text-xs mt-1">Second order</p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
                     </CardContent>
                   </Card>
                 );
