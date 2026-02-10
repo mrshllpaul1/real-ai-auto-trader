@@ -395,6 +395,70 @@ class AdaptiveStrategyService:
             "impact": "negative",
             "lead_indicators": ["vix_spike", "credit_spreads", "bank_stress", "currency_moves"],
             "confidence": 0.55
+        },
+        # Additional Event Types
+        {
+            "type": "network_upgrade",
+            "description": "Major blockchain network upgrade/hard fork",
+            "impact": "positive",
+            "lead_indicators": ["testnet_deployment", "developer_activity", "node_updates", "social_announcements"],
+            "confidence": 0.80
+        },
+        {
+            "type": "stablecoin_depeg",
+            "description": "Major stablecoin loses peg",
+            "impact": "negative",
+            "lead_indicators": ["redemption_rate", "liquidity_drain", "dex_price_deviation", "reserve_transparency"],
+            "confidence": 0.65
+        },
+        {
+            "type": "etf_launch",
+            "description": "New crypto ETF product launch",
+            "impact": "positive",
+            "lead_indicators": ["sec_filings", "fund_marketing", "institutional_demand"],
+            "confidence": 0.75
+        },
+        {
+            "type": "mining_difficulty_adjustment",
+            "description": "Significant mining difficulty change",
+            "impact": "mixed",
+            "lead_indicators": ["hashrate_trend", "miner_profitability", "network_block_time"],
+            "confidence": 0.85
+        },
+        {
+            "type": "defi_exploit",
+            "description": "Major DeFi protocol hack/exploit",
+            "impact": "negative",
+            "lead_indicators": ["smart_contract_audits", "tvl_concentration", "governance_activity"],
+            "confidence": 0.50
+        },
+        {
+            "type": "celebrity_endorsement",
+            "description": "Major celebrity/influencer crypto endorsement",
+            "impact": "positive",
+            "lead_indicators": ["social_media_activity", "influencer_wallets", "trending_topics"],
+            "confidence": 0.55
+        },
+        {
+            "type": "institutional_buy",
+            "description": "Major institutional purchase announcement",
+            "impact": "positive",
+            "lead_indicators": ["sec_13f_filings", "corporate_treasury_news", "custody_flows"],
+            "confidence": 0.70
+        },
+        {
+            "type": "layer2_milestone",
+            "description": "Layer 2 scaling solution milestone",
+            "impact": "positive",
+            "lead_indicators": ["tvl_growth", "transaction_count", "developer_adoption"],
+            "confidence": 0.70
+        },
+        {
+            "type": "cbdc_announcement",
+            "description": "Central Bank Digital Currency news",
+            "impact": "mixed",
+            "lead_indicators": ["central_bank_statements", "pilot_programs", "legislative_activity"],
+            "confidence": 0.60
         }
     ]
     
