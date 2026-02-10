@@ -1,23 +1,27 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React, { lazy, memo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { 
-  Wallet, Briefcase, PieChart, Layers, Target, LineChart, Activity,
-  RefreshCw, TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight
+  Wallet, Briefcase, PieChart, Layers, Target, LineChart, Activity
 } from 'lucide-react';
-import { Breadcrumb, useTabKeyboardNav, KeyboardHint, MobileTabsList } from '@/components/HubNavigation';
+import { 
+  Breadcrumb, 
+  useTabState, 
+  useTabKeyboardNav, 
+  KeyboardHint, 
+  MobileTabsList,
+  LazyTabContent 
+} from '@/components/HubNavigation';
 
-// Import existing page components as sub-components
-import SpotTrading from './SpotTrading';
-import PositionManagement from './PositionManagement';
-import PortfolioDashboard from './PortfolioDashboard';
-import AdvancedOrders from './AdvancedOrders';
-import OptionsTrading from './OptionsTrading';
-import PerpetualFutures from './PerpetualFutures';
-import MarketMaker from './MarketMaker';
+// Lazy load page components for better performance
+const SpotTrading = lazy(() => import('./SpotTrading'));
+const PositionManagement = lazy(() => import('./PositionManagement'));
+const PortfolioDashboard = lazy(() => import('./PortfolioDashboard'));
+const AdvancedOrders = lazy(() => import('./AdvancedOrders'));
+const OptionsTrading = lazy(() => import('./OptionsTrading'));
+const PerpetualFutures = lazy(() => import('./PerpetualFutures'));
+const MarketMaker = lazy(() => import('./MarketMaker'));
 
 const TABS = ['spot', 'positions', 'portfolio', 'advanced', 'options', 'perpetuals', 'market-maker'];
 
@@ -31,8 +35,32 @@ const TAB_LABELS = {
   'market-maker': 'Market Maker'
 };
 
+const TAB_CONFIG = [
+  { value: 'spot', icon: Wallet, label: 'Spot', color: 'green' },
+  { value: 'positions', icon: Briefcase, label: 'Positions', color: 'blue' },
+  { value: 'portfolio', icon: PieChart, label: 'Portfolio', color: 'purple' },
+  { value: 'advanced', icon: Layers, label: 'Advanced', color: 'amber' },
+  { value: 'options', icon: Target, label: 'Options', color: 'cyan' },
+  { value: 'perpetuals', icon: LineChart, label: 'Perpetuals', color: 'pink' },
+  { value: 'market-maker', icon: Activity, label: 'Market Maker', color: 'orange' },
+];
+
+// Memoized tab trigger for performance
+const TabTriggerItem = memo(({ value, icon: Icon, label, color }) => (
+  <TabsTrigger 
+    value={value} 
+    className={`data-[state=active]:bg-${color}-500/20 whitespace-nowrap`}
+  >
+    <Icon className="w-4 h-4 mr-1 md:mr-2" />
+    {label}
+  </TabsTrigger>
+));
+
+TabTriggerItem.displayName = 'TabTriggerItem';
+
 const TradingHub = () => {
-  const [activeTab, setActiveTab] = useState('spot');
+  // URL-persisted tab state
+  const [activeTab, setActiveTab] = useTabState(TABS, 'spot');
   
   // Enable keyboard navigation
   useTabKeyboardNav(TABS, activeTab, setActiveTab);
@@ -71,63 +99,53 @@ const TradingHub = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <MobileTabsList>
             <TabsList className="glass-card flex-nowrap md:flex-wrap h-auto p-1 gap-1 w-max md:w-auto">
-              <TabsTrigger value="spot" className="data-[state=active]:bg-green-500/20 whitespace-nowrap">
-                <Wallet className="w-4 h-4 mr-1 md:mr-2" />
-                Spot
-              </TabsTrigger>
-              <TabsTrigger value="positions" className="data-[state=active]:bg-blue-500/20 whitespace-nowrap">
-                <Briefcase className="w-4 h-4 mr-1 md:mr-2" />
-                Positions
-              </TabsTrigger>
-              <TabsTrigger value="portfolio" className="data-[state=active]:bg-purple-500/20 whitespace-nowrap">
-                <PieChart className="w-4 h-4 mr-1 md:mr-2" />
-                Portfolio
-              </TabsTrigger>
-              <TabsTrigger value="advanced" className="data-[state=active]:bg-amber-500/20 whitespace-nowrap">
-                <Layers className="w-4 h-4 mr-1 md:mr-2" />
-                Advanced
-              </TabsTrigger>
-              <TabsTrigger value="options" className="data-[state=active]:bg-cyan-500/20 whitespace-nowrap">
-                <Target className="w-4 h-4 mr-1 md:mr-2" />
-                Options
-              </TabsTrigger>
-              <TabsTrigger value="perpetuals" className="data-[state=active]:bg-pink-500/20 whitespace-nowrap">
-                <LineChart className="w-4 h-4 mr-1 md:mr-2" />
-                Perpetuals
-              </TabsTrigger>
-              <TabsTrigger value="market-maker" className="data-[state=active]:bg-orange-500/20 whitespace-nowrap">
-                <Activity className="w-4 h-4 mr-1 md:mr-2" />
-                Market Maker
-              </TabsTrigger>
+              {TAB_CONFIG.map((tab) => (
+                <TabTriggerItem key={tab.value} {...tab} />
+              ))}
             </TabsList>
           </MobileTabsList>
 
+          {/* Lazy-loaded tab content - only renders active tab */}
           <TabsContent value="spot" className="mt-0">
-            <SpotTrading embedded={true} />
+            <LazyTabContent isActive={activeTab === 'spot'}>
+              <SpotTrading embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="positions" className="mt-0">
-            <PositionManagement embedded={true} />
+            <LazyTabContent isActive={activeTab === 'positions'}>
+              <PositionManagement embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="portfolio" className="mt-0">
-            <PortfolioDashboard embedded={true} />
+            <LazyTabContent isActive={activeTab === 'portfolio'}>
+              <PortfolioDashboard embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="advanced" className="mt-0">
-            <AdvancedOrders embedded={true} />
+            <LazyTabContent isActive={activeTab === 'advanced'}>
+              <AdvancedOrders embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="options" className="mt-0">
-            <OptionsTrading embedded={true} />
+            <LazyTabContent isActive={activeTab === 'options'}>
+              <OptionsTrading embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="perpetuals" className="mt-0">
-            <PerpetualFutures embedded={true} />
+            <LazyTabContent isActive={activeTab === 'perpetuals'}>
+              <PerpetualFutures embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="market-maker" className="mt-0">
-            <MarketMaker embedded={true} />
+            <LazyTabContent isActive={activeTab === 'market-maker'}>
+              <MarketMaker embedded={true} />
+            </LazyTabContent>
           </TabsContent>
         </Tabs>
       </motion.div>
