@@ -868,22 +868,47 @@ const SpotTrading = ({ embedded = false }) => {
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-white">{rec.symbol}</span>
-                            <span className="text-xs text-[#666]">${rec.price?.toFixed(2)}</span>
+                            <span className="text-xs text-[#666]">${rec.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: rec.price > 1 ? 2 : 6 })}</span>
                           </div>
                           <div className={`px-2 py-1 rounded text-xs font-medium ${
-                            rec.score > 0.3 ? 'bg-[#00FF94]/20 text-[#00FF94]' :
-                            rec.score < -0.3 ? 'bg-[#FF4444]/20 text-[#FF4444]' :
+                            rec.score >= 60 ? 'bg-[#00FF94]/20 text-[#00FF94]' :
+                            rec.score <= 40 ? 'bg-[#FF4444]/20 text-[#FF4444]' :
                             'bg-[#FFB800]/20 text-[#FFB800]'
                           }`}>
-                            {rec.signal?.toUpperCase()}
+                            {rec.signal?.toUpperCase()?.replace('_', ' ')}
                           </div>
                         </div>
                         <div className="flex justify-between text-xs">
                           <span className="text-[#888]">{rec.recommendation}</span>
-                          <span className={rec.score >= 0 ? 'text-[#00FF94]' : 'text-[#FF4444]'}>
-                            Score: {rec.score?.toFixed(3)}
+                          <span className={rec.score >= 50 ? 'text-[#00FF94]' : 'text-[#FF4444]'}>
+                            Score: {rec.score?.toFixed(1)} | Conf: {rec.confidence?.toFixed(1)}%
                           </span>
                         </div>
+                        {/* Component breakdown */}
+                        {rec.components && (
+                          <div className="mt-2 pt-2 border-t border-[#333] grid grid-cols-5 gap-1 text-[10px]">
+                            <div className="text-center">
+                              <div className="text-[#666]">Order</div>
+                              <div className={rec.components.order_book >= 50 ? 'text-[#00FF94]' : 'text-[#FF4444]'}>{rec.components.order_book}</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-[#666]">Chain</div>
+                              <div className={rec.components.on_chain >= 50 ? 'text-[#00FF94]' : 'text-[#FF4444]'}>{rec.components.on_chain}</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-[#666]">Social</div>
+                              <div className={rec.components.social >= 50 ? 'text-[#00FF94]' : 'text-[#FF4444]'}>{rec.components.social}</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-[#666]">Cross</div>
+                              <div className={rec.components.cross_asset >= 50 ? 'text-[#00FF94]' : 'text-[#FF4444]'}>{rec.components.cross_asset}</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-[#666]">TA</div>
+                              <div className={rec.components.advanced_ta >= 50 ? 'text-[#00FF94]' : 'text-[#FF4444]'}>{rec.components.advanced_ta}</div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                     
