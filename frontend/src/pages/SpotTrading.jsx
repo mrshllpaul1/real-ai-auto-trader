@@ -405,7 +405,7 @@ const HoldingsTable = ({ holdings }) => {
   );
 };
 
-const SpotTrading = () => {
+const SpotTrading = ({ embedded = false }) => {
   const [pairs, setPairs] = useState([]);
   const [selectedSymbol, setSelectedSymbol] = useState('BTC');
   const [pairDetails, setPairDetails] = useState(null);
