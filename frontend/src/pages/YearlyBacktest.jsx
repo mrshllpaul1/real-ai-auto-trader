@@ -1173,6 +1173,17 @@ const YearlyBacktest = ({ embedded = false }) => {
                                         Week {event.week}
                                         {event.date_range && ` • ${event.date_range}`}
                                       </span>
+                                      {/* Sentiment indicator */}
+                                      {event.sentiment !== undefined && (
+                                        <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
+                                          event.sentiment >= 75 ? 'bg-emerald-500/20 text-emerald-400' :
+                                          event.sentiment >= 50 ? 'bg-green-500/20 text-green-400' :
+                                          event.sentiment >= 25 ? 'bg-orange-500/20 text-orange-400' :
+                                          'bg-red-500/20 text-red-400'
+                                        }`}>
+                                          F&G: {event.sentiment}
+                                        </span>
+                                      )}
                                     </div>
                                     <div className="flex items-center justify-between">
                                       <p className="text-sm text-slate-300 flex-1">{event.event}</p>
@@ -1189,6 +1200,19 @@ const YearlyBacktest = ({ embedded = false }) => {
                                         {event.regime}
                                       </Badge>
                                     </div>
+                                    {/* Sentiment signal */}
+                                    {event.sentiment_signal && (
+                                      <div className="mt-2 pt-2 border-t border-slate-700/50">
+                                        <span className={`text-xs font-medium ${
+                                          event.sentiment_signal === 'STRONG_BUY' ? 'text-emerald-400' :
+                                          event.sentiment_signal === 'BUY' ? 'text-green-400' :
+                                          event.sentiment_signal === 'REDUCE' ? 'text-orange-400' :
+                                          'text-slate-400'
+                                        }`}>
+                                          Signal: {event.sentiment_signal}
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
                                 ))}
                               </div>
