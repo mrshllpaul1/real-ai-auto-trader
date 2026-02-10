@@ -173,53 +173,140 @@ MARKET_EVENTS_2024 = [
     {"week": 51, "regime": "bull_weak", "event": "Year-end consolidation"}
 ]
 
-# 2025 Market calendar - key events that affect market regime
+# 2025 Market calendar - COMPLETE WEEK BY WEEK breakdown
 MARKET_EVENTS_2025 = [
-    {"week": 1, "regime": "sideways", "event": "New Year consolidation"},
-    {"week": 3, "regime": "bull_weak", "event": "Q1 optimism begins"},
-    {"week": 5, "regime": "bull_strong", "event": "Bitcoin ETF inflows continue"},
-    {"week": 8, "regime": "high_volatility", "event": "Fed meeting uncertainty"},
-    {"week": 10, "regime": "bear_weak", "event": "Profit taking"},
-    {"week": 12, "regime": "recovery", "event": "Q1 earnings positive"},
-    {"week": 15, "regime": "bull_strong", "event": "Bitcoin halving anniversary rally"},
-    {"week": 18, "regime": "sideways", "event": "May consolidation"},
-    {"week": 20, "regime": "bear_weak", "event": "Sell in May effect"},
-    {"week": 22, "regime": "bear_strong", "event": "Summer correction"},
-    {"week": 25, "regime": "sideways", "event": "Summer doldrums"},
-    {"week": 28, "regime": "recovery", "event": "Institutional buying"},
-    {"week": 30, "regime": "bull_weak", "event": "Q3 optimism"},
-    {"week": 33, "regime": "high_volatility", "event": "Fed Jackson Hole"},
-    {"week": 35, "regime": "bear_weak", "event": "September effect"},
-    {"week": 38, "regime": "recovery", "event": "Q3 earnings positive"},
-    {"week": 40, "regime": "bull_weak", "event": "Uptober begins"},
-    {"week": 42, "regime": "bull_strong", "event": "Pre-election rally"},
-    {"week": 45, "regime": "high_volatility", "event": "Election week"},
-    {"week": 47, "regime": "bull_strong", "event": "Post-election clarity"},
-    {"week": 50, "regime": "bull_weak", "event": "Year-end positioning"},
-    {"week": 52, "regime": "sideways", "event": "Holiday low volume"}
+    # January - Q1 Start
+    {"week": 1, "month": "January", "regime": "sideways", "event": "New Year consolidation", "date_range": "Jan 1-7"},
+    {"week": 2, "month": "January", "regime": "bull_weak", "event": "Post-holiday recovery", "date_range": "Jan 8-14"},
+    {"week": 3, "month": "January", "regime": "bull_weak", "event": "Q1 optimism begins", "date_range": "Jan 15-21"},
+    {"week": 4, "month": "January", "regime": "bull_strong", "event": "Trump inauguration crypto rally", "date_range": "Jan 22-28"},
+    # February
+    {"week": 5, "month": "February", "regime": "bull_strong", "event": "Bitcoin ETF inflows continue", "date_range": "Jan 29-Feb 4"},
+    {"week": 6, "month": "February", "regime": "bull_strong", "event": "Institutional accumulation", "date_range": "Feb 5-11"},
+    {"week": 7, "month": "February", "regime": "high_volatility", "event": "CPI data release", "date_range": "Feb 12-18"},
+    {"week": 8, "month": "February", "regime": "high_volatility", "event": "Fed meeting uncertainty", "date_range": "Feb 19-25"},
+    # March
+    {"week": 9, "month": "March", "regime": "bull_weak", "event": "March optimism", "date_range": "Feb 26-Mar 4"},
+    {"week": 10, "month": "March", "regime": "bear_weak", "event": "Profit taking", "date_range": "Mar 5-11"},
+    {"week": 11, "month": "March", "regime": "sideways", "event": "Consolidation phase", "date_range": "Mar 12-18"},
+    {"week": 12, "month": "March", "regime": "recovery", "event": "Q1 earnings positive", "date_range": "Mar 19-25"},
+    {"week": 13, "month": "March", "regime": "bull_weak", "event": "End of Q1 positioning", "date_range": "Mar 26-31"},
+    # April - Q2 Start
+    {"week": 14, "month": "April", "regime": "bull_strong", "event": "Q2 start bullish", "date_range": "Apr 1-8"},
+    {"week": 15, "month": "April", "regime": "bull_strong", "event": "Bitcoin halving anniversary rally", "date_range": "Apr 9-15"},
+    {"week": 16, "month": "April", "regime": "euphoria", "event": "Halving anniversary FOMO", "date_range": "Apr 16-22"},
+    {"week": 17, "month": "April", "regime": "high_volatility", "event": "Tax season volatility", "date_range": "Apr 23-29"},
+    # May
+    {"week": 18, "month": "May", "regime": "sideways", "event": "May consolidation", "date_range": "Apr 30-May 6"},
+    {"week": 19, "month": "May", "regime": "bear_weak", "event": "Sell in May begins", "date_range": "May 7-13"},
+    {"week": 20, "month": "May", "regime": "bear_weak", "event": "Sell in May effect", "date_range": "May 14-20"},
+    {"week": 21, "month": "May", "regime": "sideways", "event": "Range-bound trading", "date_range": "May 21-27"},
+    # June
+    {"week": 22, "month": "June", "regime": "bear_strong", "event": "Summer correction begins", "date_range": "May 28-Jun 3"},
+    {"week": 23, "month": "June", "regime": "bear_weak", "event": "Correction continues", "date_range": "Jun 4-10"},
+    {"week": 24, "month": "June", "regime": "sideways", "event": "Fed June meeting", "date_range": "Jun 11-17"},
+    {"week": 25, "month": "June", "regime": "sideways", "event": "Summer doldrums begin", "date_range": "Jun 18-24"},
+    {"week": 26, "month": "June", "regime": "sideways", "event": "End of Q2", "date_range": "Jun 25-30"},
+    # July - Q3 Start
+    {"week": 27, "month": "July", "regime": "recovery", "event": "Q3 start recovery", "date_range": "Jul 1-8"},
+    {"week": 28, "month": "July", "regime": "recovery", "event": "Institutional buying resumes", "date_range": "Jul 9-15"},
+    {"week": 29, "month": "July", "regime": "bull_weak", "event": "Summer rally attempt", "date_range": "Jul 16-22"},
+    {"week": 30, "month": "July", "regime": "bull_weak", "event": "Q3 optimism builds", "date_range": "Jul 23-29"},
+    # August
+    {"week": 31, "month": "August", "regime": "sideways", "event": "Low volume August", "date_range": "Jul 30-Aug 5"},
+    {"week": 32, "month": "August", "regime": "bear_weak", "event": "August weakness", "date_range": "Aug 6-12"},
+    {"week": 33, "month": "August", "regime": "high_volatility", "event": "Fed Jackson Hole", "date_range": "Aug 13-19"},
+    {"week": 34, "month": "August", "regime": "high_volatility", "event": "Post-Jackson Hole volatility", "date_range": "Aug 20-26"},
+    # September
+    {"week": 35, "month": "September", "regime": "bear_weak", "event": "September effect begins", "date_range": "Aug 27-Sep 2"},
+    {"week": 36, "month": "September", "regime": "bear_strong", "event": "Historically weak period", "date_range": "Sep 3-9"},
+    {"week": 37, "month": "September", "regime": "bear_weak", "event": "Mid-September pressure", "date_range": "Sep 10-16"},
+    {"week": 38, "month": "September", "regime": "recovery", "event": "Fed September meeting rally", "date_range": "Sep 17-23"},
+    {"week": 39, "month": "September", "regime": "sideways", "event": "End of Q3", "date_range": "Sep 24-30"},
+    # October - Q4 Start
+    {"week": 40, "month": "October", "regime": "bull_weak", "event": "Uptober begins", "date_range": "Oct 1-7"},
+    {"week": 41, "month": "October", "regime": "bull_strong", "event": "Uptober momentum", "date_range": "Oct 8-14"},
+    {"week": 42, "month": "October", "regime": "bull_strong", "event": "Pre-election positioning", "date_range": "Oct 15-21"},
+    {"week": 43, "month": "October", "regime": "high_volatility", "event": "Election uncertainty builds", "date_range": "Oct 22-28"},
+    # November
+    {"week": 44, "month": "November", "regime": "high_volatility", "event": "Pre-election week", "date_range": "Oct 29-Nov 4"},
+    {"week": 45, "month": "November", "regime": "high_volatility", "event": "US Election week", "date_range": "Nov 5-11"},
+    {"week": 46, "month": "November", "regime": "bull_strong", "event": "Post-election clarity", "date_range": "Nov 12-18"},
+    {"week": 47, "month": "November", "regime": "bull_strong", "event": "Thanksgiving rally", "date_range": "Nov 19-25"},
+    # December
+    {"week": 48, "month": "December", "regime": "bull_weak", "event": "December optimism", "date_range": "Nov 26-Dec 2"},
+    {"week": 49, "month": "December", "regime": "sideways", "event": "Fed December meeting", "date_range": "Dec 3-9"},
+    {"week": 50, "month": "December", "regime": "bull_weak", "event": "Year-end positioning", "date_range": "Dec 10-16"},
+    {"week": 51, "month": "December", "regime": "sideways", "event": "Holiday low volume", "date_range": "Dec 17-23"},
+    {"week": 52, "month": "December", "regime": "sideways", "event": "Year-end consolidation", "date_range": "Dec 24-31"}
 ]
 
-# 2026 Market calendar - Post-halving cycle peak year (projected)
+# 2026 Market calendar - Post-halving cycle peak year (projected) - COMPLETE WEEK BY WEEK
 MARKET_EVENTS_2026 = [
-    {"week": 1, "regime": "bull_weak", "event": "New Year continuation"},
-    {"week": 3, "regime": "bull_strong", "event": "Q1 rally begins"},
-    {"week": 6, "regime": "euphoria", "event": "BTC supercycle speculation"},
-    {"week": 9, "regime": "high_volatility", "event": "Fed policy uncertainty"},
-    {"week": 12, "regime": "bull_strong", "event": "Institutional adoption wave"},
-    {"week": 15, "regime": "euphoria", "event": "Altseason begins"},
-    {"week": 18, "regime": "high_volatility", "event": "Market overheating warnings"},
-    {"week": 20, "regime": "bear_weak", "event": "May correction"},
-    {"week": 23, "regime": "recovery", "event": "Dip buying"},
-    {"week": 26, "regime": "bull_strong", "event": "Summer rally"},
-    {"week": 29, "regime": "euphoria", "event": "Cycle top speculation"},
-    {"week": 32, "regime": "high_volatility", "event": "Extreme greed phase"},
-    {"week": 35, "regime": "bear_weak", "event": "Early distribution"},
-    {"week": 38, "regime": "sideways", "event": "Market indecision"},
-    {"week": 40, "regime": "bull_weak", "event": "Q4 optimism"},
-    {"week": 43, "regime": "bull_strong", "event": "Year-end FOMO"},
-    {"week": 46, "regime": "high_volatility", "event": "Profit taking begins"},
-    {"week": 49, "regime": "bear_weak", "event": "Cycle top forming"},
-    {"week": 52, "regime": "sideways", "event": "Year-end consolidation"}
+    # January - Q1 Start - Post-halving bull continuation
+    {"week": 1, "month": "January", "regime": "bull_weak", "event": "New Year continuation", "date_range": "Jan 1-7"},
+    {"week": 2, "month": "January", "regime": "bull_strong", "event": "Post-holiday momentum", "date_range": "Jan 8-14"},
+    {"week": 3, "month": "January", "regime": "bull_strong", "event": "Q1 rally begins", "date_range": "Jan 15-21"},
+    {"week": 4, "month": "January", "regime": "bull_strong", "event": "Institutional FOMO", "date_range": "Jan 22-28"},
+    # February
+    {"week": 5, "month": "February", "regime": "euphoria", "event": "BTC supercycle begins", "date_range": "Jan 29-Feb 4"},
+    {"week": 6, "month": "February", "regime": "euphoria", "event": "BTC supercycle speculation", "date_range": "Feb 5-11"},
+    {"week": 7, "month": "February", "regime": "high_volatility", "event": "Profit taking volatility", "date_range": "Feb 12-18"},
+    {"week": 8, "month": "February", "regime": "bull_strong", "event": "Dip buying resumes", "date_range": "Feb 19-25"},
+    # March
+    {"week": 9, "month": "March", "regime": "high_volatility", "event": "Fed policy uncertainty", "date_range": "Feb 26-Mar 4"},
+    {"week": 10, "month": "March", "regime": "bull_weak", "event": "Rate decision clarity", "date_range": "Mar 5-11"},
+    {"week": 11, "month": "March", "regime": "bull_strong", "event": "Institutional accumulation", "date_range": "Mar 12-18"},
+    {"week": 12, "month": "March", "regime": "bull_strong", "event": "Institutional adoption wave", "date_range": "Mar 19-25"},
+    {"week": 13, "month": "March", "regime": "euphoria", "event": "Q1 ends strong", "date_range": "Mar 26-31"},
+    # April - Q2 Start - Altseason
+    {"week": 14, "month": "April", "regime": "euphoria", "event": "Altseason warming up", "date_range": "Apr 1-8"},
+    {"week": 15, "month": "April", "regime": "euphoria", "event": "Altseason begins", "date_range": "Apr 9-15"},
+    {"week": 16, "month": "April", "regime": "euphoria", "event": "Altcoin mania", "date_range": "Apr 16-22"},
+    {"week": 17, "month": "April", "regime": "high_volatility", "event": "Extreme volatility", "date_range": "Apr 23-29"},
+    # May
+    {"week": 18, "month": "May", "regime": "high_volatility", "event": "Market overheating warnings", "date_range": "Apr 30-May 6"},
+    {"week": 19, "month": "May", "regime": "bear_weak", "event": "May correction begins", "date_range": "May 7-13"},
+    {"week": 20, "month": "May", "regime": "bear_weak", "event": "May correction continues", "date_range": "May 14-20"},
+    {"week": 21, "month": "May", "regime": "bear_strong", "event": "Deeper correction", "date_range": "May 21-27"},
+    # June
+    {"week": 22, "month": "June", "regime": "recovery", "event": "Dip buying begins", "date_range": "May 28-Jun 3"},
+    {"week": 23, "month": "June", "regime": "recovery", "event": "Recovery phase", "date_range": "Jun 4-10"},
+    {"week": 24, "month": "June", "regime": "bull_weak", "event": "Stabilization", "date_range": "Jun 11-17"},
+    {"week": 25, "month": "June", "regime": "bull_weak", "event": "Summer positioning", "date_range": "Jun 18-24"},
+    {"week": 26, "month": "June", "regime": "bull_strong", "event": "Summer rally starts", "date_range": "Jun 25-30"},
+    # July - Q3 Start
+    {"week": 27, "month": "July", "regime": "bull_strong", "event": "Q3 momentum", "date_range": "Jul 1-8"},
+    {"week": 28, "month": "July", "regime": "bull_strong", "event": "Summer rally continues", "date_range": "Jul 9-15"},
+    {"week": 29, "month": "July", "regime": "euphoria", "event": "Cycle top speculation", "date_range": "Jul 16-22"},
+    {"week": 30, "month": "July", "regime": "euphoria", "event": "ATH expectations", "date_range": "Jul 23-29"},
+    # August
+    {"week": 31, "month": "August", "regime": "high_volatility", "event": "Extreme greed indicators", "date_range": "Jul 30-Aug 5"},
+    {"week": 32, "month": "August", "regime": "high_volatility", "event": "Extreme greed phase", "date_range": "Aug 6-12"},
+    {"week": 33, "month": "August", "regime": "bear_weak", "event": "Distribution begins", "date_range": "Aug 13-19"},
+    {"week": 34, "month": "August", "regime": "bear_weak", "event": "Smart money exiting", "date_range": "Aug 20-26"},
+    # September
+    {"week": 35, "month": "September", "regime": "bear_weak", "event": "Early distribution", "date_range": "Aug 27-Sep 2"},
+    {"week": 36, "month": "September", "regime": "bear_strong", "event": "September weakness", "date_range": "Sep 3-9"},
+    {"week": 37, "month": "September", "regime": "sideways", "event": "Consolidation", "date_range": "Sep 10-16"},
+    {"week": 38, "month": "September", "regime": "sideways", "event": "Market indecision", "date_range": "Sep 17-23"},
+    {"week": 39, "month": "September", "regime": "recovery", "event": "Late September bounce", "date_range": "Sep 24-30"},
+    # October - Q4 Start
+    {"week": 40, "month": "October", "regime": "bull_weak", "event": "Q4 optimism", "date_range": "Oct 1-7"},
+    {"week": 41, "month": "October", "regime": "bull_weak", "event": "Uptober attempt", "date_range": "Oct 8-14"},
+    {"week": 42, "month": "October", "regime": "bull_strong", "event": "Q4 momentum builds", "date_range": "Oct 15-21"},
+    {"week": 43, "month": "October", "regime": "bull_strong", "event": "Year-end FOMO begins", "date_range": "Oct 22-28"},
+    # November
+    {"week": 44, "month": "November", "regime": "bull_strong", "event": "November momentum", "date_range": "Oct 29-Nov 4"},
+    {"week": 45, "month": "November", "regime": "high_volatility", "event": "Profit taking starts", "date_range": "Nov 5-11"},
+    {"week": 46, "month": "November", "regime": "high_volatility", "event": "Profit taking intensifies", "date_range": "Nov 12-18"},
+    {"week": 47, "month": "November", "regime": "bear_weak", "event": "Late cycle distribution", "date_range": "Nov 19-25"},
+    # December
+    {"week": 48, "month": "December", "regime": "bear_weak", "event": "Cycle top forming", "date_range": "Nov 26-Dec 2"},
+    {"week": 49, "month": "December", "regime": "bear_weak", "event": "Distribution continues", "date_range": "Dec 3-9"},
+    {"week": 50, "month": "December", "regime": "sideways", "event": "Year-end uncertainty", "date_range": "Dec 10-16"},
+    {"week": 51, "month": "December", "regime": "sideways", "event": "Holiday consolidation", "date_range": "Dec 17-23"},
+    {"week": 52, "month": "December", "regime": "sideways", "event": "Year-end consolidation", "date_range": "Dec 24-31"}
 ]
 
 # All market events by year
