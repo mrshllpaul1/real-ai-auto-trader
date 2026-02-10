@@ -266,26 +266,72 @@ MARKET_EVENTS_2022 = [
     {"week": 52, "month": "December", "regime": "sideways", "event": "Year-end bottom", "date_range": "Dec 23-31"}
 ]
 
-# 2023 Market calendar - Recovery year
+# 2023 Market calendar - Recovery year - COMPLETE WEEK BY WEEK
 MARKET_EVENTS_2023 = [
-    {"week": 1, "regime": "sideways", "event": "New Year consolidation"},
-    {"week": 4, "regime": "bull_weak", "event": "January rally begins"},
-    {"week": 7, "regime": "bull_strong", "event": "Crypto rally continues"},
-    {"week": 10, "regime": "high_volatility", "event": "SVB bank crisis"},
-    {"week": 13, "regime": "recovery", "event": "Banking fears ease"},
-    {"week": 16, "regime": "bull_weak", "event": "Spring optimism"},
-    {"week": 19, "regime": "sideways", "event": "Consolidation"},
-    {"week": 22, "regime": "bull_weak", "event": "BlackRock ETF filing"},
-    {"week": 25, "regime": "high_volatility", "event": "SEC vs Binance/Coinbase"},
-    {"week": 28, "regime": "sideways", "event": "Summer range"},
-    {"week": 31, "regime": "bear_weak", "event": "August weakness"},
-    {"week": 34, "regime": "sideways", "event": "September consolidation"},
-    {"week": 37, "regime": "bull_weak", "event": "ETF optimism returns"},
-    {"week": 40, "regime": "bull_strong", "event": "Uptober rally"},
-    {"week": 43, "regime": "bull_strong", "event": "BTC breaks $35k"},
-    {"week": 46, "regime": "high_volatility", "event": "CZ Binance settlement"},
-    {"week": 49, "regime": "bull_strong", "event": "ETF approval anticipation"},
-    {"week": 52, "regime": "bull_weak", "event": "Year-end positioning"}
+    # January
+    {"week": 1, "month": "January", "regime": "sideways", "event": "New Year consolidation", "date_range": "Jan 1-7"},
+    {"week": 2, "month": "January", "regime": "bull_weak", "event": "January rally starts", "date_range": "Jan 8-14"},
+    {"week": 3, "month": "January", "regime": "bull_weak", "event": "BTC recovers $20k", "date_range": "Jan 15-21"},
+    {"week": 4, "month": "January", "regime": "bull_weak", "event": "January rally begins", "date_range": "Jan 22-28"},
+    # February
+    {"week": 5, "month": "February", "regime": "bull_strong", "event": "BTC breaks $24k", "date_range": "Jan 29-Feb 4"},
+    {"week": 6, "month": "February", "regime": "bull_strong", "event": "Momentum builds", "date_range": "Feb 5-11"},
+    {"week": 7, "month": "February", "regime": "bull_strong", "event": "Crypto rally continues", "date_range": "Feb 12-18"},
+    {"week": 8, "month": "February", "regime": "sideways", "event": "Consolidation", "date_range": "Feb 19-25"},
+    # March - SVB Crisis
+    {"week": 9, "month": "March", "regime": "bear_weak", "event": "Pre-SVB weakness", "date_range": "Feb 26-Mar 4"},
+    {"week": 10, "month": "March", "regime": "high_volatility", "event": "SVB bank crisis", "date_range": "Mar 5-11"},
+    {"week": 11, "month": "March", "regime": "high_volatility", "event": "Banking fears spread", "date_range": "Mar 12-18"},
+    {"week": 12, "month": "March", "regime": "recovery", "event": "Fed backstop calms markets", "date_range": "Mar 19-25"},
+    {"week": 13, "month": "March", "regime": "recovery", "event": "Banking fears ease", "date_range": "Mar 26-31"},
+    # April
+    {"week": 14, "month": "April", "regime": "bull_weak", "event": "April optimism", "date_range": "Apr 1-7"},
+    {"week": 15, "month": "April", "regime": "bull_weak", "event": "BTC holds $28k", "date_range": "Apr 8-14"},
+    {"week": 16, "month": "April", "regime": "bull_weak", "event": "Spring optimism", "date_range": "Apr 15-21"},
+    {"week": 17, "month": "April", "regime": "sideways", "event": "Consolidation", "date_range": "Apr 22-28"},
+    # May
+    {"week": 18, "month": "May", "regime": "sideways", "event": "May range trading", "date_range": "Apr 29-May 5"},
+    {"week": 19, "month": "May", "regime": "sideways", "event": "Consolidation continues", "date_range": "May 6-12"},
+    {"week": 20, "month": "May", "regime": "bear_weak", "event": "Mild pullback", "date_range": "May 13-19"},
+    {"week": 21, "month": "May", "regime": "sideways", "event": "Range bound", "date_range": "May 20-26"},
+    # June - SEC Actions
+    {"week": 22, "month": "June", "regime": "bull_weak", "event": "BlackRock ETF filing", "date_range": "May 27-Jun 2"},
+    {"week": 23, "month": "June", "regime": "bull_strong", "event": "ETF optimism surge", "date_range": "Jun 3-9"},
+    {"week": 24, "month": "June", "regime": "high_volatility", "event": "SEC vs Binance", "date_range": "Jun 10-16"},
+    {"week": 25, "month": "June", "regime": "high_volatility", "event": "SEC vs Coinbase", "date_range": "Jun 17-23"},
+    {"week": 26, "month": "June", "regime": "sideways", "event": "Post-SEC stabilization", "date_range": "Jun 24-30"},
+    # July
+    {"week": 27, "month": "July", "regime": "sideways", "event": "Summer doldrums", "date_range": "Jul 1-7"},
+    {"week": 28, "month": "July", "regime": "sideways", "event": "Summer range", "date_range": "Jul 8-14"},
+    {"week": 29, "month": "July", "regime": "bull_weak", "event": "XRP partial win vs SEC", "date_range": "Jul 15-21"},
+    {"week": 30, "month": "July", "regime": "sideways", "event": "Consolidation", "date_range": "Jul 22-28"},
+    # August
+    {"week": 31, "month": "August", "regime": "bear_weak", "event": "August weakness", "date_range": "Jul 29-Aug 4"},
+    {"week": 32, "month": "August", "regime": "bear_weak", "event": "Low volume decline", "date_range": "Aug 5-11"},
+    {"week": 33, "month": "August", "regime": "crash", "event": "Flash crash Aug 17", "date_range": "Aug 12-18"},
+    {"week": 34, "month": "August", "regime": "bear_weak", "event": "Post-crash recovery", "date_range": "Aug 19-25"},
+    # September
+    {"week": 35, "month": "September", "regime": "sideways", "event": "September range", "date_range": "Aug 26-Sep 1"},
+    {"week": 36, "month": "September", "regime": "sideways", "event": "Consolidation", "date_range": "Sep 2-8"},
+    {"week": 37, "month": "September", "regime": "bull_weak", "event": "ETF optimism returns", "date_range": "Sep 9-15"},
+    {"week": 38, "month": "September", "regime": "sideways", "event": "Range trading", "date_range": "Sep 16-22"},
+    {"week": 39, "month": "September", "regime": "sideways", "event": "End of Q3", "date_range": "Sep 23-29"},
+    # October - Uptober
+    {"week": 40, "month": "October", "regime": "bull_weak", "event": "Uptober rally begins", "date_range": "Sep 30-Oct 6"},
+    {"week": 41, "month": "October", "regime": "bull_strong", "event": "BTC breaks $28k", "date_range": "Oct 7-13"},
+    {"week": 42, "month": "October", "regime": "bull_strong", "event": "Momentum builds", "date_range": "Oct 14-20"},
+    {"week": 43, "month": "October", "regime": "bull_strong", "event": "BTC breaks $35k", "date_range": "Oct 21-27"},
+    # November - CZ Settlement
+    {"week": 44, "month": "November", "regime": "bull_strong", "event": "November rally", "date_range": "Oct 28-Nov 3"},
+    {"week": 45, "month": "November", "regime": "bull_strong", "event": "BTC approaches $38k", "date_range": "Nov 4-10"},
+    {"week": 46, "month": "November", "regime": "high_volatility", "event": "CZ Binance settlement", "date_range": "Nov 11-17"},
+    {"week": 47, "month": "November", "regime": "bull_weak", "event": "Post-settlement calm", "date_range": "Nov 18-24"},
+    {"week": 48, "month": "November", "regime": "bull_weak", "event": "Thanksgiving optimism", "date_range": "Nov 25-30"},
+    # December
+    {"week": 49, "month": "December", "regime": "bull_strong", "event": "ETF approval anticipation", "date_range": "Dec 1-8"},
+    {"week": 50, "month": "December", "regime": "bull_strong", "event": "BTC breaks $42k", "date_range": "Dec 9-15"},
+    {"week": 51, "month": "December", "regime": "high_volatility", "event": "Year-end volatility", "date_range": "Dec 16-22"},
+    {"week": 52, "month": "December", "regime": "bull_weak", "event": "Year-end positioning", "date_range": "Dec 23-31"}
 ]
 
 # 2024 Market calendar - Bitcoin halving year and ETF
