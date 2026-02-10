@@ -19,6 +19,12 @@ def set_db(db):
     _db = db
 
 
+def set_dependencies(db, adaptive_strategy_service=None):
+    """Set dependencies from service initialization"""
+    global _db
+    _db = db
+
+
 async def get_database():
     global _db
     if _db is None:
