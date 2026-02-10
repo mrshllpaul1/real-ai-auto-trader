@@ -842,7 +842,7 @@ const AdaptiveStrategy = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <ArrowRightLeft size={20} className="text-[#FFB800]" />
-                  Recent Large Transactions (>$10M)
+                  Recent Large Transactions (&gt;$10M)
                 </CardTitle>
               </CardHeader>
               <CardContent>
