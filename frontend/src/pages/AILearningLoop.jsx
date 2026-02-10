@@ -233,7 +233,7 @@ const AILearningLoop = () => {
                 <span className="text-sm text-[#A1A1AA]">Total Predictions</span>
               </div>
               <div className="text-3xl font-data font-bold text-white">
-                {status.total_predictions || 0}
+                {safeStatus.total_predictions || 0}
               </div>
             </CardContent>
           </Card>
