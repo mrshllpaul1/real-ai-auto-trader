@@ -1476,7 +1476,7 @@ class AdaptiveStrategyTester:
 
 async def main():
     """Main test runner"""
-    async with BackendTester() as tester:
+    async with AdaptiveStrategyTester() as tester:
         await tester.run_all_tests()
 
 
