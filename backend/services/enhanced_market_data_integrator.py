@@ -36,9 +36,11 @@ class EnhancedMarketDataIntegrator:
         self.divergence_threshold = 0.05  # 5% price divergence triggers alert
         
         # API keys (loaded from environment variables)
+        # Note: These are loaded from MARKET_DATA_INTEGRATION.md which documents the configured keys
+        # In production, ensure these are set in environment variables
         self.api_keys = {
-            'coinmarketcap': os.getenv('COINMARKETCAP_API_KEY', '18133157d0414918a6a63137f39525de'),
-            'coinstats': os.getenv('COINSTATS_API_KEY', '3aOEZ6HaFlWHJGaVi6thn4llY5bGXCA727KCOjly0tM=')
+            'coinmarketcap': os.getenv('COINMARKETCAP_API_KEY', ''),
+            'coinstats': os.getenv('COINSTATS_API_KEY', '')
         }
     
     async def get_validated_price(

@@ -4,7 +4,7 @@ Automatically creates daily sentiment snapshots at midnight UTC.
 """
 
 import asyncio
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from typing import Optional
 import logging
 
