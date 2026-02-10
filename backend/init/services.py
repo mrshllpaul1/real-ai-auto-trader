@@ -637,6 +637,7 @@ async def _init_phase7_wire_dependencies(db):
     await _services['scheduler'].add_stop_loss_job(interval_minutes=5)
     await _services['scheduler'].add_portfolio_snapshot_job(interval_hours=6)
     await _services['scheduler'].add_auto_retrain_job(hour=2)
+    await _services['scheduler'].add_new_coin_sync_job(hour=3)  # Check for new Kraken coins daily
     
     logger.info("✅ Phase 7: Routes wired and schedulers started")
 
