@@ -449,7 +449,7 @@ async def get_provider_keys_status():
 @router.post("/provider-keys/save")
 async def save_provider_keys(request: DataProviderKeysRequest):
     """Save data provider API keys"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     # Build update document (only non-None values)
