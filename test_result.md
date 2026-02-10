@@ -1093,7 +1093,44 @@ backend:
 
 ---
 
-## A/B Testing v2 - ULTRA HIGH WIN RATE Variants - February 10, 2026
+## Data Sources Update - February 10, 2026
+
+### Changes Made to Remove Simulated Data:
+
+#### 1. Options Trading (`/app/backend/routes/options_trading.py`)
+- ✅ Added `get_real_price()` function to fetch REAL prices from Kraken API
+- ✅ Updated `/options/chain/{symbol}` to use real Kraken prices
+- ✅ Updated `/options/order` to use real prices for order execution
+- ✅ Updated `/options/positions` to calculate P&L with real prices
+- ✅ Updated `/options/close/{position_id}` to use real exit prices
+- ✅ Updated frontend warning from "simulated" to "live Kraken data"
+
+#### 2. Perpetual Futures (`/app/backend/routes/perpetual_futures.py`)
+- ✅ Added `get_real_perp_price()` function to fetch REAL prices from Kraken API
+- ✅ Updated `/perpetuals/markets` to show real BTC, ETH, SOL, ARB, DOGE, LINK prices
+- ✅ Updated `/perpetuals/account` to show REAL Kraken USD balance
+- ✅ All position calculations now use real mark prices
+
+#### 3. Position Manager
+- ✅ Already using database positions from isolated portfolio
+- ✅ Shows empty when no positions (correct behavior)
+
+#### 4. News Sentiment
+- ✅ Service properly configured with CryptoPanic API key
+- ✅ Falls back to CoinGecko if no CryptoPanic news
+- ✅ Market sentiment calculation working (shows 53.3 neutral)
+
+#### 5. Triggers
+- ✅ Service properly initialized
+- ✅ Shows empty when no triggers created (correct behavior - user creates triggers)
+
+### Real Price Verification:
+- BTC: $69,059 (live from Kraken)
+- ETH: $2,013 (live from Kraken)
+- SOL: $84.76 (live from Kraken)
+- Account Balance: $250.01 (live from Kraken)
+
+---
 
 ### Features Implemented:
 
