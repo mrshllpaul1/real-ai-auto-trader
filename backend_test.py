@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-ML Optimization and A/B Testing System Testing
-Tests ML optimization endpoints, A/B testing, overfitting detection, and historical events.
+Adaptive Strategy and Event Prediction System Testing
+Tests regime detection, regime variants, auto-adjustment, event prediction, and monitoring.
 """
 
 import asyncio
