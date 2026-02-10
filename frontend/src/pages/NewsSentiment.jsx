@@ -5,7 +5,6 @@ import {
   ArrowUpRight, BarChart3, Zap, Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'sonner';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.REACT_APP_BACKEND_URL || '');
@@ -71,7 +70,6 @@ const NewsSentiment = () => {
     } catch (err) {
       console.error('Error fetching sentiment data:', err);
       setError('Unable to refresh sentiment. Please try again.');
-      toast.error('Failed to refresh sentiment data.');
     } finally {
       setLoading(false);
     }
@@ -142,7 +140,7 @@ const NewsSentiment = () => {
     );
   };
 
-  const renderSearchBar = () => (
+  const renderSearchBar = (items = []) => (
     <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
       <div className="flex items-center gap-2 bg-[#1F1F1F] border border-[#333] rounded-lg px-3 py-2 w-full md:w-1/2">
         <Filter size={16} className="text-[#A1A1AA]" />
@@ -155,15 +153,7 @@ const NewsSentiment = () => {
         />
       </div>
       <div className="text-xs text-[#A1A1AA]">
-        Showing {filterNews(
-          activeTab === 'trending'
-            ? trendingNews
-            : activeTab === 'bullish'
-            ? bullishNews
-            : activeTab === 'bearish'
-            ? bearishNews
-            : []
-        ).length} articles
+        Showing {filterNews(items).length} articles
       </div>
     </div>
   );
@@ -343,7 +333,7 @@ const NewsSentiment = () => {
               <Flame className="text-orange-400" />
               <h2 className="text-lg font-semibold text-white">Trending News</h2>
             </div>
-            {renderSearchBar()}
+            {renderSearchBar(trendingNews)}
             <div className="space-y-3">
               {filterNews(trendingNews).map((news, i) => (
                 <div
@@ -403,7 +393,7 @@ const NewsSentiment = () => {
               <h2 className="text-lg font-semibold text-white">Bullish News</h2>
               <span className="text-sm text-[#A1A1AA]">({bullishNews.length} articles)</span>
             </div>
-            {renderSearchBar()}
+            {renderSearchBar(bullishNews)}
             {bullishNews.length === 0 ? (
               <div className="text-center py-8 text-[#A1A1AA]">No bullish news at the moment</div>
             ) : (
@@ -442,7 +432,7 @@ const NewsSentiment = () => {
               <h2 className="text-lg font-semibold text-white">Bearish News</h2>
               <span className="text-sm text-[#A1A1AA]">({bearishNews.length} articles)</span>
             </div>
-            {renderSearchBar()}
+            {renderSearchBar(bearishNews)}
             {bearishNews.length === 0 ? (
               <div className="text-center py-8 text-[#A1A1AA]">No bearish news at the moment</div>
             ) : (
