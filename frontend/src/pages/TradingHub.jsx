@@ -73,38 +73,31 @@ const TradingHub = () => {
             <TabsList className="glass-card flex-nowrap md:flex-wrap h-auto p-1 gap-1 w-max md:w-auto">
               <TabsTrigger value="spot" className="data-[state=active]:bg-green-500/20 whitespace-nowrap">
                 <Wallet className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden xs:inline">Spot</span>
-                <span className="xs:hidden">1</span>
+                Spot
               </TabsTrigger>
               <TabsTrigger value="positions" className="data-[state=active]:bg-blue-500/20 whitespace-nowrap">
                 <Briefcase className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden xs:inline">Positions</span>
-                <span className="xs:hidden">2</span>
+                Positions
               </TabsTrigger>
               <TabsTrigger value="portfolio" className="data-[state=active]:bg-purple-500/20 whitespace-nowrap">
                 <PieChart className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden xs:inline">Portfolio</span>
-                <span className="xs:hidden">3</span>
+                Portfolio
               </TabsTrigger>
               <TabsTrigger value="advanced" className="data-[state=active]:bg-amber-500/20 whitespace-nowrap">
                 <Layers className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden xs:inline">Advanced</span>
-                <span className="xs:hidden">4</span>
+                Advanced
               </TabsTrigger>
               <TabsTrigger value="options" className="data-[state=active]:bg-cyan-500/20 whitespace-nowrap">
                 <Target className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden xs:inline">Options</span>
-                <span className="xs:hidden">5</span>
+                Options
               </TabsTrigger>
               <TabsTrigger value="perpetuals" className="data-[state=active]:bg-pink-500/20 whitespace-nowrap">
                 <LineChart className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden xs:inline">Perpetuals</span>
-                <span className="xs:hidden">6</span>
+                Perpetuals
               </TabsTrigger>
               <TabsTrigger value="market-maker" className="data-[state=active]:bg-orange-500/20 whitespace-nowrap">
                 <Activity className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden xs:inline">Market Maker</span>
-                <span className="xs:hidden">7</span>
+                Market Maker
               </TabsTrigger>
             </TabsList>
           </MobileTabsList>
