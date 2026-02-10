@@ -473,6 +473,15 @@ async def _init_phase6_scheduling(db):
     strategy_builder = get_strategy_builder(db, chat)
     _services['strategy_builder'] = strategy_builder
     
+    # Enhanced Data Services
+    kraken_universe_mgr = get_kraken_universe_manager(db)
+    onchain_service = get_onchain_metrics_service(db)
+    mtf_service = get_multitimeframe_service(db)
+    
+    _services['kraken_universe_mgr'] = kraken_universe_mgr
+    _services['onchain_metrics'] = onchain_service
+    _services['mtf_historical'] = mtf_service
+    
     logger.info("✅ Phase 6: Scheduling and data services initialized")
 
 
