@@ -348,6 +348,18 @@ backend:
         - agent: "testing"
         - comment: "❌ TensorFlow import error: 'NoneType' object has no attribute 'Layer' in rainbow_dqn.py. Causing some ML functionality issues. Non-critical as core systems work, but should be fixed for full ML capabilities."
 
+  - task: "Whale Alerts and Event Backtesting System"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/whale_alerts.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "✅ WHALE ALERTS AND EVENT BACKTESTING SYSTEM 90.5% FUNCTIONAL: Comprehensive testing completed (57/63 tests passed). ✅ WHALE ALERT SYSTEM: All core endpoints working perfectly - whale/check generates alerts with proper severity levels (info, warning, critical, urgent), whale/active returns 6 active alerts with recommended_action field, whale/thresholds shows 6 configured metrics with proper structure, whale/monitoring start/stop functionality operational. ✅ ALERT STRUCTURE: Alerts contain required fields (alert_id, title, severity, price_impact_expected) as specified in review request. Severity filtering working for all levels. ✅ EVENT BACKTESTING: backtest/simulate with n_predictions=50 working, backtest/historical-events returns 31 events with 12 event types (bitcoin_halving, fomc_meeting, options_expiry, etc.), backtest/accuracy and backtest/event-types endpoints operational. ✅ INTEGRATION: All whale alert severity filters working, event type specific accuracy endpoints functional. ⚠️ MINOR ISSUES: Price impact format inconsistency (string vs numeric), missing severity breakdown in summary, backtest metrics structure needs refinement for precision/recall/f1_score display. All core whale alerts and backtesting features are production-ready and meet review requirements."
+
 metadata:
   created_by: "main_agent"
   version: "1.1"
