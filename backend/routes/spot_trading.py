@@ -736,24 +736,41 @@ async def get_ai_recommendations():
                     except:
                         pass
                 
+                # Extract composite signal data
+                composite = signals.get('composite', {})
+                scores = signals.get('scores', {})
+                
+                # Determine recommendation based on signal
+                signal = composite.get('signal', 'hold')
+                if signal == 'buy':
+                    recommendation = 'Buy'
+                elif signal == 'sell':
+                    recommendation = 'Sell'
+                else:
+                    recommendation = 'Hold'
+                
                 recommendations.append({
                     "symbol": symbol,
                     "name": pair_info['name'],
                     "price": price,
-                    "signal": signals.get('composite_signal', 'neutral'),
-                    "score": round(signals.get('composite_score', 0), 3),
-                    "confidence": signals.get('confidence', 0),
-                    "recommendation": signals.get('recommendation', 'Hold'),
+                    "signal": signal,
+                    "score": composite.get('score', 50),
+                    "confidence": composite.get('confidence', 0),
+                    "recommendation": recommendation,
+                    "models_used": composite.get('models_used', 0),
                     "components": {
-                        k: v for k, v in signals.items() 
-                        if k in ['order_book', 'on_chain', 'social', 'transformer', 'rl_agent', 'technical']
+                        "order_book": scores.get('order_book', 50),
+                        "on_chain": scores.get('on_chain', 50),
+                        "social": scores.get('social', 50),
+                        "cross_asset": scores.get('cross_asset', 50),
+                        "advanced_ta": scores.get('advanced_ta', 50)
                     }
                 })
         except Exception as e:
             logger.warning(f"AI recommendation error for {symbol}: {e}")
     
-    # Sort by absolute score (strongest signals first)
-    recommendations.sort(key=lambda x: abs(x['score']), reverse=True)
+    # Sort by confidence (strongest signals first)
+    recommendations.sort(key=lambda x: x['confidence'], reverse=True)
     
     return {
         "recommendations": recommendations,
