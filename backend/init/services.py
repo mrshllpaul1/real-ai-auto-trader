@@ -586,6 +586,10 @@ async def _init_phase7_wire_dependencies(db):
     from routes import mtf_training as mtf_training_routes
     mtf_training_routes.set_dependencies(db, _services['mtf_training'])
     
+    # Kraken Expansion Routes
+    from routes import kraken_expansion as kraken_expansion_routes
+    kraken_expansion_routes.set_dependencies(db, _services['kraken_expansion'])
+    
     # Wire DRL Engine routes
     from routes import drl_engine as drl_engine_routes
     drl_engine_routes.set_dependencies(db, _services.get('drl_engine'))
