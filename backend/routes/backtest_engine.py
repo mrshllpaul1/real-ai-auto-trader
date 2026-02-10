@@ -144,22 +144,27 @@ async def generate_ml_based_signals(prices: List[float], symbol: str, db, strate
     Generate ML-based signals using the trained Enhanced MTF model combined
     with technical analysis for high win rate and Sharpe ratio.
     
-    Strategy v7 - Optimized for Performance:
+    Strategy v8 - ULTRA HIGH WIN RATE Optimized:
     1. Uses Enhanced MTF model predictions when available
-    2. Multi-factor trend-following with strict confirmation
-    3. RSI extremes for high-probability entries
+    2. Multi-factor trend-following with VERY STRICT confirmation
+    3. RSI extremes + mean reversion for high-probability entries
     4. Volatility filtering to avoid choppy markets
-    5. Proper position management with trailing stops
+    5. ADX trend strength filter for quality setups
+    6. MACD divergence confirmation
+    7. Dynamic trailing stops with profit locking
+    8. Wait for trend confirmation before entry
     """
     signals = []
     n = len(prices)
     params = strategy_params or {}
     
-    # Strategy parameters - optimized for higher win rate
+    # Strategy parameters - ULTRA optimized for higher win rate
     lookback = params.get("lookback", 20)
-    min_trend_strength = params.get("min_trend_strength", 0.015)
-    rsi_oversold = params.get("rsi_oversold", 25)
-    rsi_overbought = params.get("rsi_overbought", 75)
+    min_trend_strength = params.get("min_trend_strength", 0.02)  # Increased
+    rsi_oversold = params.get("rsi_oversold", 20)  # More extreme
+    rsi_overbought = params.get("rsi_overbought", 80)  # More extreme
+    entry_threshold = params.get("entry_threshold", 8)  # Much higher threshold
+    adx_threshold = params.get("adx_threshold", 25)  # ADX filter
     
     # Get ML prediction from Enhanced MTF service
     ml_signal = 0  # -1 sell, 0 hold, 1 buy
@@ -169,7 +174,6 @@ async def generate_ml_based_signals(prices: List[float], symbol: str, db, strate
         from services.enhanced_mtf_training_service import get_enhanced_mtf_service
         enhanced_mtf_service = get_enhanced_mtf_service(db)
         if enhanced_mtf_service:
-            # Get prediction for this symbol
             coin_symbol = symbol.replace("/USD", "").replace("USD", "")
             prediction = await enhanced_mtf_service.predict(coin_symbol)
             if prediction and "prediction" in prediction:
@@ -186,27 +190,53 @@ async def generate_ml_based_signals(prices: List[float], symbol: str, db, strate
     holding_days = 0
     highest_since_entry = 0
     lowest_since_entry = float('inf')
+    consecutive_trend_days = 0
+    prev_trend = None
+    
+    # Historical tracking for divergence detection
+    rsi_history = []
+    price_highs = []
+    price_lows = []
     
     for i in range(n):
-        if i < lookback + 10:
+        if i < lookback + 20:  # Need more data for reliable signals
             signals.append("hold")
             continue
         
-        # Calculate technical indicators
+        # Calculate technical indicators with multiple timeframes
         short_window = prices[i-5:i+1]
         medium_window = prices[i-lookback:i+1]
         long_window = prices[max(0, i-50):i+1]
+        extra_long_window = prices[max(0, i-100):i+1]
         
-        # Moving averages
+        # Moving averages - multiple timeframes
         sma_5 = sum(short_window) / len(short_window)
+        sma_10 = sum(prices[i-10:i+1]) / 11 if i >= 10 else sma_5
         sma_20 = sum(medium_window) / len(medium_window)
         sma_50 = sum(long_window) / len(long_window)
+        sma_100 = sum(extra_long_window) / len(extra_long_window) if len(extra_long_window) >= 50 else sma_50
         
-        # Momentum
+        # EMA calculation for MACD
+        ema_12 = _calc_ema(prices[max(0, i-26):i+1], 12)
+        ema_26 = _calc_ema(prices[max(0, i-26):i+1], 26)
+        macd_line = ema_12 - ema_26
+        
+        # Previous MACD for crossover detection
+        prev_ema_12 = _calc_ema(prices[max(0, i-27):i], 12)
+        prev_ema_26 = _calc_ema(prices[max(0, i-27):i], 26)
+        prev_macd = prev_ema_12 - prev_ema_26
+        
+        # MACD histogram
+        signal_line = _calc_ema([macd_line], 9) if i > 35 else macd_line
+        macd_hist = macd_line - signal_line
+        
+        # Momentum calculations
+        momentum_3 = (prices[i] - prices[i-3]) / prices[i-3] if i >= 3 else 0
         momentum_5 = (prices[i] - prices[i-5]) / prices[i-5]
+        momentum_10 = (prices[i] - prices[i-10]) / prices[i-10] if i >= 10 else 0
         momentum_20 = (prices[i] - prices[i-20]) / prices[i-20] if i >= 20 else 0
         
-        # RSI calculation
+        # RSI calculation with proper smoothing
         gains, losses = [], []
         for j in range(1, min(15, i+1)):
             diff = prices[i-j+1] - prices[i-j]
@@ -215,26 +245,89 @@ async def generate_ml_based_signals(prices: List[float], symbol: str, db, strate
         avg_gain = sum(gains) / max(len(gains), 1)
         avg_loss = sum(losses) / max(len(losses), 1) + 1e-10
         rsi = 100 - (100 / (1 + avg_gain / avg_loss))
+        rsi_history.append(rsi)
+        if len(rsi_history) > 20:
+            rsi_history.pop(0)
         
-        # Volatility
+        # Stochastic RSI for oversold/overbought
+        if len(rsi_history) >= 14:
+            rsi_min = min(rsi_history[-14:])
+            rsi_max = max(rsi_history[-14:])
+            stoch_rsi = (rsi - rsi_min) / (rsi_max - rsi_min + 1e-10) * 100
+        else:
+            stoch_rsi = 50
+        
+        # Volatility with ATR-style calculation
         returns = [(prices[j] - prices[j-1]) / prices[j-1] for j in range(max(1, i-20), i+1)]
         volatility = (sum(r**2 for r in returns) / len(returns)) ** 0.5 if returns else 0.02
+        avg_volatility = sum(abs(r) for r in returns) / len(returns) if returns else 0.015
         
-        # Trend detection
-        strong_uptrend = sma_5 > sma_20 * 1.005 and sma_20 > sma_50 * 1.005 and momentum_5 > min_trend_strength
-        strong_downtrend = sma_5 < sma_20 * 0.995 and sma_20 < sma_50 * 0.995 and momentum_5 < -min_trend_strength
-        uptrend = sma_5 > sma_20 and sma_20 > sma_50
-        downtrend = sma_5 < sma_20 and sma_20 < sma_50
+        # ADX calculation (simplified)
+        tr_list = []
+        dm_plus_list = []
+        dm_minus_list = []
+        for j in range(max(1, i-14), i+1):
+            high_low = abs(max(prices[j-1:j+1]) - min(prices[j-1:j+1]))
+            tr_list.append(high_low)
+            
+            up_move = prices[j] - prices[j-1] if j > 0 else 0
+            down_move = prices[j-1] - prices[j] if j > 0 else 0
+            
+            dm_plus_list.append(max(0, up_move) if up_move > down_move else 0)
+            dm_minus_list.append(max(0, down_move) if down_move > up_move else 0)
         
-        # Higher highs / Lower lows pattern
-        recent_high = max(prices[i-5:i]) if i >= 5 else prices[i]
-        recent_low = min(prices[i-5:i]) if i >= 5 else prices[i]
-        breakout_up = prices[i] > recent_high * 1.01
-        breakout_down = prices[i] < recent_low * 0.99
+        atr = sum(tr_list) / len(tr_list) if tr_list else 0.01
+        di_plus = sum(dm_plus_list) / (atr * len(dm_plus_list) + 1e-10) * 100
+        di_minus = sum(dm_minus_list) / (atr * len(dm_minus_list) + 1e-10) * 100
+        dx = abs(di_plus - di_minus) / (di_plus + di_minus + 1e-10) * 100
+        adx = dx  # Simplified ADX
+        
+        # Trend detection - more stringent
+        ma_aligned_up = sma_5 > sma_10 > sma_20 > sma_50
+        ma_aligned_down = sma_5 < sma_10 < sma_20 < sma_50
+        
+        strong_uptrend = ma_aligned_up and momentum_5 > min_trend_strength and adx > adx_threshold
+        strong_downtrend = ma_aligned_down and momentum_5 < -min_trend_strength and adx > adx_threshold
+        uptrend = sma_5 > sma_20 and sma_20 > sma_50 and prices[i] > sma_20
+        downtrend = sma_5 < sma_20 and sma_20 < sma_50 and prices[i] < sma_20
+        
+        # Track trend consistency
+        current_trend = "up" if uptrend else ("down" if downtrend else "neutral")
+        if current_trend == prev_trend:
+            consecutive_trend_days += 1
+        else:
+            consecutive_trend_days = 1
+        prev_trend = current_trend
+        
+        # Support/Resistance levels
+        recent_10_high = max(prices[max(0, i-10):i])
+        recent_10_low = min(prices[max(0, i-10):i])
+        recent_20_high = max(prices[max(0, i-20):i])
+        recent_20_low = min(prices[max(0, i-20):i])
+        
+        # Breakout detection with confirmation
+        confirmed_breakout_up = prices[i] > recent_20_high * 1.005 and prices[i-1] > recent_10_high
+        confirmed_breakout_down = prices[i] < recent_20_low * 0.995 and prices[i-1] < recent_10_low
+        
+        # RSI divergence detection
+        bullish_divergence = False
+        bearish_divergence = False
+        if len(rsi_history) >= 10 and len(prices) > i - 10:
+            # Bullish divergence: price lower low, RSI higher low
+            if prices[i] < min(prices[i-5:i]) and rsi > min(rsi_history[-5:]):
+                bullish_divergence = True
+            # Bearish divergence: price higher high, RSI lower high
+            if prices[i] > max(prices[i-5:i]) and rsi < max(rsi_history[-5:]):
+                bearish_divergence = True
+        
+        # Mean reversion signals
+        price_distance_from_sma20 = (prices[i] - sma_20) / sma_20 * 100
+        mean_reversion_buy = price_distance_from_sma20 < -3 and rsi < 35
+        mean_reversion_sell = price_distance_from_sma20 > 3 and rsi > 65
         
         signal = "hold"
         
-        # Position management for existing positions
+        # Position management for existing positions - TIGHT RISK MANAGEMENT
         if position_held:
             holding_days += 1
             current_price = prices[i]
@@ -245,19 +338,39 @@ async def generate_ml_based_signals(prices: List[float], symbol: str, db, strate
                 drawdown_from_high = (highest_since_entry - current_price) / highest_since_entry * 100
                 
                 exit_signal = False
-                # Exit conditions for long
-                if pnl_pct >= 15:  # Take profit
+                exit_reason = ""
+                
+                # Dynamic take profit based on volatility
+                take_profit_target = max(8, min(20, 100 * avg_volatility * 5))
+                
+                # Exit conditions for long - STRICT
+                if pnl_pct >= take_profit_target:  # Dynamic take profit
                     exit_signal = True
-                elif pnl_pct <= -5:  # Stop loss
+                    exit_reason = "take_profit"
+                elif pnl_pct <= -3:  # Tight stop loss
                     exit_signal = True
-                elif drawdown_from_high > 4 and pnl_pct > 3:  # Trailing stop
+                    exit_reason = "stop_loss"
+                elif pnl_pct > 5 and drawdown_from_high > 2:  # Lock profits early
                     exit_signal = True
-                elif strong_downtrend and pnl_pct > 0:  # Trend reversal with profit
+                    exit_reason = "trailing_stop"
+                elif pnl_pct > 2 and drawdown_from_high > 1.5:  # Very tight trailing
                     exit_signal = True
-                elif rsi > 80:  # Overbought
+                    exit_reason = "tight_trailing"
+                elif strong_downtrend and pnl_pct > 1:  # Exit on trend reversal
                     exit_signal = True
-                elif holding_days > 30 and pnl_pct < 5:  # Time decay
+                    exit_reason = "trend_reversal"
+                elif rsi > 85:  # Extreme overbought
                     exit_signal = True
+                    exit_reason = "overbought"
+                elif bearish_divergence and pnl_pct > 0:  # Divergence exit
+                    exit_signal = True
+                    exit_reason = "divergence"
+                elif holding_days > 20 and pnl_pct < 3:  # Time-based exit
+                    exit_signal = True
+                    exit_reason = "time_decay"
+                elif macd_hist < 0 and prev_macd > 0 and pnl_pct > 0:  # MACD cross
+                    exit_signal = True
+                    exit_reason = "macd_cross"
                 
                 if exit_signal:
                     signal = "sell"
@@ -272,18 +385,25 @@ async def generate_ml_based_signals(prices: List[float], symbol: str, db, strate
                 drawup_from_low = (current_price - lowest_since_entry) / lowest_since_entry * 100 if lowest_since_entry > 0 else 0
                 
                 exit_signal = False
-                # Exit conditions for short
-                if pnl_pct >= 15:
+                take_profit_target = max(8, min(20, 100 * avg_volatility * 5))
+                
+                if pnl_pct >= take_profit_target:
                     exit_signal = True
-                elif pnl_pct <= -5:
+                elif pnl_pct <= -3:
                     exit_signal = True
-                elif drawup_from_low > 4 and pnl_pct > 3:
+                elif pnl_pct > 5 and drawup_from_low > 2:
                     exit_signal = True
-                elif strong_uptrend and pnl_pct > 0:
+                elif pnl_pct > 2 and drawup_from_low > 1.5:
                     exit_signal = True
-                elif rsi < 20:
+                elif strong_uptrend and pnl_pct > 1:
                     exit_signal = True
-                elif holding_days > 30 and pnl_pct < 5:
+                elif rsi < 15:
+                    exit_signal = True
+                elif bullish_divergence and pnl_pct > 0:
+                    exit_signal = True
+                elif holding_days > 20 and pnl_pct < 3:
+                    exit_signal = True
+                elif macd_hist > 0 and prev_macd < 0 and pnl_pct > 0:
                     exit_signal = True
                 
                 if exit_signal:
@@ -293,59 +413,96 @@ async def generate_ml_based_signals(prices: List[float], symbol: str, db, strate
                     holding_days = 0
                     lowest_since_entry = float('inf')
         
-        # Entry logic for new positions
+        # Entry logic for new positions - ULTRA STRICT CONFIRMATION
         if not position_held:
             buy_score = 0
             sell_score = 0
             
-            # ML model signal (high weight)
-            if ml_signal == 1 and ml_confidence > 0.7:
-                buy_score += 4
-            elif ml_signal == -1 and ml_confidence > 0.7:
-                sell_score += 4
+            # ML model signal (high weight if confident)
+            if ml_signal == 1 and ml_confidence > 0.75:
+                buy_score += 5
+            elif ml_signal == -1 and ml_confidence > 0.75:
+                sell_score += 5
             
-            # Strong trend signals
-            if strong_uptrend:
+            # Strong trend with ADX confirmation (high weight)
+            if strong_uptrend and adx > 30:
+                buy_score += 5
+            elif strong_downtrend and adx > 30:
+                sell_score += 5
+            elif strong_uptrend:
                 buy_score += 3
             elif strong_downtrend:
                 sell_score += 3
-            elif uptrend:
-                buy_score += 1
-            elif downtrend:
-                sell_score += 1
             
-            # RSI extremes (high probability)
-            if rsi < rsi_oversold:
+            # RSI extremes with stochastic confirmation
+            if rsi < rsi_oversold and stoch_rsi < 20:
+                buy_score += 5
+            elif rsi > rsi_overbought and stoch_rsi > 80:
+                sell_score += 5
+            elif rsi < 30:
+                buy_score += 2
+            elif rsi > 70:
+                sell_score += 2
+            
+            # MACD crossover confirmation
+            if macd_line > 0 and prev_macd <= 0:  # Bullish crossover
+                buy_score += 3
+            elif macd_line < 0 and prev_macd >= 0:  # Bearish crossover
+                sell_score += 3
+            
+            # RSI divergence signals (high probability)
+            if bullish_divergence and rsi < 40:
                 buy_score += 4
-            elif rsi > rsi_overbought:
+            elif bearish_divergence and rsi > 60:
                 sell_score += 4
             
-            # Breakout signals
-            if breakout_up and uptrend:
+            # Mean reversion at extremes
+            if mean_reversion_buy and uptrend:
+                buy_score += 3
+            elif mean_reversion_sell and downtrend:
+                sell_score += 3
+            
+            # Confirmed breakouts
+            if confirmed_breakout_up and uptrend and adx > 20:
+                buy_score += 3
+            elif confirmed_breakout_down and downtrend and adx > 20:
+                sell_score += 3
+            
+            # Momentum confirmation - multiple timeframes
+            if momentum_3 > 0.01 and momentum_5 > 0.015 and momentum_10 > 0.02:
+                buy_score += 3
+            elif momentum_3 < -0.01 and momentum_5 < -0.015 and momentum_10 < -0.02:
+                sell_score += 3
+            
+            # Trend consistency bonus
+            if consecutive_trend_days >= 3 and uptrend:
                 buy_score += 2
-            elif breakout_down and downtrend:
+            elif consecutive_trend_days >= 3 and downtrend:
                 sell_score += 2
             
-            # Momentum confirmation
-            if momentum_5 > 0.02 and momentum_20 > 0.03:
-                buy_score += 2
-            elif momentum_5 < -0.02 and momentum_20 < -0.03:
-                sell_score += 2
+            # Volatility filter - STRICT
+            if volatility > 0.035:  # High volatility penalty
+                buy_score = int(buy_score * 0.4)
+                sell_score = int(sell_score * 0.4)
+            elif volatility < 0.01:  # Low volatility penalty
+                buy_score = int(buy_score * 0.7)
+                sell_score = int(sell_score * 0.7)
             
-            # Volatility filter - avoid high volatility entries
-            if volatility > 0.04:
-                buy_score = int(buy_score * 0.5)
-                sell_score = int(sell_score * 0.5)
+            # Price position filter - don't buy at highs, don't sell at lows
+            if prices[i] > recent_20_high * 0.98:  # Near recent high
+                buy_score = int(buy_score * 0.6)
+            if prices[i] < recent_20_low * 1.02:  # Near recent low
+                sell_score = int(sell_score * 0.6)
             
-            # Entry decision - require strong conviction
-            if buy_score >= 5 and buy_score > sell_score + 2:
+            # Entry decision - ULTRA STRICT threshold
+            if buy_score >= entry_threshold and buy_score > sell_score + 3:
                 signal = "buy"
                 position_held = True
                 position_type = "long"
                 entry_price = prices[i]
                 holding_days = 0
                 highest_since_entry = prices[i]
-            elif sell_score >= 5 and sell_score > buy_score + 2:
+            elif sell_score >= entry_threshold and sell_score > buy_score + 3:
                 signal = "sell"
                 position_held = True
                 position_type = "short"
@@ -356,6 +513,22 @@ async def generate_ml_based_signals(prices: List[float], symbol: str, db, strate
         signals.append(signal)
     
     return signals
+
+
+def _calc_ema(prices: List[float], period: int) -> float:
+    """Calculate Exponential Moving Average"""
+    if not prices:
+        return 0
+    if len(prices) < period:
+        return sum(prices) / len(prices)
+    
+    multiplier = 2 / (period + 1)
+    ema = sum(prices[:period]) / period
+    
+    for price in prices[period:]:
+        ema = (price - ema) * multiplier + ema
+    
+    return ema
 
 
 # =============================================================================
