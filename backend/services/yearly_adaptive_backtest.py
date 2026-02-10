@@ -334,27 +334,72 @@ MARKET_EVENTS_2023 = [
     {"week": 52, "month": "December", "regime": "bull_weak", "event": "Year-end positioning", "date_range": "Dec 23-31"}
 ]
 
-# 2024 Market calendar - Bitcoin halving year and ETF
+# 2024 Market calendar - Bitcoin halving year and ETF - COMPLETE WEEK BY WEEK
 MARKET_EVENTS_2024 = [
-    {"week": 1, "regime": "high_volatility", "event": "ETF decision week"},
-    {"week": 2, "regime": "euphoria", "event": "Bitcoin ETF approved!"},
-    {"week": 5, "regime": "bull_strong", "event": "ETF inflows massive"},
-    {"week": 8, "regime": "bull_strong", "event": "BTC breaks $50k"},
-    {"week": 11, "regime": "euphoria", "event": "BTC new ATH $73k"},
-    {"week": 14, "regime": "high_volatility", "event": "Pre-halving volatility"},
-    {"week": 16, "regime": "bull_strong", "event": "Bitcoin halving week"},
-    {"week": 19, "regime": "bear_weak", "event": "Post-halving correction"},
-    {"week": 22, "regime": "sideways", "event": "Summer consolidation"},
-    {"week": 25, "regime": "bear_weak", "event": "Mt Gox distribution fears"},
-    {"week": 28, "regime": "recovery", "event": "Oversold bounce"},
-    {"week": 31, "regime": "high_volatility", "event": "Yen carry trade unwind"},
-    {"week": 34, "regime": "sideways", "event": "Summer range"},
-    {"week": 37, "regime": "bull_weak", "event": "Fed rate cut expectations"},
-    {"week": 40, "regime": "bull_strong", "event": "Uptober begins"},
-    {"week": 43, "regime": "high_volatility", "event": "US Election week"},
-    {"week": 45, "regime": "euphoria", "event": "Trump wins - crypto rally"},
-    {"week": 48, "regime": "bull_strong", "event": "BTC breaks $100k"},
-    {"week": 51, "regime": "bull_weak", "event": "Year-end consolidation"}
+    # January - ETF Approval
+    {"week": 1, "month": "January", "regime": "high_volatility", "event": "ETF decision week", "date_range": "Jan 1-7"},
+    {"week": 2, "month": "January", "regime": "euphoria", "event": "Bitcoin ETF approved!", "date_range": "Jan 8-14"},
+    {"week": 3, "month": "January", "regime": "bear_weak", "event": "Sell the news reaction", "date_range": "Jan 15-21"},
+    {"week": 4, "month": "January", "regime": "sideways", "event": "Post-ETF consolidation", "date_range": "Jan 22-28"},
+    # February
+    {"week": 5, "month": "February", "regime": "bull_strong", "event": "ETF inflows massive", "date_range": "Jan 29-Feb 4"},
+    {"week": 6, "month": "February", "regime": "bull_strong", "event": "BTC breaks $45k", "date_range": "Feb 5-11"},
+    {"week": 7, "month": "February", "regime": "bull_strong", "event": "Momentum continues", "date_range": "Feb 12-18"},
+    {"week": 8, "month": "February", "regime": "bull_strong", "event": "BTC breaks $50k", "date_range": "Feb 19-25"},
+    # March - New ATH
+    {"week": 9, "month": "March", "regime": "euphoria", "event": "BTC approaches ATH", "date_range": "Feb 26-Mar 4"},
+    {"week": 10, "month": "March", "regime": "euphoria", "event": "BTC breaks previous ATH", "date_range": "Mar 5-11"},
+    {"week": 11, "month": "March", "regime": "euphoria", "event": "BTC new ATH $73k", "date_range": "Mar 12-18"},
+    {"week": 12, "month": "March", "regime": "high_volatility", "event": "Post-ATH volatility", "date_range": "Mar 19-25"},
+    {"week": 13, "month": "March", "regime": "bear_weak", "event": "Profit taking", "date_range": "Mar 26-31"},
+    # April - Bitcoin Halving
+    {"week": 14, "month": "April", "regime": "high_volatility", "event": "Pre-halving volatility", "date_range": "Apr 1-7"},
+    {"week": 15, "month": "April", "regime": "sideways", "event": "Halving anticipation", "date_range": "Apr 8-14"},
+    {"week": 16, "month": "April", "regime": "bull_strong", "event": "Bitcoin halving week", "date_range": "Apr 15-21"},
+    {"week": 17, "month": "April", "regime": "sideways", "event": "Post-halving consolidation", "date_range": "Apr 22-28"},
+    # May
+    {"week": 18, "month": "May", "regime": "bear_weak", "event": "May correction begins", "date_range": "Apr 29-May 5"},
+    {"week": 19, "month": "May", "regime": "bear_weak", "event": "Post-halving correction", "date_range": "May 6-12"},
+    {"week": 20, "month": "May", "regime": "sideways", "event": "Stabilization", "date_range": "May 13-19"},
+    {"week": 21, "month": "May", "regime": "bull_weak", "event": "ETH ETF speculation", "date_range": "May 20-26"},
+    # June
+    {"week": 22, "month": "June", "regime": "sideways", "event": "Summer consolidation", "date_range": "May 27-Jun 2"},
+    {"week": 23, "month": "June", "regime": "sideways", "event": "Range trading", "date_range": "Jun 3-9"},
+    {"week": 24, "month": "June", "regime": "bear_weak", "event": "Summer weakness", "date_range": "Jun 10-16"},
+    {"week": 25, "month": "June", "regime": "bear_weak", "event": "Mt Gox distribution fears", "date_range": "Jun 17-23"},
+    {"week": 26, "month": "June", "regime": "bear_strong", "event": "BTC drops below $60k", "date_range": "Jun 24-30"},
+    # July - Mt Gox & Germany Selling
+    {"week": 27, "month": "July", "regime": "crash", "event": "Mt Gox + Germany selling", "date_range": "Jul 1-7"},
+    {"week": 28, "month": "July", "regime": "recovery", "event": "Oversold bounce", "date_range": "Jul 8-14"},
+    {"week": 29, "month": "July", "regime": "bull_weak", "event": "Trump crypto support", "date_range": "Jul 15-21"},
+    {"week": 30, "month": "July", "regime": "sideways", "event": "ETH ETF launch", "date_range": "Jul 22-28"},
+    # August - Yen Carry Trade
+    {"week": 31, "month": "August", "regime": "high_volatility", "event": "Yen carry trade unwind", "date_range": "Jul 29-Aug 5"},
+    {"week": 32, "month": "August", "regime": "crash", "event": "Black Monday Aug 5", "date_range": "Aug 6-12"},
+    {"week": 33, "month": "August", "regime": "recovery", "event": "Recovery from crash", "date_range": "Aug 13-19"},
+    {"week": 34, "month": "August", "regime": "sideways", "event": "Summer range continues", "date_range": "Aug 20-26"},
+    # September
+    {"week": 35, "month": "September", "regime": "bear_weak", "event": "September weakness", "date_range": "Aug 27-Sep 2"},
+    {"week": 36, "month": "September", "regime": "sideways", "event": "Pre-Fed consolidation", "date_range": "Sep 3-9"},
+    {"week": 37, "month": "September", "regime": "bull_weak", "event": "Fed rate cut expectations", "date_range": "Sep 10-16"},
+    {"week": 38, "month": "September", "regime": "bull_strong", "event": "Fed cuts 50bps!", "date_range": "Sep 17-23"},
+    {"week": 39, "month": "September", "regime": "bull_weak", "event": "Post-cut optimism", "date_range": "Sep 24-30"},
+    # October - Uptober
+    {"week": 40, "month": "October", "regime": "bull_strong", "event": "Uptober begins", "date_range": "Oct 1-7"},
+    {"week": 41, "month": "October", "regime": "bull_strong", "event": "BTC breaks $65k", "date_range": "Oct 8-14"},
+    {"week": 42, "month": "October", "regime": "bull_strong", "event": "Momentum building", "date_range": "Oct 15-21"},
+    {"week": 43, "month": "October", "regime": "high_volatility", "event": "US Election uncertainty", "date_range": "Oct 22-28"},
+    # November - Trump Victory
+    {"week": 44, "month": "November", "regime": "high_volatility", "event": "Pre-election week", "date_range": "Oct 29-Nov 4"},
+    {"week": 45, "month": "November", "regime": "euphoria", "event": "Trump wins - crypto rally", "date_range": "Nov 5-11"},
+    {"week": 46, "month": "November", "regime": "euphoria", "event": "BTC breaks $90k", "date_range": "Nov 12-18"},
+    {"week": 47, "month": "November", "regime": "bull_strong", "event": "Rally continues", "date_range": "Nov 19-25"},
+    # December
+    {"week": 48, "month": "December", "regime": "bull_strong", "event": "BTC breaks $100k", "date_range": "Nov 26-Dec 2"},
+    {"week": 49, "month": "December", "regime": "high_volatility", "event": "Post-$100k volatility", "date_range": "Dec 3-9"},
+    {"week": 50, "month": "December", "regime": "sideways", "event": "Consolidation above $100k", "date_range": "Dec 10-16"},
+    {"week": 51, "month": "December", "regime": "bull_weak", "event": "Year-end consolidation", "date_range": "Dec 17-23"},
+    {"week": 52, "month": "December", "regime": "sideways", "event": "Holiday trading", "date_range": "Dec 24-31"}
 ]
 
 # 2025 Market calendar - COMPLETE WEEK BY WEEK breakdown
