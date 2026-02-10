@@ -194,6 +194,9 @@ async def run_backtest(backtest_id: str, config: BacktestConfig, db):
                 fast = config.strategy_params.get("fast_ma", 10)
                 slow = config.strategy_params.get("slow_ma", 30)
                 signals = generate_trend_following_signals(prices, fast, slow)
+            elif config.strategy_type == "ml_based":
+                # Use ML-based signals with improved strategy
+                signals = await generate_ml_based_signals(prices, symbol, db, config.strategy_params)
             else:
                 # Random signals for other strategies
                 signals = [random.choice(["buy", "sell", "hold"]) for _ in range(days)]
