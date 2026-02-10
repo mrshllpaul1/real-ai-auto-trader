@@ -362,6 +362,34 @@ async def train_all_kraken(
     return result
 
 
+@router.post("/train-fast")
+async def train_fast(
+    epochs: int = 100,
+    batch_size: int = 50
+):
+    """
+    Fast training on ALL Kraken coins using sentiment features only.
+    
+    This is much faster as it doesn't require downloading OHLCV data.
+    Uses only sentiment signals: Twitter, Reddit, Fear & Greed, FOMO/Fear.
+    
+    Typically completes in under 2 minutes for 600+ coins.
+    """
+    service = get_service()
+    if not service:
+        raise HTTPException(status_code=500, detail="Enhanced MTF Training service not initialized")
+    
+    logger.info(f"⚡ Starting fast sentiment training...")
+    
+    result = await service.train_sentiment_only(
+        symbols=["all"],
+        epochs=epochs,
+        batch_size=batch_size
+    )
+    
+    return result
+
+
 @router.post("/download-data")
 async def download_data(
     symbols: Optional[List[str]] = None,
