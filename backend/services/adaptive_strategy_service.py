@@ -459,8 +459,142 @@ class AdaptiveStrategyService:
             "impact": "mixed",
             "lead_indicators": ["central_bank_statements", "pilot_programs", "legislative_activity"],
             "confidence": 0.60
+        },
+        # New Event Types for Enhanced Coverage
+        {
+            "type": "token_unlock",
+            "description": "Major token vesting unlock event",
+            "impact": "negative",
+            "recurrence": "varies by project",
+            "lead_indicators": ["vesting_schedule", "token_supply_increase", "holder_concentration"],
+            "confidence": 0.90
+        },
+        {
+            "type": "quarterly_earnings",
+            "description": "Major crypto company quarterly earnings report",
+            "impact": "mixed",
+            "recurrence": "quarterly",
+            "lead_indicators": ["revenue_estimates", "trading_volume_trends", "market_conditions"],
+            "confidence": 0.85
+        },
+        {
+            "type": "governance_vote",
+            "description": "Major protocol governance proposal vote",
+            "impact": "mixed",
+            "lead_indicators": ["proposal_submission", "voting_power_concentration", "community_sentiment"],
+            "confidence": 0.75
+        },
+        {
+            "type": "airdrop_event",
+            "description": "Major token airdrop distribution",
+            "impact": "positive",
+            "lead_indicators": ["snapshot_announcements", "eligibility_criteria", "token_allocation"],
+            "confidence": 0.70
+        },
+        {
+            "type": "geopolitical_event",
+            "description": "Geopolitical event affecting crypto markets (trade wars, sanctions)",
+            "impact": "negative",
+            "lead_indicators": ["political_tensions", "trade_policy_changes", "sanctions_announcements"],
+            "confidence": 0.55
+        },
+        {
+            "type": "protocol_launch",
+            "description": "Major new blockchain protocol or mainnet launch",
+            "impact": "positive",
+            "lead_indicators": ["testnet_metrics", "developer_ecosystem", "partnership_announcements"],
+            "confidence": 0.70
+        },
+        {
+            "type": "futures_expiry",
+            "description": "Major crypto futures contract expiry (CME quarterly)",
+            "impact": "mixed",
+            "recurrence": "quarterly (Mar, Jun, Sep, Dec)",
+            "lead_indicators": ["open_interest_cme", "basis_spread", "funding_rates"],
+            "confidence": 0.88
+        },
+        {
+            "type": "tax_deadline",
+            "description": "Major tax filing deadline affecting crypto selling pressure",
+            "impact": "negative",
+            "recurrence": "annual (April, extensions in October)",
+            "lead_indicators": ["exchange_outflows", "selling_pressure", "tax_season_patterns"],
+            "confidence": 0.80
         }
     ]
+    
+    # =========================================================================
+    # REAL SCHEDULED EVENTS CALENDAR 2025
+    # =========================================================================
+    SCHEDULED_EVENTS_2025 = {
+        "fomc_meetings": [
+            {"date": "2025-01-29", "description": "FOMC Meeting - January 2025 (rates held steady)"},
+            {"date": "2025-03-19", "description": "FOMC Meeting - March 2025"},
+            {"date": "2025-05-07", "description": "FOMC Meeting - May 2025"},
+            {"date": "2025-06-18", "description": "FOMC Meeting - June 2025"},
+            {"date": "2025-07-30", "description": "FOMC Meeting - July 2025"},
+            {"date": "2025-09-17", "description": "FOMC Meeting - September 2025"},
+            {"date": "2025-10-29", "description": "FOMC Meeting - October 2025"},
+            {"date": "2025-12-17", "description": "FOMC Meeting - December 2025"},
+        ],
+        "options_expiry": [
+            {"date": "2025-07-25", "description": "July 2025 Monthly Options Expiry"},
+            {"date": "2025-08-29", "description": "August 2025 Monthly Options Expiry"},
+            {"date": "2025-09-26", "description": "September 2025 Quarterly Options Expiry (major)"},
+            {"date": "2025-10-31", "description": "October 2025 Monthly Options Expiry"},
+            {"date": "2025-11-28", "description": "November 2025 Monthly Options Expiry"},
+            {"date": "2025-12-26", "description": "December 2025 Quarterly Options Expiry (major)"},
+        ],
+        "futures_expiry": [
+            {"date": "2025-07-25", "description": "CME Bitcoin/ETH Futures Quarterly Expiry - Q3"},
+            {"date": "2025-09-26", "description": "CME Bitcoin/ETH Futures Quarterly Expiry - Q3 end"},
+            {"date": "2025-12-26", "description": "CME Bitcoin/ETH Futures Quarterly Expiry - Q4 end"},
+        ],
+        "ethereum_upgrades": [
+            {"date": "2025-03-12", "description": "Ethereum Pectra Upgrade (Devnet testing)"},
+            {"date": "2025-05-07", "description": "Ethereum Pectra Mainnet Activation (EIP-7702, EIP-7251)"},
+            {"date": "2025-10-15", "description": "Ethereum Fusaka Upgrade (estimated - PeerDAS, Verkle Trees)"},
+        ],
+        "token_unlocks": [
+            {"date": "2025-07-12", "description": "Aptos (APT) - 11.31M tokens unlock (~$80M)", "coins": ["APT"], "impact_pct": -5},
+            {"date": "2025-07-15", "description": "Arbitrum (ARB) - 92.65M tokens unlock (~$65M)", "coins": ["ARB"], "impact_pct": -8},
+            {"date": "2025-07-16", "description": "Starknet (STRK) - 64M tokens unlock (~$45M)", "coins": ["STRK"], "impact_pct": -6},
+            {"date": "2025-08-01", "description": "Sui (SUI) - 64.19M tokens unlock (~$90M)", "coins": ["SUI"], "impact_pct": -5},
+            {"date": "2025-08-12", "description": "Aptos (APT) - 11.31M tokens unlock (~$80M)", "coins": ["APT"], "impact_pct": -5},
+            {"date": "2025-08-15", "description": "Optimism (OP) - 31.34M tokens unlock (~$55M)", "coins": ["OP"], "impact_pct": -7},
+            {"date": "2025-09-01", "description": "Sui (SUI) - 64.19M tokens unlock (~$90M)", "coins": ["SUI"], "impact_pct": -5},
+            {"date": "2025-09-15", "description": "Arbitrum (ARB) - 92.65M tokens unlock (~$65M)", "coins": ["ARB"], "impact_pct": -8},
+            {"date": "2025-10-01", "description": "Worldcoin (WLD) - Large team/investor unlock (~$200M)", "coins": ["WLD"], "impact_pct": -12},
+            {"date": "2025-10-12", "description": "Aptos (APT) - 11.31M tokens unlock (~$80M)", "coins": ["APT"], "impact_pct": -5},
+            {"date": "2025-11-06", "description": "Immutable (IMX) - 32.47M tokens unlock (~$40M)", "coins": ["IMX"], "impact_pct": -6},
+            {"date": "2025-12-15", "description": "Arbitrum (ARB) - 92.65M tokens unlock (~$65M)", "coins": ["ARB"], "impact_pct": -8},
+        ],
+        "quarterly_earnings": [
+            {"date": "2025-07-29", "description": "MicroStrategy (MSTR) Q2 2025 Earnings - BTC treasury update", "coins": ["BTC"]},
+            {"date": "2025-08-05", "description": "Coinbase (COIN) Q2 2025 Earnings - trading volume data", "coins": ["BTC", "ETH"]},
+            {"date": "2025-08-07", "description": "Marathon Digital (MARA) Q2 2025 Earnings - mining update", "coins": ["BTC"]},
+            {"date": "2025-10-28", "description": "MicroStrategy (MSTR) Q3 2025 Earnings", "coins": ["BTC"]},
+            {"date": "2025-11-04", "description": "Coinbase (COIN) Q3 2025 Earnings", "coins": ["BTC", "ETH"]},
+        ],
+        "sec_regulatory": [
+            {"date": "2025-07-25", "description": "SEC Solana ETF decision deadline (VanEck filing)"},
+            {"date": "2025-08-15", "description": "SEC Litecoin ETF decision deadline (Canary Capital)"},
+            {"date": "2025-10-10", "description": "SEC XRP ETF decision deadline (potential)"},
+            {"date": "2025-10-18", "description": "SEC Solana ETF final deadline (extended)"},
+        ],
+        "tax_deadlines": [
+            {"date": "2025-10-15", "description": "US Tax Extension Deadline - expected crypto selling pressure"},
+        ],
+        "network_upgrades": [
+            {"date": "2025-08-15", "description": "Solana Firedancer validator client release (estimated)"},
+            {"date": "2025-09-01", "description": "Cardano Chang+1 hard fork (governance upgrade)"},
+            {"date": "2025-10-15", "description": "Ethereum Fusaka upgrade (PeerDAS, estimated)"},
+        ],
+        "institutional_events": [
+            {"date": "2025-08-01", "description": "Bitcoin ETF Q2 2025 13F filings deadline - institutional holdings revealed"},
+            {"date": "2025-11-14", "description": "Bitcoin ETF Q3 2025 13F filings deadline"},
+        ],
+    }
     
     def __init__(self, db):
         self.db = db
