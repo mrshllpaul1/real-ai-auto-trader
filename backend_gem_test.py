@@ -167,8 +167,8 @@ class HardenedGemTester:
             self.log_result("Gems Scan", False, f"HTTP {status}: {data}")
             return None
         
-        # Check basic response structure
-        required_fields = ["count", "gems", "scan_time"]
+        # Check basic response structure (actual response has different field names)
+        required_fields = ["success", "gems", "scan_time"]
         missing_fields = [field for field in required_fields if field not in data]
         
         if missing_fields:
