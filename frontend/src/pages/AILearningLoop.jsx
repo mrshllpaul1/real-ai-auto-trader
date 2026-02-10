@@ -245,7 +245,7 @@ const AILearningLoop = () => {
                 <span className="text-sm text-[#A1A1AA]">Verified</span>
               </div>
               <div className="text-3xl font-data font-bold text-[#00FF94]">
-                {status.verified_predictions || 0}
+                {safeStatus.verified_predictions || 0}
               </div>
             </CardContent>
           </Card>
