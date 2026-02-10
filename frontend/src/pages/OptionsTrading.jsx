@@ -435,7 +435,7 @@ const OptionsTrading = () => {
             <div>
               <h4 className="font-bold text-[#FFB800]">Options Trading Risk</h4>
               <p className="text-sm text-[#A1A1AA]">
-                Options are complex instruments. You can lose 100% of your premium. Prices shown are simulated.
+                Options are complex instruments. You can lose 100% of your premium. Prices are from live Kraken data.
               </p>
             </div>
           </div>
