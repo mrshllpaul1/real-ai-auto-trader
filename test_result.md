@@ -380,12 +380,23 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Whale Alerts and Event Backtesting System"
-    - "Adaptive Strategy and Event Prediction System"
+    - "Enhanced Event Prediction Coverage"
   stuck_tasks:
     - "Enhanced MTF Training API Service Availability"
-  test_all: true
+  test_all: false
   test_priority: "high_first"
+
+  - task: "Enhanced Event Prediction Coverage"
+    implemented: true
+    working: true
+    file: "/app/backend/services/adaptive_strategy_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+        - agent: "main"
+        - comment: "Enhanced event prediction coverage from 5 active event types to 27 total (22 with active predictions). Added 8 new event types (token_unlock, quarterly_earnings, governance_vote, airdrop_event, geopolitical_event, protocol_launch, futures_expiry, tax_deadline). Implemented prediction logic for all 19 originally-defined event types. Added real 2025-2026 scheduled events calendar (FOMC dates, options expiry, token unlocks, earnings, SEC deadlines, ETH upgrades, etc). Added 4 new API endpoints: /event-calendar, /event-coverage-stats, /event-types, /scheduled-events. Enhanced frontend with coverage stats bar, category filters, probability filters, scheduled events timeline, and event type coverage grid."
 
   - task: "On-Chain Data Endpoints"
     implemented: true
