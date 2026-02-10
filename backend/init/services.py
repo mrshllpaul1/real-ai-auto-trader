@@ -458,7 +458,7 @@ async def _init_phase6_scheduling(db):
     _services['events_db'] = events_db
 
     async def ensure_historical_events_ready():
-        """Seed curated historical events if the database is sparse."""
+        """Seed curated historical events if the database contains fewer than MIN_HISTORICAL_EVENTS entries."""
         if not events_db:
             return
         try:
@@ -483,6 +483,7 @@ async def _init_phase6_scheduling(db):
             inserted = seed_result.get("inserted", 0)
             updated = seed_result.get("updated", 0)
             total_seeded = seed_result.get("total_events", 0)
+            required_events = min(MIN_HISTORICAL_EVENTS, total_seeded or MIN_HISTORICAL_EVENTS)
             # Upsert-based seeding is idempotent; concurrent startup calls should not create duplicates
             if inserted + updated == 0:
                 logger.warning(
@@ -494,10 +495,11 @@ async def _init_phase6_scheduling(db):
 
             post_seed_stats = await events_db.get_stats()
             post_total_events = post_seed_stats.get("total_events", 0)
-            if post_total_events < MIN_HISTORICAL_EVENTS:
+            if post_total_events < required_events:
                 logger.warning(
-                    "⚠️ Historical events remain below threshold after auto-seed (total: %s)",
+                    "⚠️ Historical events remain below threshold after auto-seed (total: %s, required: %s)",
                     post_total_events,
+                    required_events,
                 )
                 return
 
