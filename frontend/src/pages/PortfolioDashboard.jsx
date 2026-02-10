@@ -17,7 +17,7 @@ import toast from '../utils/toast';
 
 const COLORS = ['#9D00FF', '#00FF94', '#FFB800', '#FF0055', '#007AFF', '#FF6B00', '#00D4FF', '#FF00FF'];
 
-const PortfolioDashboard = () => {
+const PortfolioDashboard = ({ embedded = false }) => {
   const [summary, setSummary] = useState(null);
   const [composition, setComposition] = useState(null);
   const [history, setHistory] = useState(null);

@@ -15,7 +15,7 @@ import api from '../services/api';
 import toast from '../utils/toast';
 import TradingPairSelector from '../components/TradingPairSelector';
 
-const OptionsTrading = () => {
+const OptionsTrading = ({ embedded = false }) => {
   const [chain, setChain] = useState(null);
   const [positions, setPositions] = useState([]);
   const [strategies, setStrategies] = useState([]);

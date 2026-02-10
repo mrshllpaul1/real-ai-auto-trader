@@ -19,7 +19,7 @@ import api from '../services/api';
 import toast from '../utils/toast';
 import TradingPairSelector from '../components/TradingPairSelector';
 
-const BacktestEngine = () => {
+const BacktestEngine = ({ embedded = false }) => {
   const [strategies, setStrategies] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [history, setHistory] = useState([]);

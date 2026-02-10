@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
 
-const PositionManagement = () => {
+const PositionManagement = ({ embedded = false }) => {
   const [positions, setPositions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingPosition, setEditingPosition] = useState(null);

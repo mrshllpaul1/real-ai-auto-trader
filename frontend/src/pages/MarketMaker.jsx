@@ -17,7 +17,7 @@ import api from '../services/api';
 import toast from '../utils/toast';
 import TradingPairSelector from '../components/TradingPairSelector';
 
-const MarketMaker = () => {
+const MarketMaker = ({ embedded = false }) => {
   const [status, setStatus] = useState(null);
   const [orders, setOrders] = useState({ bids: [], asks: [] });
   const [history, setHistory] = useState([]);

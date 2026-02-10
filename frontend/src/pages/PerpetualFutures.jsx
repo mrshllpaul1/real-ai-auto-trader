@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.REACT_APP_BACKEND_URL || '');
 
-const PerpetualFutures = () => {
+const PerpetualFutures = ({ embedded = false }) => {
   const [activeTab, setActiveTab] = useState('markets');
   const [markets, setMarkets] = useState([]);
   const [positions, setPositions] = useState(null);

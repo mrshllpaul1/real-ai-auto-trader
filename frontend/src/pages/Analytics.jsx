@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import api, { tradingAPI } from '../services/api';
 import { TrendingUp, TrendingDown, DollarSign, Activity, PieChart as PieIcon, BarChart3, Target, Zap, Wallet, TestTube, RefreshCw } from 'lucide-react';
 
-const Analytics = () => {
+const Analytics = ({ embedded = false }) => {
   const [portfolio, setPortfolio] = useState(null);
   const [tradeHistory, setTradeHistory] = useState([]);
   const [performanceData, setPerformanceData] = useState([]);
