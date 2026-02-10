@@ -418,73 +418,67 @@ const SpotTrading = () => {
   const [tradingStatus, setTradingStatus] = useState(null);
   const [showRecommendations, setShowRecommendations] = useState(false);
   
+  // Helper to safely fetch JSON with retry
+  const safeFetchJSON = async (url, retries = 2) => {
+    for (let i = 0; i <= retries; i++) {
+      try {
+        const res = await fetch(url);
+        const contentType = res.headers.get('content-type');
+        
+        // Check if response is JSON before parsing
+        if (res.ok && contentType && contentType.includes('application/json')) {
+          return await res.json();
+        } else if (!res.ok) {
+          console.warn(`Fetch ${url} failed with status ${res.status}, retry ${i + 1}`);
+          if (i < retries) {
+            await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+          }
+        }
+      } catch (err) {
+        console.error(`Fetch ${url} error:`, err);
+        if (i < retries) {
+          await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+        }
+      }
+    }
+    return null;
+  };
+
   // Fetch trading status
   const fetchStatus = useCallback(async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/spot/status`);
-      if (res.ok) {
-        setTradingStatus(await res.json());
-      }
-    } catch (err) {
-      console.error('Status fetch error:', err);
-    }
+    const data = await safeFetchJSON(`${API_URL}/api/spot/status`);
+    if (data) setTradingStatus(data);
   }, []);
   
   // Fetch all pairs with prices
   const fetchPairs = useCallback(async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/spot/pairs`);
-      if (res.ok) {
-        const data = await res.json();
-        setPairs(data.pairs || []);
-      } else {
-        console.error('Pairs fetch failed with status:', res.status);
-      }
-    } catch (err) {
-      console.error('Pairs fetch error:', err);
+    const data = await safeFetchJSON(`${API_URL}/api/spot/pairs`);
+    if (data?.pairs) {
+      setPairs(data.pairs);
+      console.log('Pairs loaded:', data.pairs.length);
     }
   }, []);
   
   // Fetch selected pair details
   const fetchPairDetails = useCallback(async (symbol) => {
-    try {
-      const res = await fetch(`${API_URL}/api/spot/pair/${symbol}`);
-      if (res.ok) {
-        setPairDetails(await res.json());
-      } else {
-        console.error('Pair details fetch failed:', res.status);
-      }
-    } catch (err) {
-      console.error('Pair details error:', err);
-    }
+    const data = await safeFetchJSON(`${API_URL}/api/spot/pair/${symbol}`);
+    if (data) setPairDetails(data);
   }, []);
   
   // Fetch user balance
   const fetchBalance = useCallback(async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/spot/balance`);
-      if (res.ok) {
-        const data = await res.json();
-        setBalance(data);
-        console.log('Balance loaded:', data?.holdings?.length, 'holdings');
-      } else {
-        console.error('Balance fetch failed:', res.status);
-      }
-    } catch (err) {
-      console.error('Balance fetch error:', err);
+    const data = await safeFetchJSON(`${API_URL}/api/spot/balance`);
+    if (data) {
+      setBalance(data);
+      console.log('Balance loaded:', data.holdings?.length, 'holdings');
     }
   }, []);
   
   // Fetch AI recommendations
   const fetchRecommendations = useCallback(async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/spot/ai-recommendations`);
-      if (res.ok) {
-        const data = await res.json();
-        setRecommendations(data.recommendations || []);
-      }
-    } catch (err) {
-      console.error('Recommendations error:', err);
+    const data = await safeFetchJSON(`${API_URL}/api/spot/ai-recommendations`);
+    if (data?.recommendations) {
+      setRecommendations(data.recommendations);
     }
   }, []);
   
