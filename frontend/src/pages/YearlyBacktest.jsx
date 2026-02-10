@@ -506,6 +506,15 @@ const YearlyBacktest = () => {
               <CardContent>
                 <div className="flex flex-wrap gap-4 items-end">
                   <div className="space-y-2">
+                    <Label>Initial Capital ($)</Label>
+                    <Input
+                      type="number"
+                      value={initialCapital}
+                      onChange={(e) => setInitialCapital(Number(e.target.value))}
+                      className="w-32"
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label>Select Year</Label>
                     <Select value={selectedYear} onValueChange={setSelectedYear}>
                       <SelectTrigger className="w-32">
