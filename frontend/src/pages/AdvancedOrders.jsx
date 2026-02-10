@@ -189,7 +189,9 @@ const AdvancedOrders = () => {
     { id: 'iceberg', label: 'Iceberg', icon: Layers, count: ordersSummary?.active_orders?.iceberg_orders || 0 }
   ];
 
-  const symbols = ['BTC/USD', 'ETH/USD', 'SOL/USD', 'ARB/USD', 'DOGE/USD'];
+  const symbols = tradingPairs.length > 0 
+    ? tradingPairs.map(p => `${p.symbol}/USD`)
+    : ['BTC/USD', 'ETH/USD', 'SOL/USD', 'ARB/USD', 'DOGE/USD'];
   const frequencies = ['hourly', 'daily', 'weekly', 'monthly'];
 
   return (
