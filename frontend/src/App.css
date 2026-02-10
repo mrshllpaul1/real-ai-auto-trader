@@ -58,25 +58,6 @@
   display: none;
 }
 
-/* Responsive breakpoints for xs screens */
-@media (max-width: 480px) {
-  .xs\:hidden {
-    display: none !important;
-  }
-  .xs\:inline {
-    display: inline !important;
-  }
-}
-
-@media (min-width: 481px) {
-  .xs\:hidden {
-    display: inline !important;
-  }
-  .hidden.xs\:inline {
-    display: none !important;
-  }
-}
-
 /* Keyboard hint styling */
 kbd {
   font-family: ui-monospace, monospace;
