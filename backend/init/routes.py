@@ -65,6 +65,7 @@ def register_routes(api_router: APIRouter):
     from routes import enhanced_data as enhanced_data_routes
     from routes import mtf_training as mtf_training_routes
     from routes import kraken_expansion as kraken_expansion_routes
+    from routes import enhanced_mtf_training as enhanced_mtf_training_routes
     
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
