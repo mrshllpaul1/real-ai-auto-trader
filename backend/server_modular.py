@@ -186,6 +186,7 @@ api_router.include_router(strategy_builder_routes.router, tags=["Custom Strategy
 api_router.include_router(ohlcv_routes.router, tags=["OHLCV Data"])
 api_router.include_router(training_history_routes.router, tags=["Training History"])
 api_router.include_router(training_scheduler_routes.router, tags=["Training Scheduler"])
+api_router.include_router(ml_optimization.router, tags=["ML Optimization & A/B Testing"])
 
 # Include the router
 app.include_router(api_router)
