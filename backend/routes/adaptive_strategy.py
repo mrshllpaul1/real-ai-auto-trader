@@ -238,6 +238,97 @@ async def get_events_by_type(event_type: str, db=Depends(get_database)):
     }
 
 
+@router.get("/event-calendar")
+async def get_event_calendar(days_ahead: int = 60, db=Depends(get_database)):
+    """Get organized calendar of all predicted and scheduled events"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    service = get_adaptive_strategy_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="Adaptive strategy service not available")
+    
+    return await service.get_event_calendar(days_ahead=days_ahead)
+
+
+@router.get("/event-coverage-stats")
+async def get_event_coverage_stats(db=Depends(get_database)):
+    """Get statistics on event prediction coverage across all event types"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    service = get_adaptive_strategy_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="Adaptive strategy service not available")
+    
+    return await service.get_event_coverage_stats()
+
+
+@router.get("/event-types")
+async def get_all_event_types(db=Depends(get_database)):
+    """Get all defined event types with their metadata"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    service = get_adaptive_strategy_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="Adaptive strategy service not available")
+    
+    event_types = []
+    for event_config in service.PREDICTABLE_EVENTS:
+        active_predictions = [e for e in service.predicted_events if e.event_type == event_config["type"]]
+        event_types.append({
+            "type": event_config["type"],
+            "description": event_config["description"],
+            "impact": event_config.get("impact", "mixed"),
+            "confidence": event_config.get("confidence", 0.5),
+            "lead_indicators": event_config.get("lead_indicators", []),
+            "recurrence": event_config.get("recurrence", "varies"),
+            "active_predictions": len(active_predictions),
+        })
+    
+    return {
+        "event_types": event_types,
+        "total_types": len(event_types),
+        "types_with_predictions": len([et for et in event_types if et["active_predictions"] > 0])
+    }
+
+
+@router.get("/scheduled-events")
+async def get_scheduled_events_calendar(days_ahead: int = 90, db=Depends(get_database)):
+    """Get raw scheduled events from the 2025 calendar"""
+    from services.adaptive_strategy_service import get_adaptive_strategy_service
+    from datetime import datetime, timezone
+    
+    service = get_adaptive_strategy_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="Adaptive strategy service not available")
+    
+    now = datetime.now(timezone.utc)
+    scheduled = []
+    
+    for calendar_key, events in service.SCHEDULED_EVENTS_2025.items():
+        for ev in events:
+            ev_date = datetime.strptime(ev["date"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            days_until = (ev_date - now).days
+            if 0 <= days_until <= days_ahead:
+                scheduled.append({
+                    "date": ev["date"],
+                    "days_until": days_until,
+                    "description": ev["description"],
+                    "calendar_category": calendar_key,
+                    "coins": ev.get("coins", []),
+                    "impact_pct": ev.get("impact_pct", None),
+                })
+    
+    scheduled.sort(key=lambda x: x["date"])
+    
+    return {
+        "scheduled_events": scheduled,
+        "total": len(scheduled),
+        "days_ahead": days_ahead,
+        "calendars": list(service.SCHEDULED_EVENTS_2025.keys())
+    }
+
+
 # =============================================================================
 # ADAPTIVE MONITORING
 # =============================================================================
