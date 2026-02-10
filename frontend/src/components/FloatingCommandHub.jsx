@@ -3,13 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { 
   MessageCircle, Send, X, Loader2, Sparkles, Minimize2, Maximize2,
   Search, Plus, Save, TrendingUp, Zap, Settings, BarChart3, Wallet,
-  Target, RefreshCw, ArrowRight, Wand2, Bot, Brain, Command
+  Target, RefreshCw, ArrowRight, Wand2, Bot, Brain, Command, DollarSign,
+  Activity, Play, Square, CheckCircle, AlertTriangle, TrendingDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
@@ -33,11 +35,28 @@ const FloatingCommandHub = () => {
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const [chatSessionId] = useState(() => `chat_${Date.now()}`);
+  const [deepAnalysis, setDeepAnalysis] = useState(false);
   
   // Strategy Builder state
   const [strategyInput, setStrategyInput] = useState('');
   const [strategyLoading, setStrategyLoading] = useState(false);
   const [generatedStrategy, setGeneratedStrategy] = useState(null);
+  
+  // Trade Execution state
+  const [tradeAction, setTradeAction] = useState('buy');
+  const [tradeCoin, setTradeCoin] = useState('BTC');
+  const [tradeAmount, setTradeAmount] = useState('');
+  const [tradeLoading, setTradeLoading] = useState(false);
+  const [tradePreview, setTradePreview] = useState(null);
+  const [tradeHistory, setTradeHistory] = useState([]);
+  
+  // AI Control state
+  const [tethysStatus, setTethysStatus] = useState(null);
+  const [modelsStatus, setModelsStatus] = useState(null);
+  const [controlLoading, setControlLoading] = useState(false);
+  
+  // Smart Suggestions
+  const [suggestions, setSuggestions] = useState([]);
   
   const messagesEndRef = useRef(null);
 
@@ -55,17 +74,23 @@ const FloatingCommandHub = () => {
       if (cmdMessages.length === 0) {
         setCmdMessages([{
           type: 'ai',
-          content: `⚡ **Command Center**\n\n• "Find hidden gems"\n• "Add BTC to watchlist"\n• "Go to analytics"\n• "Predict ETH price"`,
+          content: `⚡ **Command Center Enhanced**\n\nTry these commands:\n• "Find hidden gems"\n• "Analyze BTC"\n• "Show my trades"\n• "Go to trading"\n• "help" for more\n\n✨ Or ask anything naturally!`,
         }]);
       }
       if (chatMessages.length === 0) {
         setChatMessages([{
           type: 'ai',
-          content: `🤖 **AI Assistant**\n\nAsk me about:\n• Coin analysis\n• Market conditions\n• Trading advice\n• News & sentiment`,
+          content: `🤖 **AI Assistant**\n\n${deepAnalysis ? '🔬 Deep Analysis Mode Active\n\n' : ''}Ask me about:\n• Coin analysis\n• Market conditions\n• Trading advice\n• News & sentiment\n\n💡 Toggle Deep Analysis for predictions!`,
         }]);
       }
+      // Fetch data when hub opens
+      fetchSuggestions();
+      fetchTradeHistory();
+      if (activeTab === 'control') {
+        fetchAIStatus();
+      }
     }
-  }, [isOpen, cmdMessages.length, chatMessages.length]);
+  }, [isOpen, cmdMessages.length, chatMessages.length, deepAnalysis, activeTab]);
 
   // Command Center - Execute actions
   const executeCommand = async (message) => {
@@ -78,13 +103,25 @@ const FloatingCommandHub = () => {
     const msgLower = message.toLowerCase();
     
     try {
+      // Help command
+      if (msgLower === 'help' || msgLower === '?') {
+        setCmdMessages(prev => [...prev, { 
+          type: 'ai', 
+          content: `⚡ **Command Center Help**\n\n**Navigation:**\n• "Go to [page]" - Navigate to any page\n• "Open trading" - Quick access\n\n**Actions:**\n• "Find hidden gems" - Scan for opportunities\n• "Analyze BTC" - Quick coin analysis\n• "Show my trades" - View trade history\n• "Advise on $1000 portfolio" - Get strategy advice\n\n**Tabs:**\n• "Switch to trade" - Go to Trade tab\n• "Switch to control" - Go to AI Control\n\nOr just ask naturally!`
+        }]);
+        setCmdLoading(false);
+        return;
+      }
+      
       // Navigation
       if (msgLower.includes('go to') || msgLower.includes('open') || msgLower.includes('show')) {
         const routes = {
           'dashboard': '/', 'growth': '/growth', 'journal': '/journal',
           'scanner': '/scanner', 'trading': '/trading', 'analytics': '/analytics',
           'tethys': '/tethys', 'news': '/news', 'settings': '/settings',
-          'portfolio': '/portfolio-dashboard', 'positions': '/positions'
+          'portfolio': '/portfolio-dashboard', 'positions': '/positions',
+          'ai learning': '/ai-learning', 'backtest': '/backtest-engine',
+          'options': '/options-trading', 'perpetuals': '/perpetuals'
         };
         for (const [key, path] of Object.entries(routes)) {
           if (msgLower.includes(key)) {
@@ -108,13 +145,96 @@ const FloatingCommandHub = () => {
         return;
       }
       
-      // AI fallback
-      const response = await api.post('/ai-chat/command', {
-        command: message,
+      // Quick analysis
+      if ((msgLower.includes('analyze') || msgLower.includes('analysis')) && 
+          (msgLower.includes('btc') || msgLower.includes('eth') || msgLower.includes('sol'))) {
+        const coinPattern = /\b(btc|eth|sol|ada|dot|avax|bnb|xrp)\b/;
+        const coinMatch = msgLower.match(coinPattern);
+        if (coinMatch) {
+          const coinMap = {
+            'btc': 'bitcoin', 'eth': 'ethereum', 'sol': 'solana',
+            'ada': 'cardano', 'dot': 'polkadot', 'avax': 'avalanche-2',
+            'bnb': 'binancecoin', 'xrp': 'ripple'
+          };
+          const coinId = coinMap[coinMatch[0]];
+          const res = await api.post('/ai-chat/quick-analysis', { coin_id: coinId });
+          setCmdMessages(prev => [...prev, { 
+            type: 'ai', 
+            content: res.data.analysis || 'Analysis complete.'
+          }]);
+          return;
+        }
+      }
+      
+      // Trade history
+      if (msgLower.includes('show') && (msgLower.includes('trade') || msgLower.includes('history'))) {
+        const res = await api.get('/ai-chat/trade-history?limit=5');
+        const trades = res.data.trades || [];
+        if (trades.length > 0) {
+          const tradeList = trades.map(t => 
+            `• **${t.action?.toUpperCase()}** ${t.coin} at $${t.price?.toFixed(2)} - $${t.total_usd?.toFixed(2)}`
+          ).join('\n');
+          setCmdMessages(prev => [...prev, { 
+            type: 'ai', 
+            content: `📊 **Recent Trades:**\n${tradeList}`
+          }]);
+        } else {
+          setCmdMessages(prev => [...prev, { 
+            type: 'ai', 
+            content: 'No recent trades found.'
+          }]);
+        }
+        return;
+      }
+      
+      // Strategy advice
+      if (msgLower.includes('advise') || msgLower.includes('strategy') || msgLower.includes('recommend')) {
+        const amountMatch = msgLower.match(/\$?(\d+)/);
+        const amount = amountMatch ? parseInt(amountMatch[1]) : 1000;
+        const riskLevel = msgLower.includes('aggressive') ? 'aggressive' : 
+                         msgLower.includes('conservative') ? 'low' : 
+                         msgLower.includes('moderate') ? 'moderate' : 'moderate';
+        
+        const res = await api.post('/ai-chat/strategy-advice', {
+          portfolio_value: amount,
+          risk_tolerance: riskLevel
+        });
+        setCmdMessages(prev => [...prev, { 
+          type: 'ai', 
+          content: res.data.advice || 'Strategy advice generated.'
+        }]);
+        return;
+      }
+      
+      // Switch tabs
+      if (msgLower.includes('switch to') || msgLower.includes('open tab')) {
+        if (msgLower.includes('trade')) {
+          setActiveTab('trade');
+          setCmdMessages(prev => [...prev, { type: 'ai', content: '✅ Switched to Trade tab' }]);
+          return;
+        } else if (msgLower.includes('control') || msgLower.includes('ai control')) {
+          setActiveTab('control');
+          setCmdMessages(prev => [...prev, { type: 'ai', content: '✅ Switched to AI Control tab' }]);
+          return;
+        } else if (msgLower.includes('strategy')) {
+          setActiveTab('strategy');
+          setCmdMessages(prev => [...prev, { type: 'ai', content: '✅ Switched to Strategy tab' }]);
+          return;
+        }
+      }
+      
+      // AI fallback - use execute-command endpoint for complex queries
+      const response = await api.post('/ai-chat/execute-command', {
+        query: message,
         session_id: cmdSessionId
       }, { timeout: 30000 });
       
-      setCmdMessages(prev => [...prev, { type: 'ai', content: response.data.response || 'Command processed.' }]);
+      // Note: actions field is for future enhancement to show executed actions in UI
+      setCmdMessages(prev => [...prev, { 
+        type: 'ai', 
+        content: response.data.response || 'Command processed.',
+        actions: response.data.actions_executed // Reserved for future action display
+      }]);
       
     } catch (error) {
       setCmdMessages(prev => [...prev, { type: 'ai', content: '❌ Error processing command. Try again.' }]);
@@ -123,7 +243,7 @@ const FloatingCommandHub = () => {
     }
   };
 
-  // AI Chat
+  // AI Chat - Enhanced with Deep Analysis
   const sendChatMessage = async (message) => {
     if (!message.trim()) return;
     
@@ -132,16 +252,28 @@ const FloatingCommandHub = () => {
     setChatLoading(true);
     
     try {
-      const response = await api.post('/ai-chat/ask', {
-        query: message,
-        session_id: chatSessionId,
-        include_market_data: true
-      }, { timeout: 60000 });
+      const endpoint = deepAnalysis ? '/ai-chat/ask-deep' : '/ai-chat/ask';
+      const payload = deepAnalysis 
+        ? {
+            query: message,
+            session_id: chatSessionId,
+            include_predictions: true,
+            include_gems: true
+          }
+        : {
+            query: message,
+            session_id: chatSessionId,
+            include_market_data: true
+          };
+      
+      const response = await api.post(endpoint, payload, { timeout: 60000 });
       
       setChatMessages(prev => [...prev, { 
         type: 'ai', 
         content: response.data.response,
-        coins: response.data.coins_mentioned
+        coins: response.data.coins_mentioned,
+        predictions: response.data.predictions,
+        gems: response.data.gems
       }]);
     } catch (error) {
       setChatMessages(prev => [...prev, { type: 'ai', content: '❌ Error. Please try again.' }]);
@@ -187,6 +319,124 @@ const FloatingCommandHub = () => {
     }
   };
 
+  // Trade Execution
+  const previewTrade = async () => {
+    if (!tradeAmount || parseFloat(tradeAmount) <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+    
+    setTradeLoading(true);
+    try {
+      const response = await api.post('/ai-chat/execute-trade', {
+        action: tradeAction,
+        coin: tradeCoin,
+        amount_usd: parseFloat(tradeAmount),
+        order_type: 'market',
+        confirm: false
+      });
+      
+      setTradePreview(response.data.preview);
+      toast.success('Trade preview ready!');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to preview trade');
+    } finally {
+      setTradeLoading(false);
+    }
+  };
+
+  const executeTrade = async () => {
+    if (!tradePreview) return;
+    
+    setTradeLoading(true);
+    try {
+      const response = await api.post('/ai-chat/execute-trade', {
+        action: tradeAction,
+        coin: tradeCoin,
+        amount_usd: parseFloat(tradeAmount),
+        order_type: 'market',
+        confirm: true
+      });
+      
+      toast.success(response.data.message || 'Trade executed!');
+      setTradePreview(null);
+      setTradeAmount('');
+      fetchTradeHistory();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Trade execution failed');
+    } finally {
+      setTradeLoading(false);
+    }
+  };
+
+  const fetchTradeHistory = async () => {
+    try {
+      const response = await api.get('/ai-chat/trade-history?limit=5');
+      setTradeHistory(response.data.trades || []);
+    } catch (error) {
+      console.error('Failed to fetch trade history:', error);
+    }
+  };
+
+  // AI Control
+  const toggleTethys = async () => {
+    setControlLoading(true);
+    try {
+      const isActive = tethysStatus?.is_active;
+      await api.post(`/tethys-train/${isActive ? 'stop' : 'start'}`);
+      toast.success(`Tethys ${isActive ? 'stopped' : 'started'}!`);
+      fetchAIStatus();
+    } catch (error) {
+      toast.error('Failed to toggle Tethys');
+    } finally {
+      setControlLoading(false);
+    }
+  };
+
+  const trainModels = async () => {
+    setControlLoading(true);
+    const loadingToast = toast.loading('Training AI models...');
+    try {
+      const response = await api.post('/training/train-all');
+      toast.dismiss(loadingToast);
+      
+      if (response.data.status === 'lightweight_mode') {
+        toast.info('Lightweight mode active - using pre-computed patterns');
+      } else {
+        toast.success('Models trained successfully!');
+      }
+      fetchAIStatus();
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error('Training failed');
+    } finally {
+      setControlLoading(false);
+    }
+  };
+
+  const fetchAIStatus = async () => {
+    try {
+      const [tethysRes, modelsRes] = await Promise.allSettled([
+        api.get('/tethys-train/status'),
+        api.get('/enhanced-ai/status')
+      ]);
+      
+      if (tethysRes.status === 'fulfilled') setTethysStatus(tethysRes.value.data);
+      if (modelsRes.status === 'fulfilled') setModelsStatus(modelsRes.value.data);
+    } catch (error) {
+      console.error('Failed to fetch AI status:', error);
+    }
+  };
+
+  const fetchSuggestions = async () => {
+    try {
+      const response = await api.get('/ai-chat/suggestions');
+      setSuggestions(response.data.suggestions || []);
+    } catch (error) {
+      console.error('Failed to fetch suggestions:', error);
+    }
+  };
+
   const formatMessage = (content) => {
     if (!content) return null;
     return content.split('\n').map((line, i) => {
@@ -202,7 +452,9 @@ const FloatingCommandHub = () => {
     { icon: '💎', label: 'Find Gems', action: () => executeCommand('Find hidden gems') },
     { icon: '📊', label: 'Analytics', action: () => { navigate('/analytics'); setIsOpen(false); } },
     { icon: '🌊', label: 'Tethys', action: () => { navigate('/tethys'); setIsOpen(false); } },
-    { icon: '⚙️', label: 'Settings', action: () => { navigate('/settings'); setIsOpen(false); } },
+    { icon: '💼', label: 'Portfolio', action: () => { navigate('/portfolio-dashboard'); setIsOpen(false); } },
+    { icon: '📈', label: 'Trading', action: () => { navigate('/trading'); setIsOpen(false); } },
+    { icon: '🧠', label: 'AI Learning', action: () => { navigate('/ai-learning'); setIsOpen(false); } },
   ];
 
   return (
@@ -219,7 +471,9 @@ const FloatingCommandHub = () => {
             data-testid="command-hub-btn"
           >
             <Command size={24} className="text-white group-hover:scale-110 transition-transform" />
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-400 rounded-full flex items-center justify-center animate-pulse">
+            <span className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ${
+              tethysStatus?.is_active ? 'bg-green-400 animate-pulse' : 'bg-cyan-400'
+            }`}>
               <Zap size={12} className="text-black" />
             </span>
           </motion.button>
@@ -245,8 +499,8 @@ const FloatingCommandHub = () => {
                   <Command size={16} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-white">Command Hub</h3>
-                  <p className="text-[10px] text-slate-400">AI • Strategy • Commands</p>
+                  <h3 className="text-sm font-semibold text-white">AI Command Hub</h3>
+                  <p className="text-[10px] text-slate-400">Execute • Analyze • Control • Trade</p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -273,27 +527,33 @@ const FloatingCommandHub = () => {
               <>
                 {/* Tabs */}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-                  <TabsList className="mx-2 mt-2 bg-slate-800/50 p-0.5 h-9 flex-shrink-0">
-                    <TabsTrigger value="command" className="flex-1 text-xs gap-1 data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
-                      <Zap size={12} /> Commands
+                  <TabsList className="mx-2 mt-2 bg-slate-800/50 p-0.5 h-9 flex-shrink-0 grid grid-cols-5">
+                    <TabsTrigger value="command" className="text-[10px] gap-0.5 data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
+                      <Zap size={10} /> CMD
                     </TabsTrigger>
-                    <TabsTrigger value="chat" className="flex-1 text-xs gap-1 data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400">
-                      <MessageCircle size={12} /> Ask AI
+                    <TabsTrigger value="chat" className="text-[10px] gap-0.5 data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400">
+                      <MessageCircle size={10} /> AI
                     </TabsTrigger>
-                    <TabsTrigger value="strategy" className="flex-1 text-xs gap-1 data-[state=active]:bg-pink-500/20 data-[state=active]:text-pink-400">
-                      <Wand2 size={12} /> Strategy
+                    <TabsTrigger value="trade" className="text-[10px] gap-0.5 data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400">
+                      <DollarSign size={10} /> Trade
+                    </TabsTrigger>
+                    <TabsTrigger value="control" className="text-[10px] gap-0.5 data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+                      <Brain size={10} /> Control
+                    </TabsTrigger>
+                    <TabsTrigger value="strategy" className="text-[10px] gap-0.5 data-[state=active]:bg-pink-500/20 data-[state=active]:text-pink-400">
+                      <Wand2 size={10} /> Strategy
                     </TabsTrigger>
                   </TabsList>
 
                   {/* Command Center Tab */}
                   <TabsContent value="command" className="flex-1 flex flex-col overflow-hidden m-0 p-2">
-                    {/* Quick Actions */}
-                    <div className="flex gap-1.5 mb-2 flex-shrink-0">
+                    {/* Quick Actions - 3x2 Grid */}
+                    <div className="grid grid-cols-3 gap-1.5 mb-2 flex-shrink-0">
                       {quickCommands.map((cmd, i) => (
                         <button
                           key={i}
                           onClick={cmd.action}
-                          className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700/50 text-[10px] text-slate-300 hover:text-white transition-all flex flex-col items-center gap-0.5"
+                          className="py-1.5 px-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700/50 text-[10px] text-slate-300 hover:text-white transition-all flex flex-col items-center gap-0.5"
                         >
                           <span>{cmd.icon}</span>
                           <span>{cmd.label}</span>
@@ -324,6 +584,24 @@ const FloatingCommandHub = () => {
                       <div ref={messagesEndRef} />
                     </div>
                     
+                    {/* Smart Suggestions */}
+                    {suggestions.length > 0 && cmdMessages.length <= 1 && suggestions[0]?.queries && (
+                      <div className="space-y-1 mb-2 flex-shrink-0">
+                        <p className="text-[9px] text-slate-500 uppercase tracking-wide">Try these:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {suggestions[0].queries.slice(0, 3).map((query, i) => (
+                            <button
+                              key={i}
+                              onClick={() => executeCommand(query)}
+                              className="px-2 py-1 rounded-md bg-slate-800/30 hover:bg-slate-700/50 text-[10px] text-slate-400 hover:text-white transition-all border border-slate-700/30"
+                            >
+                              {query}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
                     {/* Input */}
                     <form onSubmit={(e) => { e.preventDefault(); executeCommand(cmdInput); }} className="flex gap-2 mt-2 flex-shrink-0">
                       <Input
@@ -341,6 +619,15 @@ const FloatingCommandHub = () => {
 
                   {/* AI Chat Tab */}
                   <TabsContent value="chat" className="flex-1 flex flex-col overflow-hidden m-0 p-2">
+                    {/* Deep Analysis Toggle */}
+                    <div className="flex items-center justify-between mb-2 px-2 py-1.5 rounded-lg bg-slate-800/30 border border-slate-700/50 flex-shrink-0">
+                      <div className="flex items-center gap-2">
+                        <Sparkles size={12} className="text-purple-400" />
+                        <span className="text-xs text-slate-300">Deep Analysis</span>
+                      </div>
+                      <Switch checked={deepAnalysis} onCheckedChange={setDeepAnalysis} className="scale-75" />
+                    </div>
+                    
                     <div className="flex-1 overflow-y-auto space-y-2 pr-1">
                       {chatMessages.map((msg, i) => (
                         <div key={i} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -359,6 +646,26 @@ const FloatingCommandHub = () => {
                                 ))}
                               </div>
                             )}
+                            {msg.predictions && (
+                              <div className="mt-2 p-2 bg-cyan-500/10 rounded border border-cyan-500/30">
+                                <div className="text-[10px] text-cyan-400 font-medium mb-1">📈 Predictions</div>
+                                <div className="text-[10px] text-slate-300">
+                                  {typeof msg.predictions === 'object' 
+                                    ? `Price: ${msg.predictions.price || 'N/A'}, Confidence: ${msg.predictions.confidence || 'N/A'}%`
+                                    : String(msg.predictions).substring(0, 100)}
+                                </div>
+                              </div>
+                            )}
+                            {msg.gems && msg.gems.length > 0 && (
+                              <div className="flex gap-1 mt-1 flex-wrap">
+                                <span className="text-[10px] text-yellow-400">💎</span>
+                                {msg.gems.map((gem, j) => (
+                                  <Badge key={j} variant="outline" className="text-[10px] border-yellow-500/50 text-yellow-300">
+                                    {gem}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -371,6 +678,24 @@ const FloatingCommandHub = () => {
                       )}
                       <div ref={messagesEndRef} />
                     </div>
+                    
+                    {/* Smart Suggestions for Chat */}
+                    {suggestions.length > 1 && chatMessages.length <= 1 && suggestions[1]?.queries && (
+                      <div className="space-y-1 mb-2 flex-shrink-0">
+                        <p className="text-[9px] text-slate-500 uppercase tracking-wide">Suggestions:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {suggestions[1].queries.slice(0, 2).map((query, i) => (
+                            <button
+                              key={i}
+                              onClick={() => sendChatMessage(query)}
+                              className="px-2 py-1 rounded-md bg-slate-800/30 hover:bg-slate-700/50 text-[10px] text-slate-400 hover:text-white transition-all border border-slate-700/30"
+                            >
+                              {query}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     
                     <form onSubmit={(e) => { e.preventDefault(); sendChatMessage(chatInput); }} className="flex gap-2 mt-2 flex-shrink-0">
                       <Input
@@ -463,6 +788,236 @@ const FloatingCommandHub = () => {
                           </button>
                         ))}
                       </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Trade Execution Tab */}
+                  <TabsContent value="trade" className="flex-1 flex flex-col overflow-hidden m-0 p-2">
+                    <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+                      {/* Trade Form */}
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => setTradeAction('buy')}
+                            size="sm"
+                            variant={tradeAction === 'buy' ? 'default' : 'outline'}
+                            className={`flex-1 h-8 ${tradeAction === 'buy' ? 'bg-green-500/20 text-green-400 border-green-500/50' : 'border-slate-700/50'}`}
+                          >
+                            Buy
+                          </Button>
+                          <Button
+                            onClick={() => setTradeAction('sell')}
+                            size="sm"
+                            variant={tradeAction === 'sell' ? 'default' : 'outline'}
+                            className={`flex-1 h-8 ${tradeAction === 'sell' ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'border-slate-700/50'}`}
+                          >
+                            Sell
+                          </Button>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] text-slate-400">Coin</label>
+                          <select
+                            value={tradeCoin}
+                            onChange={(e) => setTradeCoin(e.target.value)}
+                            className="w-full h-8 px-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-sm text-white"
+                          >
+                            <option value="BTC">Bitcoin (BTC)</option>
+                            <option value="ETH">Ethereum (ETH)</option>
+                            <option value="SOL">Solana (SOL)</option>
+                            <option value="ADA">Cardano (ADA)</option>
+                            <option value="DOT">Polkadot (DOT)</option>
+                            <option value="AVAX">Avalanche (AVAX)</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] text-slate-400">Amount (USD)</label>
+                          <Input
+                            type="number"
+                            value={tradeAmount}
+                            onChange={(e) => setTradeAmount(e.target.value)}
+                            placeholder="100"
+                            className="h-8 bg-slate-800/50 border-slate-700/50 text-sm"
+                          />
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={previewTrade}
+                            disabled={tradeLoading || !tradeAmount}
+                            className="flex-1 h-8 text-xs bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400"
+                          >
+                            {tradeLoading ? <Loader2 size={12} className="animate-spin" /> : 'Preview'}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Trade Preview */}
+                      {tradePreview && (
+                        <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 space-y-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-400">Action</span>
+                            <span className={`font-medium ${tradePreview.action === 'buy' ? 'text-green-400' : 'text-red-400'}`}>
+                              {tradePreview.action.toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-400">Volume</span>
+                            <span className="text-white">{tradePreview.volume} {tradePreview.coin}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-400">Price</span>
+                            <span className="text-white">${tradePreview.price?.toFixed(2)}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-400">Total</span>
+                            <span className="text-white font-medium">${tradePreview.total_usd?.toFixed(2)}</span>
+                          </div>
+                          
+                          {/* Warning Banner */}
+                          <div className="flex items-center gap-2 p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+                            <AlertTriangle size={14} className="text-yellow-400 flex-shrink-0" />
+                            <p className="text-xs text-yellow-400 font-medium">Real money trade on Kraken!</p>
+                          </div>
+                          
+                          <Button
+                            onClick={executeTrade}
+                            disabled={tradeLoading}
+                            className="w-full h-8 text-xs bg-green-600 hover:bg-green-700"
+                          >
+                            <CheckCircle size={12} className="mr-1" /> Confirm & Execute
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Trade History */}
+                      {tradeHistory.length > 0 && (
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] text-slate-500 uppercase tracking-wide">Recent Trades</p>
+                          {tradeHistory.map((trade, i) => (
+                            <div key={i} className="p-2 rounded-lg bg-slate-800/30 text-xs">
+                              <div className="flex items-center justify-between">
+                                <Badge className={trade.action === 'buy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}>
+                                  {trade.action?.toUpperCase()}
+                                </Badge>
+                                <span className="text-white">{trade.coin}</span>
+                                <span className="text-slate-400">${trade.total_usd?.toFixed(2)}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  {/* AI Control Tab */}
+                  <TabsContent value="control" className="flex-1 flex flex-col overflow-hidden m-0 p-2" onFocus={fetchAIStatus}>
+                    <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+                      {/* Tethys Control */}
+                      <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-cyan-400" />
+                            <span className="text-sm font-medium text-white">Tethys AI</span>
+                          </div>
+                          <Badge className={tethysStatus?.is_active ? 'bg-green-500' : 'bg-gray-600'}>
+                            {tethysStatus?.is_active ? 'ACTIVE' : 'STANDBY'}
+                          </Badge>
+                        </div>
+                        
+                        {tethysStatus && (
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="p-2 bg-slate-800/50 rounded">
+                              <div className="text-slate-400">Signals</div>
+                              <div className="text-white font-medium">{tethysStatus.signals_generated || 0}</div>
+                            </div>
+                            <div className="p-2 bg-slate-800/50 rounded">
+                              <div className="text-slate-400">Confidence</div>
+                              <div className="text-white font-medium">{tethysStatus.confidence?.toFixed(0) || 0}%</div>
+                            </div>
+                          </div>
+                        )}
+
+                        <Button
+                          onClick={toggleTethys}
+                          disabled={controlLoading}
+                          className={`w-full h-8 text-xs ${
+                            tethysStatus?.is_active 
+                              ? 'bg-red-600 hover:bg-red-700' 
+                              : 'bg-cyan-600 hover:bg-cyan-700'
+                          }`}
+                        >
+                          {controlLoading ? (
+                            <Loader2 size={12} className="animate-spin mr-1" />
+                          ) : tethysStatus?.is_active ? (
+                            <><Square size={12} className="mr-1" /> Stop Tethys</>
+                          ) : (
+                            <><Play size={12} className="mr-1" /> Start Tethys</>
+                          )}
+                        </Button>
+                      </div>
+
+                      {/* Model Training */}
+                      <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Brain className="w-4 h-4 text-purple-400" />
+                            <span className="text-sm font-medium text-white">AI Models</span>
+                          </div>
+                        </div>
+
+                        {modelsStatus && (
+                          <div className="space-y-1.5 text-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-400">Accuracy</span>
+                              <span className="text-white font-medium">{modelsStatus.accuracy?.toFixed(1) || 0}%</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-400">Predictions</span>
+                              <span className="text-white">{modelsStatus.predictions_today || 0}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-400">Win Rate</span>
+                              <span className="text-green-400">{modelsStatus.win_rate?.toFixed(1) || 0}%</span>
+                            </div>
+                          </div>
+                        )}
+
+                        <Button
+                          onClick={trainModels}
+                          disabled={controlLoading}
+                          className="w-full h-8 text-xs bg-purple-600 hover:bg-purple-700"
+                        >
+                          {controlLoading ? (
+                            <Loader2 size={12} className="animate-spin mr-1" />
+                          ) : (
+                            <><Play size={12} className="mr-1" /> Train Models</>
+                          )}
+                        </Button>
+                      </div>
+
+                      {/* Recent Signals */}
+                      {tethysStatus?.recent_signals && tethysStatus.recent_signals.length > 0 && (
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] text-slate-500 uppercase tracking-wide">Recent Signals</p>
+                          {tethysStatus.recent_signals.slice(0, 3).map((signal, i) => (
+                            <div key={i} className="p-2 rounded-lg bg-slate-800/30 text-xs">
+                              <div className="flex items-center justify-between">
+                                <Badge className={
+                                  signal.action === 'BUY' ? 'bg-green-500/20 text-green-400' :
+                                  signal.action === 'SELL' ? 'bg-red-500/20 text-red-400' :
+                                  'bg-gray-500/20 text-gray-400'
+                                }>
+                                  {signal.action}
+                                </Badge>
+                                <span className="text-white">{signal.symbol}</span>
+                                <span className="text-slate-400">{signal.confidence?.toFixed(0)}%</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </TabsContent>
                 </Tabs>
