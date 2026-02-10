@@ -722,20 +722,20 @@ const AILearningLoop = () => {
                   </div>
 
                   {/* By Coin Performance */}
-                  {feedback.by_coin && Object.keys(feedback.by_coin).length > 0 && (
+                  {feedback?.by_coin && Object.keys(feedback.by_coin).length > 0 && (
                     <div>
                       <h4 className="text-sm font-medium text-[#A1A1AA] mb-3">Performance by Coin</h4>
                       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 max-h-60 overflow-y-auto">
                         {Object.entries(feedback.by_coin)
-                          .sort((a, b) => b[1].accuracy_rate - a[1].accuracy_rate)
+                          .sort((a, b) => (b[1]?.accuracy_rate || 0) - (a[1]?.accuracy_rate || 0))
                           .slice(0, 20)
                           .map(([coin, stats]) => (
                             <div key={coin} className="p-3 bg-[#121212] rounded-lg">
                               <div className="font-bold text-white">{coin}</div>
-                              <div className={`text-lg font-data ${getAccuracyColor(stats.accuracy_rate)}`}>
-                                {stats.accuracy_rate.toFixed(1)}%
+                              <div className={`text-lg font-data ${getAccuracyColor(stats?.accuracy_rate || 0)}`}>
+                                {(stats?.accuracy_rate || 0).toFixed(1)}%
                               </div>
-                              <div className="text-xs text-[#A1A1AA]">{stats.total} predictions</div>
+                              <div className="text-xs text-[#A1A1AA]">{stats?.total || 0} predictions</div>
                             </div>
                           ))}
                       </div>
