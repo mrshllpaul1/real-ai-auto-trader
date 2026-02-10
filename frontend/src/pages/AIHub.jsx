@@ -1,24 +1,31 @@
-import React, { useState } from 'react';
+import React, { lazy, memo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { 
-  Brain, Zap, Bot, Layers, Wand2, GraduationCap, Cpu, Activity, Gauge, Sparkles
+  Brain, Zap, Bot, Layers, Wand2, GraduationCap, Cpu, Activity, Gauge
 } from 'lucide-react';
-import { Breadcrumb, useTabKeyboardNav, KeyboardHint, MobileTabsList } from '@/components/HubNavigation';
+import { 
+  Breadcrumb, 
+  useTabState, 
+  useTabKeyboardNav, 
+  KeyboardHint, 
+  MobileTabsList,
+  LazyTabContent 
+} from '@/components/HubNavigation';
 
-// Import existing page components
-import AICommandCenter from './AICommandCenter';
-import AdaptiveStrategy from './AdaptiveStrategy';
-import AutoTrading from './AutoTrading';
-import AutoExecution from './AutoExecution';
-import EnsembleAI from './EnsembleAI';
-import StrategyBuilder from './StrategyBuilder';
-import AILearning from './AILearning';
-import AITeacher from './AITeacher';
-import AILearningLoop from './AILearningLoop';
-import ModelPerformanceDashboard from './ModelPerformanceDashboard';
-import EnhancedMTFPredictions from './EnhancedMTFPredictions';
+// Lazy load page components
+const AICommandCenter = lazy(() => import('./AICommandCenter'));
+const AdaptiveStrategy = lazy(() => import('./AdaptiveStrategy'));
+const AutoTrading = lazy(() => import('./AutoTrading'));
+const AutoExecution = lazy(() => import('./AutoExecution'));
+const EnsembleAI = lazy(() => import('./EnsembleAI'));
+const StrategyBuilder = lazy(() => import('./StrategyBuilder'));
+const AILearning = lazy(() => import('./AILearning'));
+const AITeacher = lazy(() => import('./AITeacher'));
+const AILearningLoop = lazy(() => import('./AILearningLoop'));
+const ModelPerformanceDashboard = lazy(() => import('./ModelPerformanceDashboard'));
+const EnhancedMTFPredictions = lazy(() => import('./EnhancedMTFPredictions'));
 
 const TABS = ['center', 'adaptive', 'auto', 'execute', 'ensemble', 'builder', 'learning', 'models', 'predictions'];
 
@@ -34,10 +41,32 @@ const TAB_LABELS = {
   'predictions': 'MTF'
 };
 
+const TAB_CONFIG = [
+  { value: 'center', icon: Brain, label: 'AI Center', color: 'purple' },
+  { value: 'adaptive', icon: Gauge, label: 'Adaptive', color: 'cyan' },
+  { value: 'auto', icon: Zap, label: 'Auto', color: 'green' },
+  { value: 'execute', icon: Bot, label: 'Execute', color: 'amber' },
+  { value: 'ensemble', icon: Layers, label: 'Ensemble', color: 'pink' },
+  { value: 'builder', icon: Wand2, label: 'Builder', color: 'blue' },
+  { value: 'learning', icon: GraduationCap, label: 'Learning', color: 'indigo' },
+  { value: 'models', icon: Cpu, label: 'Models', color: 'orange' },
+  { value: 'predictions', icon: Activity, label: 'MTF', color: 'red' },
+];
+
+const TabTriggerItem = memo(({ value, icon: Icon, label, color }) => (
+  <TabsTrigger 
+    value={value} 
+    className={`data-[state=active]:bg-${color}-500/20 whitespace-nowrap`}
+  >
+    <Icon className="w-4 h-4 mr-1 md:mr-2" />
+    {label}
+  </TabsTrigger>
+));
+
+TabTriggerItem.displayName = 'TabTriggerItem';
+
 const AIHub = () => {
-  const [activeTab, setActiveTab] = useState('center');
-  
-  // Enable keyboard navigation
+  const [activeTab, setActiveTab] = useTabState(TABS, 'center');
   useTabKeyboardNav(TABS, activeTab, setActiveTab);
 
   return (
@@ -47,7 +76,6 @@ const AIHub = () => {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-7xl mx-auto"
       >
-        {/* Breadcrumb */}
         <Breadcrumb items={[
           { label: 'AI & Strategy', href: '/ai' },
           { label: TAB_LABELS[activeTab] }
@@ -74,105 +102,81 @@ const AIHub = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <MobileTabsList>
             <TabsList className="glass-card flex-nowrap md:flex-wrap h-auto p-1 gap-1 w-max md:w-auto">
-              <TabsTrigger value="center" className="data-[state=active]:bg-purple-500/20 whitespace-nowrap">
-                <Brain className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">AI Center</span>
-                <span className="sm:hidden">1</span>
-              </TabsTrigger>
-              <TabsTrigger value="adaptive" className="data-[state=active]:bg-cyan-500/20 whitespace-nowrap">
-                <Gauge className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Adaptive</span>
-                <span className="sm:hidden">2</span>
-              </TabsTrigger>
-              <TabsTrigger value="auto" className="data-[state=active]:bg-green-500/20 whitespace-nowrap">
-                <Zap className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Auto</span>
-                <span className="sm:hidden">3</span>
-              </TabsTrigger>
-              <TabsTrigger value="execute" className="data-[state=active]:bg-amber-500/20 whitespace-nowrap">
-                <Bot className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Execute</span>
-                <span className="sm:hidden">4</span>
-              </TabsTrigger>
-              <TabsTrigger value="ensemble" className="data-[state=active]:bg-pink-500/20 whitespace-nowrap">
-                <Layers className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Ensemble</span>
-                <span className="sm:hidden">5</span>
-              </TabsTrigger>
-              <TabsTrigger value="builder" className="data-[state=active]:bg-blue-500/20 whitespace-nowrap">
-                <Wand2 className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Builder</span>
-                <span className="sm:hidden">6</span>
-              </TabsTrigger>
-              <TabsTrigger value="learning" className="data-[state=active]:bg-indigo-500/20 whitespace-nowrap">
-                <GraduationCap className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Learning</span>
-                <span className="sm:hidden">7</span>
-              </TabsTrigger>
-              <TabsTrigger value="models" className="data-[state=active]:bg-orange-500/20 whitespace-nowrap">
-                <Cpu className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Models</span>
-                <span className="sm:hidden">8</span>
-              </TabsTrigger>
-              <TabsTrigger value="predictions" className="data-[state=active]:bg-red-500/20 whitespace-nowrap">
-                <Activity className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">MTF</span>
-                <span className="sm:hidden">9</span>
-              </TabsTrigger>
+              {TAB_CONFIG.map((tab) => (
+                <TabTriggerItem key={tab.value} {...tab} />
+              ))}
             </TabsList>
           </MobileTabsList>
 
           <TabsContent value="center" className="mt-0">
-            <AICommandCenter embedded={true} />
+            <LazyTabContent isActive={activeTab === 'center'}>
+              <AICommandCenter embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="adaptive" className="mt-0">
-            <AdaptiveStrategy embedded={true} />
+            <LazyTabContent isActive={activeTab === 'adaptive'}>
+              <AdaptiveStrategy embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="auto" className="mt-0">
-            <AutoTrading embedded={true} />
+            <LazyTabContent isActive={activeTab === 'auto'}>
+              <AutoTrading embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="execute" className="mt-0">
-            <AutoExecution embedded={true} />
+            <LazyTabContent isActive={activeTab === 'execute'}>
+              <AutoExecution embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="ensemble" className="mt-0">
-            <EnsembleAI embedded={true} />
+            <LazyTabContent isActive={activeTab === 'ensemble'}>
+              <EnsembleAI embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="builder" className="mt-0">
-            <StrategyBuilder embedded={true} />
+            <LazyTabContent isActive={activeTab === 'builder'}>
+              <StrategyBuilder embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="learning" className="mt-0">
-            <div className="space-y-6">
-              <Tabs defaultValue="ai-learning">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="ai-learning">AI Learning</TabsTrigger>
-                  <TabsTrigger value="teacher">AI Teacher</TabsTrigger>
-                  <TabsTrigger value="loop">Learning Loop</TabsTrigger>
-                </TabsList>
-                <TabsContent value="ai-learning">
-                  <AILearning embedded={true} />
-                </TabsContent>
-                <TabsContent value="teacher">
-                  <AITeacher embedded={true} />
-                </TabsContent>
-                <TabsContent value="loop">
-                  <AILearningLoop embedded={true} />
-                </TabsContent>
-              </Tabs>
-            </div>
+            <LazyTabContent isActive={activeTab === 'learning'}>
+              <div className="space-y-6">
+                <Tabs defaultValue="ai-learning">
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="ai-learning">AI Learning</TabsTrigger>
+                    <TabsTrigger value="teacher">AI Teacher</TabsTrigger>
+                    <TabsTrigger value="loop">Learning Loop</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="ai-learning">
+                    <AILearning embedded={true} />
+                  </TabsContent>
+                  <TabsContent value="teacher">
+                    <AITeacher embedded={true} />
+                  </TabsContent>
+                  <TabsContent value="loop">
+                    <AILearningLoop embedded={true} />
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="models" className="mt-0">
-            <ModelPerformanceDashboard embedded={true} />
+            <LazyTabContent isActive={activeTab === 'models'}>
+              <ModelPerformanceDashboard embedded={true} />
+            </LazyTabContent>
           </TabsContent>
 
           <TabsContent value="predictions" className="mt-0">
-            <EnhancedMTFPredictions embedded={true} />
+            <LazyTabContent isActive={activeTab === 'predictions'}>
+              <EnhancedMTFPredictions embedded={true} />
+            </LazyTabContent>
           </TabsContent>
         </Tabs>
       </motion.div>
