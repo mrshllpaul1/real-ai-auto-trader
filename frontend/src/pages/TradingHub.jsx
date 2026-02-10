@@ -127,6 +127,12 @@ const TradingHub = () => {
             </LazyTabContent>
           </TabsContent>
 
+          <TabsContent value="performance" className="mt-0">
+            <LazyTabContent isActive={activeTab === 'performance'}>
+              <PerformanceDashboard embedded={true} />
+            </LazyTabContent>
+          </TabsContent>
+
           <TabsContent value="advanced" className="mt-0">
             <LazyTabContent isActive={activeTab === 'advanced'}>
               <AdvancedOrders embedded={true} />
