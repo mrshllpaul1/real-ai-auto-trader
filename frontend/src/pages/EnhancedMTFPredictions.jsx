@@ -221,9 +221,9 @@ const EnhancedMTFPredictions = () => {
               className="bg-purple-600 hover:bg-purple-700"
             >
               {isTraining ? (
-                <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Training...</>
+                <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Training 634 coins...</>
               ) : (
-                <><Play className="w-4 h-4 mr-2" /> Train Model</>
+                <><Play className="w-4 h-4 mr-2" /> Train All Kraken (634)</>
               )}
             </Button>
             <Button 
@@ -235,7 +235,7 @@ const EnhancedMTFPredictions = () => {
               {isPredicting ? (
                 <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Predicting...</>
               ) : (
-                <><Sparkles className="w-4 h-4 mr-2" /> Run Predictions</>
+                <><Sparkles className="w-4 h-4 mr-2" /> Predict All (634)</>
               )}
             </Button>
           </div>
