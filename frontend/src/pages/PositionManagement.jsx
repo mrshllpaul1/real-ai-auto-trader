@@ -375,7 +375,7 @@ const PositionManagement = ({ embedded = false }) => {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-xs text-[#A1A1AA] mb-1 flex items-center gap-1">
-                          <Clock size={12} /> Entry Price
+                          <Clock size={12} /> Price 24h Ago
                         </p>
                         <p className="font-data text-white">${pos.entry_price?.toFixed(4)}</p>
                       </div>
