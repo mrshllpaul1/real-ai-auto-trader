@@ -1704,3 +1704,83 @@ class SchedulerService:
         })
         
         return results
+
+
+    async def add_new_coin_sync_job(self, hour: int = 3) -> Dict[str, Any]:
+        """
+        Add daily job to check for new Kraken coin listings.
+        Runs at specified hour (default 3 AM UTC).
+        
+        This job:
+        1. Syncs the Kraken universe to detect new listings
+        2. Adds new coins to the training universe
+        3. Optionally starts downloading data for new coins
+        """
+        job_id = 'new_coin_sync'
+        
+        if self.scheduler.get_job(job_id):
+            self.scheduler.remove_job(job_id)
+        
+        self.scheduler.add_job(
+            self._run_new_coin_sync,
+            trigger=CronTrigger(hour=hour),
+            id=job_id,
+            name='Daily New Coin Sync',
+            replace_existing=True
+        )
+        
+        self.active_jobs[job_id] = {
+            'type': 'new_coin_sync',
+            'hour': hour,
+            'created_at': datetime.utcnow().isoformat()
+        }
+        
+        logger.info(f"🔍 New coin sync job added (daily at {hour}:00 UTC)")
+        return {'success': True, 'job_id': job_id, 'schedule': f'daily at {hour}:00 UTC'}
+    
+    async def _run_new_coin_sync(self) -> Dict[str, Any]:
+        """Execute new coin sync and data download"""
+        timestamp = datetime.utcnow()
+        logger.info(f"🔍 [{timestamp.strftime('%H:%M')}] Checking for new Kraken coins...")
+        
+        results = {
+            'timestamp': timestamp.isoformat(),
+            'new_coins': [],
+            'download_started': False
+        }
+        
+        try:
+            from services.kraken_data_expansion_service import get_expansion_service
+            expansion_service = get_expansion_service(self.db)
+            
+            if expansion_service:
+                # Check for new coins
+                check_result = await expansion_service.check_for_new_coins()
+                results['new_coins'] = check_result.get('coins', [])[:20]
+                results['new_coins_count'] = check_result.get('new_coins_found', 0)
+                
+                logger.info(f"  📊 Found {results['new_coins_count']} coins without data")
+                
+                # Auto-download data for new coins (up to 20 at a time)
+                if results['new_coins_count'] > 0:
+                    logger.info("  📥 Starting data download for new coins...")
+                    download_result = await expansion_service.download_priority_coins(
+                        count=20,
+                        timeframes=["1h", "4h", "1D"]
+                    )
+                    results['download_started'] = download_result.get('status') == 'started'
+                    results['download_job_id'] = download_result.get('job_id')
+                    
+        except Exception as e:
+            logger.error(f"  ❌ New coin sync error: {e}")
+            results['error'] = str(e)
+        
+        # Save execution record
+        await self.db.scheduler_executions.insert_one({
+            'job_id': 'new_coin_sync',
+            'timestamp': timestamp.isoformat(),
+            'success': len(results.get('new_coins', [])) >= 0,
+            'results': results
+        })
+        
+        return results
