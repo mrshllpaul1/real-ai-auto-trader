@@ -142,10 +142,10 @@ class HistoricalDataDownloader:
             volatility_14d = np.zeros(len(closes))
             
             for i in range(7, len(returns)):
-                volatility_7d[i] = np.std(returns[i-7:i]) if i >= 7 else 0
+                volatility_7d[i] = np.std(returns[i-7:i])
             
             for i in range(14, len(returns)):
-                volatility_14d[i] = np.std(returns[i-14:i]) if i >= 14 else 0
+                volatility_14d[i] = np.std(returns[i-14:i])
             
             # Price momentum (1d, 7d, 14d, 30d)
             momentum_1d = np.zeros(len(closes))
@@ -154,16 +154,16 @@ class HistoricalDataDownloader:
             momentum_30d = np.zeros(len(closes))
             
             for i in range(1, len(closes)):
-                momentum_1d[i] = (closes[i] - closes[i-1]) / closes[i-1] * 100 if i >= 1 else 0
+                momentum_1d[i] = (closes[i] - closes[i-1]) / closes[i-1] * 100
             
             for i in range(7, len(closes)):
-                momentum_7d[i] = (closes[i] - closes[i-7]) / closes[i-7] * 100 if i >= 7 else 0
+                momentum_7d[i] = (closes[i] - closes[i-7]) / closes[i-7] * 100
             
             for i in range(14, len(closes)):
-                momentum_14d[i] = (closes[i] - closes[i-14]) / closes[i-14] * 100 if i >= 14 else 0
+                momentum_14d[i] = (closes[i] - closes[i-14]) / closes[i-14] * 100
             
             for i in range(30, len(closes)):
-                momentum_30d[i] = (closes[i] - closes[i-30]) / closes[i-30] * 100 if i >= 30 else 0
+                momentum_30d[i] = (closes[i] - closes[i-30]) / closes[i-30] * 100
             
             # Volume surge ratio (current volume / 7-day average volume)
             volume_surge = np.zeros(len(volumes))
