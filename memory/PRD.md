@@ -66,29 +66,52 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 - Improves response times for frequently accessed data
 - Balance cached for 30s, tickers for 5s
 
-### ✅ NEW: Real Entry Price Tracking for Accurate P&L
+### ✅ NEW: Trade History Sync
 
 **Implemented:**
-- **EntryPriceTracker** (`/backend/services/entry_price_tracker.py`):
-  - Records entry prices when trades are executed
-  - Calculates weighted average for DCA positions
-  - Tracks realized P&L on sells
-  - Stores trade history per position
-  - Archives closed positions
-- **New API Endpoints**:
-  - `GET /api/spot/entry-prices` - Get all entry prices
-  - `GET /api/spot/entry-prices/{symbol}` - Get entry for specific symbol
-  - `POST /api/spot/entry-prices/{symbol}` - Manually set entry price
-  - `DELETE /api/spot/entry-prices/{symbol}` - Delete entry record
-  - `GET /api/spot/portfolio-pnl` - Full portfolio P&L summary
-- **Updated Balance API**: Now returns entry price data when available
-- **Frontend Update**: Position Manager shows "Tracked" badge for real entry prices, falls back to 24h P&L when no entry data
+- `POST /api/spot/sync-trade-history` - Imports all historical trades from Kraken
+  - Configurable `days_back` parameter (default 365, max 1825 days)
+  - `force_resync` option to clear and resync all data
+  - Processes trades in chronological order
+  - Calculates weighted average entry prices for DCA positions
+  - Tracks realized P&L from sells
+- `GET /api/spot/trade-history/summary` - Summary of synced trade data
 
-**How Entry Prices Work:**
-1. When you BUY through the app, entry price is automatically recorded
-2. DCA purchases calculate weighted average entry price
-3. SELLs track realized P&L against entry price
-4. Can manually set entry prices for existing positions
+**How It Works:**
+1. Fetches all trades from Kraken API (with pagination)
+2. Sorts by timestamp (oldest first)
+3. Processes buys → calculates weighted average entry
+4. Processes sells → calculates realized P&L
+5. Stores in `position_entries` MongoDB collection
+
+### ✅ NEW: Performance Dashboard
+
+**Implemented:**
+- **Backend API** (`/api/portfolio-performance/dashboard`):
+  - Portfolio value, cost basis, P&L calculations
+  - Win/loss statistics and win rate
+  - Best/worst performer identification
+  - Position-by-position P&L breakdown
+  
+- **Frontend Component** (`/frontend/src/pages/PerformanceDashboard.jsx`):
+  - Summary cards (Portfolio Value, Cost Basis, Total P&L, Win Rate)
+  - P&L breakdown (Unrealized vs Realized)
+  - Top performers section
+  - Position performance list with entry prices
+  - "Sync Trades" button to import Kraken history
+
+**Added to Trading Hub** as new "Performance" tab accessible at `/trading?tab=performance`
+
+**Files Created:**
+- `/backend/services/performance_dashboard.py`
+- `/backend/routes/performance_dashboard.py`
+- `/frontend/src/pages/PerformanceDashboard.jsx`
+
+**Files Modified:**
+- `/backend/routes/spot_trading.py` - Added sync-trade-history endpoint
+- `/backend/init/routes.py` - Registered performance routes
+- `/backend/init/services.py` - Initialized performance service
+- `/frontend/src/pages/TradingHub.jsx` - Added Performance tab
 
 ### ✅ FIXED: Positions Page P&L Calculation
 
