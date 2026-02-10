@@ -366,10 +366,14 @@ const Settings = () => {
       </motion.div>
 
       <Tabs defaultValue="api" className="space-y-6" data-testid="settings-tabs">
-        <TabsList className="bg-[#0A0A0A] border border-[#1F1F1F]">
+        <TabsList className="bg-[#0A0A0A] border border-[#1F1F1F] flex-wrap">
           <TabsTrigger value="api" data-testid="api-tab">
             <Key size={16} className="mr-2" />
             API Credentials
+          </TabsTrigger>
+          <TabsTrigger value="data-providers" data-testid="data-providers-tab">
+            <Database size={16} className="mr-2" />
+            Data Providers
           </TabsTrigger>
           <TabsTrigger value="risk" data-testid="risk-tab">
             <Shield size={16} className="mr-2" />
