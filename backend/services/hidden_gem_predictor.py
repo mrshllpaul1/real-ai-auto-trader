@@ -13,10 +13,7 @@ try:
     from emergentintegrations.llm.chat import LlmChat, UserMessage
 except ImportError:  # Graceful degradation when LLM client isn't installed
     LlmChat = None
-
-    class UserMessage:  # type: ignore
-        def __init__(self, text: str):
-            self.text = text
+    UserMessage = None
 
 
 class HiddenGemPredictor:
