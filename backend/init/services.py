@@ -472,25 +472,27 @@ async def _init_phase6_scheduling(db):
                     inserted = seed_result.get("inserted", 0)
                     updated = seed_result.get("updated", 0)
                     total_seeded = seed_result.get("total_events", 0)
-                    estimated_total = current_total_events + inserted
                     if (inserted + updated) == 0:
                         logger.warning(
                             "⚠️ Historical events auto-seed made no database changes (existing: %s, curated total: %s)",
                             current_total_events,
                             total_seeded,
                         )
-                    elif estimated_total < MIN_HISTORICAL_EVENTS:
-                        logger.warning(
-                            "⚠️ Historical events remain below threshold after auto-seed (estimated total: %s)",
-                            estimated_total,
-                        )
                     else:
-                        logger.info(
-                            "🌐 Seeded historical events database with %s curated events (%s inserted, %s updated)",
-                            total_seeded,
-                            inserted,
-                            updated,
-                        )
+                        post_seed_stats = await events_db.get_stats()
+                        post_total_events = post_seed_stats.get("total_events", 0)
+                        if post_total_events < MIN_HISTORICAL_EVENTS:
+                            logger.warning(
+                                "⚠️ Historical events remain below threshold after auto-seed (total: %s)",
+                                post_total_events,
+                            )
+                        else:
+                            logger.info(
+                                "🌐 Seeded historical events database with %s curated events (%s inserted, %s updated)",
+                                total_seeded,
+                                inserted,
+                                updated,
+                            )
         except Exception as e:
             logger.warning("⚠️ Auto-seed of historical events failed: %s", e)
     
