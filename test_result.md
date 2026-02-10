@@ -1136,6 +1136,61 @@ backend:
 ### Test Results: ✅ 86.2% Success (Core functionality working)
 
 
+---
+
+## On-Chain Data Integration & Enhanced Features - February 10, 2026
+
+### New Features Implemented:
+
+#### 1. On-Chain Data Service
+Complete whale tracking and network analysis system:
+
+| Endpoint | Description | Status |
+|----------|-------------|--------|
+| `/api/on-chain/whale-activity` | Exchange flows, whale sentiment, accumulation score | ✅ |
+| `/api/on-chain/exchange-flows` | Detailed per-exchange inflow/outflow | ✅ |
+| `/api/on-chain/whale-transactions` | Recent large transactions (>$10M) | ✅ |
+| `/api/on-chain/network-metrics` | Hash rate, active addresses, fees | ✅ |
+| `/api/on-chain/whale-distribution` | Wallet distribution by size | ✅ |
+| `/api/on-chain/summary` | Quick overview | ✅ |
+
+**Features:**
+- Real-time exchange flow tracking (10 major exchanges)
+- Whale wallet tracking (>1000 BTC wallets)
+- Transaction impact classification (bullish/bearish/neutral)
+- Network health scoring (0-100)
+- Accumulation/distribution signal detection
+
+#### 2. Enhanced Event Prediction (10 New Event Types)
+| Event Type | Probability | Lead Indicators |
+|------------|-------------|-----------------|
+| network_upgrade | 80% | Testnet deployment, client updates |
+| etf_launch | 75% | SEC filings, fund marketing |
+| institutional_buy | 70% | 13F filings, treasury news |
+| layer2_milestone | 70% | TVL growth, developer adoption |
+| stablecoin_depeg | 65% | Redemption rate, liquidity |
+| cbdc_announcement | 60% | Central bank statements |
+| celebrity_endorsement | 55% | Social activity, wallet tracking |
+| defi_exploit | 50% | Smart contract audits, TVL |
+
+#### 3. Enhanced Frontend Page
+Updated `/adaptive` page with:
+- 4 tabs: Regime Variants, Event Predictions, On-Chain Data, Optimal Strategy
+- Real-time on-chain metrics display
+- Large transaction feed
+- Whale sentiment visualization
+- Network health indicators
+
+### Files Created:
+- `/app/backend/services/onchain_data_service.py` - On-chain data service
+- `/app/backend/routes/onchain_data.py` - On-chain API routes
+- `/app/frontend/src/pages/AdaptiveStrategy.jsx` - Enhanced UI (overwritten)
+- `/app/backend/init/routes.py` - Route registration (updated)
+
+### Test Results: ✅ 97% Success (32/33 tests passed)
+
+
+
         - comment: "✅ ENHANCED MTF TRAINING API TESTING COMPLETE - February 10, 2026. 🎉 ALL KRAKEN UNIVERSE FEATURES WORKING PERFECTLY (93.2% success rate - 69/74 tests passed). ✅ KRAKEN UNIVERSE: Successfully fetched all 634 Kraken coins available for trading. ✅ FAST TRAINING: Completed sentiment-only training on all 634 coins in 2.8 seconds with 100% accuracy using 12 sentiment features (twitter_sentiment, reddit_sentiment, fear_greed_index, fomo_score, etc.). ✅ BATCH PREDICTIONS: Generated 634 predictions with signal distribution: 48 BUY, 585 HOLD, 1 SELL (reflecting current market sentiment). ✅ MODEL INFO: Confirmed sentiment_only_mtf model with 12 features trained on 634 coins with 100% accuracy using sklearn Logistic Regression. ✅ FEAR & GREED INTEGRATION: Real-time data showing 'Extreme Fear' (value: 9) from Alternative.me API. ✅ SENTIMENT ANALYSIS: BTC sentiment analysis working with multi-source data. ⚠️ MINOR ISSUES: Individual prediction endpoints (/predict/BTC, /predict/ETH) returning 400 errors due to model lookup issue (batch predictions work fine). Signal distribution differs from expected (48/585/1 vs 336/234/64) but reflects actual market conditions. All core Enhanced MTF Training API features are production-ready and fully functional for the full Kraken universe as requested."
 
   - task: "ML Optimization and A/B Testing System"
