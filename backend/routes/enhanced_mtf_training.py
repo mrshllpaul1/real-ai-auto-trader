@@ -307,6 +307,61 @@ async def get_model_info():
     return model_info
 
 
+@router.get("/kraken-universe")
+async def get_kraken_universe():
+    """
+    Get all available coins from Kraken exchange.
+    
+    Returns the full list of 600+ coins available for training.
+    """
+    service = get_service()
+    if not service:
+        raise HTTPException(status_code=500, detail="Enhanced MTF Training service not initialized")
+    
+    coins = await service.fetch_all_kraken_coins()
+    stats = await service.get_kraken_universe_stats()
+    
+    return {
+        "total_coins": len(coins),
+        "coins": coins,
+        "stats": stats,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@router.post("/train-all-kraken")
+async def train_all_kraken(
+    epochs: int = 100,
+    download_data: bool = True,
+    background_tasks: BackgroundTasks = None
+):
+    """
+    Train on ALL Kraken coins (600+).
+    
+    This is a long-running operation that trains the model on the entire
+    Kraken coin universe with technical + sentiment features.
+    
+    Note: This operation may take several minutes to complete.
+    """
+    service = get_service()
+    if not service:
+        raise HTTPException(status_code=500, detail="Enhanced MTF Training service not initialized")
+    
+    # Get all Kraken coins
+    all_coins = await service.fetch_all_kraken_coins()
+    
+    logger.info(f"🌐 Starting training on {len(all_coins)} Kraken coins...")
+    
+    # Run training
+    result = await service.train_enhanced_model(
+        symbols=all_coins,
+        epochs=epochs,
+        download_data=download_data
+    )
+    
+    return result
+
+
 @router.post("/download-data")
 async def download_data(
     symbols: Optional[List[str]] = None,
