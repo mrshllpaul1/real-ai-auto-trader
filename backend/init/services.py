@@ -585,6 +585,20 @@ async def _init_phase7_wire_dependencies(db):
         entry_tracker=_services.get('entry_tracker')
     )
     
+    # Performance Dashboard
+    from routes import performance_dashboard as performance_dashboard_routes
+    from services.performance_dashboard import PerformanceDashboardService
+    performance_service = PerformanceDashboardService(db, _services.get('entry_tracker'))
+    await performance_service.ensure_indexes()
+    _services['performance'] = performance_service
+    performance_dashboard_routes.set_dependencies(
+        db, 
+        _services['kraken'], 
+        _services.get('entry_tracker'),
+        performance_service
+    )
+    logger.info("✅ Performance Dashboard initialized")
+    
     # Portfolio Visualization - pass kraken service for real portfolio data
     from routes import portfolio_visualization
     portfolio_visualization.set_dependencies(db, _services['isolated_portfolio'], _services['kraken'])
