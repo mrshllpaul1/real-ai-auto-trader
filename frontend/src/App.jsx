@@ -123,6 +123,7 @@ function App() {
                     <Route path="/dashboard-settings" element={<DashboardCustomization />} />
                     <Route path="/options-trading" element={<OptionsTrading />} />
                     <Route path="/backtest-engine" element={<BacktestEngine />} />
+                    <Route path="/yearly-backtest" element={<YearlyBacktest />} />
                     <Route path="/advanced-orders" element={<AdvancedOrders />} />
                     <Route path="/defi-wallet" element={<DeFiWallet />} />
                     <Route path="/yield-farming" element={<YieldFarming />} />
