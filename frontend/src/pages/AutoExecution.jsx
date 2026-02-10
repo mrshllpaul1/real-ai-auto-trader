@@ -17,7 +17,7 @@ import api from '../services/api';
 import { toast } from 'sonner';
 import { useTradingMode } from '../context/TradingModeContext';
 
-const AutoExecution = () => {
+const AutoExecution = ({ embedded = false }) => {
   const [status, setStatus] = useState(null);
   const [aiStatus, setAiStatus] = useState(null);
   const [aiPerformance, setAiPerformance] = useState(null);

@@ -123,7 +123,7 @@ const PredictionCard = ({ prediction }) => {
 };
 
 // Main Component
-const EnhancedMTFPredictions = () => {
+const EnhancedMTFPredictions = ({ embedded = false }) => {
   const [trainingStatus, setTrainingStatus] = useState({ status: 'idle' });
   const [predictions, setPredictions] = useState(null);
   const [fearGreed, setFearGreed] = useState({ value: 50, classification: 'Neutral' });

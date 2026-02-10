@@ -111,7 +111,7 @@ const AccuracyGauge = ({ value, label }) => {
   );
 };
 
-const AILearningLoop = () => {
+const AILearningLoop = ({ embedded = false }) => {
   const [status, setStatus] = useState(null);
   const [performance, setPerformance] = useState(null);
   const [insights, setInsights] = useState(null);

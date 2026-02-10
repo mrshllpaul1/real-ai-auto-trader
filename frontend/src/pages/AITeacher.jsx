@@ -16,7 +16,7 @@ import api from '../services/api';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 
-const AITeacher = () => {
+const AITeacher = ({ embedded = false }) => {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);

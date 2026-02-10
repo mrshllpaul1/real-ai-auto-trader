@@ -13,7 +13,7 @@ import {
 } from 'recharts';
 import api from '../services/api';
 
-const ModelPerformanceDashboard = () => {
+const ModelPerformanceDashboard = ({ embedded = false }) => {
   const [drlStatus, setDrlStatus] = useState(null);
   const [intelligenceStatus, setIntelligenceStatus] = useState(null);
   const [backtestResults, setBacktestResults] = useState(null);

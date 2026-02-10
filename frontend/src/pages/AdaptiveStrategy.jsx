@@ -53,7 +53,7 @@ const impactColors = {
   mixed: '#FFB800'
 };
 
-const AdaptiveStrategy = () => {
+const AdaptiveStrategy = ({ embedded = false }) => {
   const [activeTab, setActiveTab] = useState('regime');
   const [strategyStatus, setStrategyStatus] = useState(null);
   const [currentRegime, setCurrentRegime] = useState(null);

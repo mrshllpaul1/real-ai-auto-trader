@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
 
-const AILearning = () => {
+const AILearning = ({ embedded = false }) => {
   const [learningReport, setLearningReport] = useState(null);
   const [indicators, setIndicators] = useState([]);
   const [loading, setLoading] = useState(true);

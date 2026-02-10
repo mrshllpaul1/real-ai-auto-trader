@@ -14,7 +14,7 @@ import AICoinSelectionSection from '../components/AICoinSelectionSection';
 import AutomatedTradingSection from '../components/AutomatedTradingSection';
 import { useTradingMode } from '../context/TradingModeContext';
 
-const AutoTrading = () => {
+const AutoTrading = ({ embedded = false }) => {
   // Use global trading mode context
   const { isRealMode, isPaperMode, setMode } = useTradingMode();
   

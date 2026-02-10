@@ -266,7 +266,7 @@ const LearningTab = ({ learningStatus, onTrain }) => (
   </div>
 );
 
-const AICommandCenter = () => {
+const AICommandCenter = ({ embedded = false }) => {
   const [activeTab, setActiveTab] = useState('brain');
   const [loading, setLoading] = useState(true);
   const [enhancedStatus, setEnhancedStatus] = useState(null);

@@ -32,7 +32,7 @@ import api from '../services/api';
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL;
 
-const StrategyBuilder = () => {
+const StrategyBuilder = ({ embedded = false }) => {
   const [activeTab, setActiveTab] = useState('ai-builder');
   const [templates, setTemplates] = useState([]);
   const [savedStrategies, setSavedStrategies] = useState([]);

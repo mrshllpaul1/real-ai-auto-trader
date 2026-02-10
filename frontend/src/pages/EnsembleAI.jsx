@@ -58,7 +58,7 @@ const GemBadge = ({ potential }) => {
   );
 };
 
-const EnsembleAI = () => {
+const EnsembleAI = ({ embedded = false }) => {
   const [status, setStatus] = useState(null);
   const [buildStatus, setBuildStatus] = useState(null);
   const [universe, setUniverse] = useState(null);
