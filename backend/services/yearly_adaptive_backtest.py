@@ -1250,19 +1250,41 @@ class YearlyBacktestEngine:
                     if event["week"] <= week + 1:
                         regime = event["regime"]
                 
+                # Get sentiment data for this week
+                sentiment = get_weekly_sentiment(self.year, week + 1)
+                
                 self.weekly_performance.append({
                     "week": current_week + 1,
                     "return": week_return,
                     "win_rate": week_win_rate,
                     "trades": weekly_trades,
                     "regime": regime,
-                    "capital": self.capital
+                    "capital": self.capital,
+                    "sentiment": sentiment["fear_greed_value"],
+                    "sentiment_category": sentiment["category"],
+                    "sentiment_signal": sentiment["signal"]
                 })
                 
-                self.regime_history.append({"week": week + 1, "regime": regime})
+                self.regime_history.append({
+                    "week": week + 1, 
+                    "regime": regime,
+                    "sentiment": sentiment["fear_greed_value"],
+                    "sentiment_signal": sentiment["signal"]
+                })
                 
-                # Adapt strategy based on performance
+                # Adapt strategy based on performance AND sentiment
                 self.strategy.adapt_to_regime(regime, week_win_rate)
+                
+                # Apply sentiment adjustments to strategy parameters
+                adjustments = sentiment["adjustments"]
+                self.strategy.params["position_size_pct"] *= adjustments["position_size_multiplier"]
+                self.strategy.params["entry_threshold"] += adjustments["entry_threshold_modifier"]
+                self.strategy.params["take_profit_pct"] *= adjustments["take_profit_modifier"]
+                
+                # Ensure params stay within reasonable bounds
+                self.strategy.params["position_size_pct"] = max(3, min(15, self.strategy.params["position_size_pct"]))
+                self.strategy.params["entry_threshold"] = max(5, min(15, self.strategy.params["entry_threshold"]))
+                self.strategy.params["take_profit_pct"] = max(4, min(15, self.strategy.params["take_profit_pct"]))
                 
                 # Reset weekly counters
                 current_week = week
