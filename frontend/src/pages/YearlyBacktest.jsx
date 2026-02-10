@@ -63,9 +63,9 @@ const YearlyBacktest = () => {
     }
   };
 
-  const loadMarketCalendar = async () => {
+  const loadMarketCalendar = async (year = 2025) => {
     try {
-      const res = await api.get('/yearly-backtest/market-calendar');
+      const res = await api.get(`/yearly-backtest/market-calendar?year=${year}`);
       setMarketCalendar(res.data);
     } catch (error) {
       console.error('Error loading calendar:', error);
