@@ -151,6 +151,7 @@ def register_routes(api_router: APIRouter):
     api_router.include_router(risk_analyzer_routes.router, tags=["Risk Analyzer"])
     api_router.include_router(telegram_routes.router, tags=["Telegram Notifications"])
     api_router.include_router(rebalance_routes.router, tags=["Portfolio Rebalancing"])
+    api_router.include_router(enhanced_data_routes.router, tags=["Enhanced Data Services"])
     
     logger.info("✅ All routes registered")
     
