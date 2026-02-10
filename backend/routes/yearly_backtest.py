@@ -67,8 +67,8 @@ async def run_yearly_backtest(
     backtest_id = str(uuid.uuid4())
     year = request.year
     
-    if year < 2020 or year > 2025:
-        raise HTTPException(status_code=400, detail="Year must be between 2020 and 2025")
+    if year < 2020 or year > 2026:
+        raise HTTPException(status_code=400, detail="Year must be between 2020 and 2026")
     
     try:
         from services.yearly_adaptive_backtest import run_yearly_adaptive_backtest, TOP_COINS, COINS_BY_YEAR
