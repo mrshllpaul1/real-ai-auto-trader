@@ -68,6 +68,7 @@ def register_routes(api_router: APIRouter, db=None):
     from routes import mtf_training as mtf_training_routes
     from routes import kraken_expansion as kraken_expansion_routes
     from routes import enhanced_mtf_training as enhanced_mtf_training_routes
+    from routes import performance_dashboard as performance_dashboard_routes
     from routes import ml_optimization as ml_optimization_routes
     from routes import ml_monitoring as ml_monitoring_routes
     
