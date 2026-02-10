@@ -356,11 +356,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Enhanced Data API - Kraken Universe Endpoints"
-    - "Enhanced Data API - On-Chain Metrics Endpoints"
-    - "Enhanced Data API - Multi-Timeframe Historical Data"
-    - "Enhanced Data API - Data Provider Keys Management"
-    - "Enhanced Data API - Overall Service Status"
+    - "ML Optimization and A/B Testing System"
   stuck_tasks:
     - "Tethys Execute Trade Endpoint"
     - "Market Data Endpoints"
