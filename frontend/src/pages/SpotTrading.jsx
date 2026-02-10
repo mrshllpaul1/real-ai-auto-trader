@@ -479,25 +479,40 @@ const SpotTrading = ({ embedded = false }) => {
     const loadData = async () => {
       setLoading(true);
       
-      // Fetch all data in parallel
-      const [statusData, pairsData, balanceData, recsData] = await Promise.all([
-        safeFetchJSON(`${API_URL}/api/spot/status`),
-        safeFetchJSON(`${API_URL}/api/spot/pairs`),
-        safeFetchJSON(`${API_URL}/api/spot/balance`),
-        safeFetchJSON(`${API_URL}/api/spot/ai-recommendations`)
-      ]);
-      
+      // Fetch data with staggered timing to avoid rate limiting
+      // Status first (no Kraken API)
+      const statusData = await safeFetchJSON(`${API_URL}/api/spot/status`);
       if (!isMounted) return;
-      
       if (statusData) setTradingStatus(statusData);
+      
+      // Small delay before next call
+      await new Promise(r => setTimeout(r, 100));
+      
+      // Pairs (Kraken API)
+      const pairsData = await safeFetchJSON(`${API_URL}/api/spot/pairs`);
+      if (!isMounted) return;
       if (pairsData?.pairs) {
         setPairs(pairsData.pairs);
         console.log('[SpotTrading] Pairs loaded:', pairsData.pairs.length);
       }
+      
+      // Small delay before next call
+      await new Promise(r => setTimeout(r, 100));
+      
+      // Balance (Kraken API)
+      const balanceData = await safeFetchJSON(`${API_URL}/api/spot/balance`);
+      if (!isMounted) return;
       if (balanceData) {
         setBalance(balanceData);
         console.log('[SpotTrading] Balance loaded:', balanceData.holdings?.length, 'holdings');
       }
+      
+      // Small delay before recommendations
+      await new Promise(r => setTimeout(r, 100));
+      
+      // AI recommendations (no Kraken API, uses cached data)
+      const recsData = await safeFetchJSON(`${API_URL}/api/spot/ai-recommendations`);
+      if (!isMounted) return;
       if (recsData?.recommendations) {
         setRecommendations(recsData.recommendations);
       }
@@ -507,14 +522,14 @@ const SpotTrading = ({ embedded = false }) => {
     
     loadData();
     
-    // Refresh prices every 10 seconds
+    // Refresh prices every 15 seconds (increased from 10 to reduce API load)
     const interval = setInterval(async () => {
       if (!isMounted) return;
       const data = await safeFetchJSON(`${API_URL}/api/spot/pairs`);
       if (data?.pairs && isMounted) {
         setPairs(data.pairs);
       }
-    }, 10000);
+    }, 15000);
     
     return () => {
       isMounted = false;
