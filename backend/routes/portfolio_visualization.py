@@ -32,12 +32,15 @@ async def _fetch_kraken_holdings() -> List[Dict[str, Any]]:
         # Import and call spot trading balance endpoint directly
         from routes import spot_trading
         
+        print(f"DEBUG: spot_trading._kraken_service = {spot_trading._kraken_service}")
+        
         if spot_trading._kraken_service is None:
-            print("DEBUG: Kraken service not available")
+            print("DEBUG: Kraken service not available, returning empty")
             return []
         
         # Get balance from Kraken service
         balance = await spot_trading._kraken_service.get_balance()
+        print(f"DEBUG: balance = {type(balance)}, len = {len(balance) if isinstance(balance, dict) else 'N/A'}")
         
         if not isinstance(balance, dict) or not balance:
             print("DEBUG: Empty or invalid balance from Kraken")
