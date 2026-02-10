@@ -187,6 +187,74 @@ MAJOR_EVENTS = [
     # 2025 February onwards (projected/reported)
     {"date": "2025-02-01", "event": "Trump tariffs on China cause market volatility", "coins": ["BTC"], "impact": "negative", "category": "macro"},
     {"date": "2025-02-03", "event": "Bitcoin drops to $91,000 on tariff fears", "coins": ["BTC"], "impact": "negative", "category": "milestone"},
+    
+    # Additional Historical Events - DeFi & Altcoins
+    {"date": "2020-06-15", "event": "Compound launches COMP token - DeFi Summer begins", "coins": ["COMP", "ETH"], "impact": "positive", "category": "defi"},
+    {"date": "2020-08-13", "event": "Yam Finance launches and crashes 90%", "coins": ["YAM", "ETH"], "impact": "negative", "category": "defi"},
+    {"date": "2020-09-16", "event": "Uniswap airdrops UNI token - $1200 per user", "coins": ["UNI", "ETH"], "impact": "positive", "category": "defi"},
+    {"date": "2020-09-28", "event": "SushiSwap vampire attack on Uniswap", "coins": ["SUSHI", "UNI"], "impact": "mixed", "category": "defi"},
+    {"date": "2021-02-03", "event": "Dogecoin surges 800% in week on Reddit pump", "coins": ["DOGE"], "impact": "positive", "category": "meme"},
+    {"date": "2021-03-22", "event": "Twitter founder Jack Dorsey sells first tweet as NFT", "coins": ["ETH"], "impact": "positive", "category": "nft"},
+    {"date": "2021-05-05", "event": "Shiba Inu token surges 2000% in a week", "coins": ["SHIB"], "impact": "positive", "category": "meme"},
+    {"date": "2021-08-18", "event": "Poly Network hack - $600M stolen and returned", "coins": ["ETH"], "impact": "negative", "category": "hack"},
+    {"date": "2021-09-14", "event": "Arbitrum One mainnet launch", "coins": ["ETH", "ARB"], "impact": "positive", "category": "technology"},
+    {"date": "2021-10-28", "event": "Facebook rebrands to Meta - metaverse coins pump", "coins": ["MANA", "SAND"], "impact": "positive", "category": "institutional"},
+    {"date": "2021-11-01", "event": "Solana reaches $260 ATH", "coins": ["SOL"], "impact": "positive", "category": "milestone"},
+    {"date": "2021-11-09", "event": "Avalanche launches $180M DeFi incentive program", "coins": ["AVAX"], "impact": "positive", "category": "defi"},
+    {"date": "2021-12-09", "event": "Badger DAO hack - $120M stolen", "coins": ["BADGER", "ETH"], "impact": "negative", "category": "hack"},
+    
+    # 2022 Additional Events
+    {"date": "2022-01-17", "event": "Wonderland TIME Treasury scandal breaks", "coins": ["TIME", "AVAX"], "impact": "negative", "category": "defi"},
+    {"date": "2022-02-03", "event": "Wormhole bridge hack - $320M stolen", "coins": ["SOL", "ETH"], "impact": "negative", "category": "hack"},
+    {"date": "2022-03-23", "event": "ApeCoin launches with $4B valuation", "coins": ["APE"], "impact": "positive", "category": "nft"},
+    {"date": "2022-03-28", "event": "Ronin bridge hack - $625M stolen by North Korea", "coins": ["AXS", "ETH"], "impact": "negative", "category": "hack"},
+    {"date": "2022-04-30", "event": "Otherside NFT mint crashes Ethereum gas to $5000", "coins": ["APE", "ETH"], "impact": "mixed", "category": "nft"},
+    {"date": "2022-06-27", "event": "Harmony Horizon bridge hack - $100M stolen", "coins": ["ONE"], "impact": "negative", "category": "hack"},
+    {"date": "2022-08-08", "event": "Tornado Cash sanctioned by US Treasury", "coins": ["TORN", "ETH"], "impact": "negative", "category": "regulatory"},
+    {"date": "2022-09-06", "event": "Cardano Vasil hard fork launches", "coins": ["ADA"], "impact": "positive", "category": "technology"},
+    {"date": "2022-10-06", "event": "BNB Chain halted after $570M bridge exploit", "coins": ["BNB"], "impact": "negative", "category": "hack"},
+    {"date": "2022-10-11", "event": "Mango Markets exploited for $114M", "coins": ["MNGO", "SOL"], "impact": "negative", "category": "defi"},
+    
+    # 2023 Additional Events
+    {"date": "2023-02-01", "event": "Optimism launches OP token airdrop", "coins": ["OP", "ETH"], "impact": "positive", "category": "defi"},
+    {"date": "2023-03-02", "event": "Silvergate stock crashes 60% - crypto bank fears", "coins": ["BTC"], "impact": "negative", "category": "macro"},
+    {"date": "2023-04-03", "event": "Arbitrum ARB token airdrop - $120M to users", "coins": ["ARB", "ETH"], "impact": "positive", "category": "defi"},
+    {"date": "2023-05-05", "event": "Pepe memecoin launches - 400,000% gains in weeks", "coins": ["PEPE"], "impact": "positive", "category": "meme"},
+    {"date": "2023-06-29", "event": "Bitcoin ordinals NFTs exceed 10M inscriptions", "coins": ["BTC"], "impact": "positive", "category": "technology"},
+    {"date": "2023-07-06", "event": "Multichain bridge collapse - $130M frozen", "coins": ["MULTI"], "impact": "negative", "category": "defi"},
+    {"date": "2023-08-16", "event": "PayPal launches PYUSD stablecoin", "coins": ["ETH"], "impact": "positive", "category": "institutional"},
+    {"date": "2023-09-12", "event": "Friend.tech social token platform launches on Base", "coins": ["ETH"], "impact": "positive", "category": "defi"},
+    {"date": "2023-10-04", "event": "Chainlink launches CCIP cross-chain protocol", "coins": ["LINK"], "impact": "positive", "category": "technology"},
+    {"date": "2023-10-23", "event": "Bitcoin breaks $35,000 on ETF optimism", "coins": ["BTC"], "impact": "positive", "category": "milestone"},
+    {"date": "2023-11-09", "event": "Sam Bankman-Fried found guilty on all charges", "coins": ["FTT", "SOL"], "impact": "mixed", "category": "regulatory"},
+    {"date": "2023-12-11", "event": "Solana surges to $70 - 400% from 2023 lows", "coins": ["SOL"], "impact": "positive", "category": "milestone"},
+    {"date": "2023-12-18", "event": "Ledger Connect Kit supply chain attack", "coins": ["ETH"], "impact": "negative", "category": "hack"},
+    {"date": "2023-12-25", "event": "Bonk memecoin surges 600% in December", "coins": ["BONK", "SOL"], "impact": "positive", "category": "meme"},
+    
+    # 2024 Additional Events
+    {"date": "2024-01-25", "event": "Grayscale GBTC outflows reach $5B post-ETF", "coins": ["BTC"], "impact": "negative", "category": "institutional"},
+    {"date": "2024-02-07", "event": "Bitcoin breaks $45,000 on ETF momentum", "coins": ["BTC"], "impact": "positive", "category": "milestone"},
+    {"date": "2024-02-29", "event": "Bitcoin surpasses $60,000 for first time since 2021", "coins": ["BTC"], "impact": "positive", "category": "milestone"},
+    {"date": "2024-03-11", "event": "Dencun upgrade reduces L2 fees by 90%", "coins": ["ETH", "ARB", "OP"], "impact": "positive", "category": "technology"},
+    {"date": "2024-03-27", "event": "BlackRock IBIT becomes largest Bitcoin ETF", "coins": ["BTC"], "impact": "positive", "category": "institutional"},
+    {"date": "2024-04-13", "event": "Hong Kong approves spot Bitcoin and Ethereum ETFs", "coins": ["BTC", "ETH"], "impact": "positive", "category": "regulatory"},
+    {"date": "2024-05-01", "event": "Bitcoin drops 15% post-halving as sell-news event", "coins": ["BTC"], "impact": "negative", "category": "milestone"},
+    {"date": "2024-05-23", "event": "SEC approves spot Ethereum ETF 19b-4 filings", "coins": ["ETH"], "impact": "positive", "category": "regulatory"},
+    {"date": "2024-06-04", "event": "Roaring Kitty returns - GameStop and memecoins surge", "coins": ["DOGE", "SHIB"], "impact": "positive", "category": "meme"},
+    {"date": "2024-06-18", "event": "LayerZero ZRO token airdrop - $600M distribution", "coins": ["ZRO"], "impact": "positive", "category": "defi"},
+    {"date": "2024-07-29", "event": "Trump speaks at Bitcoin Nashville conference", "coins": ["BTC"], "impact": "positive", "category": "regulatory"},
+    {"date": "2024-08-25", "event": "Telegram TON token surges on chat integration", "coins": ["TON"], "impact": "positive", "category": "technology"},
+    {"date": "2024-09-05", "event": "Bitcoin ETFs cross $50B total AUM", "coins": ["BTC"], "impact": "positive", "category": "institutional"},
+    {"date": "2024-09-27", "event": "China stimulus announcement pumps risk assets", "coins": ["BTC", "ETH"], "impact": "positive", "category": "macro"},
+    {"date": "2024-10-16", "event": "World Liberty Financial token launches - Trump family project", "coins": ["BTC"], "impact": "mixed", "category": "celebrity"},
+    {"date": "2024-11-15", "event": "Dogecoin surges 150% on DOGE department memes", "coins": ["DOGE"], "impact": "positive", "category": "meme"},
+    {"date": "2024-11-28", "event": "Bitcoin challenges $100,000 - fails at $98,500", "coins": ["BTC"], "impact": "mixed", "category": "milestone"},
+    {"date": "2024-12-11", "event": "XRP surges to $2.50 - highest since 2018", "coins": ["XRP"], "impact": "positive", "category": "milestone"},
+    {"date": "2024-12-24", "event": "Santa rally pushes Bitcoin above $100k again", "coins": ["BTC"], "impact": "positive", "category": "milestone"},
+    
+    # 2025 Additional Projected Events
+    {"date": "2025-02-05", "event": "Ethereum Prague-Electra upgrade scheduled", "coins": ["ETH"], "impact": "positive", "category": "technology"},
+    {"date": "2025-02-08", "event": "Bitcoin recovers to $95,000 after tariff fears fade", "coins": ["BTC"], "impact": "positive", "category": "milestone"},
 ]
 
 # Predictable event patterns identified from historical data
