@@ -254,7 +254,7 @@ const PositionManagement = ({ embedded = false }) => {
               ) : (
                 <TrendingDown size={18} className="text-[#FF0055]" />
               )}
-              <span className="text-sm text-[#A1A1AA]">Total P&L</span>
+              <span className="text-sm text-[#A1A1AA]">Total P&L (24h)</span>
             </div>
             <div className={`text-3xl font-data font-bold ${totalPnl >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
               {totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}
