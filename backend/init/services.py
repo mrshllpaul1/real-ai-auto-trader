@@ -462,24 +462,28 @@ async def _init_phase6_scheduling(db):
             stats = await events_db.get_stats()
             if stats.get("total_events", 0) < MIN_HISTORICAL_EVENTS:
                 seed_result = await events_db.seed_major_events()
-                inserted = seed_result.get("inserted", 0) if seed_result else 0
-                updated = seed_result.get("updated", 0) if seed_result else 0
-                total_seeded = seed_result.get("total_events", 0) if seed_result else 0
-                post_seed_stats = await events_db.get_stats()
-                if post_seed_stats.get("total_events", 0) < MIN_HISTORICAL_EVENTS:
-                    logger.warning(
-                        "⚠️ Historical events remain below threshold after auto-seed (%s)",
-                        post_seed_stats.get("total_events", 0),
-                    )
-                elif not seed_result or (inserted + updated) == 0:
-                    logger.info("ℹ️ Historical events already satisfied threshold; no seed changes applied")
+                if not seed_result:
+                    logger.warning("⚠️ Historical events auto-seed returned no result")
                 else:
-                    logger.info(
-                        "🌐 Seeded historical events database with %s curated events (%s inserted, %s updated)",
-                        total_seeded,
-                        inserted,
-                        updated,
-                    )
+                    inserted = seed_result.get("inserted", 0)
+                    updated = seed_result.get("updated", 0)
+                    total_seeded = seed_result.get("total_events", 0)
+                    if (inserted + updated) == 0:
+                        logger.warning("⚠️ Historical events auto-seed made no database changes")
+                    else:
+                        post_seed_stats = await events_db.get_stats()
+                        if post_seed_stats.get("total_events", 0) < MIN_HISTORICAL_EVENTS:
+                            logger.warning(
+                                "⚠️ Historical events remain below threshold after auto-seed (%s)",
+                                post_seed_stats.get("total_events", 0),
+                            )
+                        else:
+                            logger.info(
+                                "🌐 Seeded historical events database with %s curated events (%s inserted, %s updated)",
+                                total_seeded,
+                                inserted,
+                                updated,
+                            )
         except Exception as e:
             logger.warning("⚠️ Auto-seed of historical events skipped: %s", e)
     
