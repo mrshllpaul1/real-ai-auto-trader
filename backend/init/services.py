@@ -461,38 +461,44 @@ async def _init_phase6_scheduling(db):
         try:
             stats = await events_db.get_stats()
             current_total_events = stats.get("total_events", 0)
-            if current_total_events < MIN_HISTORICAL_EVENTS:
-                seed_result = await events_db.seed_major_events()
-                if seed_result is None:
-                    logger.warning(
-                        "⚠️ Historical events auto-seed returned no result (existing events: %s) – check database connectivity",
-                        current_total_events,
-                    )
-                else:
-                    inserted = seed_result.get("inserted", 0)
-                    updated = seed_result.get("updated", 0)
-                    total_seeded = seed_result.get("total_events", 0)
-                    if (inserted + updated) == 0:
-                        logger.warning(
-                            "⚠️ Historical events auto-seed made no database changes (existing: %s, curated total: %s)",
-                            current_total_events,
-                            total_seeded,
-                        )
-                    else:
-                        post_seed_stats = await events_db.get_stats()
-                        post_total_events = post_seed_stats.get("total_events", 0)
-                        if post_total_events < MIN_HISTORICAL_EVENTS:
-                            logger.warning(
-                                "⚠️ Historical events remain below threshold after auto-seed (total: %s)",
-                                post_total_events,
-                            )
-                        else:
-                            logger.info(
-                                "🌐 Seeded historical events database with %s curated events (%s inserted, %s updated)",
-                                total_seeded,
-                                inserted,
-                                updated,
-                            )
+            if current_total_events >= MIN_HISTORICAL_EVENTS:
+                return
+
+            seed_result = await events_db.seed_major_events()
+            if seed_result is None:
+                logger.warning(
+                    "⚠️ Historical events auto-seed returned no result (existing events: %s) – check database connectivity",
+                    current_total_events,
+                )
+                return
+
+            inserted = seed_result.get("inserted", 0)
+            updated = seed_result.get("updated", 0)
+            total_seeded = seed_result.get("total_events", 0)
+            # Upsert-based seeding is idempotent; concurrent startup calls should not create duplicates
+            if (inserted + updated) == 0:
+                logger.warning(
+                    "⚠️ Historical events auto-seed made no database changes (existing: %s, curated total: %s)",
+                    current_total_events,
+                    total_seeded,
+                )
+                return
+
+            post_seed_stats = await events_db.get_stats()
+            post_total_events = post_seed_stats.get("total_events", 0)
+            if post_total_events < MIN_HISTORICAL_EVENTS:
+                logger.warning(
+                    "⚠️ Historical events remain below threshold after auto-seed (total: %s)",
+                    post_total_events,
+                )
+                return
+
+            logger.info(
+                "🌐 Seeded historical events database with %s curated events (%s inserted, %s updated)",
+                total_seeded,
+                inserted,
+                updated,
+            )
         except Exception as e:
             logger.warning("⚠️ Auto-seed of historical events failed: %s", e)
     
