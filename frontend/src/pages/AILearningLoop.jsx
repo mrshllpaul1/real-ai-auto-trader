@@ -625,23 +625,23 @@ const AILearningLoop = () => {
                     <div>
                       <div className="flex justify-between text-sm mb-2">
                         <span className="text-[#A1A1AA]">Overall Accuracy</span>
-                        <span className={getAccuracyColor(stats.accuracy_rate)}>{stats.accuracy_rate.toFixed(1)}%</span>
+                        <span className={getAccuracyColor(stats?.accuracy_rate || 0)}>{(stats?.accuracy_rate || 0).toFixed(1)}%</span>
                       </div>
-                      <Progress value={stats.accuracy_rate} className="h-2" />
+                      <Progress value={stats?.accuracy_rate || 0} className="h-2" />
                     </div>
 
                     {/* By Type */}
-                    {stats.by_type && Object.keys(stats.by_type).length > 0 && (
+                    {stats?.by_type && Object.keys(stats.by_type).length > 0 && (
                       <div>
                         <h4 className="text-sm font-medium text-[#A1A1AA] mb-3">By Prediction Type</h4>
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                           {Object.entries(stats.by_type).map(([type, typeStats]) => (
                             <div key={type} className="p-3 bg-[#121212] rounded-lg">
                               <div className="text-xs text-[#A1A1AA] mb-1">{type}</div>
-                              <div className={`text-lg font-bold ${getAccuracyColor(typeStats.accuracy)}`}>
-                                {typeStats.accuracy.toFixed(1)}%
+                              <div className={`text-lg font-bold ${getAccuracyColor(typeStats?.accuracy || 0)}`}>
+                                {(typeStats?.accuracy || 0).toFixed(1)}%
                               </div>
-                              <div className="text-xs text-[#A1A1AA]">{typeStats.total} predictions</div>
+                              <div className="text-xs text-[#A1A1AA]">{typeStats?.total || 0} predictions</div>
                             </div>
                           ))}
                         </div>
@@ -649,26 +649,26 @@ const AILearningLoop = () => {
                     )}
 
                     {/* By Confidence */}
-                    {stats.by_confidence && (
+                    {stats?.by_confidence && (
                       <div>
                         <h4 className="text-sm font-medium text-[#A1A1AA] mb-3">By Confidence Level</h4>
                         <div className="grid grid-cols-3 gap-3">
                           <div className="p-3 bg-[#121212] rounded-lg border-l-4 border-[#00FF94]">
                             <div className="text-xs text-[#A1A1AA] mb-1">High Confidence (80%+)</div>
-                            <div className={`text-lg font-bold ${getAccuracyColor(stats.by_confidence.high)}`}>
-                              {stats.by_confidence.high.toFixed(1)}%
+                            <div className={`text-lg font-bold ${getAccuracyColor(stats.by_confidence?.high || 0)}`}>
+                              {(stats.by_confidence?.high || 0).toFixed(1)}%
                             </div>
                           </div>
                           <div className="p-3 bg-[#121212] rounded-lg border-l-4 border-[#FFB800]">
                             <div className="text-xs text-[#A1A1AA] mb-1">Medium (50-80%)</div>
-                            <div className={`text-lg font-bold ${getAccuracyColor(stats.by_confidence.medium)}`}>
-                              {stats.by_confidence.medium.toFixed(1)}%
+                            <div className={`text-lg font-bold ${getAccuracyColor(stats.by_confidence?.medium || 0)}`}>
+                              {(stats.by_confidence?.medium || 0).toFixed(1)}%
                             </div>
                           </div>
                           <div className="p-3 bg-[#121212] rounded-lg border-l-4 border-[#FF0055]">
                             <div className="text-xs text-[#A1A1AA] mb-1">Low (&lt;50%)</div>
-                            <div className={`text-lg font-bold ${getAccuracyColor(stats.by_confidence.low)}`}>
-                              {stats.by_confidence.low.toFixed(1)}%
+                            <div className={`text-lg font-bold ${getAccuracyColor(stats.by_confidence?.low || 0)}`}>
+                              {(stats.by_confidence?.low || 0).toFixed(1)}%
                             </div>
                           </div>
                         </div>
