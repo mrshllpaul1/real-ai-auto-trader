@@ -53,7 +53,7 @@ class FakeCollection:
         self.docs.append(doc)
         return _FakeResult(doc["_id"])
 
-    async def find_one(self, query: Dict[str, Any]):
+    async def find_one(self, query: Dict[str, Any], **kwargs):
         for doc in self.docs:
             if all(doc.get(k) == v for k, v in query.items()):
                 return doc
@@ -112,21 +112,22 @@ async def test_training_history_complete_flow():
     service = TrainingHistoryService(db)
 
     session_id = await service.start_training("rl_agent", {"episodes": 1})
+
     # Simulate time passing to get non-zero duration
     for doc in db.training_history.docs:
         if doc["_id"] == ObjectId(session_id):
             doc["started_at"] = datetime.now(timezone.utc) - timedelta(seconds=2)
 
     await service.complete_training(session_id, result={"status": "ok"}, metrics={"loss": 0.1})
-
     history = await service.get_history(model_type="rl_agent")
+    stats = await service.get_model_stats("rl_agent")
+
     assert len(history) == 1
     entry = history[0]
     assert entry["status"] == "completed"
     assert entry["duration_seconds"] is not None
     assert entry["metrics"]["loss"] == 0.1
 
-    stats = await service.get_model_stats("rl_agent")
     assert stats["completed"] == 1
     assert stats["total_sessions"] == 1
     assert stats["avg_duration_seconds"] is not None
