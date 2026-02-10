@@ -43,6 +43,7 @@ class OptionOrder(BaseModel):
     strike_price: float
     expiry_date: str  # ISO format
     quantity: float
+    action: str = "buy"  # "buy" or "sell"
     order_type: str = "market"  # market, limit
     limit_price: Optional[float] = None
 
@@ -283,13 +284,14 @@ async def place_option_order(
         "user_id": user_id,
         "symbol": order.symbol.upper(),
         "option_type": order.option_type,
+        "action": order.action,
         "strike_price": order.strike_price,
         "expiry_date": order.expiry_date,
         "quantity": order.quantity,
         "order_type": order.order_type,
         "limit_price": order.limit_price,
         "fill_price": greeks["price"],
-        "total_cost": greeks["price"] * order.quantity,
+        "total_cost": greeks["price"] * order.quantity if order.action == "buy" else -greeks["price"] * order.quantity,
         "greeks": greeks,
         "status": "filled",  # Simulated instant fill
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -304,9 +306,10 @@ async def place_option_order(
         "user_id": user_id,
         "symbol": order.symbol.upper(),
         "option_type": order.option_type,
+        "action": order.action,
         "strike_price": order.strike_price,
         "expiry_date": order.expiry_date,
-        "quantity": order.quantity,
+        "quantity": order.quantity if order.action == "buy" else -order.quantity,  # Negative for sold options
         "entry_price": greeks["price"],
         "current_price": greeks["price"],
         "pnl": 0,
@@ -357,18 +360,33 @@ async def get_option_positions(
         
         pos["current_price"] = greeks["price"]
         pos["greeks"] = greeks
-        pos["pnl"] = round((greeks["price"] - pos["entry_price"]) * pos["quantity"], 2)
-        pos["pnl_pct"] = round((greeks["price"] - pos["entry_price"]) / pos["entry_price"] * 100, 2) if pos["entry_price"] > 0 else 0
+        
+        # Calculate P&L based on whether option was bought or sold
+        quantity = pos.get("quantity", 0)
+        is_short = quantity < 0  # Negative quantity means sold/short position
+        
+        if is_short:
+            # For sold options, profit when price goes down
+            pos["pnl"] = round((pos["entry_price"] - greeks["price"]) * abs(quantity), 2)
+        else:
+            # For bought options, profit when price goes up
+            pos["pnl"] = round((greeks["price"] - pos["entry_price"]) * quantity, 2)
+            
+        pos["pnl_pct"] = round(pos["pnl"] / (pos["entry_price"] * abs(quantity)) * 100, 2) if pos["entry_price"] > 0 else 0
         pos["days_to_expiry"] = days_to_expiry
     
     # Calculate totals
-    total_value = sum(p["current_price"] * p["quantity"] for p in positions)
+    total_value = sum(abs(p["current_price"] * p.get("quantity", 0)) for p in positions)
     total_pnl = sum(p["pnl"] for p in positions)
+    long_positions = sum(1 for p in positions if p.get("quantity", 0) > 0)
+    short_positions = sum(1 for p in positions if p.get("quantity", 0) < 0)
     
     return {
         "positions": positions,
         "summary": {
             "total_positions": len(positions),
+            "long_positions": long_positions,
+            "short_positions": short_positions,
             "total_value": round(total_value, 2),
             "total_pnl": round(total_pnl, 2),
             "calls": sum(1 for p in positions if p["option_type"] == "call"),
@@ -410,7 +428,16 @@ async def close_option_position(
         option_type=position["option_type"]
     )
     
-    final_pnl = (greeks["price"] - position["entry_price"]) * position["quantity"]
+    # Calculate final P&L based on position type
+    quantity = position.get("quantity", 0)
+    is_short = quantity < 0
+    
+    if is_short:
+        # For sold options, profit when buying back cheaper
+        final_pnl = (position["entry_price"] - greeks["price"]) * abs(quantity)
+    else:
+        # For bought options, profit when selling higher
+        final_pnl = (greeks["price"] - position["entry_price"]) * quantity
     
     # Update position
     await db.option_positions.update_one(
