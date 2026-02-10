@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import toast from '../utils/toast';
+import TradingPairSelector from '../components/TradingPairSelector';
 
 const OptionsTrading = () => {
   const [chain, setChain] = useState(null);
