@@ -418,110 +418,263 @@ const AdaptiveStrategy = () => {
 
         {/* Event Predictions Tab */}
         <TabsContent value="predictions" className="mt-4">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-white">Predicted Future Events</h3>
-            <Button onClick={predictEvents} variant="outline" size="sm">
-              <Eye size={14} className="mr-2" />
-              Refresh Predictions
-            </Button>
+          {/* Coverage Stats Bar */}
+          {coverageStats && (
+            <Card className="bg-[#0A0A0A] border-[#1F1F1F] mb-4">
+              <CardContent className="p-4">
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <PieChart size={18} className="text-[#9D00FF]" />
+                      <span className="text-sm text-[#A1A1AA]">Event Coverage:</span>
+                      <span className="text-lg font-bold" style={{ color: coverageStats.coverage_percentage >= 70 ? '#00FF94' : coverageStats.coverage_percentage >= 50 ? '#FFB800' : '#FF0055' }}>
+                        {coverageStats.coverage_percentage}%
+                      </span>
+                    </div>
+                    <div className="h-4 w-px bg-[#333] hidden lg:block" />
+                    <div className="flex items-center gap-2">
+                      <Target size={14} className="text-[#00B4FF]" />
+                      <span className="text-xs text-[#A1A1AA]">
+                        {coverageStats.event_types_with_predictions}/{coverageStats.total_event_types_defined} types active
+                      </span>
+                    </div>
+                    <div className="h-4 w-px bg-[#333] hidden lg:block" />
+                    <div className="flex items-center gap-2">
+                      <Calendar size={14} className="text-[#FFB800]" />
+                      <span className="text-xs text-[#A1A1AA]">
+                        Upcoming: <span className="text-white">{coverageStats.upcoming_events?.next_30_days || 0}</span> (30d) · <span className="text-white">{coverageStats.upcoming_events?.next_60_days || 0}</span> (60d) · <span className="text-white">{coverageStats.upcoming_events?.next_90_days || 0}</span> (90d)
+                      </span>
+                    </div>
+                  </div>
+                  <div className="w-full lg:w-48">
+                    <Progress value={coverageStats.coverage_percentage} className="h-2" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Filters and Actions */}
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-[#A1A1AA]">Filter:</span>
+              {['all', 'scheduled', 'derivatives', 'regulatory', 'protocol', 'on_chain', 'macro', 'defi', 'institutional', 'risk'].map(f => (
+                <Button
+                  key={f}
+                  size="sm"
+                  variant={eventFilter === f ? "default" : "outline"}
+                  onClick={() => setEventFilter(f)}
+                  className={`text-xs h-7 ${eventFilter === f ? 'bg-[#9D00FF] text-white' : 'text-[#A1A1AA] border-[#333]'}`}
+                >
+                  {f === 'all' ? 'All' : f === 'on_chain' ? 'On-Chain' : f.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </Button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={probabilityFilter}
+                onChange={(e) => setProbabilityFilter(Number(e.target.value))}
+                className="text-xs bg-[#0A0A0A] border border-[#333] rounded px-2 py-1 text-white h-7"
+              >
+                <option value={0}>All probabilities</option>
+                <option value={0.3}>30%+</option>
+                <option value={0.5}>50%+</option>
+                <option value={0.7}>70%+</option>
+                <option value={0.9}>90%+</option>
+              </select>
+              <Button onClick={predictEvents} variant="outline" size="sm" className="h-7">
+                <RefreshCw size={12} className="mr-1" />
+                Refresh
+              </Button>
+            </div>
           </div>
+
+          {/* Scheduled Events Timeline */}
+          {eventCalendar?.scheduled_events_raw?.length > 0 && eventFilter === 'all' && (
+            <Card className="bg-[#0A0A0A] border-[#1F1F1F] mb-4">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Clock size={14} className="text-[#00B4FF]" />
+                  <span className="text-[#00B4FF]">Upcoming Scheduled Events</span>
+                  <Badge variant="outline" className="text-xs ml-2">{eventCalendar.scheduled_events_raw.length} events</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {eventCalendar.scheduled_events_raw.slice(0, 9).map((ev, idx) => (
+                    <div key={idx} className="flex items-center gap-2 p-2 rounded bg-[#121212] border border-[#1F1F1F]">
+                      <div className="text-center shrink-0 w-12">
+                        <div className="text-[10px] text-[#666] uppercase">
+                          {new Date(ev.date + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short' })}
+                        </div>
+                        <div className="text-lg font-bold text-white leading-none">
+                          {new Date(ev.date + 'T00:00:00Z').getUTCDate()}
+                        </div>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-white truncate">{ev.description}</p>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <Badge variant="outline" className="text-[9px] h-4 px-1">{ev.calendar_category?.replace('_', ' ')}</Badge>
+                          <span className="text-[10px] text-[#666]">{ev.days_until}d away</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
           
-          <div className="space-y-4">
-            {predictedEvents.length > 0 ? (
-              predictedEvents.map((event, idx) => {
+          {/* Event Predictions List */}
+          <div className="space-y-3">
+            {(() => {
+              const categoryMap = {
+                fomc_meeting: 'macro', options_expiry: 'derivatives', futures_expiry: 'derivatives',
+                bitcoin_halving: 'protocol', ethereum_upgrade: 'protocol', network_upgrade: 'protocol',
+                mining_difficulty_adjustment: 'protocol', sec_deadline: 'regulatory', regulatory_action: 'regulatory',
+                etf_launch: 'regulatory', cbdc_announcement: 'regulatory', whale_accumulation: 'on_chain',
+                whale_distribution: 'on_chain', token_unlock: 'scheduled', quarterly_earnings: 'scheduled',
+                institutional_buy: 'institutional', exchange_listing: 'market', governance_vote: 'defi',
+                airdrop_event: 'defi', defi_exploit: 'defi', layer2_milestone: 'protocol',
+                protocol_launch: 'protocol', celebrity_endorsement: 'social', macro_crisis: 'macro',
+                geopolitical_event: 'macro', stablecoin_depeg: 'risk', tax_deadline: 'scheduled',
+                regime_shift: 'risk', volatility_event: 'risk', trend_exhaustion: 'risk',
+                correlation_shift: 'risk', liquidity_event: 'risk', aggregate_sell_pressure: 'risk',
+              };
+
+              const filtered = predictedEvents.filter(event => {
+                const cat = categoryMap[event.event_type] || 'other';
+                const passCategory = eventFilter === 'all' || cat === eventFilter;
+                const passProb = event.probability >= probabilityFilter;
+                return passCategory && passProb;
+              });
+
+              if (filtered.length === 0) {
+                return (
+                  <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
+                    <CardContent className="p-8 text-center">
+                      <Calendar size={48} className="mx-auto text-[#333] mb-4" />
+                      <p className="text-[#A1A1AA]">{predictedEvents.length === 0 ? 'No predictions available' : 'No events match current filters'}</p>
+                      {predictedEvents.length === 0 && (
+                        <Button onClick={predictEvents} className="mt-4 bg-[#9D00FF]">
+                          Generate Predictions
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              }
+
+              return filtered.map((event, idx) => {
                 const impactColor = impactColors[event.expected_impact] || '#A1A1AA';
+                const cat = categoryMap[event.event_type] || 'other';
+                const catColors = {
+                  macro: '#FF6B00', derivatives: '#00B4FF', protocol: '#9D00FF', regulatory: '#FFB800',
+                  on_chain: '#00FF94', scheduled: '#FF00FF', defi: '#00B4FF', institutional: '#FFB800',
+                  risk: '#FF0055', market: '#00FF94', social: '#FF6B00', other: '#A1A1AA'
+                };
                 
                 return (
                   <motion.div
                     key={event.event_id || idx}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.1 }}
+                    transition={{ delay: Math.min(idx * 0.05, 0.5) }}
                   >
                     <Card className="bg-[#0A0A0A] border-[#1F1F1F] hover:border-[#333] transition-colors">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-4">
+                          <div className="flex items-start gap-3 min-w-0">
                             <div 
-                              className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+                              className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
                               style={{ backgroundColor: `${impactColor}20` }}
                             >
                               {event.expected_impact === 'positive' ? (
-                                <TrendingUp size={24} style={{ color: impactColor }} />
+                                <TrendingUp size={20} style={{ color: impactColor }} />
                               ) : event.expected_impact === 'negative' ? (
-                                <TrendingDown size={24} style={{ color: impactColor }} />
+                                <TrendingDown size={20} style={{ color: impactColor }} />
                               ) : (
-                                <Activity size={24} style={{ color: impactColor }} />
+                                <Activity size={20} style={{ color: impactColor }} />
                               )}
                             </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-bold text-white">{event.description}</h4>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="font-bold text-white text-sm">{event.description}</h4>
+                              </div>
+                              <div className="flex items-center gap-2 mt-1 flex-wrap">
                                 <Badge 
-                                  className="text-xs"
-                                  style={{ 
-                                    backgroundColor: `${impactColor}20`,
-                                    color: impactColor
-                                  }}
+                                  className="text-[10px] h-5"
+                                  style={{ backgroundColor: `${impactColor}20`, color: impactColor }}
                                 >
                                   {event.expected_impact?.toUpperCase()}
                                 </Badge>
+                                <Badge 
+                                  variant="outline" 
+                                  className="text-[10px] h-5"
+                                  style={{ borderColor: catColors[cat], color: catColors[cat] }}
+                                >
+                                  {event.event_type?.replace(/_/g, ' ')}
+                                </Badge>
+                                <Badge variant="outline" className="text-[10px] h-5 text-[#666]">
+                                  {cat}
+                                </Badge>
                               </div>
-                              <p className="text-sm text-[#A1A1AA] mt-1">
-                                Type: {event.event_type?.replace('_', ' ')}
-                              </p>
-                              <div className="flex items-center gap-4 mt-2">
+                              <div className="flex items-center gap-4 mt-2 flex-wrap">
                                 <div className="flex items-center gap-1">
-                                  <Calendar size={14} className="text-[#666]" />
-                                  <span className="text-sm text-white">{event.predicted_date}</span>
+                                  <Calendar size={12} className="text-[#666]" />
+                                  <span className="text-xs text-white">{event.predicted_date}</span>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                  <Gauge size={14} className="text-[#666]" />
-                                  <span className="text-sm font-bold" style={{ color: event.probability > 0.7 ? '#00FF94' : '#FFB800' }}>
-                                    {(event.probability * 100).toFixed(0)}% probability
+                                  <Gauge size={12} className="text-[#666]" />
+                                  <span className="text-xs font-bold" style={{ color: event.probability >= 0.9 ? '#00FF94' : event.probability >= 0.7 ? '#00B4FF' : event.probability >= 0.5 ? '#FFB800' : '#FF6B00' }}>
+                                    {(event.probability * 100).toFixed(0)}%
                                   </span>
                                 </div>
                               </div>
                               {event.affected_coins && (
-                                <div className="flex items-center gap-2 mt-2">
-                                  <span className="text-xs text-[#666]">Affected:</span>
-                                  {event.affected_coins.map(coin => (
-                                    <Badge key={coin} variant="outline" className="text-xs">
+                                <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                                  <span className="text-[10px] text-[#666]">Coins:</span>
+                                  {event.affected_coins.slice(0, 6).map(coin => (
+                                    <Badge key={coin} variant="outline" className="text-[10px] h-4 px-1">
                                       {coin}
                                     </Badge>
                                   ))}
+                                  {event.affected_coins.length > 6 && (
+                                    <span className="text-[10px] text-[#666]">+{event.affected_coins.length - 6}</span>
+                                  )}
                                 </div>
                               )}
                               {event.confidence_factors && (
-                                <div className="mt-3 p-2 rounded bg-[#121212]">
-                                  <p className="text-xs text-[#666] mb-1">Confidence Factors:</p>
-                                  <div className="flex flex-wrap gap-2">
+                                <div className="mt-2 p-2 rounded bg-[#121212]">
+                                  <p className="text-[10px] text-[#666] mb-1">Confidence Factors:</p>
+                                  <div className="flex flex-wrap gap-x-3 gap-y-0.5">
                                     {Object.entries(event.confidence_factors).map(([factor, value]) => (
-                                      <span key={factor} className="text-xs text-[#A1A1AA]">
-                                        {factor.replace('_', ' ')}: <span className="text-white">{(value * 100).toFixed(0)}%</span>
+                                      <span key={factor} className="text-[10px] text-[#A1A1AA]">
+                                        {factor.replace(/_/g, ' ')}: <span className="text-white">{(value * 100).toFixed(0)}%</span>
                                       </span>
                                     ))}
                                   </div>
+                                  {event.prediction_basis && (
+                                    <p className="text-[10px] text-[#555] mt-1 italic">Basis: {event.prediction_basis}</p>
+                                  )}
                                 </div>
                               )}
                             </div>
                           </div>
-                          <div className="text-right shrink-0">
-                            <div className="w-16 h-16">
+                          <div className="text-right shrink-0 ml-2">
+                            <div className="w-14 h-14">
                               <svg viewBox="0 0 36 36" className="circular-chart">
                                 <path
-                                  className="circle-bg"
                                   d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                                   fill="none"
                                   stroke="#1F1F1F"
                                   strokeWidth="3"
                                 />
                                 <path
-                                  className="circle"
                                   strokeDasharray={`${event.probability * 100}, 100`}
                                   d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                                   fill="none"
-                                  stroke={impactColor}
+                                  stroke={event.probability >= 0.9 ? '#00FF94' : event.probability >= 0.7 ? '#00B4FF' : event.probability >= 0.5 ? '#FFB800' : '#FF6B00'}
                                   strokeWidth="3"
                                   strokeLinecap="round"
                                 />
@@ -536,19 +689,61 @@ const AdaptiveStrategy = () => {
                     </Card>
                   </motion.div>
                 );
-              })
-            ) : (
-              <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
-                <CardContent className="p-8 text-center">
-                  <Calendar size={48} className="mx-auto text-[#333] mb-4" />
-                  <p className="text-[#A1A1AA]">No predictions available</p>
-                  <Button onClick={predictEvents} className="mt-4 bg-[#9D00FF]">
-                    Generate Predictions
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+              });
+            })()}
           </div>
+
+          {/* Event Type Coverage Grid */}
+          {coverageStats?.type_details && (
+            <Card className="bg-[#0A0A0A] border-[#1F1F1F] mt-6">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <BarChart3 size={14} className="text-[#9D00FF]" />
+                  <span className="text-[#9D00FF]">Event Type Coverage</span>
+                  <Badge variant="outline" className="text-xs ml-2">
+                    {coverageStats.event_types_with_predictions}/{coverageStats.total_event_types_defined} types
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+                  {coverageStats.type_details.map((td, idx) => (
+                    <div
+                      key={idx}
+                      className={`flex items-center gap-2 p-2 rounded border ${
+                        td.is_predicted ? 'bg-[#121212] border-[#1F1F1F]' : 'bg-[#0A0A0A] border-[#1A1A1A] opacity-60'
+                      }`}
+                    >
+                      <div className={`w-2 h-2 rounded-full shrink-0 ${td.is_predicted ? 'bg-[#00FF94]' : 'bg-[#333]'}`} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] text-white truncate">{td.event_type?.replace(/_/g, ' ')}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] text-[#666]">
+                            {td.is_predicted ? `${td.active_predictions} active` : 'inactive'}
+                          </span>
+                          {td.avg_probability > 0 && (
+                            <span className="text-[9px]" style={{ color: td.avg_probability >= 0.7 ? '#00FF94' : '#FFB800' }}>
+                              {(td.avg_probability * 100).toFixed(0)}%
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Badge 
+                        variant="outline" 
+                        className="text-[8px] h-4 px-1 shrink-0"
+                        style={{ 
+                          color: td.impact === 'positive' ? '#00FF94' : td.impact === 'negative' ? '#FF0055' : '#FFB800',
+                          borderColor: td.impact === 'positive' ? '#00FF9430' : td.impact === 'negative' ? '#FF005530' : '#FFB80030',
+                        }}
+                      >
+                        {td.impact}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* On-Chain Data Tab */}
