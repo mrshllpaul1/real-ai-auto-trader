@@ -577,6 +577,10 @@ async def _init_phase7_wire_dependencies(db):
         _services['mtf_historical']
     )
     
+    # MTF Training Routes
+    from routes import mtf_training as mtf_training_routes
+    mtf_training_routes.set_dependencies(db, _services['mtf_training'])
+    
     # Wire DRL Engine routes
     from routes import drl_engine as drl_engine_routes
     drl_engine_routes.set_dependencies(db, _services.get('drl_engine'))
