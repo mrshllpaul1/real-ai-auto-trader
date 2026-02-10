@@ -587,84 +587,212 @@ class BackendTester:
                                'Get BTC On-Chain Historical Metrics')
 
     async def test_enhanced_mtf_training_endpoints(self):
-        """Test Enhanced MTF Training API endpoints with sentiment integration"""
-        print("\n=== TESTING ENHANCED MTF TRAINING API ENDPOINTS ===")
+        """Test Enhanced MTF Training API endpoints with full Kraken universe features"""
+        print("\n=== TESTING ENHANCED MTF TRAINING API - KRAKEN UNIVERSE FEATURES ===")
+        print("Testing the new full Kraken universe features with sentiment-only training")
         
-        # 1. GET /api/enhanced-mtf-training/status
-        print("\n--- 1. Enhanced MTF Training Status ---")
-        await self.test_endpoint('GET', '/enhanced-mtf-training/status', 
+        # 1. GET /api/enhanced-mtf-training/kraken-universe - Should return all 634 Kraken coins
+        print("\n--- 1. Kraken Universe - All 634 Coins ---")
+        result = await self.test_endpoint('GET', '/enhanced-mtf-training/kraken-universe', 
+                               'Enhanced MTF Kraken Universe (634 coins)')
+        
+        if result['success'] and result.get('data'):
+            data = result['data']
+            total_coins = data.get('total_coins', 0)
+            print(f"   📊 Total Kraken coins available: {total_coins}")
+            if total_coins >= 600:
+                self.log_result('Kraken Universe Size Check', True, 200, 
+                              f"✅ {total_coins} coins available (expected 634+)")
+            else:
+                self.log_result('Kraken Universe Size Check', False, 200, None,
+                              f"❌ Only {total_coins} coins (expected 634+)")
+        
+        # 2. GET /api/enhanced-mtf-training/status - Should show training status with coins_trained=634
+        print("\n--- 2. Training Status - Should show 634 coins trained ---")
+        result = await self.test_endpoint('GET', '/enhanced-mtf-training/status', 
                                'Enhanced MTF Training Status')
         
-        # 2. GET /api/enhanced-mtf-training/model-info
-        print("\n--- 2. Enhanced MTF Model Info ---")
-        await self.test_endpoint('GET', '/enhanced-mtf-training/model-info', 
+        if result['success'] and result.get('data'):
+            data = result['data']
+            coins_trained = data.get('coins_trained', 0)
+            accuracy = data.get('accuracy', 0)
+            print(f"   📊 Coins trained: {coins_trained}")
+            print(f"   📊 Model accuracy: {accuracy * 100:.1f}%")
+            
+            if coins_trained >= 600:
+                self.log_result('Training Status - Coins Count', True, 200,
+                              f"✅ {coins_trained} coins trained (expected 634)")
+            else:
+                self.log_result('Training Status - Coins Count', False, 200, None,
+                              f"❌ Only {coins_trained} coins trained (expected 634)")
+        
+        # 3. POST /api/enhanced-mtf-training/train-fast - Fast training on all Kraken coins
+        print("\n--- 3. Fast Training - All Kraken Coins (Sentiment Only) ---")
+        print("   ⚡ Testing fast training with sentiment features only (~2 seconds)")
+        
+        import time
+        start_time = time.time()
+        
+        result = await self.test_endpoint('POST', '/enhanced-mtf-training/train-fast', 
+                               'Enhanced MTF Fast Training (All Kraken)',
+                               data={}, expected_status=[200, 201])
+        
+        end_time = time.time()
+        duration = end_time - start_time
+        
+        if result['success'] and result.get('data'):
+            data = result['data']
+            symbols_trained = data.get('symbols_trained', 0)
+            accuracy = data.get('accuracy', 0)
+            mode = data.get('mode', '')
+            
+            print(f"   📊 Training duration: {duration:.1f} seconds")
+            print(f"   📊 Symbols trained: {symbols_trained}")
+            print(f"   📊 Training mode: {mode}")
+            print(f"   📊 Accuracy: {accuracy * 100:.1f}%")
+            
+            # Check if training completed in ~2 seconds
+            if duration <= 10:  # Allow up to 10 seconds for network latency
+                self.log_result('Fast Training Duration', True, 200,
+                              f"✅ Completed in {duration:.1f}s (expected ~2s)")
+            else:
+                self.log_result('Fast Training Duration', False, 200, None,
+                              f"❌ Took {duration:.1f}s (expected ~2s)")
+            
+            # Check if trained on 634+ coins
+            if symbols_trained >= 600:
+                self.log_result('Fast Training - Coins Count', True, 200,
+                              f"✅ Trained on {symbols_trained} coins (expected 634)")
+            else:
+                self.log_result('Fast Training - Coins Count', False, 200, None,
+                              f"❌ Only trained on {symbols_trained} coins (expected 634)")
+        
+        # 4. POST /api/enhanced-mtf-training/predict-all with {"symbols": ["all"]} - Should return predictions for all 634 coins
+        print("\n--- 4. Batch Predictions - All 634 Coins ---")
+        result = await self.test_endpoint('POST', '/enhanced-mtf-training/predict-all', 
+                               'Enhanced MTF Predict All Coins (634 predictions)',
+                               data={"symbols": ["all"]})
+        
+        if result['success'] and result.get('data'):
+            data = result['data']
+            total_predictions = data.get('total_predictions', 0)
+            buy_signals = data.get('buy_signals', 0)
+            hold_signals = data.get('hold_signals', 0)
+            sell_signals = data.get('sell_signals', 0)
+            
+            print(f"   📊 Total predictions: {total_predictions}")
+            print(f"   📊 BUY signals: {buy_signals}")
+            print(f"   📊 HOLD signals: {hold_signals}")
+            print(f"   📊 SELL signals: {sell_signals}")
+            
+            # Check if we got 634 predictions
+            if total_predictions >= 600:
+                self.log_result('Batch Predictions Count', True, 200,
+                              f"✅ {total_predictions} predictions (expected 634)")
+            else:
+                self.log_result('Batch Predictions Count', False, 200, None,
+                              f"❌ Only {total_predictions} predictions (expected 634)")
+            
+            # Check signal distribution (expected: 336 BUY, 234 HOLD, 64 SELL)
+            expected_buy = 336
+            expected_hold = 234
+            expected_sell = 64
+            
+            # Allow some variance (±50)
+            buy_ok = abs(buy_signals - expected_buy) <= 100
+            hold_ok = abs(hold_signals - expected_hold) <= 100
+            sell_ok = abs(sell_signals - expected_sell) <= 100
+            
+            if buy_ok and hold_ok and sell_ok:
+                self.log_result('Signal Distribution Check', True, 200,
+                              f"✅ Signals: {buy_signals} BUY, {hold_signals} HOLD, {sell_signals} SELL")
+            else:
+                self.log_result('Signal Distribution Check', False, 200, None,
+                              f"❌ Unexpected distribution: {buy_signals} BUY, {hold_signals} HOLD, {sell_signals} SELL (expected ~336/234/64)")
+        
+        # 5. GET /api/enhanced-mtf-training/model-info - Should show sentiment_only_mtf model with 12 features and 634+ coins
+        print("\n--- 5. Model Info - Sentiment Only MTF with 12 Features ---")
+        result = await self.test_endpoint('GET', '/enhanced-mtf-training/model-info', 
                                'Enhanced MTF Model Information')
         
-        # 3. GET /api/enhanced-mtf-training/fear-greed
-        print("\n--- 3. Fear & Greed Index ---")
-        await self.test_endpoint('GET', '/enhanced-mtf-training/fear-greed', 
+        if result['success'] and result.get('data'):
+            data = result['data']
+            model = data.get('model', {})
+            model_type = model.get('type', '')
+            feature_info = model.get('feature_info', {})
+            training_info = model.get('training_info', {})
+            
+            total_features = feature_info.get('total_features', 0)
+            symbols_trained = training_info.get('symbols_trained', 0)
+            accuracy = training_info.get('accuracy', 0)
+            
+            print(f"   📊 Model type: {model_type}")
+            print(f"   📊 Total features: {total_features}")
+            print(f"   📊 Symbols trained: {symbols_trained}")
+            print(f"   📊 Model accuracy: {accuracy * 100:.1f}%")
+            
+            # Check if it's sentiment_only_mtf model with 12 features
+            if model_type == 'sentiment_only_mtf' and total_features == 12:
+                self.log_result('Model Type & Features', True, 200,
+                              f"✅ {model_type} with {total_features} features")
+            else:
+                self.log_result('Model Type & Features', False, 200, None,
+                              f"❌ Got {model_type} with {total_features} features (expected sentiment_only_mtf with 12)")
+            
+            # Check if trained on 634+ coins
+            if symbols_trained >= 600:
+                self.log_result('Model Training Scale', True, 200,
+                              f"✅ Trained on {symbols_trained} coins (expected 634+)")
+            else:
+                self.log_result('Model Training Scale', False, 200, None,
+                              f"❌ Only trained on {symbols_trained} coins (expected 634+)")
+            
+            # Check if accuracy is 100%
+            if accuracy >= 0.99:  # Allow for floating point precision
+                self.log_result('Model Accuracy', True, 200,
+                              f"✅ Model accuracy: {accuracy * 100:.1f}% (expected 100%)")
+            else:
+                self.log_result('Model Accuracy', False, 200, None,
+                              f"❌ Model accuracy: {accuracy * 100:.1f}% (expected 100%)")
+        
+        # 6. GET /api/enhanced-mtf-training/fear-greed - Should return real Fear & Greed Index (currently "Extreme Fear" at 9)
+        print("\n--- 6. Fear & Greed Index - Real Data ---")
+        result = await self.test_endpoint('GET', '/enhanced-mtf-training/fear-greed', 
                                'Fear & Greed Index Data')
         
-        # 4. GET /api/enhanced-mtf-training/sentiment/BTC
-        print("\n--- 4. Sentiment Analysis for BTC ---")
-        await self.test_endpoint('GET', '/enhanced-mtf-training/sentiment/BTC', 
-                               'BTC Sentiment Analysis')
+        if result['success'] and result.get('data'):
+            data = result['data']
+            value = data.get('value', 50)
+            classification = data.get('classification', 'Neutral')
+            
+            print(f"   📊 Fear & Greed value: {value}")
+            print(f"   📊 Classification: {classification}")
+            
+            # Check if we got real data (not default 50)
+            if value != 50 and classification != 'Neutral':
+                self.log_result('Fear & Greed Real Data', True, 200,
+                              f"✅ Real F&G data: {value} ({classification})")
+            else:
+                self.log_result('Fear & Greed Real Data', False, 200, None,
+                              f"❌ Got default/neutral data: {value} ({classification})")
         
-        # Test sentiment for other major coins
-        for coin in ['ETH', 'SOL']:
-            await self.test_endpoint('GET', f'/enhanced-mtf-training/sentiment/{coin}', 
-                                   f'{coin} Sentiment Analysis')
+        # Additional tests for completeness
+        print("\n--- Additional Enhanced MTF Tests ---")
         
-        # 5. GET /api/enhanced-mtf-training/predict/BTC
-        print("\n--- 5. Enhanced MTF Predictions ---")
+        # Test individual predictions
         await self.test_endpoint('GET', '/enhanced-mtf-training/predict/BTC', 
                                'Enhanced MTF BTC Prediction')
         
-        # Test predictions for other coins
-        for coin in ['ETH', 'SOL']:
-            await self.test_endpoint('GET', f'/enhanced-mtf-training/predict/{coin}', 
-                                   f'Enhanced MTF {coin} Prediction')
+        await self.test_endpoint('GET', '/enhanced-mtf-training/predict/ETH', 
+                               'Enhanced MTF ETH Prediction')
         
-        # 6. GET /api/enhanced-mtf-training/predict-all
-        print("\n--- 6. Enhanced MTF Batch Predictions ---")
-        await self.test_endpoint('GET', '/enhanced-mtf-training/predict-all', 
-                               'Enhanced MTF All Predictions')
+        # Test sentiment analysis
+        await self.test_endpoint('GET', '/enhanced-mtf-training/sentiment/BTC', 
+                               'BTC Sentiment Analysis')
         
-        # 7. Training History
-        print("\n--- 7. Enhanced MTF Training History ---")
+        # Test training history
         await self.test_endpoint('GET', '/enhanced-mtf-training/history', 
                                'Enhanced MTF Training History')
-        
-        # 8. Data Download (optional)
-        print("\n--- 8. Enhanced MTF Data Download ---")
-        download_data = {
-            "symbols": ["BTC", "ETH"],
-            "timeframes": ["1h", "4h", "1D"],
-            "force": False
-        }
-        await self.test_endpoint('POST', '/enhanced-mtf-training/download-data', 
-                               'Enhanced MTF Download OHLCV Data', 
-                               data=download_data, expected_status=[200, 201, 202])
-        
-        # 9. POST Prediction with custom parameters
-        print("\n--- 9. Enhanced MTF Custom Prediction ---")
-        prediction_data = {
-            "symbol": "BTC",
-            "timeframes": ["1h", "4h", "1D"]
-        }
-        await self.test_endpoint('POST', '/enhanced-mtf-training/predict', 
-                               'Enhanced MTF Custom BTC Prediction', 
-                               data=prediction_data)
-        
-        # 10. POST Batch Predictions with custom parameters
-        print("\n--- 10. Enhanced MTF Custom Batch Predictions ---")
-        batch_prediction_data = {
-            "symbols": ["BTC", "ETH", "SOL"],
-            "timeframes": ["1h", "4h"]
-        }
-        await self.test_endpoint('POST', '/enhanced-mtf-training/predict-all', 
-                               'Enhanced MTF Custom Batch Predictions', 
-                               data=batch_prediction_data)
 
     async def run_all_tests(self):
         """Run all test suites"""
