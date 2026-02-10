@@ -380,6 +380,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Whale Alerts and Event Backtesting System"
     - "Adaptive Strategy and Event Prediction System"
   stuck_tasks:
     - "Enhanced MTF Training API Service Availability"
