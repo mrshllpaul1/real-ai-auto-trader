@@ -26,6 +26,7 @@ def set_dependencies(database, kraken_service=None, entry_tracker=None, performa
     _kraken_service = kraken_service
     _entry_tracker = entry_tracker
     _performance_service = performance_service
+    logger.info(f"Performance Dashboard dependencies set: kraken={kraken_service is not None}, entry={entry_tracker is not None}")
 
 
 @router.get("/dashboard")
