@@ -372,8 +372,8 @@ nginx-code-proxy RUNNING   pid 45
 - All environment variables set ✅
 
 **URL:**
-- Deployment: https://test-complete-5.preview.emergentagent.com ✅
-- Backend API: https://test-complete-5.preview.emergentagent.com/api ✅
+- Deployment: https://history-boost.preview.emergentagent.com ✅
+- Backend API: https://history-boost.preview.emergentagent.com/api ✅
 
 ---
 
