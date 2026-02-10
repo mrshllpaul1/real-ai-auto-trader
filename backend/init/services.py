@@ -454,6 +454,15 @@ async def _init_phase6_scheduling(db):
     events_db = get_historical_events_db(db, coindesk_service, correlation_engine)
     _services['correlation_engine'] = correlation_engine
     _services['events_db'] = events_db
+
+    if events_db:
+        try:
+            stats = await events_db.get_stats()
+            if stats.get("total_events", 0) < 150:
+                seed_result = await events_db.seed_major_events()
+                logger.info("🌐 Seeded historical events database with %s curated events", seed_result.get("total_events"))
+        except Exception as e:
+            logger.warning(f"⚠️ Auto-seed of historical events skipped: {e}")
     
     # Event Triggers
     trigger_service = get_event_trigger_service(

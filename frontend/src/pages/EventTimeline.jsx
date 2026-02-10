@@ -31,7 +31,7 @@ const EventTimeline = () => {
     try {
       setLoading(true);
       const [eventsRes, correlatedRes, upcomingRes, patternsRes] = await Promise.all([
-        api.get(`/events/database/list?limit=100`).catch(() => ({ data: { events: [] } })),
+        api.get(`/events/database/list?limit=200`).catch(() => ({ data: { events: [] } })),
         api.get(`/events/database/search?keyword=price&limit=30`).catch(() => ({ data: { events: [] } })),
         api.get(`/events/patterns/upcoming`).catch(() => ({ data: { upcoming_events: [] } })),
         api.get(`/events/patterns/all`).catch(() => ({ data: null }))
