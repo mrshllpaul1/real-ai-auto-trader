@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def register_routes(api_router: APIRouter):
+def register_routes(api_router: APIRouter, db=None):
     """Register all API routes with the router"""
     
     # Import routes
