@@ -252,3 +252,63 @@ class NotificationService:
             upsert=True
         )
         return await self.get_notification_settings(user_id)
+
+
+    async def notify_regime_change(
+        self, 
+        old_regime: str, 
+        new_regime: str, 
+        week: int,
+        event: str
+    ) -> Dict[str, Any]:
+        """
+        Send notification when market regime changes.
+        This helps traders adjust their strategy parameters.
+        """
+        # Check cooldown to avoid spam
+        key = f"regime_change_{new_regime}"
+        if self._check_cooldown(key):
+            return {'success': False, 'reason': 'cooldown'}
+        
+        # Determine priority based on regime type
+        if new_regime in ['crash', 'euphoria']:
+            priority = 'high'
+        elif new_regime in ['high_volatility', 'bear_strong']:
+            priority = 'normal'
+        else:
+            priority = 'low'
+        
+        # Build notification message
+        regime_emoji = {
+            'bull_strong': '🚀',
+            'bull_weak': '📈',
+            'bear_strong': '🔻',
+            'bear_weak': '📉',
+            'sideways': '➡️',
+            'high_volatility': '⚡',
+            'recovery': '🔄',
+            'crash': '💥',
+            'euphoria': '🎉'
+        }
+        
+        emoji = regime_emoji.get(new_regime, '📊')
+        
+        title = f"{emoji} Market Regime Changed to {new_regime.upper()}"
+        body = f"Week {week}: {event}. Adjust your strategy parameters accordingly."
+        
+        # Set cooldown before sending
+        self._set_cooldown(key)
+        
+        return await self.send_push_notification(
+            title=title,
+            body=body,
+            data={
+                'type': 'regime_change',
+                'old_regime': old_regime,
+                'new_regime': new_regime,
+                'week': week,
+                'event': event
+            },
+            priority=priority,
+            vibrate=True
+        )
