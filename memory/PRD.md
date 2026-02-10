@@ -15,16 +15,28 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 - Current market regime detection using 52-week calendar
 - Trading signals generation based on regime and market conditions
 - Paper mode and real money mode support
+- **NEW: Frontend Live Trading Dashboard** with:
+  - Start/Stop trading toggle
+  - Configuration panel (amount, positions, paper mode, regime adaptation)
+  - Real-time regime display with recommended parameters
+  - Trading signals with individual and batch execution
+  - Execute All signals button for batch trading
+- **NEW: Regime Change Notifications** - alerts when market regime changes
+- **NEW: Execute All Signals** endpoint for batch order execution
 
 **API Endpoints:**
 - `POST /api/yearly-backtest/live-trading/activate` - Start adaptive trading
 - `POST /api/yearly-backtest/live-trading/deactivate` - Stop trading
 - `GET /api/yearly-backtest/live-trading/status` - Current regime and config
 - `GET /api/yearly-backtest/live-trading/signals` - Live trading signals
+- `GET /api/yearly-backtest/live-trading/check-regime-change` - Check for regime changes
+- `POST /api/yearly-backtest/live-trading/execute-all-signals` - Execute all actionable signals
 
 **Files Modified:**
-- `backend/routes/yearly_backtest.py` - Added live trading endpoints
+- `backend/routes/yearly_backtest.py` - Added live trading endpoints + execute all
 - `backend/services/yearly_adaptive_backtest.py` - Added REGIME_PARAMS export
+- `backend/services/notification_service.py` - Added regime change notifications
+- `frontend/src/pages/YearlyBacktest.jsx` - Complete Live Trading UI
 
 ### ✅ COMPLETED: Enhanced Adaptive Backtesting with Month & Week Granularity
 
