@@ -2,6 +2,7 @@
 Perpetual Futures Trading API Routes
 =====================================
 Leverage trading with funding rates and liquidation tracking.
+Uses REAL market prices from Kraken API.
 """
 
 import logging
@@ -11,6 +12,7 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 import uuid
 import math
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +32,38 @@ async def get_database():
         from server import db
         _db = db
     return _db
+
+
+async def get_real_perp_price(symbol: str) -> float:
+    """Get REAL price from Kraken API for perpetual markets"""
+    # Extract base asset from symbol like "BTC-PERP" -> "BTC"
+    base = symbol.replace("-PERP", "").upper()
+    
+    symbol_map = {
+        "BTC": "XXBTZUSD",
+        "ETH": "XETHZUSD", 
+        "SOL": "SOLUSD",
+        "AVAX": "AVAXUSD",
+        "ARB": "ARBUSD",
+        "DOGE": "XDGUSD",
+        "XRP": "XXRPZUSD"
+    }
+    pair = symbol_map.get(base, f"{base}USD")
+    
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                "https://api.kraken.com/0/public/Ticker",
+                params={"pair": pair}
+            )
+            data = response.json()
+            if not data.get("error") and data.get("result"):
+                for key, ticker in data["result"].items():
+                    return float(ticker['c'][0])
+    except Exception as e:
+        logger.warning(f"Failed to get Kraken price for {base}: {e}")
+    
+    return None
 
 
 # =============================================================================
