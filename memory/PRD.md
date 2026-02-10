@@ -47,6 +47,58 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 **Files Modified:**
 - `frontend/src/pages/SpotTrading.jsx`
 
+### ✅ FIXED: Positions Page Hardcoded P&L
+
+**Issue:** All positions showed identical +5.26% gain regardless of actual performance.
+
+**Root Cause:** P&L was hardcoded in the position calculation logic.
+
+**Fix Applied:**
+- Now uses actual 24h change data from Kraken API
+- Labels updated to clarify "24h P&L" timeframe
+- "Entry Price" renamed to "Price 24h Ago" for accuracy
+
+**Files Modified:**
+- `frontend/src/pages/PositionManagement.jsx`
+
+### ✅ NEW: Market Sentiment Integration for Adaptive Backtest
+
+**Implemented:**
+- **Historical Fear & Greed Data**: Added weekly sentiment data for years 2020-2026
+  - Based on actual market sentiment patterns
+  - Values: 0-24 (Extreme Fear), 25-49 (Fear), 50 (Neutral), 51-74 (Greed), 75-100 (Extreme Greed)
+- **Sentiment-Based Trading Adjustments**:
+  - Extreme Fear: +30% position size, lower entry threshold (STRONG_BUY signal)
+  - Fear: +10% position size (BUY signal)
+  - Greed: -10% position size, tighter stops (HOLD signal)
+  - Extreme Greed: -40% position size, higher entry threshold (REDUCE signal)
+- **Backtest Integration**: Sentiment data now influences:
+  - Position sizing
+  - Entry/exit thresholds
+  - Take profit targets
+- **Market Calendar UI**: Now shows sentiment data:
+  - Sentiment distribution (extreme fear/fear/neutral/greed/extreme greed weeks)
+  - Quarterly average sentiment
+  - F&G value badge on each weekly event
+  - Trading signal (STRONG_BUY/BUY/HOLD/REDUCE) on each event
+
+**Files Modified:**
+- `backend/services/yearly_adaptive_backtest.py` - Added HISTORICAL_SENTIMENT_BY_YEAR, SENTIMENT_ADJUSTMENTS, get_weekly_sentiment()
+- `backend/routes/yearly_backtest.py` - Updated market-calendar endpoint to include sentiment data
+- `frontend/src/pages/YearlyBacktest.jsx` - Updated UI to display sentiment data
+
+### ✅ FIXED: Market Calendar 2026 Dropdown
+
+**Issue:** Selecting 2026 in the Market Calendar year dropdown didn't update the display.
+
+**Fix Applied:**
+- Added separate `calendarYear` state variable for immediate UI feedback
+- Dropdown now updates immediately on selection
+- Loading state shows while fetching new year data
+
+**Files Modified:**
+- `frontend/src/pages/YearlyBacktest.jsx`
+
 ### ✅ MAJOR REFACTOR: Consolidated 46 Pages into 8 Hub Pages
 
 **Before:** 46 separate pages in sidebar (overwhelming)
