@@ -820,6 +820,48 @@ class HistoricalEventsDatabase:
                     ]
                 })
         
+        # US CPI releases (approx mid-month)
+        cpi_2026 = ["2026-02-13", "2026-03-13", "2026-04-10", "2026-05-15", "2026-06-12", "2026-07-14"]
+        for cpi_date in cpi_2026:
+            cpi_dt = datetime.strptime(cpi_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            if cpi_dt > now:
+                days_until = (cpi_dt - now).days
+                upcoming.append({
+                    "event_type": "US CPI Release",
+                    "predicted_date": cpi_date,
+                    "days_until": days_until,
+                    "predictability": "HIGH",
+                    "expected_impact": "mixed",
+                    "historical_avg_impact": "+/- 3-8% intraday volatility",
+                    "coins_affected": ["BTC", "ETH"],
+                    "preparation_signals": [
+                        "Consensus CPI estimates",
+                        "Breakevens / inflation swaps",
+                        "Dollar index moves"
+                    ]
+                })
+        
+        # US Non-Farm Payrolls (first Friday)
+        nfp_2026 = ["2026-02-06", "2026-03-06", "2026-04-03", "2026-05-08", "2026-06-05", "2026-07-03"]
+        for nfp_date in nfp_2026:
+            nfp_dt = datetime.strptime(nfp_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            if nfp_dt > now:
+                days_until = (nfp_dt - now).days
+                upcoming.append({
+                    "event_type": "US Non-Farm Payrolls",
+                    "predicted_date": nfp_date,
+                    "days_until": days_until,
+                    "predictability": "HIGH",
+                    "expected_impact": "mixed",
+                    "historical_avg_impact": "+/- 2-6% intraday volatility",
+                    "coins_affected": ["BTC", "ETH"],
+                    "preparation_signals": [
+                        "ADP employment preview",
+                        "Jobless claims trends",
+                        "Fed speaker tone before print"
+                    ]
+                })
+        
         # Options expiry (last Friday of each month)
         current_month = now.month
         current_year = now.year
