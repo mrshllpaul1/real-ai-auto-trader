@@ -416,7 +416,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Kraken Portfolio and Trading Pairs Integration - COMPLETED"
+    - "Win Rate Improvements - A/B Testing and ML Strategy"
+    - "Verify improved win rates and Sharpe ratios"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
