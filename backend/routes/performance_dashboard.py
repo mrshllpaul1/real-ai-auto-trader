@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/performance", tags=["Performance Dashboard"])
+router = APIRouter(prefix="/portfolio-performance", tags=["Performance Dashboard"])
 
 # Global dependencies
 _db = None
