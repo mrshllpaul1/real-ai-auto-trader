@@ -122,6 +122,17 @@ const AILearningLoop = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
+  // Default status object to prevent null errors
+  const safeStatus = status || {
+    total_predictions: 0,
+    verified_predictions: 0,
+    verification_rate: 0,
+    accuracy_rate: 0,
+    model_accuracy: {},
+    learning_rate: 0,
+    last_training: null
+  };
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
