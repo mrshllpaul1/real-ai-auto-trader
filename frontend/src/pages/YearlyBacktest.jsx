@@ -718,6 +718,297 @@ const YearlyBacktest = () => {
             {renderMultiYearResults()}
           </TabsContent>
 
+          {/* Live Trading Tab */}
+          <TabsContent value="live" className="space-y-6">
+            {/* Status Banner */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`p-4 rounded-xl border ${
+                liveTrading.active 
+                  ? 'bg-green-500/10 border-green-500/30' 
+                  : 'bg-slate-800/50 border-slate-700'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`w-3 h-3 rounded-full ${liveTrading.active ? 'bg-green-500 animate-pulse' : 'bg-slate-500'}`} />
+                  <div>
+                    <h3 className="font-semibold text-white">
+                      {liveTrading.active ? 'Live Trading Active' : 'Live Trading Inactive'}
+                    </h3>
+                    {liveTrading.status && (
+                      <p className="text-sm text-slate-400">
+                        Week {liveTrading.status.week} • {liveTrading.status.event} • 
+                        <Badge className={`ml-2 text-xs ${
+                          liveTrading.status.regime?.includes('bull') ? 'bg-green-500/20 text-green-400' :
+                          liveTrading.status.regime?.includes('bear') ? 'bg-red-500/20 text-red-400' :
+                          liveTrading.status.regime === 'euphoria' ? 'bg-purple-500/20 text-purple-400' :
+                          liveTrading.status.regime === 'crash' ? 'bg-red-600/20 text-red-500' :
+                          'bg-amber-500/20 text-amber-400'
+                        }`}>
+                          {liveTrading.status.regime}
+                        </Badge>
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <Button
+                  onClick={liveTrading.active ? deactivateLiveTrading : activateLiveTrading}
+                  disabled={liveTradingLoading}
+                  className={liveTrading.active 
+                    ? 'bg-red-500 hover:bg-red-600' 
+                    : 'bg-green-500 hover:bg-green-600'
+                  }
+                >
+                  {liveTradingLoading ? (
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  ) : liveTrading.active ? (
+                    <Pause className="w-4 h-4 mr-2" />
+                  ) : (
+                    <Power className="w-4 h-4 mr-2" />
+                  )}
+                  {liveTrading.active ? 'Stop Trading' : 'Start Trading'}
+                </Button>
+              </div>
+            </motion.div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Configuration Panel */}
+              <Card className="glass-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="w-5 h-5 text-blue-400" />
+                    Trading Configuration
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Amount per Trade ($)</Label>
+                    <Input
+                      type="number"
+                      value={tradingConfig.amount_per_trade_usd}
+                      onChange={(e) => setTradingConfig(prev => ({
+                        ...prev,
+                        amount_per_trade_usd: parseFloat(e.target.value) || 25
+                      }))}
+                      className="bg-slate-800"
+                      disabled={liveTrading.active}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Max Positions</Label>
+                    <Input
+                      type="number"
+                      value={tradingConfig.max_positions}
+                      onChange={(e) => setTradingConfig(prev => ({
+                        ...prev,
+                        max_positions: parseInt(e.target.value) || 5
+                      }))}
+                      className="bg-slate-800"
+                      disabled={liveTrading.active}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50">
+                    <div>
+                      <p className="font-medium text-white">Paper Mode</p>
+                      <p className="text-xs text-slate-400">Simulate trades without real money</p>
+                    </div>
+                    <Switch
+                      checked={tradingConfig.paper_mode}
+                      onCheckedChange={(checked) => setTradingConfig(prev => ({
+                        ...prev,
+                        paper_mode: checked
+                      }))}
+                      disabled={liveTrading.active}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50">
+                    <div>
+                      <p className="font-medium text-white">Regime Adaptation</p>
+                      <p className="text-xs text-slate-400">Auto-adjust params to market</p>
+                    </div>
+                    <Switch
+                      checked={tradingConfig.use_regime_adaptation}
+                      onCheckedChange={(checked) => setTradingConfig(prev => ({
+                        ...prev,
+                        use_regime_adaptation: checked
+                      }))}
+                      disabled={liveTrading.active}
+                    />
+                  </div>
+
+                  {liveTrading.config && (
+                    <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                      <p className="text-sm font-medium text-blue-400 mb-2">Active Parameters</p>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>Stop Loss: <span className="text-white">{liveTrading.config.stop_loss_pct}%</span></div>
+                        <div>Take Profit: <span className="text-white">{liveTrading.config.take_profit_pct}%</span></div>
+                        <div>Coins: <span className="text-white">{liveTrading.config.coins?.length || 0}</span></div>
+                        <div>Mode: <span className="text-white">{liveTrading.config.paper_mode ? 'Paper' : 'Real'}</span></div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Current Regime Info */}
+              <Card className="glass-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-purple-400" />
+                    Current Market Regime
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {liveTrading.status ? (
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-lg bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30">
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge className={`text-lg px-3 py-1 ${
+                            liveTrading.status.regime?.includes('bull') ? 'bg-green-500/30 text-green-400' :
+                            liveTrading.status.regime?.includes('bear') ? 'bg-red-500/30 text-red-400' :
+                            liveTrading.status.regime === 'euphoria' ? 'bg-purple-500/30 text-purple-400' :
+                            liveTrading.status.regime === 'crash' ? 'bg-red-600/30 text-red-500' :
+                            'bg-amber-500/30 text-amber-400'
+                          }`}>
+                            {liveTrading.status.regime?.toUpperCase()}
+                          </Badge>
+                          <span className="text-sm text-slate-400">Week {liveTrading.status.week}</span>
+                        </div>
+                        <p className="text-white font-medium">{liveTrading.status.event}</p>
+                        <p className="text-sm text-slate-400 mt-1">{liveTrading.status.date_range}</p>
+                      </div>
+
+                      {liveTrading.status.recommended_params && (
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="p-3 rounded-lg bg-slate-800/50 text-center">
+                            <p className="text-xs text-slate-400">Stop Loss</p>
+                            <p className="text-lg font-bold text-red-400">
+                              {liveTrading.status.recommended_params.stop_loss}%
+                            </p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-slate-800/50 text-center">
+                            <p className="text-xs text-slate-400">Take Profit</p>
+                            <p className="text-lg font-bold text-green-400">
+                              {liveTrading.status.recommended_params.take_profit}%
+                            </p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-slate-800/50 text-center">
+                            <p className="text-xs text-slate-400">Position Size</p>
+                            <p className="text-lg font-bold text-blue-400">
+                              {(liveTrading.status.recommended_params.position_size_factor * 100).toFixed(0)}%
+                            </p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-slate-800/50 text-center">
+                            <p className="text-xs text-slate-400">Min Confidence</p>
+                            <p className="text-lg font-bold text-purple-400">
+                              {liveTrading.status.recommended_params.min_confidence}%
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-40 text-slate-400">
+                      <RefreshCw className="w-6 h-6 animate-spin mr-2" />
+                      Loading regime data...
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Live Signals */}
+              <Card className="glass-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-amber-400" />
+                    Trading Signals
+                  </CardTitle>
+                  <CardDescription>
+                    Real-time signals based on adaptive strategy
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                    {liveTrading.signals.length > 0 ? (
+                      liveTrading.signals.map((signal, idx) => (
+                        <div
+                          key={idx}
+                          className={`p-3 rounded-lg border ${
+                            signal.action === 'BUY' ? 'bg-green-500/10 border-green-500/30' :
+                            signal.action === 'SELL' ? 'bg-red-500/10 border-red-500/30' :
+                            'bg-slate-800/50 border-slate-700'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-white">{signal.coin}</span>
+                              <Badge className={`text-xs ${
+                                signal.action === 'BUY' ? 'bg-green-500/30 text-green-400' :
+                                signal.action === 'SELL' ? 'bg-red-500/30 text-red-400' :
+                                'bg-slate-700 text-slate-400'
+                              }`}>
+                                {signal.action}
+                              </Badge>
+                            </div>
+                            <span className="text-sm text-slate-400">
+                              {signal.confidence}% conf
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-400 mb-2">{signal.reason}</p>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-red-400">SL: {signal.stop_loss}%</span>
+                            <span className="text-green-400">TP: {signal.take_profit}%</span>
+                            {liveTrading.active && signal.action !== 'HOLD' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 text-xs"
+                                onClick={() => executeSignal(signal)}
+                              >
+                                Execute
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-slate-400">
+                        <Radio className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p>No active signals</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Warning for Real Money */}
+            {!tradingConfig.paper_mode && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30"
+              >
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-amber-400">Real Money Trading Warning</p>
+                    <p className="text-sm text-slate-400 mt-1">
+                      You are about to trade with real money on Kraken. This involves significant risk. 
+                      Only trade with funds you can afford to lose. Past backtesting performance does not 
+                      guarantee future results.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </TabsContent>
+
           <TabsContent value="calendar" className="space-y-6">
             <Card className="glass-card">
               <CardHeader>
