@@ -550,3 +550,165 @@ async def get_multi_timeframe_analysis(
         },
         "generated_at": datetime.now(timezone.utc).isoformat()
     }
+
+
+
+# =============================================================================
+# A/B TESTING & PRODUCTION MONITORING
+# =============================================================================
+
+class ABTestRunRequest(BaseModel):
+    n_simulations: int = 100
+
+
+class TradeRecordRequest(BaseModel):
+    variant_id: str
+    symbol: str
+    entry_price: float
+    exit_price: float
+    position_type: str  # 'long' or 'short'
+    signal_confidence: float = 0.5
+
+
+class OverfitDetectionRequest(BaseModel):
+    variant_id: str
+    train_results: Dict[str, Any]
+    validation_results: Dict[str, Any]
+
+
+@router.get("/ab-testing/status")
+async def get_ab_testing_status(db=Depends(get_database)):
+    """Get current A/B testing status and all variant metrics"""
+    from services.ml_optimization_service import get_ml_optimization_service
+    service = get_ml_optimization_service(db)
+    
+    if not service:
+        return {"status": "not_initialized", "message": "Initialize variants first"}
+    
+    return await service.get_monitoring_status()
+
+
+@router.post("/ab-testing/initialize")
+async def initialize_ab_testing(db=Depends(get_database)):
+    """Initialize all strategy variants for A/B testing"""
+    from services.ml_optimization_service import get_ml_optimization_service
+    service = get_ml_optimization_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="ML optimization service not available")
+    
+    return await service.initialize_variants()
+
+
+@router.post("/ab-testing/run")
+async def run_ab_test(request: ABTestRunRequest, db=Depends(get_database)):
+    """Run A/B test simulation across all variants"""
+    from services.ml_optimization_service import get_ml_optimization_service
+    service = get_ml_optimization_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="ML optimization service not available")
+    
+    return await service.run_ab_test(n_simulations=request.n_simulations)
+
+
+@router.get("/ab-testing/select/{symbol}")
+async def select_variant(symbol: str, db=Depends(get_database)):
+    """Select the best variant for a trade using Thompson Sampling"""
+    from services.ml_optimization_service import get_ml_optimization_service
+    service = get_ml_optimization_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="ML optimization service not available")
+    
+    variant_id, parameters = await service.get_variant_for_trade(symbol)
+    
+    return {
+        "symbol": symbol,
+        "selected_variant": variant_id,
+        "parameters": parameters
+    }
+
+
+@router.post("/ab-testing/record-trade")
+async def record_trade(request: TradeRecordRequest, db=Depends(get_database)):
+    """Record a completed trade for performance tracking"""
+    from services.ml_optimization_service import get_ml_optimization_service
+    service = get_ml_optimization_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="ML optimization service not available")
+    
+    return await service.record_trade(
+        variant_id=request.variant_id,
+        symbol=request.symbol,
+        entry_price=request.entry_price,
+        exit_price=request.exit_price,
+        position_type=request.position_type,
+        signal_confidence=request.signal_confidence
+    )
+
+
+@router.post("/monitoring/start")
+async def start_prod_monitoring(db=Depends(get_database)):
+    """Start production monitoring for win rate and Sharpe ratio"""
+    from services.ml_optimization_service import get_ml_optimization_service
+    service = get_ml_optimization_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="ML optimization service not available")
+    
+    return await service.start_production_monitoring()
+
+
+@router.post("/monitoring/stop")
+async def stop_prod_monitoring(db=Depends(get_database)):
+    """Stop production monitoring"""
+    from services.ml_optimization_service import get_ml_optimization_service
+    service = get_ml_optimization_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="ML optimization service not available")
+    
+    return await service.stop_production_monitoring()
+
+
+@router.post("/overfitting/detect")
+async def detect_overfitting(request: OverfitDetectionRequest, db=Depends(get_database)):
+    """Detect overfitting by comparing train vs validation performance"""
+    from services.ml_optimization_service import get_ml_optimization_service
+    service = get_ml_optimization_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="ML optimization service not available")
+    
+    return await service.detect_overfitting(
+        variant_id=request.variant_id,
+        train_results=request.train_results,
+        validation_results=request.validation_results
+    )
+
+
+@router.post("/overfitting/reduce/{variant_id}")
+async def reduce_overfitting(variant_id: str, db=Depends(get_database)):
+    """Apply regularization techniques to reduce overfitting"""
+    from services.ml_optimization_service import get_ml_optimization_service
+    service = get_ml_optimization_service(db)
+    
+    if not service:
+        raise HTTPException(status_code=500, detail="ML optimization service not available")
+    
+    return await service.reduce_overfitting(variant_id)
+
+
+@router.get("/variants")
+async def get_all_variants(db=Depends(get_database)):
+    """Get all strategy variants with performance metrics"""
+    from services.ml_optimization_service import get_ml_optimization_service
+    service = get_ml_optimization_service(db)
+    
+    if not service:
+        return {"variants": [], "message": "Initialize variants first"}
+    
+    return await service.get_monitoring_status()
+
