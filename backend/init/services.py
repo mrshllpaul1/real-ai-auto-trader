@@ -60,6 +60,8 @@ async def _init_phase1_core(db):
     from services.market_data_service import MarketDataService
     from services.news_service import CryptoNewsAggregator
     from services.kraken_service import KrakenAuthenticator, KrakenTradeService, set_kraken_service
+    from services.kraken_cache_service import KrakenCacheService
+    from services.entry_price_tracker import EntryPriceTracker
     from services.dynamic_coin_universe import DynamicCoinUniverseManager, set_universe_manager
     from services.ai_news_sentiment import AINewsSentimentService, set_sentiment_service
     from services.cryptopanic_service import CryptoPanicService, set_cryptopanic_service
@@ -69,17 +71,28 @@ async def _init_phase1_core(db):
     _services['market'] = MarketDataService()
     _services['news'] = CryptoNewsAggregator()
     
+    # Entry Price Tracker (always initialize with DB)
+    entry_tracker = EntryPriceTracker(db)
+    await entry_tracker.ensure_indexes()
+    _services['entry_tracker'] = entry_tracker
+    logger.info("✅ Entry Price Tracker initialized")
+    
     # Kraken (optional)
     kraken_api_key = os.getenv('KRAKEN_API_KEY')
     kraken_api_secret = os.getenv('KRAKEN_API_SECRET')
     if kraken_api_key and kraken_api_secret:
         kraken_auth = KrakenAuthenticator(kraken_api_key, kraken_api_secret)
         kraken_service = KrakenTradeService(kraken_auth)
-        _services['kraken'] = kraken_service
-        set_kraken_service(kraken_service)  # Set singleton
-        logger.info("✅ Kraken service initialized")
+        
+        # Wrap with caching layer
+        kraken_cached = KrakenCacheService(kraken_service)
+        _services['kraken'] = kraken_cached  # Use cached version everywhere
+        _services['kraken_raw'] = kraken_service  # Keep raw for direct access if needed
+        set_kraken_service(kraken_cached)  # Set singleton to cached version
+        logger.info("✅ Kraken service initialized with caching layer")
     else:
         _services['kraken'] = None
+        _services['kraken_raw'] = None
         logger.warning("⚠️ Kraken service not initialized - missing API keys")
     
     # Dynamic Coin Universe
