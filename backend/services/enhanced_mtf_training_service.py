@@ -943,7 +943,7 @@ class EnhancedMTFTrainingService:
                 "status": "failed",
                 "error": str(e),
                 "training_id": training_id,
-                "progress": 100,
+                "progress": self._training_status.get("progress", 0),
                 "current_phase": "failed"
             }
             return {
