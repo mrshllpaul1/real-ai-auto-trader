@@ -389,7 +389,13 @@ const PositionManagement = ({ embedded = false }) => {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-xs text-[#A1A1AA] mb-1 flex items-center gap-1">
-                          <Clock size={12} /> Price 24h Ago
+                          <Clock size={12} /> 
+                          {pos.has_real_entry ? 'Entry Price' : 'Price 24h Ago'}
+                          {pos.has_real_entry && (
+                            <span className="ml-1 px-1 py-0.5 bg-green-500/20 text-green-400 text-[10px] rounded">
+                              Tracked
+                            </span>
+                          )}
                         </p>
                         <p className="font-data text-white">${pos.entry_price?.toFixed(4)}</p>
                       </div>
