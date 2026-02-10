@@ -301,21 +301,76 @@ async def get_current_strategy_params():
 
 
 @router.get("/market-calendar")
-async def get_market_calendar():
+async def get_market_calendar(year: Optional[int] = None):
     """
-    Get the 2025 market events calendar used for regime detection.
+    Get the market events calendar used for regime detection.
+    Can specify a year (2020-2026) or get all years.
+    Returns week-by-week breakdown with month, regime, and event details.
     """
-    from services.yearly_adaptive_backtest import MARKET_EVENTS_2025
+    from services.yearly_adaptive_backtest import (
+        MARKET_EVENTS_2020, MARKET_EVENTS_2021, MARKET_EVENTS_2022,
+        MARKET_EVENTS_2023, MARKET_EVENTS_2024, MARKET_EVENTS_2025,
+        MARKET_EVENTS_2026, MARKET_EVENTS_BY_YEAR
+    )
     
+    all_calendars = {
+        2020: MARKET_EVENTS_2020,
+        2021: MARKET_EVENTS_2021,
+        2022: MARKET_EVENTS_2022,
+        2023: MARKET_EVENTS_2023,
+        2024: MARKET_EVENTS_2024,
+        2025: MARKET_EVENTS_2025,
+        2026: MARKET_EVENTS_2026
+    }
+    
+    def get_calendar_summary(events, year):
+        """Build detailed calendar summary for a year"""
+        months = ["January", "February", "March", "April", "May", "June", 
+                  "July", "August", "September", "October", "November", "December"]
+        
+        # Group events by month
+        events_by_month = {month: [] for month in months}
+        for event in events:
+            month = event.get("month", months[(event["week"] - 1) // 4])
+            if month in events_by_month:
+                events_by_month[month].append(event)
+        
+        # Calculate regime distribution
+        regime_counts = {}
+        for event in events:
+            regime = event["regime"]
+            regime_counts[regime] = regime_counts.get(regime, 0) + 1
+        
+        # Find key events
+        key_events = [e for e in events if e["regime"] in ["crash", "euphoria", "high_volatility"]]
+        
+        return {
+            "year": year,
+            "total_weeks": len(events),
+            "events": events,
+            "events_by_month": events_by_month,
+            "regime_distribution": regime_counts,
+            "key_events": key_events,
+            "regimes_by_quarter": {
+                "Q1": [e for e in events if e["week"] <= 13],
+                "Q2": [e for e in events if 13 < e["week"] <= 26],
+                "Q3": [e for e in events if 26 < e["week"] <= 39],
+                "Q4": [e for e in events if e["week"] > 39]
+            }
+        }
+    
+    if year:
+        if year not in all_calendars:
+            raise HTTPException(status_code=400, detail=f"Year {year} not available. Choose from 2020-2026")
+        
+        return get_calendar_summary(all_calendars[year], year)
+    
+    # Return all years
     return {
-        "year": 2025,
-        "events": MARKET_EVENTS_2025,
-        "total_events": len(MARKET_EVENTS_2025),
-        "regimes_by_quarter": {
-            "Q1": [e for e in MARKET_EVENTS_2025 if e["week"] <= 13],
-            "Q2": [e for e in MARKET_EVENTS_2025 if 13 < e["week"] <= 26],
-            "Q3": [e for e in MARKET_EVENTS_2025 if 26 < e["week"] <= 39],
-            "Q4": [e for e in MARKET_EVENTS_2025 if e["week"] > 39]
+        "available_years": list(all_calendars.keys()),
+        "calendars": {
+            yr: get_calendar_summary(events, yr) 
+            for yr, events in all_calendars.items()
         }
     }
 
