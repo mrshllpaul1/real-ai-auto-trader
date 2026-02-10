@@ -184,17 +184,17 @@ class HardenedGemTester:
             return None
         
         gems = data.get("gems", [])
-        count = data.get("count", 0)
+        gems_found = data.get("gems_found", 0)  # Use actual field name
         
-        # Verify count matches gems array length
-        if count != len(gems):
-            self.log_result("Gems Scan", False, f"Count {count} doesn't match gems array length {len(gems)}")
+        # Verify gems_found matches gems array length
+        if gems_found != len(gems):
+            self.log_result("Gems Scan", False, f"gems_found {gems_found} doesn't match gems array length {len(gems)}")
             return None
         
         self.log_result(
             "Gems Scan", 
             True, 
-            f"Scan successful: {count} gems found (expected 0 in test env with no live data)"
+            f"Scan successful: {gems_found} gems found (expected 0 in test env with no live data)"
         )
         
         return data
