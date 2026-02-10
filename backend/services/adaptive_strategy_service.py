@@ -524,7 +524,7 @@ class AdaptiveStrategyService:
     ]
     
     # =========================================================================
-    # REAL SCHEDULED EVENTS CALENDAR 2025
+    # REAL SCHEDULED EVENTS CALENDAR 2025-2026
     # =========================================================================
     SCHEDULED_EVENTS_2025 = {
         "fomc_meetings": [
@@ -536,6 +536,15 @@ class AdaptiveStrategyService:
             {"date": "2025-09-17", "description": "FOMC Meeting - September 2025"},
             {"date": "2025-10-29", "description": "FOMC Meeting - October 2025"},
             {"date": "2025-12-17", "description": "FOMC Meeting - December 2025"},
+            # 2026 FOMC calendar
+            {"date": "2026-01-28", "description": "FOMC Meeting - January 2026"},
+            {"date": "2026-03-18", "description": "FOMC Meeting - March 2026"},
+            {"date": "2026-04-29", "description": "FOMC Meeting - April 2026"},
+            {"date": "2026-06-17", "description": "FOMC Meeting - June 2026"},
+            {"date": "2026-07-29", "description": "FOMC Meeting - July 2026"},
+            {"date": "2026-09-16", "description": "FOMC Meeting - September 2026"},
+            {"date": "2026-10-28", "description": "FOMC Meeting - October 2026"},
+            {"date": "2026-12-16", "description": "FOMC Meeting - December 2026"},
         ],
         "options_expiry": [
             {"date": "2025-07-25", "description": "July 2025 Monthly Options Expiry"},
@@ -544,16 +553,37 @@ class AdaptiveStrategyService:
             {"date": "2025-10-31", "description": "October 2025 Monthly Options Expiry"},
             {"date": "2025-11-28", "description": "November 2025 Monthly Options Expiry"},
             {"date": "2025-12-26", "description": "December 2025 Quarterly Options Expiry (major)"},
+            # 2026
+            {"date": "2026-01-30", "description": "January 2026 Monthly Options Expiry"},
+            {"date": "2026-02-27", "description": "February 2026 Monthly Options Expiry"},
+            {"date": "2026-03-27", "description": "March 2026 Quarterly Options Expiry (major)"},
+            {"date": "2026-04-24", "description": "April 2026 Monthly Options Expiry"},
+            {"date": "2026-05-29", "description": "May 2026 Monthly Options Expiry"},
+            {"date": "2026-06-26", "description": "June 2026 Quarterly Options Expiry (major)"},
+            {"date": "2026-07-31", "description": "July 2026 Monthly Options Expiry"},
+            {"date": "2026-08-28", "description": "August 2026 Monthly Options Expiry"},
+            {"date": "2026-09-25", "description": "September 2026 Quarterly Options Expiry (major)"},
+            {"date": "2026-10-30", "description": "October 2026 Monthly Options Expiry"},
+            {"date": "2026-11-27", "description": "November 2026 Monthly Options Expiry"},
+            {"date": "2026-12-25", "description": "December 2026 Quarterly Options Expiry (major)"},
         ],
         "futures_expiry": [
             {"date": "2025-07-25", "description": "CME Bitcoin/ETH Futures Quarterly Expiry - Q3"},
             {"date": "2025-09-26", "description": "CME Bitcoin/ETH Futures Quarterly Expiry - Q3 end"},
             {"date": "2025-12-26", "description": "CME Bitcoin/ETH Futures Quarterly Expiry - Q4 end"},
+            # 2026
+            {"date": "2026-03-27", "description": "CME Bitcoin/ETH Futures Quarterly Expiry - Q1 2026"},
+            {"date": "2026-06-26", "description": "CME Bitcoin/ETH Futures Quarterly Expiry - Q2 2026"},
+            {"date": "2026-09-25", "description": "CME Bitcoin/ETH Futures Quarterly Expiry - Q3 2026"},
+            {"date": "2026-12-25", "description": "CME Bitcoin/ETH Futures Quarterly Expiry - Q4 2026"},
         ],
         "ethereum_upgrades": [
             {"date": "2025-03-12", "description": "Ethereum Pectra Upgrade (Devnet testing)"},
             {"date": "2025-05-07", "description": "Ethereum Pectra Mainnet Activation (EIP-7702, EIP-7251)"},
             {"date": "2025-10-15", "description": "Ethereum Fusaka Upgrade (estimated - PeerDAS, Verkle Trees)"},
+            # 2026
+            {"date": "2026-03-15", "description": "Ethereum Osaka Upgrade (estimated - Verkle Trees, statelessness)"},
+            {"date": "2026-09-01", "description": "Ethereum post-Osaka improvements (estimated - EVM enhancements)"},
         ],
         "token_unlocks": [
             {"date": "2025-07-12", "description": "Aptos (APT) - 11.31M tokens unlock (~$80M)", "coins": ["APT"], "impact_pct": -5},
@@ -568,6 +598,19 @@ class AdaptiveStrategyService:
             {"date": "2025-10-12", "description": "Aptos (APT) - 11.31M tokens unlock (~$80M)", "coins": ["APT"], "impact_pct": -5},
             {"date": "2025-11-06", "description": "Immutable (IMX) - 32.47M tokens unlock (~$40M)", "coins": ["IMX"], "impact_pct": -6},
             {"date": "2025-12-15", "description": "Arbitrum (ARB) - 92.65M tokens unlock (~$65M)", "coins": ["ARB"], "impact_pct": -8},
+            # 2026
+            {"date": "2026-01-12", "description": "Aptos (APT) - 11.31M tokens unlock", "coins": ["APT"], "impact_pct": -5},
+            {"date": "2026-01-15", "description": "Arbitrum (ARB) - 92.65M tokens unlock", "coins": ["ARB"], "impact_pct": -8},
+            {"date": "2026-02-01", "description": "Sui (SUI) - 64.19M tokens unlock", "coins": ["SUI"], "impact_pct": -5},
+            {"date": "2026-02-12", "description": "Aptos (APT) - 11.31M tokens unlock", "coins": ["APT"], "impact_pct": -5},
+            {"date": "2026-02-15", "description": "Optimism (OP) - 31.34M tokens unlock", "coins": ["OP"], "impact_pct": -7},
+            {"date": "2026-03-01", "description": "Sui (SUI) - 64.19M tokens unlock", "coins": ["SUI"], "impact_pct": -5},
+            {"date": "2026-03-15", "description": "Arbitrum (ARB) - 92.65M tokens unlock", "coins": ["ARB"], "impact_pct": -8},
+            {"date": "2026-04-01", "description": "Worldcoin (WLD) - Team/investor unlock", "coins": ["WLD"], "impact_pct": -10},
+            {"date": "2026-04-12", "description": "Aptos (APT) - 11.31M tokens unlock", "coins": ["APT"], "impact_pct": -5},
+            {"date": "2026-05-15", "description": "Optimism (OP) - 31.34M tokens unlock", "coins": ["OP"], "impact_pct": -7},
+            {"date": "2026-06-01", "description": "Sui (SUI) - 64.19M tokens unlock", "coins": ["SUI"], "impact_pct": -5},
+            {"date": "2026-06-15", "description": "Arbitrum (ARB) - 92.65M tokens unlock", "coins": ["ARB"], "impact_pct": -8},
         ],
         "quarterly_earnings": [
             {"date": "2025-07-29", "description": "MicroStrategy (MSTR) Q2 2025 Earnings - BTC treasury update", "coins": ["BTC"]},
@@ -575,24 +618,47 @@ class AdaptiveStrategyService:
             {"date": "2025-08-07", "description": "Marathon Digital (MARA) Q2 2025 Earnings - mining update", "coins": ["BTC"]},
             {"date": "2025-10-28", "description": "MicroStrategy (MSTR) Q3 2025 Earnings", "coins": ["BTC"]},
             {"date": "2025-11-04", "description": "Coinbase (COIN) Q3 2025 Earnings", "coins": ["BTC", "ETH"]},
+            # 2026
+            {"date": "2026-02-04", "description": "MicroStrategy (MSTR) Q4 2025 Earnings - BTC treasury update", "coins": ["BTC"]},
+            {"date": "2026-02-10", "description": "Coinbase (COIN) Q4 2025 Earnings - annual trading volume", "coins": ["BTC", "ETH"]},
+            {"date": "2026-02-12", "description": "Marathon Digital (MARA) Q4 2025 Earnings - mining update", "coins": ["BTC"]},
+            {"date": "2026-04-28", "description": "MicroStrategy (MSTR) Q1 2026 Earnings", "coins": ["BTC"]},
+            {"date": "2026-05-05", "description": "Coinbase (COIN) Q1 2026 Earnings", "coins": ["BTC", "ETH"]},
+            {"date": "2026-07-28", "description": "MicroStrategy (MSTR) Q2 2026 Earnings", "coins": ["BTC"]},
+            {"date": "2026-08-04", "description": "Coinbase (COIN) Q2 2026 Earnings", "coins": ["BTC", "ETH"]},
         ],
         "sec_regulatory": [
             {"date": "2025-07-25", "description": "SEC Solana ETF decision deadline (VanEck filing)"},
             {"date": "2025-08-15", "description": "SEC Litecoin ETF decision deadline (Canary Capital)"},
             {"date": "2025-10-10", "description": "SEC XRP ETF decision deadline (potential)"},
             {"date": "2025-10-18", "description": "SEC Solana ETF final deadline (extended)"},
+            # 2026
+            {"date": "2026-03-01", "description": "SEC Altcoin ETF review window (potential Cardano, Polkadot)"},
+            {"date": "2026-06-15", "description": "SEC Staking ETF review (potential staking-enabled ETFs)"},
         ],
         "tax_deadlines": [
             {"date": "2025-10-15", "description": "US Tax Extension Deadline - expected crypto selling pressure"},
+            # 2026
+            {"date": "2026-04-15", "description": "US Tax Filing Deadline 2026 - expected crypto selling pressure"},
+            {"date": "2026-10-15", "description": "US Tax Extension Deadline 2026 - expected crypto selling pressure"},
         ],
         "network_upgrades": [
             {"date": "2025-08-15", "description": "Solana Firedancer validator client release (estimated)"},
             {"date": "2025-09-01", "description": "Cardano Chang+1 hard fork (governance upgrade)"},
             {"date": "2025-10-15", "description": "Ethereum Fusaka upgrade (PeerDAS, estimated)"},
+            # 2026
+            {"date": "2026-02-28", "description": "Solana token extensions major upgrade (estimated)"},
+            {"date": "2026-03-15", "description": "Ethereum Osaka upgrade (Verkle Trees, estimated)"},
+            {"date": "2026-06-01", "description": "Cardano Voltaire era completion (estimated)"},
+            {"date": "2026-09-01", "description": "Polkadot JAM protocol upgrade (estimated)"},
         ],
         "institutional_events": [
             {"date": "2025-08-01", "description": "Bitcoin ETF Q2 2025 13F filings deadline - institutional holdings revealed"},
             {"date": "2025-11-14", "description": "Bitcoin ETF Q3 2025 13F filings deadline"},
+            # 2026
+            {"date": "2026-02-14", "description": "Bitcoin ETF Q4 2025 13F filings deadline - annual institutional holdings"},
+            {"date": "2026-05-15", "description": "Bitcoin ETF Q1 2026 13F filings deadline"},
+            {"date": "2026-08-14", "description": "Bitcoin ETF Q2 2026 13F filings deadline"},
         ],
     }
     
