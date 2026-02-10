@@ -2,7 +2,7 @@
 Yearly Adaptive Backtesting System
 ===================================
 Comprehensive backtesting system that:
-1. Runs full year 2025 backtest with weekly adaptation
+1. Runs full year backtest with weekly adaptation (2020-2025)
 2. Tests across all Kraken coins
 3. Automatically adapts strategy parameters weekly
 4. Creates profitable portfolio with auto-trading signals
@@ -26,6 +26,25 @@ TOP_COINS = [
     "AAVE", "MKR", "CRV", "LDO", "SNX", "COMP", "SUSHI", "YFI", "BAL", "1INCH"
 ]
 
+# Coins available in each year (some didn't exist before certain years)
+COINS_BY_YEAR = {
+    2020: ["BTC", "ETH", "XRP", "LTC", "BCH", "ETC", "XMR", "ZEC", "DASH", "XLM", 
+           "ALGO", "ATOM", "LINK", "ADA", "DOT", "UNI", "AAVE", "SNX", "COMP", "YFI"],
+    2021: ["BTC", "ETH", "SOL", "XRP", "ADA", "AVAX", "DOT", "LINK", "MATIC", "ATOM",
+           "UNI", "FIL", "DOGE", "SHIB", "LTC", "BCH", "ETC", "XLM", "ALGO", "AAVE",
+           "MKR", "CRV", "SNX", "COMP", "SUSHI", "YFI", "1INCH", "NEAR", "HBAR", "VET"],
+    2022: ["BTC", "ETH", "SOL", "XRP", "ADA", "AVAX", "DOT", "LINK", "MATIC", "ATOM",
+           "UNI", "NEAR", "FIL", "DOGE", "SHIB", "LTC", "BCH", "ALGO", "HBAR", "VET",
+           "AAVE", "MKR", "CRV", "LDO", "SNX", "COMP", "SUSHI", "APT", "OP", "ARB"],
+    2023: ["BTC", "ETH", "SOL", "XRP", "ADA", "AVAX", "DOT", "LINK", "MATIC", "ATOM",
+           "UNI", "NEAR", "FIL", "ARB", "OP", "APT", "INJ", "DOGE", "SHIB", "PEPE",
+           "BONK", "LTC", "BCH", "ALGO", "HBAR", "VET", "AAVE", "MKR", "CRV", "LDO"],
+    2024: ["BTC", "ETH", "SOL", "XRP", "ADA", "AVAX", "DOT", "LINK", "MATIC", "ATOM",
+           "UNI", "NEAR", "FIL", "ARB", "OP", "SUI", "APT", "INJ", "TIA", "SEI",
+           "DOGE", "SHIB", "PEPE", "BONK", "WIF", "FLOKI", "LTC", "BCH", "AAVE", "MKR"],
+    2025: TOP_COINS[:30]
+}
+
 # Market regime parameters
 MARKET_REGIMES = {
     "bull_strong": {"bias": 0.003, "volatility": 0.02, "trend_strength": 0.8},
@@ -34,8 +53,121 @@ MARKET_REGIMES = {
     "bear_weak": {"bias": -0.001, "volatility": 0.018, "trend_strength": 0.5},
     "sideways": {"bias": 0, "volatility": 0.012, "trend_strength": 0.2},
     "high_volatility": {"bias": 0, "volatility": 0.04, "trend_strength": 0.3},
-    "recovery": {"bias": 0.002, "volatility": 0.022, "trend_strength": 0.6}
+    "recovery": {"bias": 0.002, "volatility": 0.022, "trend_strength": 0.6},
+    "crash": {"bias": -0.006, "volatility": 0.05, "trend_strength": 0.9},
+    "euphoria": {"bias": 0.005, "volatility": 0.03, "trend_strength": 0.85}
 }
+
+# 2020 Market calendar - COVID crash and DeFi summer
+MARKET_EVENTS_2020 = [
+    {"week": 1, "regime": "bull_weak", "event": "New Year optimism"},
+    {"week": 4, "regime": "sideways", "event": "Pre-COVID uncertainty"},
+    {"week": 8, "regime": "bear_weak", "event": "COVID fears begin"},
+    {"week": 11, "regime": "crash", "event": "COVID crash - Black Thursday"},
+    {"week": 13, "regime": "bear_strong", "event": "Market capitulation"},
+    {"week": 15, "regime": "recovery", "event": "Fed stimulus announced"},
+    {"week": 18, "regime": "bull_weak", "event": "Recovery begins"},
+    {"week": 21, "regime": "sideways", "event": "Consolidation"},
+    {"week": 24, "regime": "bull_weak", "event": "DeFi summer begins"},
+    {"week": 27, "regime": "bull_strong", "event": "DeFi mania - YFI launch"},
+    {"week": 30, "regime": "high_volatility", "event": "DeFi volatility peak"},
+    {"week": 33, "regime": "bear_weak", "event": "DeFi correction"},
+    {"week": 36, "regime": "sideways", "event": "September consolidation"},
+    {"week": 40, "regime": "bull_weak", "event": "PayPal crypto announcement"},
+    {"week": 43, "regime": "bull_strong", "event": "Institutional FOMO begins"},
+    {"week": 46, "regime": "bull_strong", "event": "BTC breaks ATH"},
+    {"week": 49, "regime": "euphoria", "event": "December rally"},
+    {"week": 52, "regime": "bull_strong", "event": "Year-end euphoria"}
+]
+
+# 2021 Market calendar - Bull run and May crash
+MARKET_EVENTS_2021 = [
+    {"week": 1, "regime": "bull_strong", "event": "New Year continuation"},
+    {"week": 4, "regime": "euphoria", "event": "Tesla BTC purchase"},
+    {"week": 7, "regime": "bull_strong", "event": "Institutional buying"},
+    {"week": 10, "regime": "high_volatility", "event": "Coinbase IPO"},
+    {"week": 13, "regime": "bull_strong", "event": "BTC new ATH $64k"},
+    {"week": 16, "regime": "bear_weak", "event": "Profit taking begins"},
+    {"week": 19, "regime": "crash", "event": "May crash - China ban"},
+    {"week": 21, "regime": "bear_strong", "event": "Elon FUD - Tesla drops BTC"},
+    {"week": 24, "regime": "bear_weak", "event": "Summer lows"},
+    {"week": 27, "regime": "sideways", "event": "Accumulation phase"},
+    {"week": 30, "regime": "recovery", "event": "Recovery begins"},
+    {"week": 33, "regime": "bull_weak", "event": "NFT mania begins"},
+    {"week": 36, "regime": "bull_strong", "event": "El Salvador BTC adoption"},
+    {"week": 39, "regime": "high_volatility", "event": "China final ban"},
+    {"week": 42, "regime": "bull_strong", "event": "BTC ETF speculation"},
+    {"week": 45, "regime": "euphoria", "event": "BTC ATH $69k - Nov 10"},
+    {"week": 48, "regime": "bear_weak", "event": "Post-ATH correction"},
+    {"week": 51, "regime": "bear_strong", "event": "December selloff"}
+]
+
+# 2022 Market calendar - Crypto winter
+MARKET_EVENTS_2022 = [
+    {"week": 1, "regime": "bear_weak", "event": "New Year weakness"},
+    {"week": 4, "regime": "bear_strong", "event": "Fed hawkish pivot"},
+    {"week": 7, "regime": "sideways", "event": "Consolidation"},
+    {"week": 10, "regime": "bear_weak", "event": "Ukraine war begins"},
+    {"week": 13, "regime": "recovery", "event": "Brief relief rally"},
+    {"week": 16, "regime": "bear_weak", "event": "Rate hike fears"},
+    {"week": 19, "regime": "crash", "event": "LUNA/UST collapse"},
+    {"week": 22, "regime": "bear_strong", "event": "Contagion - 3AC, Celsius"},
+    {"week": 25, "regime": "bear_weak", "event": "Summer capitulation"},
+    {"week": 28, "regime": "sideways", "event": "Bottom forming"},
+    {"week": 31, "regime": "recovery", "event": "Bear market rally"},
+    {"week": 34, "regime": "bear_weak", "event": "Merge anticipation"},
+    {"week": 37, "regime": "sideways", "event": "ETH Merge complete"},
+    {"week": 40, "regime": "bear_weak", "event": "Macro weakness"},
+    {"week": 43, "regime": "sideways", "event": "Pre-FTX calm"},
+    {"week": 45, "regime": "crash", "event": "FTX collapse"},
+    {"week": 48, "regime": "bear_strong", "event": "FTX contagion"},
+    {"week": 51, "regime": "bear_weak", "event": "Year-end capitulation"}
+]
+
+# 2023 Market calendar - Recovery year
+MARKET_EVENTS_2023 = [
+    {"week": 1, "regime": "sideways", "event": "New Year consolidation"},
+    {"week": 4, "regime": "bull_weak", "event": "January rally begins"},
+    {"week": 7, "regime": "bull_strong", "event": "Crypto rally continues"},
+    {"week": 10, "regime": "high_volatility", "event": "SVB bank crisis"},
+    {"week": 13, "regime": "recovery", "event": "Banking fears ease"},
+    {"week": 16, "regime": "bull_weak", "event": "Spring optimism"},
+    {"week": 19, "regime": "sideways", "event": "Consolidation"},
+    {"week": 22, "regime": "bull_weak", "event": "BlackRock ETF filing"},
+    {"week": 25, "regime": "high_volatility", "event": "SEC vs Binance/Coinbase"},
+    {"week": 28, "regime": "sideways", "event": "Summer range"},
+    {"week": 31, "regime": "bear_weak", "event": "August weakness"},
+    {"week": 34, "regime": "sideways", "event": "September consolidation"},
+    {"week": 37, "regime": "bull_weak", "event": "ETF optimism returns"},
+    {"week": 40, "regime": "bull_strong", "event": "Uptober rally"},
+    {"week": 43, "regime": "bull_strong", "event": "BTC breaks $35k"},
+    {"week": 46, "regime": "high_volatility", "event": "CZ Binance settlement"},
+    {"week": 49, "regime": "bull_strong", "event": "ETF approval anticipation"},
+    {"week": 52, "regime": "bull_weak", "event": "Year-end positioning"}
+]
+
+# 2024 Market calendar - Bitcoin halving year and ETF
+MARKET_EVENTS_2024 = [
+    {"week": 1, "regime": "high_volatility", "event": "ETF decision week"},
+    {"week": 2, "regime": "euphoria", "event": "Bitcoin ETF approved!"},
+    {"week": 5, "regime": "bull_strong", "event": "ETF inflows massive"},
+    {"week": 8, "regime": "bull_strong", "event": "BTC breaks $50k"},
+    {"week": 11, "regime": "euphoria", "event": "BTC new ATH $73k"},
+    {"week": 14, "regime": "high_volatility", "event": "Pre-halving volatility"},
+    {"week": 16, "regime": "bull_strong", "event": "Bitcoin halving week"},
+    {"week": 19, "regime": "bear_weak", "event": "Post-halving correction"},
+    {"week": 22, "regime": "sideways", "event": "Summer consolidation"},
+    {"week": 25, "regime": "bear_weak", "event": "Mt Gox distribution fears"},
+    {"week": 28, "regime": "recovery", "event": "Oversold bounce"},
+    {"week": 31, "regime": "high_volatility", "event": "Yen carry trade unwind"},
+    {"week": 34, "regime": "sideways", "event": "Summer range"},
+    {"week": 37, "regime": "bull_weak", "event": "Fed rate cut expectations"},
+    {"week": 40, "regime": "bull_strong", "event": "Uptober begins"},
+    {"week": 43, "regime": "high_volatility", "event": "US Election week"},
+    {"week": 45, "regime": "euphoria", "event": "Trump wins - crypto rally"},
+    {"week": 48, "regime": "bull_strong", "event": "BTC breaks $100k"},
+    {"week": 51, "regime": "bull_weak", "event": "Year-end consolidation"}
+]
 
 # 2025 Market calendar - key events that affect market regime
 MARKET_EVENTS_2025 = [
@@ -62,6 +194,26 @@ MARKET_EVENTS_2025 = [
     {"week": 50, "regime": "bull_weak", "event": "Year-end positioning"},
     {"week": 52, "regime": "sideways", "event": "Holiday low volume"}
 ]
+
+# All market events by year
+MARKET_EVENTS_BY_YEAR = {
+    2020: MARKET_EVENTS_2020,
+    2021: MARKET_EVENTS_2021,
+    2022: MARKET_EVENTS_2022,
+    2023: MARKET_EVENTS_2023,
+    2024: MARKET_EVENTS_2024,
+    2025: MARKET_EVENTS_2025
+}
+
+# Starting prices by year (approximate)
+BASE_PRICES_BY_YEAR = {
+    2020: {"BTC": 7200, "ETH": 130, "XRP": 0.19, "LTC": 42, "LINK": 2, "ADA": 0.03, "DOT": 3},
+    2021: {"BTC": 29000, "ETH": 730, "SOL": 1.5, "XRP": 0.22, "ADA": 0.18, "DOT": 8, "LINK": 12},
+    2022: {"BTC": 47000, "ETH": 3700, "SOL": 170, "XRP": 0.83, "ADA": 1.3, "AVAX": 110, "LINK": 25},
+    2023: {"BTC": 16500, "ETH": 1200, "SOL": 10, "XRP": 0.35, "ADA": 0.25, "AVAX": 11, "LINK": 5.5},
+    2024: {"BTC": 42000, "ETH": 2300, "SOL": 100, "XRP": 0.62, "ADA": 0.60, "AVAX": 38, "LINK": 15},
+    2025: {"BTC": 68000, "ETH": 3500, "SOL": 150, "XRP": 0.55, "ADA": 0.45, "AVAX": 35, "LINK": 15}
+}
 
 
 class AdaptiveStrategy:
