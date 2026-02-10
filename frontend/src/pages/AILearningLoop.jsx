@@ -590,9 +590,9 @@ const AILearningLoop = () => {
                           </Badge>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-[#A1A1AA]">
-                          <span>Current Performance: {adjustment.current_performance.toFixed(1)}%</span>
+                          <span>Current Performance: {(adjustment.current_performance || 0).toFixed(1)}%</span>
                           <span>•</span>
-                          <span>Suggested Change: {adjustment.suggested_boost || adjustment.suggested_reduction}%</span>
+                          <span>Suggested Change: {adjustment.suggested_boost || adjustment.suggested_reduction || 0}%</span>
                         </div>
                       </div>
                     ))}
