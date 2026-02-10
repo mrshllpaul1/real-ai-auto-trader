@@ -463,7 +463,7 @@ async def _init_phase6_scheduling(db):
             current_total_events = stats.get("total_events", 0)
             if current_total_events < MIN_HISTORICAL_EVENTS:
                 seed_result = await events_db.seed_major_events()
-                if not seed_result:
+                if seed_result is None:
                     logger.warning(
                         "⚠️ Historical events auto-seed returned no result (existing events: %s) – check database connectivity",
                         current_total_events,
@@ -493,7 +493,7 @@ async def _init_phase6_scheduling(db):
                                 updated,
                             )
         except Exception as e:
-            logger.warning("⚠️ Auto-seed of historical events skipped: %s", e)
+            logger.warning("⚠️ Auto-seed of historical events failed: %s", e)
     
     # Event Triggers
     trigger_service = get_event_trigger_service(
