@@ -586,15 +586,95 @@ class BackendTester:
         await self.test_endpoint('GET', '/enhanced-data/onchain/BTC/history?days=7&limit=10', 
                                'Get BTC On-Chain Historical Metrics')
 
+    async def test_enhanced_mtf_training_endpoints(self):
+        """Test Enhanced MTF Training API endpoints with sentiment integration"""
+        print("\n=== TESTING ENHANCED MTF TRAINING API ENDPOINTS ===")
+        
+        # 1. GET /api/enhanced-mtf-training/status
+        print("\n--- 1. Enhanced MTF Training Status ---")
+        await self.test_endpoint('GET', '/enhanced-mtf-training/status', 
+                               'Enhanced MTF Training Status')
+        
+        # 2. GET /api/enhanced-mtf-training/model-info
+        print("\n--- 2. Enhanced MTF Model Info ---")
+        await self.test_endpoint('GET', '/enhanced-mtf-training/model-info', 
+                               'Enhanced MTF Model Information')
+        
+        # 3. GET /api/enhanced-mtf-training/fear-greed
+        print("\n--- 3. Fear & Greed Index ---")
+        await self.test_endpoint('GET', '/enhanced-mtf-training/fear-greed', 
+                               'Fear & Greed Index Data')
+        
+        # 4. GET /api/enhanced-mtf-training/sentiment/BTC
+        print("\n--- 4. Sentiment Analysis for BTC ---")
+        await self.test_endpoint('GET', '/enhanced-mtf-training/sentiment/BTC', 
+                               'BTC Sentiment Analysis')
+        
+        # Test sentiment for other major coins
+        for coin in ['ETH', 'SOL']:
+            await self.test_endpoint('GET', f'/enhanced-mtf-training/sentiment/{coin}', 
+                                   f'{coin} Sentiment Analysis')
+        
+        # 5. GET /api/enhanced-mtf-training/predict/BTC
+        print("\n--- 5. Enhanced MTF Predictions ---")
+        await self.test_endpoint('GET', '/enhanced-mtf-training/predict/BTC', 
+                               'Enhanced MTF BTC Prediction')
+        
+        # Test predictions for other coins
+        for coin in ['ETH', 'SOL']:
+            await self.test_endpoint('GET', f'/enhanced-mtf-training/predict/{coin}', 
+                                   f'Enhanced MTF {coin} Prediction')
+        
+        # 6. GET /api/enhanced-mtf-training/predict-all
+        print("\n--- 6. Enhanced MTF Batch Predictions ---")
+        await self.test_endpoint('GET', '/enhanced-mtf-training/predict-all', 
+                               'Enhanced MTF All Predictions')
+        
+        # 7. Training History
+        print("\n--- 7. Enhanced MTF Training History ---")
+        await self.test_endpoint('GET', '/enhanced-mtf-training/history', 
+                               'Enhanced MTF Training History')
+        
+        # 8. Data Download (optional)
+        print("\n--- 8. Enhanced MTF Data Download ---")
+        download_data = {
+            "symbols": ["BTC", "ETH"],
+            "timeframes": ["1h", "4h", "1D"],
+            "force": False
+        }
+        await self.test_endpoint('POST', '/enhanced-mtf-training/download-data', 
+                               'Enhanced MTF Download OHLCV Data', 
+                               data=download_data, expected_status=[200, 201, 202])
+        
+        # 9. POST Prediction with custom parameters
+        print("\n--- 9. Enhanced MTF Custom Prediction ---")
+        prediction_data = {
+            "symbol": "BTC",
+            "timeframes": ["1h", "4h", "1D"]
+        }
+        await self.test_endpoint('POST', '/enhanced-mtf-training/predict', 
+                               'Enhanced MTF Custom BTC Prediction', 
+                               data=prediction_data)
+        
+        # 10. POST Batch Predictions with custom parameters
+        print("\n--- 10. Enhanced MTF Custom Batch Predictions ---")
+        batch_prediction_data = {
+            "symbols": ["BTC", "ETH", "SOL"],
+            "timeframes": ["1h", "4h"]
+        }
+        await self.test_endpoint('POST', '/enhanced-mtf-training/predict-all', 
+                               'Enhanced MTF Custom Batch Predictions', 
+                               data=batch_prediction_data)
+
     async def run_all_tests(self):
         """Run all test suites"""
-        print(f"🚀 Starting Backend API Tests - ENHANCED DATA API TESTING")
+        print(f"🚀 Starting Backend API Tests - ENHANCED MTF TRAINING API TESTING")
         print(f"📡 Testing Backend URL: {BASE_URL}")
         print(f"👤 User ID: {USER_ID}")
         print("=" * 60)
         
-        # Run test suites - prioritize Enhanced Data API testing
-        await self.test_enhanced_data_api_endpoints()
+        # Run test suites - prioritize Enhanced MTF Training API testing
+        await self.test_enhanced_mtf_training_endpoints()
         await self.test_health_endpoints()
         await self.test_tethys_trading_engine()
         await self.test_event_triggers_system()
