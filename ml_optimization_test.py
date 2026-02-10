@@ -157,7 +157,7 @@ class MLOptimizationTester:
                 sharpe_ratios_positive = all(r.get('sharpe_ratio', 0) > 0 for r in results)
                 
                 self.log_result(
-                    f"Win Rates Valid (50-65%): {win_rates_valid}",
+                    f"Win Rates Valid (50-70%): {win_rates_valid}",
                     win_rates_valid,
                     200 if win_rates_valid else 400,
                     {"win_rates": [r.get('win_rate') for r in results[:3]]}
