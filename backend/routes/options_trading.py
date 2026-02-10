@@ -143,18 +143,59 @@ def calculate_greeks(S, K, T, r, sigma, option_type="call"):
 # API ENDPOINTS
 # =============================================================================
 
+async def get_real_price(symbol: str) -> float:
+    """Get real price from Kraken API"""
+    import httpx
+    symbol_map = {
+        "BTC": "XXBTZUSD",
+        "ETH": "XETHZUSD",
+        "SOL": "SOLUSD"
+    }
+    pair = symbol_map.get(symbol.upper(), f"{symbol.upper()}USD")
+    
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                "https://api.kraken.com/0/public/Ticker",
+                params={"pair": pair}
+            )
+            data = response.json()
+            if not data.get("error") and data.get("result"):
+                for key, ticker in data["result"].items():
+                    # 'c' is the last trade closed [price, lot volume]
+                    return float(ticker['c'][0])
+    except Exception as e:
+        logger.warning(f"Failed to get Kraken price for {symbol}: {e}")
+    
+    # Fallback to CoinGecko if Kraken fails
+    try:
+        coin_map = {"BTC": "bitcoin", "ETH": "ethereum", "SOL": "solana"}
+        coin_id = coin_map.get(symbol.upper(), symbol.lower())
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                f"https://api.coingecko.com/api/v3/simple/price",
+                params={"ids": coin_id, "vs_currencies": "usd"}
+            )
+            data = response.json()
+            if coin_id in data:
+                return float(data[coin_id]['usd'])
+    except Exception as e:
+        logger.warning(f"Failed to get CoinGecko price for {symbol}: {e}")
+    
+    return None
+
+
 @router.get("/chain/{symbol}")
 async def get_option_chain(
     symbol: str,
     db = Depends(get_database)
 ):
-    """Get available options chain for a symbol"""
-    # Generate simulated option chain
-    current_price = {
-        "BTC": 45000,
-        "ETH": 2500,
-        "SOL": 100
-    }.get(symbol.upper(), 1000)
+    """Get available options chain for a symbol with REAL market prices"""
+    # Get REAL price from Kraken
+    current_price = await get_real_price(symbol.upper())
+    
+    if current_price is None:
+        raise HTTPException(status_code=503, detail=f"Unable to fetch real price for {symbol}")
     
     # Generate strikes around current price
     strikes = []
