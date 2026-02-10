@@ -152,9 +152,14 @@ const AdaptiveStrategy = () => {
 
   const predictEvents = async () => {
     try {
-      const res = await api.post('/adaptive-strategy/predict-events', { days_ahead: 30 });
+      const res = await api.post('/adaptive-strategy/predict-events', { days_ahead: 60 });
       setPredictedEvents(res.data?.events || []);
-      toast.success(`Predicted ${res.data?.total_events || 0} events`);
+      toast.success(`Predicted ${res.data?.total_events || 0} events (${res.data?.high_probability_events || 0} high confidence)`);
+      // Also refresh coverage stats
+      const coverageRes = await api.get('/adaptive-strategy/event-coverage-stats').catch(() => ({ data: null }));
+      setCoverageStats(coverageRes.data);
+      const calendarRes = await api.get('/adaptive-strategy/event-calendar?days_ahead=90').catch(() => ({ data: null }));
+      setEventCalendar(calendarRes.data);
     } catch (error) {
       toast.error('Failed to predict events');
     }
