@@ -32,6 +32,7 @@ import Guide from "./pages/Guide";
 import Setup from "./pages/Setup";
 import TradingJournal from "./pages/TradingJournal";
 import AIChat from "./pages/AIChat";
+import AITeacher from "./pages/AITeacher";
 import EnsembleAI from "./pages/EnsembleAI";
 import EventTriggers from "./pages/EventTriggers";
 import GemBacktester from "./pages/GemBacktester";
