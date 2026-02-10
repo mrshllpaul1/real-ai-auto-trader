@@ -164,12 +164,13 @@ async def get_backtest_results(backtest_id: str):
 
 
 @router.post("/quick-test")
-async def run_quick_yearly_test(year: int = 2025):
+async def run_quick_yearly_test(year: int = 2025, initial_capital: float = 1000):
     """
     Run a quick synchronous yearly backtest with top 20 coins.
     Returns results immediately (may take 5-10 seconds).
     
     Supported years: 2020, 2021, 2022, 2023, 2024, 2025, 2026
+    Default initial capital: $1,000
     """
     if year < 2020 or year > 2026:
         raise HTTPException(status_code=400, detail="Year must be between 2020 and 2026")
@@ -181,7 +182,7 @@ async def run_quick_yearly_test(year: int = 2025):
         
         results = await run_yearly_adaptive_backtest(
             year=year,
-            initial_capital=100000,
+            initial_capital=initial_capital,
             coins=coins,
             db=_db
         )
