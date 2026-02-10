@@ -48,6 +48,7 @@ import ModelPerformanceDashboard from "./pages/ModelPerformanceDashboard";
 import TethysDashboard from "./pages/TethysDashboard";
 import CommandCenter from "./pages/CommandCenter";
 import AICommandCenter from "./pages/AICommandCenter";
+import EnhancedMTFPredictions from "./pages/EnhancedMTFPredictions";
 import Sidebar from "./components/Sidebar";
 import FloatingCommandHub from "./components/FloatingCommandHub";
 import { Toaster } from "./components/ui/sonner";
