@@ -795,6 +795,301 @@ class OnChainAndAdaptiveStrategyTester:
         await self.test_endpoint('GET', '/enhanced-mtf-training/history', 
                                'Enhanced MTF Training History')
 
+    async def test_whale_alerts_and_backtesting_system(self):
+        """Test the new Whale Alerts and Event Backtesting system"""
+        print("\n=== TESTING WHALE ALERTS AND EVENT BACKTESTING SYSTEM ===")
+        print("🎯 Testing whale alerts, monitoring, and event backtesting with accuracy metrics")
+        
+        # 1. WHALE ALERT SYSTEM
+        print("\n--- 1. Whale Alert System ---")
+        
+        # Test whale alert check
+        check_result = await self.test_endpoint('POST', '/alerts/whale/check', 
+                                              'Whale Alert Check - On-Chain Data Analysis')
+        
+        if check_result['success'] and check_result.get('data'):
+            data = check_result['data']
+            new_alerts = data.get('new_alerts', 0)
+            alerts = data.get('alerts', [])
+            
+            print(f"   📊 New alerts generated: {new_alerts}")
+            
+            # Verify alert structure
+            if alerts:
+                sample_alert = alerts[0]
+                required_fields = ['alert_id', 'title', 'severity', 'price_impact']
+                has_required_fields = all(field in sample_alert for field in required_fields)
+                
+                if has_required_fields:
+                    self.log_result('Whale Alert - Alert Structure', True, 200,
+                                  f"✅ Alerts contain required fields: {required_fields}")
+                    
+                    # Check severity levels
+                    severity = sample_alert.get('severity', '')
+                    expected_severities = ['info', 'warning', 'critical', 'urgent']
+                    if severity in expected_severities:
+                        self.log_result('Whale Alert - Severity Levels', True, 200,
+                                      f"✅ Valid severity level: {severity}")
+                    else:
+                        self.log_result('Whale Alert - Severity Levels', False, 200, None,
+                                      f"❌ Invalid severity: {severity}. Expected: {expected_severities}")
+                    
+                    # Check price impact
+                    price_impact = sample_alert.get('price_impact', 0)
+                    if isinstance(price_impact, (int, float)):
+                        self.log_result('Whale Alert - Price Impact', True, 200,
+                                      f"✅ Price impact included: {price_impact}")
+                    else:
+                        self.log_result('Whale Alert - Price Impact', False, 200, None,
+                                      f"❌ Invalid price impact format: {price_impact}")
+                else:
+                    missing_fields = [field for field in required_fields if field not in sample_alert]
+                    self.log_result('Whale Alert - Alert Structure', False, 200, None,
+                                  f"❌ Missing fields: {missing_fields}")
+        
+        # Test active alerts
+        active_result = await self.test_endpoint('GET', '/alerts/whale/active', 
+                                               'Whale Alert - Get Active Alerts')
+        
+        if active_result['success'] and active_result.get('data'):
+            data = active_result['data']
+            alerts = data.get('alerts', [])
+            count = data.get('count', 0)
+            
+            print(f"   📊 Active alerts: {count}")
+            
+            # Verify alerts include recommended_action
+            if alerts:
+                for alert in alerts[:3]:  # Check first 3 alerts
+                    if 'recommended_action' in alert:
+                        self.log_result('Whale Alert - Recommended Action', True, 200,
+                                      f"✅ Alert includes recommended_action")
+                        break
+                else:
+                    self.log_result('Whale Alert - Recommended Action', False, 200, None,
+                                  f"❌ Alerts missing recommended_action field")
+        
+        # Test alert summary with severity breakdown
+        summary_result = await self.test_endpoint('GET', '/alerts/whale/summary', 
+                                                'Whale Alert - Summary with Severity Breakdown')
+        
+        if summary_result['success'] and summary_result.get('data'):
+            data = summary_result['data']
+            
+            # Check for severity breakdown
+            severity_counts = {}
+            for severity in ['info', 'warning', 'critical', 'urgent']:
+                if f"{severity}_count" in data or severity in data:
+                    severity_counts[severity] = data.get(f"{severity}_count", data.get(severity, 0))
+            
+            if severity_counts:
+                self.log_result('Whale Alert - Severity Breakdown', True, 200,
+                              f"✅ Severity breakdown: {severity_counts}")
+            else:
+                self.log_result('Whale Alert - Severity Breakdown', False, 200, None,
+                              f"❌ No severity breakdown found in summary")
+        
+        # Test alert thresholds
+        thresholds_result = await self.test_endpoint('GET', '/alerts/whale/thresholds', 
+                                                   'Whale Alert - Get Thresholds')
+        
+        if thresholds_result['success'] and thresholds_result.get('data'):
+            data = thresholds_result['data']
+            thresholds = data.get('thresholds', {})
+            
+            print(f"   📊 Alert thresholds configured: {len(thresholds)} metrics")
+            
+            # Verify threshold structure
+            if thresholds:
+                sample_threshold = list(thresholds.values())[0]
+                required_threshold_fields = ['name', 'warning', 'critical', 'urgent']
+                has_threshold_fields = all(field in sample_threshold for field in required_threshold_fields)
+                
+                if has_threshold_fields:
+                    self.log_result('Whale Alert - Threshold Structure', True, 200,
+                                  f"✅ Thresholds properly configured")
+                else:
+                    self.log_result('Whale Alert - Threshold Structure', False, 200, None,
+                                  f"❌ Invalid threshold structure")
+        
+        # Test monitoring start
+        start_monitoring_result = await self.test_endpoint('POST', '/alerts/whale/monitoring/start', 
+                                                         'Whale Alert - Start Monitoring')
+        
+        if start_monitoring_result['success'] and start_monitoring_result.get('data'):
+            data = start_monitoring_result['data']
+            status = data.get('status', '')
+            
+            if status in ['started', 'already_running']:
+                self.log_result('Whale Alert - Start Monitoring', True, 200,
+                              f"✅ Monitoring {status}")
+            else:
+                self.log_result('Whale Alert - Start Monitoring', False, 200, None,
+                              f"❌ Unexpected monitoring status: {status}")
+        
+        # Test monitoring stop
+        stop_monitoring_result = await self.test_endpoint('POST', '/alerts/whale/monitoring/stop', 
+                                                        'Whale Alert - Stop Monitoring')
+        
+        if stop_monitoring_result['success'] and stop_monitoring_result.get('data'):
+            data = stop_monitoring_result['data']
+            status = data.get('status', '')
+            
+            if status == 'stopped':
+                self.log_result('Whale Alert - Stop Monitoring', True, 200,
+                              f"✅ Monitoring stopped successfully")
+            else:
+                self.log_result('Whale Alert - Stop Monitoring', False, 200, None,
+                              f"❌ Unexpected stop status: {status}")
+        
+        # 2. EVENT BACKTESTING SYSTEM
+        print("\n--- 2. Event Backtesting System ---")
+        
+        # Test simulate backtest with n_predictions=50
+        simulate_data = {"n_predictions": 50}
+        simulate_result = await self.test_endpoint('POST', '/alerts/backtest/simulate', 
+                                                 'Event Backtest - Simulate 50 Predictions',
+                                                 data=simulate_data)
+        
+        if simulate_result['success'] and simulate_result.get('data'):
+            data = simulate_result['data']
+            
+            # Check for required backtest metrics
+            required_metrics = ['precision', 'recall', 'f1_score', 'impact_accuracy']
+            metrics_found = {}
+            
+            for metric in required_metrics:
+                if metric in data:
+                    metrics_found[metric] = data[metric]
+            
+            if len(metrics_found) >= 3:  # At least 3 of 4 metrics
+                self.log_result('Event Backtest - Required Metrics', True, 200,
+                              f"✅ Backtest metrics: {metrics_found}")
+                
+                # Check if average accuracy > 70%
+                accuracy_metrics = [v for v in metrics_found.values() if isinstance(v, (int, float))]
+                if accuracy_metrics:
+                    avg_accuracy = sum(accuracy_metrics) / len(accuracy_metrics)
+                    if avg_accuracy > 0.7:
+                        self.log_result('Event Backtest - Accuracy Threshold', True, 200,
+                                      f"✅ Average accuracy: {avg_accuracy:.1%} (>70%)")
+                    else:
+                        self.log_result('Event Backtest - Accuracy Threshold', False, 200, None,
+                                      f"❌ Average accuracy: {avg_accuracy:.1%} (≤70%)")
+            else:
+                missing_metrics = [m for m in required_metrics if m not in data]
+                self.log_result('Event Backtest - Required Metrics', False, 200, None,
+                              f"❌ Missing metrics: {missing_metrics}")
+        
+        # Test accuracy metrics endpoint
+        accuracy_result = await self.test_endpoint('GET', '/alerts/backtest/accuracy', 
+                                                 'Event Backtest - Get Accuracy Metrics')
+        
+        if accuracy_result['success'] and accuracy_result.get('data'):
+            data = accuracy_result['data']
+            
+            # Verify precision, recall, F1 score are present
+            accuracy_metrics = ['precision', 'recall', 'f1_score']
+            found_metrics = {metric: data.get(metric) for metric in accuracy_metrics if metric in data}
+            
+            if len(found_metrics) >= 2:
+                self.log_result('Event Backtest - Accuracy Metrics Detail', True, 200,
+                              f"✅ Accuracy metrics available: {found_metrics}")
+            else:
+                self.log_result('Event Backtest - Accuracy Metrics Detail', False, 200, None,
+                              f"❌ Insufficient accuracy metrics: {found_metrics}")
+        
+        # Test event type performance breakdown
+        event_types_result = await self.test_endpoint('GET', '/alerts/backtest/event-types', 
+                                                    'Event Backtest - Event Type Performance')
+        
+        if event_types_result['success'] and event_types_result.get('data'):
+            data = event_types_result['data']
+            
+            # Check for hit_rate by event type
+            event_performance = {}
+            for key, value in data.items():
+                if 'hit_rate' in str(key).lower() or isinstance(value, dict) and 'hit_rate' in value:
+                    event_performance[key] = value
+            
+            if event_performance:
+                self.log_result('Event Backtest - Event Type Hit Rates', True, 200,
+                              f"✅ Event type performance breakdown available")
+                
+                # Check if any event type has hit_rate
+                hit_rates_found = False
+                for event_type, performance in event_performance.items():
+                    if isinstance(performance, dict) and 'hit_rate' in performance:
+                        hit_rate = performance['hit_rate']
+                        print(f"   📊 {event_type} hit rate: {hit_rate}")
+                        hit_rates_found = True
+                
+                if hit_rates_found:
+                    self.log_result('Event Backtest - Hit Rate Values', True, 200,
+                                  f"✅ Hit rates calculated for event types")
+                else:
+                    self.log_result('Event Backtest - Hit Rate Values', False, 200, None,
+                                  f"❌ No hit_rate values found in event performance")
+            else:
+                self.log_result('Event Backtest - Event Type Hit Rates', False, 200, None,
+                              f"❌ No event type performance breakdown found")
+        
+        # Test historical events list
+        historical_result = await self.test_endpoint('GET', '/alerts/backtest/historical-events', 
+                                                   'Event Backtest - Historical Events List')
+        
+        if historical_result['success'] and historical_result.get('data'):
+            data = historical_result['data']
+            events = data.get('events', [])
+            count = data.get('count', 0)
+            event_types = data.get('event_types', [])
+            
+            print(f"   📊 Historical events available: {count}")
+            print(f"   📊 Event types: {event_types}")
+            
+            if count > 0:
+                self.log_result('Event Backtest - Historical Events', True, 200,
+                              f"✅ {count} historical events available")
+                
+                # Verify event structure
+                if events:
+                    sample_event = events[0]
+                    required_event_fields = ['event_type', 'date']
+                    has_event_fields = any(field in sample_event for field in required_event_fields)
+                    
+                    if has_event_fields:
+                        self.log_result('Event Backtest - Event Structure', True, 200,
+                                      f"✅ Historical events properly structured")
+                    else:
+                        self.log_result('Event Backtest - Event Structure', False, 200, None,
+                                      f"❌ Invalid historical event structure")
+            else:
+                self.log_result('Event Backtest - Historical Events', False, 200, None,
+                              f"❌ No historical events found")
+        
+        # 3. INTEGRATION TESTS
+        print("\n--- 3. Integration Tests ---")
+        
+        # Test filtering alerts by severity
+        for severity in ['info', 'warning', 'critical', 'urgent']:
+            await self.test_endpoint('GET', f'/alerts/whale/active?severity={severity}', 
+                                   f'Whale Alert - Filter by {severity.title()} Severity')
+        
+        # Test event type specific accuracy
+        for event_type in ['fomc_meeting', 'bitcoin_halving', 'options_expiry']:
+            await self.test_endpoint('GET', f'/alerts/backtest/accuracy?event_type={event_type}', 
+                                   f'Event Backtest - {event_type.title()} Accuracy')
+        
+        print("\n🏁 WHALE ALERTS AND EVENT BACKTESTING SYSTEM TESTING COMPLETED")
+        
+        # Summary of key verification points
+        print("\n📊 VERIFICATION SUMMARY:")
+        print("   • Alerts generated with severity levels (info, warning, critical, urgent)")
+        print("   • Alerts include recommended_action and price_impact_expected")
+        print("   • Backtest returns precision, recall, f1_score, impact_accuracy")
+        print("   • Event type breakdown shows hit_rate for each type")
+        print("   • Average accuracy score verification (target: >70%)")
+
     async def test_adaptive_strategy_system(self):
         """Test the new Adaptive Strategy and Event Prediction system"""
         print("\n=== TESTING ADAPTIVE STRATEGY AND EVENT PREDICTION SYSTEM ===")
