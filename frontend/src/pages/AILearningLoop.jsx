@@ -269,7 +269,7 @@ const AILearningLoop = () => {
                 <span className="text-sm text-[#A1A1AA]">Verification Rate</span>
               </div>
               <div className="text-3xl font-data font-bold text-[#007AFF]">
-                {(status.verification_rate || 0).toFixed(1)}%
+                {(safeStatus.verification_rate || 0).toFixed(1)}%
               </div>
             </CardContent>
           </Card>
