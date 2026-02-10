@@ -262,7 +262,7 @@ class AdaptiveStrategy:
             self.params["volatility_filter"] = 0.04
             self.params["stop_loss_pct"] = 2.5
             self.params["position_size_pct"] = 5
-            self.params["max_positions"] = 3
+            self.params["max_positions"] = 6  # Reduced but still diversified
             self.params["take_profit_pct"] = 6
             
         elif regime == "sideways":
@@ -281,12 +281,12 @@ class AdaptiveStrategy:
             self.params["rsi_oversold"] = 24
             
         elif regime == "crash":
-            # ULTRA conservative during crashes - mostly sit out
+            # ULTRA conservative during crashes - reduce exposure
             self.params["entry_threshold"] = 14
             self.params["volatility_filter"] = 0.06
             self.params["stop_loss_pct"] = 2
             self.params["position_size_pct"] = 3
-            self.params["max_positions"] = 2
+            self.params["max_positions"] = 4  # Reduced during crashes
             self.params["take_profit_pct"] = 5
             
         elif regime == "euphoria":
