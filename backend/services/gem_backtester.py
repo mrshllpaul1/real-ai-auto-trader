@@ -15,6 +15,13 @@ class GemBacktester:
     Backtests gem predictions against historical OHLCV data.
     Iteratively improves prediction accuracy through pattern learning.
     """
+    OVERFIT_GAP_THRESHOLD = 0.08
+    MIN_WEIGHT_FLOOR = 0.05
+    WEIGHT_RETAIN_FACTOR = 0.85
+    BASELINE_BLEND_FACTOR = 1 - WEIGHT_RETAIN_FACTOR
+    MIN_ACCEPTABLE_PRECISION = 0.6
+    MIN_ACCEPTABLE_RECALL = 0.55
+    TRAIN_VAL_SPLIT_RATIO = 0.7
     
     def __init__(self, db: AsyncIOMotorDatabase, gem_predictor=None):
         self.db = db
@@ -431,6 +438,34 @@ class GemBacktester:
         
         return coin_gain_pct >= 30 and relative_gain >= 15
     
+    def _compute_metrics(self, subset: List[Dict[str, Any]]) -> Dict[str, Any]:
+        if not subset:
+            return {
+                "true_positive_count": 0,
+                "true_negative_count": 0,
+                "false_positive_count": 0,
+                "false_negative_count": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1": 0.0
+            }
+        tp = sum(1 for p in subset if p["predicted_gem"] and p["actual_gem"])
+        tn = sum(1 for p in subset if not p["predicted_gem"] and not p["actual_gem"])
+        fp = sum(1 for p in subset if p["predicted_gem"] and not p["actual_gem"])
+        fn = sum(1 for p in subset if not p["predicted_gem"] and p["actual_gem"])
+        precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
+        return {
+            "true_positive_count": tp,
+            "true_negative_count": tn,
+            "false_positive_count": fp,
+            "false_negative_count": fn,
+            "precision": round(float(precision), 4),
+            "recall": round(float(recall), 4),
+            "f1": round(float(f1), 4)
+        }
+    
     def _analyze_factors(
         self,
         predictions: List[Dict],
@@ -446,14 +481,49 @@ class GemBacktester:
         # Identify patterns
         correct_gem_predictions = [p for p in correct if p["predicted_gem"]]
         correct_non_gem = [p for p in correct if not p["predicted_gem"]]
+        metrics = self._compute_metrics(predictions)
+        if predictions:
+            # Keep chronological ordering; use the latter portion as a holdout to avoid look-ahead bias without shuffling
+            split_idx = int(len(predictions) * self.TRAIN_VAL_SPLIT_RATIO)
+            if split_idx == 0:
+                train_subset = predictions
+                val_subset = []
+            else:
+                train_subset = predictions[:split_idx]
+                val_subset = predictions[split_idx:]
+        else:
+            train_subset = []
+            val_subset = []
+        train_metrics = self._compute_metrics(train_subset)
+        val_metrics = self._compute_metrics(val_subset)
+        validation_available = bool(val_subset)
+        if not validation_available:
+            val_metrics = {
+                **val_metrics,
+                "precision": None,
+                "recall": None,
+                "f1": None
+            }
+        overfit_gap = max(0.0, train_metrics["f1"] - (val_metrics["f1"] or 0)) if validation_available else 0.0
         
         return {
             "correct_avg_score": round(float(correct_avg_score), 3),
             "incorrect_avg_score": round(float(incorrect_avg_score), 3),
             "correct_gem_count": len(correct_gem_predictions),
             "correct_non_gem_count": len(correct_non_gem),
-            "false_positive_count": len([p for p in incorrect if p["predicted_gem"]]),
-            "false_negative_count": len([p for p in incorrect if not p["predicted_gem"]])
+            "false_positive_count": metrics["false_positive_count"],
+            "false_negative_count": metrics["false_negative_count"],
+            "precision": metrics["precision"],
+            "recall": metrics["recall"],
+            "f1": metrics["f1"],
+            "train_precision": train_metrics["precision"],
+            "train_recall": train_metrics["recall"],
+            "train_f1": train_metrics["f1"],
+            "val_precision": val_metrics["precision"],
+            "val_recall": val_metrics["recall"],
+            "val_f1": val_metrics["f1"],
+            "overfit_gap": overfit_gap,
+            "validation_available": validation_available
         }
     
     def _improve_weights(
@@ -464,35 +534,50 @@ class GemBacktester:
     ) -> Dict[str, Any]:
         """Improve weights and threshold based on backtest results"""
         new_weights = current_weights.copy()
-        new_threshold = current_threshold
+        new_threshold = float(current_threshold)  # Baseline before any adjustments
         analysis = iter_result.get("factor_analysis", {})
         
         changes = []
-        reason = ""
+        reason_parts: List[str] = []
         
         # Get false positive and negative counts
         false_positives = analysis.get("false_positive_count", 0)
         false_negatives = analysis.get("false_negative_count", 0)
         accuracy = iter_result.get("accuracy", 0)
+        precision = analysis.get("val_precision", analysis.get("precision", 0))
+        recall = analysis.get("val_recall", analysis.get("recall", 0))
+        overfit_gap = analysis.get("overfit_gap", 0)
+        
+        # Treat validation F1 trailing training by more than configured threshold as overfitting
+        if overfit_gap > self.OVERFIT_GAP_THRESHOLD:
+            baseline = 1 / len(new_weights)
+            # Blend current weights with a uniform baseline and enforce MIN_WEIGHT_FLOOR before normalization to reduce overfitting (normalization rebalances below)
+            new_weights = {
+                k: max(self.MIN_WEIGHT_FLOOR, self.WEIGHT_RETAIN_FACTOR * v + self.BASELINE_BLEND_FACTOR * baseline)
+                for k, v in new_weights.items()
+            }
+            new_threshold = min(0.85, new_threshold + 0.02)
+            changes.append("Smoothed weights to reduce validation gap")
+            reason_parts.append("Validation F1 significantly below training - regularizing to avoid overfitting")
         
         # Strategy based on error type
-        if false_positives > false_negatives * 2:
+        if false_positives > false_negatives * 2 or precision < self.MIN_ACCEPTABLE_PRECISION:
             # Too many false positives - be more selective
-            new_threshold = min(0.85, current_threshold + 0.03)
+            new_threshold = min(0.85, new_threshold + 0.03)
             new_weights["relative_strength"] = min(0.30, new_weights.get("relative_strength", 0.20) + 0.02)
             new_weights["volume_surge"] = max(0.10, new_weights.get("volume_surge", 0.20) - 0.02)
             new_weights["price_momentum"] = max(0.08, new_weights.get("price_momentum", 0.15) - 0.01)
             changes.append(f"Increased threshold to {new_threshold:.2f}")
             changes.append("Increased relative_strength weight")
-            reason = "High false positive rate - being more selective"
+            reason_parts.append("High false positive rate/low precision - being more selective")
             
-        elif false_negatives > false_positives * 2:
+        elif false_negatives > false_positives * 2 or recall < self.MIN_ACCEPTABLE_RECALL:
             # Too many false negatives - be more lenient
-            new_threshold = max(0.55, current_threshold - 0.03)
+            new_threshold = max(0.55, new_threshold - 0.03)
             new_weights["volume_surge"] = min(0.25, new_weights.get("volume_surge", 0.20) + 0.02)
             new_weights["technical_setup"] = max(0.10, new_weights.get("technical_setup", 0.15) - 0.01)
             changes.append(f"Decreased threshold to {new_threshold:.2f}")
-            reason = "High false negative rate - being more inclusive"
+            reason_parts.append("High false negative rate/low recall - being more inclusive")
             
         elif accuracy < 50:
             # Low accuracy - adjust based on score distribution
@@ -504,7 +589,7 @@ class GemBacktester:
                 new_threshold = min(0.85, current_threshold + 0.02)
                 new_weights["relative_strength"] = min(0.30, new_weights.get("relative_strength", 0.20) + 0.03)
                 changes.append("Emphasizing relative strength")
-                reason = "Incorrect predictions scoring too high"
+                reason_parts.append("Incorrect predictions scoring too high")
             else:
                 # Explore weight space
                 factors = list(new_weights.keys())
@@ -514,24 +599,24 @@ class GemBacktester:
                 new_weights[boost_factor] = min(0.30, new_weights[boost_factor] + 0.02)
                 new_weights[reduce_factor] = max(0.05, new_weights[reduce_factor] - 0.02)
                 changes.append(f"Boosted {boost_factor}, reduced {reduce_factor}")
-                reason = "Exploring weight combinations"
+                reason_parts.append("Exploring weight combinations")
         else:
             # Decent accuracy - fine tune
             if accuracy < 65:
                 # Slight threshold adjustment
                 if false_positives > false_negatives:
-                    new_threshold = min(0.82, current_threshold + 0.01)
+                    new_threshold = min(0.82, new_threshold + 0.01)
                 else:
-                    new_threshold = max(0.60, current_threshold - 0.01)
+                    new_threshold = max(0.60, new_threshold - 0.01)
             
             # Small random exploration
             factor = np.random.choice(list(new_weights.keys()))
             adjustment = np.random.uniform(-0.01, 0.01)
             new_weights[factor] = max(0.05, min(0.30, new_weights[factor] + adjustment))
             changes.append(f"Fine-tuned {factor}")
-            reason = f"Optimization at {accuracy:.1f}% accuracy"
+            reason_parts.append(f"Optimization at {accuracy:.1f}% accuracy")
         
-        # Normalize weights to sum to 1
+        # Normalize weights after adjustments (including flooring) to keep distribution valid
         total = sum(new_weights.values())
         if total > 0:
             new_weights = {k: v / total for k, v in new_weights.items()}
@@ -540,7 +625,7 @@ class GemBacktester:
             "new_weights": new_weights,
             "new_threshold": new_threshold,
             "changes": changes,
-            "reason": reason
+            "reason": "; ".join(reason_parts)
         }
     
     async def get_backtest_history(self, limit: int = 10) -> List[Dict]:
