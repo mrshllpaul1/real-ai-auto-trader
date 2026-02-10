@@ -5,7 +5,27 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ---
 
-## Session Update - Feb 9, 2026 (Latest)
+## Session Update - Feb 10, 2026 (Latest)
+
+### ✅ NEW FEATURE: Enhanced Adaptive Backtesting with Month & Week Granularity
+
+**Added:**
+- Complete 52-week market calendar for all years (2020-2026)
+- Month-by-month event breakdown with date ranges
+- Weekly regime detection and strategy adaptation
+- Monthly performance tracking in backtest results
+- Year selector in Market Calendar view
+- Regime distribution summary (bull, bear, crash, euphoria, etc.)
+- Key events highlighting (crashes, euphoria periods)
+
+**Files Modified:**
+- `backend/services/yearly_adaptive_backtest.py` - Added complete week-by-week calendars for all years
+- `backend/routes/yearly_backtest.py` - Enhanced calendar API with year parameter
+- `frontend/src/pages/YearlyBacktest.jsx` - Updated UI with monthly breakdown view
+
+---
+
+## Session Update - Feb 9, 2026
 
 ### ✅ P0 Features COMPLETED
 
