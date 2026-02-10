@@ -582,6 +582,33 @@ async def place_spot_order(request: SpotOrderRequest):
         
         result = await _kraken_service.place_order(**order_params)
         
+        # Record entry price for tracking
+        executed_price = current_price if request.order_type.lower() == 'market' else request.price
+        if _entry_tracker:
+            try:
+                order_id = result.get('txid', [None])[0] if isinstance(result.get('txid'), list) else result.get('txid')
+                
+                if request.side.lower() == 'buy':
+                    entry_result = await _entry_tracker.record_buy(
+                        symbol=symbol,
+                        quantity=volume,
+                        price=executed_price,
+                        order_id=order_id,
+                        source="manual_trade"
+                    )
+                    logger.info(f"📈 Entry price recorded for {symbol}: {entry_result}")
+                else:  # sell
+                    entry_result = await _entry_tracker.record_sell(
+                        symbol=symbol,
+                        quantity=volume,
+                        price=executed_price,
+                        order_id=order_id,
+                        source="manual_trade"
+                    )
+                    logger.info(f"📉 Sell recorded for {symbol}: {entry_result}")
+            except Exception as e:
+                logger.warning(f"Entry price tracking error: {e}")
+        
         # Log trade to DB
         if _db:
             await _db.spot_trades.insert_one({
