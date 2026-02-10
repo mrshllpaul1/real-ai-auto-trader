@@ -503,6 +503,7 @@ async def _init_phase7_wire_dependencies(db):
     from routes import budget as budget_routes, journal as journal_routes
     from routes.learning import set_learning_service
     from routes import gem_predictor as gem_predictor_routes
+    from routes import enhanced_data as enhanced_data_routes
     
     # Wire route dependencies
     ai_universe.set_dependencies(_services['universe'])
