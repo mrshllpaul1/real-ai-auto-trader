@@ -119,6 +119,46 @@ const ModelPerformanceDashboard = () => {
     { metric: 'Drawdown Control', value: 78, fullMark: 100 }
   ];
 
+  const sb3AlgorithmMeta = {
+    srddqn: {
+      name: 'SRDDQN',
+      short: 'Self-Rewarding DQN',
+      badge: 'Advanced',
+      badgeColor: 'purple',
+      desc: 'Intrinsic rewards + curiosity + dueling architecture'
+    },
+    ddqn: {
+      name: 'DDQN',
+      short: 'Double DQN',
+      badge: 'Recommended',
+      badgeColor: 'green',
+      desc: 'Stabilized Q-learning with target action selection'
+    },
+    dqn: {
+      name: 'DQN',
+      short: 'Deep Q-Network',
+      desc: 'Replay buffer, target network, epsilon-greedy exploration'
+    },
+    ppo: {
+      name: 'PPO',
+      short: 'Proximal Policy Optimization',
+      desc: 'Clipped objective with GAE for smoother updates'
+    },
+    a2c: {
+      name: 'A2C',
+      short: 'Advantage Actor-Critic',
+      desc: 'Value baseline + entropy bonus for exploration'
+    },
+    sac: {
+      name: 'SAC',
+      short: 'Soft Actor-Critic',
+      desc: 'Maximum-entropy actor-critic with automatic entropy tuning'
+    }
+  };
+
+  const supportedSb3Algos = (sb3Status?.supported_algorithms || ['dqn', 'ddqn', 'ppo', 'a2c', 'sac']).map((a) => a.toLowerCase());
+  const sb3AlgorithmsToShow = ['srddqn', ...supportedSb3Algos];
+
   const StatusBadge = ({ status, text }) => (
     <span className={`px-2 py-1 text-xs rounded-full ${
       status === 'active' || status === true ? 'bg-green-500/20 text-green-400' :
@@ -648,44 +688,52 @@ const ModelPerformanceDashboard = () => {
 
                 <h4 className="text-white font-medium mb-4">Supported Algorithms</h4>
                 <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-                  {['SRDDQN', 'DDQN', 'DQN', 'PPO', 'A2C', 'SAC'].map((algo) => (
-                    <div key={algo} className={`rounded-lg p-3 text-center ${
-                      algo === 'SRDDQN' 
-                        ? 'bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30' 
-                        : algo === 'DDQN' 
-                          ? 'bg-gradient-to-br from-cyan-500/20 to-green-500/20 border border-cyan-500/30' 
-                          : 'bg-[#1a1a2e]'
-                    }`}>
-                      <div className={`w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center ${
-                        algo === 'SRDDQN' ? 'bg-purple-500/30' : algo === 'DDQN' ? 'bg-cyan-500/30' : 'bg-cyan-500/20'
+                  {sb3AlgorithmsToShow.map((algoKey) => {
+                    const meta = sb3AlgorithmMeta[algoKey] || { name: algoKey.toUpperCase(), desc: '' };
+                    const isSupported = supportedSb3Algos.includes(algoKey);
+                    const hasAgent = Object.values(sb3Status?.agents || {}).some(
+                      (agent) => agent.algorithm?.toLowerCase() === algoKey
+                    );
+                    const badgeColor = meta.badgeColor === 'purple'
+                      ? 'bg-purple-500/20 text-purple-400'
+                      : meta.badgeColor === 'green'
+                        ? 'bg-green-500/20 text-green-400'
+                        : 'bg-cyan-500/20 text-cyan-400';
+
+                    return (
+                      <div key={algoKey} className={`rounded-lg p-3 text-center ${
+                        algoKey === 'srddqn' 
+                          ? 'bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30' 
+                          : algoKey === 'ddqn' 
+                            ? 'bg-gradient-to-br from-cyan-500/20 to-green-500/20 border border-cyan-500/30' 
+                            : 'bg-[#1a1a2e]'
                       }`}>
-                        <Brain className={`w-5 h-5 ${
-                          algo === 'SRDDQN' ? 'text-pink-400' : algo === 'DDQN' ? 'text-green-400' : 'text-cyan-400'
-                        }`} />
+                        <div className={`w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center ${
+                          algoKey === 'srddqn' ? 'bg-purple-500/30' : algoKey === 'ddqn' ? 'bg-cyan-500/30' : 'bg-cyan-500/20'
+                        }`}>
+                          <Brain className={`w-5 h-5 ${
+                            algoKey === 'srddqn' ? 'text-pink-400' : algoKey === 'ddqn' ? 'text-green-400' : 'text-cyan-400'
+                          }`} />
+                        </div>
+                        <h4 className={`font-medium text-sm ${
+                          algoKey === 'srddqn' ? 'text-pink-400' : algoKey === 'ddqn' ? 'text-green-400' : 'text-white'
+                        }`}>{meta.name}</h4>
+                        <p className="text-gray-400 text-xs mt-1">{meta.short || meta.desc}</p>
+                        {meta.desc && (
+                          <p className="text-[11px] text-gray-500 mt-1 leading-tight">{meta.desc}</p>
+                        )}
+                        {meta.badge && (
+                          <span className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full ${badgeColor}`}>
+                            {meta.badge}
+                          </span>
+                        )}
+                        <div className="mt-2 text-[11px] text-gray-400 flex items-center justify-center gap-1">
+                          <StatusBadge status={isSupported} text={isSupported ? 'Supported' : 'Unavailable'} />
+                          {hasAgent && <StatusBadge status text="Loaded" />}
+                        </div>
                       </div>
-                      <h4 className={`font-medium text-sm ${
-                        algo === 'SRDDQN' ? 'text-pink-400' : algo === 'DDQN' ? 'text-green-400' : 'text-white'
-                      }`}>{algo}</h4>
-                      <p className="text-gray-400 text-xs mt-1">
-                        {algo === 'SRDDQN' && 'Self-Rewarding DQN'}
-                        {algo === 'DDQN' && 'Double DQN'}
-                        {algo === 'DQN' && 'Deep Q-Network'}
-                        {algo === 'PPO' && 'Proximal Policy'}
-                        {algo === 'A2C' && 'Actor-Critic'}
-                        {algo === 'SAC' && 'Soft Actor-Critic'}
-                      </p>
-                      {algo === 'SRDDQN' && (
-                        <span className="inline-block mt-1 px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded-full">
-                          Advanced
-                        </span>
-                      )}
-                      {algo === 'DDQN' && (
-                        <span className="inline-block mt-1 px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">
-                          Recommended
-                        </span>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* SRDDQN Details Card */}
