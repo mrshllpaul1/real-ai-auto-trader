@@ -1,18 +1,25 @@
-import React, { useState } from 'react';
+import React, { lazy, memo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { 
   Newspaper, Target, Calendar, Award, MessageSquare
 } from 'lucide-react';
-import { Breadcrumb, useTabKeyboardNav, KeyboardHint, MobileTabsList } from '@/components/HubNavigation';
+import { 
+  Breadcrumb, 
+  useTabState, 
+  useTabKeyboardNav, 
+  KeyboardHint, 
+  MobileTabsList,
+  LazyTabContent 
+} from '@/components/HubNavigation';
 
-// Import existing page components
-import NewsSentiment from './NewsSentiment';
-import NewsAndIntelligence from './NewsAndIntelligence';
-import EventTriggers from './EventTriggers';
-import EventTimeline from './EventTimeline';
-import TriggerPerformance from './TriggerPerformance';
+// Lazy load page components for better performance
+const NewsSentiment = lazy(() => import('./NewsSentiment'));
+const NewsAndIntelligence = lazy(() => import('./NewsAndIntelligence'));
+const EventTriggers = lazy(() => import('./EventTriggers'));
+const EventTimeline = lazy(() => import('./EventTimeline'));
+const TriggerPerformance = lazy(() => import('./TriggerPerformance'));
 
 const TABS = ['sentiment', 'intel', 'triggers', 'timeline', 'performance'];
 
@@ -24,8 +31,30 @@ const TAB_LABELS = {
   'performance': 'Stats'
 };
 
+const TAB_CONFIG = [
+  { value: 'sentiment', icon: MessageSquare, label: 'Sentiment', color: 'amber' },
+  { value: 'intel', icon: Newspaper, label: 'Intelligence', color: 'blue' },
+  { value: 'triggers', icon: Target, label: 'Triggers', color: 'red' },
+  { value: 'timeline', icon: Calendar, label: 'Timeline', color: 'purple' },
+  { value: 'performance', icon: Award, label: 'Stats', color: 'green' },
+];
+
+// Memoized tab trigger for performance
+const TabTriggerItem = memo(({ value, icon: Icon, label, color }) => (
+  <TabsTrigger 
+    value={value} 
+    className={`data-[state=active]:bg-${color}-500/20 whitespace-nowrap`}
+  >
+    <Icon className="w-4 h-4 mr-1 md:mr-2" />
+    {label}
+  </TabsTrigger>
+));
+
+TabTriggerItem.displayName = 'TabTriggerItem';
+
 const NewsHub = () => {
-  const [activeTab, setActiveTab] = useState('sentiment');
+  // URL-persisted tab state
+  const [activeTab, setActiveTab] = useTabState(TABS, 'sentiment');
   
   // Enable keyboard navigation
   useTabKeyboardNav(TABS, activeTab, setActiveTab);

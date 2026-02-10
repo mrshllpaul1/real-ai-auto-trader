@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
+import React, { lazy, memo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { 
   Wallet, Sprout, PieChart
 } from 'lucide-react';
-import { Breadcrumb, useTabKeyboardNav, KeyboardHint, MobileTabsList } from '@/components/HubNavigation';
+import { 
+  Breadcrumb, 
+  useTabState, 
+  useTabKeyboardNav, 
+  KeyboardHint, 
+  MobileTabsList,
+  LazyTabContent 
+} from '@/components/HubNavigation';
 
-// Import existing page components
-import DeFiWallet from './DeFiWallet';
-import YieldFarming from './YieldFarming';
-import PortfolioRebalance from './PortfolioRebalance';
+// Lazy load page components for better performance
+const DeFiWallet = lazy(() => import('./DeFiWallet'));
+const YieldFarming = lazy(() => import('./YieldFarming'));
+const PortfolioRebalance = lazy(() => import('./PortfolioRebalance'));
 
 const TABS = ['wallet', 'yield', 'rebalance'];
 
@@ -20,8 +27,28 @@ const TAB_LABELS = {
   'rebalance': 'Rebalance'
 };
 
+const TAB_CONFIG = [
+  { value: 'wallet', icon: Wallet, label: 'Wallet', color: 'emerald' },
+  { value: 'yield', icon: Sprout, label: 'Yield Farming', color: 'green' },
+  { value: 'rebalance', icon: PieChart, label: 'Rebalance', color: 'blue' },
+];
+
+// Memoized tab trigger for performance
+const TabTriggerItem = memo(({ value, icon: Icon, label, color }) => (
+  <TabsTrigger 
+    value={value} 
+    className={`data-[state=active]:bg-${color}-500/20 whitespace-nowrap`}
+  >
+    <Icon className="w-4 h-4 mr-1 md:mr-2" />
+    {label}
+  </TabsTrigger>
+));
+
+TabTriggerItem.displayName = 'TabTriggerItem';
+
 const DeFiHub = () => {
-  const [activeTab, setActiveTab] = useState('wallet');
+  // URL-persisted tab state
+  const [activeTab, setActiveTab] = useTabState(TABS, 'wallet');
   
   // Enable keyboard navigation
   useTabKeyboardNav(TABS, activeTab, setActiveTab);

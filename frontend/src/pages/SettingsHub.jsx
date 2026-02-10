@@ -1,20 +1,27 @@
-import React, { useState } from 'react';
+import React, { lazy, memo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { 
   Settings as SettingsIcon, Key, Shield, MessageCircle, BookOpen, Layout
 } from 'lucide-react';
-import { Breadcrumb, useTabKeyboardNav, KeyboardHint, MobileTabsList } from '@/components/HubNavigation';
+import { 
+  Breadcrumb, 
+  useTabState, 
+  useTabKeyboardNav, 
+  KeyboardHint, 
+  MobileTabsList,
+  LazyTabContent 
+} from '@/components/HubNavigation';
 
-// Import existing page components
-import Settings from './Settings';
-import Setup from './Setup';
-import TradingBudget from './TradingBudget';
-import TelegramNotifications from './TelegramNotifications';
-import TradingJournal from './TradingJournal';
-import Guide from './Guide';
-import DashboardCustomization from './DashboardCustomization';
+// Lazy load page components for better performance
+const Settings = lazy(() => import('./Settings'));
+const Setup = lazy(() => import('./Setup'));
+const TradingBudget = lazy(() => import('./TradingBudget'));
+const TelegramNotifications = lazy(() => import('./TelegramNotifications'));
+const TradingJournal = lazy(() => import('./TradingJournal'));
+const Guide = lazy(() => import('./Guide'));
+const DashboardCustomization = lazy(() => import('./DashboardCustomization'));
 
 const TABS = ['settings', 'setup', 'budget', 'telegram', 'journal', 'guide', 'customize'];
 
@@ -28,8 +35,32 @@ const TAB_LABELS = {
   'customize': 'Customize'
 };
 
+const TAB_CONFIG = [
+  { value: 'settings', icon: SettingsIcon, label: 'Settings', color: 'slate' },
+  { value: 'setup', icon: Key, label: 'API Setup', color: 'amber' },
+  { value: 'budget', icon: Shield, label: 'Budget', color: 'green' },
+  { value: 'telegram', icon: MessageCircle, label: 'Telegram', color: 'blue' },
+  { value: 'journal', icon: BookOpen, label: 'Journal', color: 'purple' },
+  { value: 'guide', icon: BookOpen, label: 'Guide', color: 'cyan' },
+  { value: 'customize', icon: Layout, label: 'Customize', color: 'pink' },
+];
+
+// Memoized tab trigger for performance
+const TabTriggerItem = memo(({ value, icon: Icon, label, color }) => (
+  <TabsTrigger 
+    value={value} 
+    className={`data-[state=active]:bg-${color}-500/20 whitespace-nowrap`}
+  >
+    <Icon className="w-4 h-4 mr-1 md:mr-2" />
+    {label}
+  </TabsTrigger>
+));
+
+TabTriggerItem.displayName = 'TabTriggerItem';
+
 const SettingsHub = () => {
-  const [activeTab, setActiveTab] = useState('settings');
+  // URL-persisted tab state
+  const [activeTab, setActiveTab] = useTabState(TABS, 'settings');
   
   // Enable keyboard navigation
   useTabKeyboardNav(TABS, activeTab, setActiveTab);

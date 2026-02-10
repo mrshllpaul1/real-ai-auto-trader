@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
+import React, { lazy, memo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { 
   Gem, Radar, Cpu, Users
 } from 'lucide-react';
-import { Breadcrumb, useTabKeyboardNav, KeyboardHint, MobileTabsList } from '@/components/HubNavigation';
+import { 
+  Breadcrumb, 
+  useTabState, 
+  useTabKeyboardNav, 
+  KeyboardHint, 
+  MobileTabsList,
+  LazyTabContent 
+} from '@/components/HubNavigation';
 
-// Import existing page components
-import GemScanner from './GemScanner';
-import GemMLDLComparison from './GemMLDLComparison';
-import CopyTrading from './CopyTrading';
+// Lazy load page components for better performance
+const GemScanner = lazy(() => import('./GemScanner'));
+const GemMLDLComparison = lazy(() => import('./GemMLDLComparison'));
+const CopyTrading = lazy(() => import('./CopyTrading'));
 
 const TABS = ['scanner', 'ml-dl', 'copy'];
 
@@ -20,8 +27,28 @@ const TAB_LABELS = {
   'copy': 'Copy Trading'
 };
 
+const TAB_CONFIG = [
+  { value: 'scanner', icon: Radar, label: 'Gem Scanner', color: 'pink' },
+  { value: 'ml-dl', icon: Cpu, label: 'ML vs DL', color: 'purple' },
+  { value: 'copy', icon: Users, label: 'Copy Trading', color: 'blue' },
+];
+
+// Memoized tab trigger for performance
+const TabTriggerItem = memo(({ value, icon: Icon, label, color }) => (
+  <TabsTrigger 
+    value={value} 
+    className={`data-[state=active]:bg-${color}-500/20 whitespace-nowrap`}
+  >
+    <Icon className="w-4 h-4 mr-1 md:mr-2" />
+    {label}
+  </TabsTrigger>
+));
+
+TabTriggerItem.displayName = 'TabTriggerItem';
+
 const ScannerHub = () => {
-  const [activeTab, setActiveTab] = useState('scanner');
+  // URL-persisted tab state
+  const [activeTab, setActiveTab] = useTabState(TABS, 'scanner');
   
   // Enable keyboard navigation
   useTabKeyboardNav(TABS, activeTab, setActiveTab);
