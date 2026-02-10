@@ -359,7 +359,7 @@ async def get_pair_details(symbol: str):
 
 @router.get("/balance")
 async def get_spot_balance():
-    """Get user's spot balance across all supported coins"""
+    """Get user's spot balance across all supported coins with entry price tracking"""
     if _kraken_service is None:
         raise HTTPException(status_code=503, detail="Kraken service not initialized")
     
@@ -391,8 +391,19 @@ async def get_spot_balance():
             'OP': 'OP',
         }
         
+        # Get entry prices if tracker is available
+        entry_prices = {}
+        if _entry_tracker:
+            try:
+                all_entries = await _entry_tracker.get_all_entries()
+                entry_prices = {e['symbol']: e for e in all_entries}
+            except Exception as e:
+                logger.warning(f"Could not load entry prices: {e}")
+        
         holdings = []
         total_usd_value = 0
+        total_cost_basis = 0
+        total_unrealized_pnl = 0
         usd_balance = 0
         
         for currency, amount in balance.items():
@@ -419,18 +430,47 @@ async def get_spot_balance():
                     pass
             
             if amount > 0:
+                # Get entry price data if available
+                entry_data = entry_prices.get(symbol, {})
+                entry_price = entry_data.get('entry_price')
+                has_entry_price = entry_price is not None
+                
+                # Calculate P&L
+                if has_entry_price and price > 0:
+                    cost_basis = entry_price * amount
+                    unrealized_pnl = usd_value - cost_basis
+                    pnl_percent = ((price - entry_price) / entry_price * 100) if entry_price > 0 else 0
+                    total_cost_basis += cost_basis
+                    total_unrealized_pnl += unrealized_pnl
+                else:
+                    cost_basis = None
+                    unrealized_pnl = None
+                    pnl_percent = None
+                
                 holdings.append({
                     "symbol": symbol,
                     "name": TRADING_PAIRS.get(symbol, {}).get('name', symbol),
                     "amount": amount,
                     "price": price,
                     "usd_value": round(usd_value, 2),
-                    "kraken_currency": currency
+                    "kraken_currency": currency,
+                    # Entry price tracking fields
+                    "entry_price": entry_price,
+                    "has_entry_price": has_entry_price,
+                    "cost_basis": round(cost_basis, 2) if cost_basis else None,
+                    "unrealized_pnl": round(unrealized_pnl, 2) if unrealized_pnl is not None else None,
+                    "pnl_percent": round(pnl_percent, 2) if pnl_percent is not None else None,
+                    "realized_pnl": entry_data.get('realized_pnl', 0),
+                    "total_buys": entry_data.get('total_buys', 0),
+                    "total_sells": entry_data.get('total_sells', 0)
                 })
                 total_usd_value += usd_value
         
         # Sort by USD value
         holdings.sort(key=lambda x: x['usd_value'], reverse=True)
+        
+        # Calculate portfolio P&L metrics
+        portfolio_pnl_percent = ((total_usd_value - total_cost_basis) / total_cost_basis * 100) if total_cost_basis > 0 else None
         
         return {
             "holdings": holdings,
@@ -438,6 +478,11 @@ async def get_spot_balance():
             "total_crypto_value": round(total_usd_value, 2),
             "total_portfolio_value": round(usd_balance + total_usd_value, 2),
             "holdings_count": len(holdings),
+            # P&L metrics
+            "total_cost_basis": round(total_cost_basis, 2) if total_cost_basis > 0 else None,
+            "total_unrealized_pnl": round(total_unrealized_pnl, 2) if total_cost_basis > 0 else None,
+            "portfolio_pnl_percent": round(portfolio_pnl_percent, 2) if portfolio_pnl_percent is not None else None,
+            "has_entry_data": len(entry_prices) > 0,
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
     except Exception as e:
