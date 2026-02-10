@@ -74,13 +74,13 @@ const FloatingCommandHub = () => {
       if (cmdMessages.length === 0) {
         setCmdMessages([{
           type: 'ai',
-          content: `⚡ **Command Center**\n\n• "Find hidden gems"\n• "Add BTC to watchlist"\n• "Go to analytics"\n• "Predict ETH price"`,
+          content: `⚡ **Command Center Enhanced**\n\nTry these commands:\n• "Find hidden gems"\n• "Analyze BTC"\n• "Show my trades"\n• "Go to trading"\n• "help" for more\n\n✨ Or ask anything naturally!`,
         }]);
       }
       if (chatMessages.length === 0) {
         setChatMessages([{
           type: 'ai',
-          content: `🤖 **AI Assistant**\n\nAsk me about:\n• Coin analysis\n• Market conditions\n• Trading advice\n• News & sentiment`,
+          content: `🤖 **AI Assistant**\n\n${deepAnalysis ? '🔬 Deep Analysis Mode Active\n\n' : ''}Ask me about:\n• Coin analysis\n• Market conditions\n• Trading advice\n• News & sentiment\n\n💡 Toggle Deep Analysis for predictions!`,
         }]);
       }
       // Fetch data when hub opens
@@ -103,13 +103,25 @@ const FloatingCommandHub = () => {
     const msgLower = message.toLowerCase();
     
     try {
+      // Help command
+      if (msgLower === 'help' || msgLower === '?') {
+        setCmdMessages(prev => [...prev, { 
+          type: 'ai', 
+          content: `⚡ **Command Center Help**\n\n**Navigation:**\n• "Go to [page]" - Navigate to any page\n• "Open trading" - Quick access\n\n**Actions:**\n• "Find hidden gems" - Scan for opportunities\n• "Analyze BTC" - Quick coin analysis\n• "Show my trades" - View trade history\n• "Advise on $1000 portfolio" - Get strategy advice\n\n**Tabs:**\n• "Switch to trade" - Go to Trade tab\n• "Switch to control" - Go to AI Control\n\nOr just ask naturally!`
+        }]);
+        setCmdLoading(false);
+        return;
+      }
+      
       // Navigation
       if (msgLower.includes('go to') || msgLower.includes('open') || msgLower.includes('show')) {
         const routes = {
           'dashboard': '/', 'growth': '/growth', 'journal': '/journal',
           'scanner': '/scanner', 'trading': '/trading', 'analytics': '/analytics',
           'tethys': '/tethys', 'news': '/news', 'settings': '/settings',
-          'portfolio': '/portfolio-dashboard', 'positions': '/positions'
+          'portfolio': '/portfolio-dashboard', 'positions': '/positions',
+          'ai learning': '/ai-learning', 'backtest': '/backtest-engine',
+          'options': '/options-trading', 'perpetuals': '/perpetuals'
         };
         for (const [key, path] of Object.entries(routes)) {
           if (msgLower.includes(key)) {
@@ -133,13 +145,94 @@ const FloatingCommandHub = () => {
         return;
       }
       
-      // AI fallback
-      const response = await api.post('/ai-chat/command', {
-        command: message,
+      // Quick analysis
+      if ((msgLower.includes('analyze') || msgLower.includes('analysis')) && 
+          (msgLower.includes('btc') || msgLower.includes('eth') || msgLower.includes('sol'))) {
+        const coinMatch = msgLower.match(/\b(btc|eth|sol|ada|dot|avax|bnb|xrp)\b/);
+        if (coinMatch) {
+          const coinMap = {
+            'btc': 'bitcoin', 'eth': 'ethereum', 'sol': 'solana',
+            'ada': 'cardano', 'dot': 'polkadot', 'avax': 'avalanche-2',
+            'bnb': 'binancecoin', 'xrp': 'ripple'
+          };
+          const coinId = coinMap[coinMatch[0]];
+          const res = await api.post('/ai-chat/quick-analysis', { coin_id: coinId });
+          setCmdMessages(prev => [...prev, { 
+            type: 'ai', 
+            content: res.data.analysis || 'Analysis complete.'
+          }]);
+          return;
+        }
+      }
+      
+      // Trade history
+      if (msgLower.includes('show') && (msgLower.includes('trade') || msgLower.includes('history'))) {
+        const res = await api.get('/ai-chat/trade-history?limit=5');
+        const trades = res.data.trades || [];
+        if (trades.length > 0) {
+          const tradeList = trades.map(t => 
+            `• **${t.action?.toUpperCase()}** ${t.coin} at $${t.price?.toFixed(2)} - $${t.total_usd?.toFixed(2)}`
+          ).join('\n');
+          setCmdMessages(prev => [...prev, { 
+            type: 'ai', 
+            content: `📊 **Recent Trades:**\n${tradeList}`
+          }]);
+        } else {
+          setCmdMessages(prev => [...prev, { 
+            type: 'ai', 
+            content: 'No recent trades found.'
+          }]);
+        }
+        return;
+      }
+      
+      // Strategy advice
+      if (msgLower.includes('advise') || msgLower.includes('strategy') || msgLower.includes('recommend')) {
+        const amountMatch = msgLower.match(/\$?(\d+)/);
+        const amount = amountMatch ? parseInt(amountMatch[1]) : 1000;
+        const riskLevel = msgLower.includes('aggressive') ? 'aggressive' : 
+                         msgLower.includes('conservative') ? 'low' : 
+                         msgLower.includes('moderate') ? 'moderate' : 'moderate';
+        
+        const res = await api.post('/ai-chat/strategy-advice', {
+          portfolio_value: amount,
+          risk_tolerance: riskLevel
+        });
+        setCmdMessages(prev => [...prev, { 
+          type: 'ai', 
+          content: res.data.advice || 'Strategy advice generated.'
+        }]);
+        return;
+      }
+      
+      // Switch tabs
+      if (msgLower.includes('switch to') || msgLower.includes('open tab')) {
+        if (msgLower.includes('trade')) {
+          setActiveTab('trade');
+          setCmdMessages(prev => [...prev, { type: 'ai', content: '✅ Switched to Trade tab' }]);
+          return;
+        } else if (msgLower.includes('control') || msgLower.includes('ai control')) {
+          setActiveTab('control');
+          setCmdMessages(prev => [...prev, { type: 'ai', content: '✅ Switched to AI Control tab' }]);
+          return;
+        } else if (msgLower.includes('strategy')) {
+          setActiveTab('strategy');
+          setCmdMessages(prev => [...prev, { type: 'ai', content: '✅ Switched to Strategy tab' }]);
+          return;
+        }
+      }
+      
+      // AI fallback - use execute-command endpoint for complex queries
+      const response = await api.post('/ai-chat/execute-command', {
+        query: message,
         session_id: cmdSessionId
       }, { timeout: 30000 });
       
-      setCmdMessages(prev => [...prev, { type: 'ai', content: response.data.response || 'Command processed.' }]);
+      setCmdMessages(prev => [...prev, { 
+        type: 'ai', 
+        content: response.data.response || 'Command processed.',
+        actions: response.data.actions_executed
+      }]);
       
     } catch (error) {
       setCmdMessages(prev => [...prev, { type: 'ai', content: '❌ Error processing command. Try again.' }]);
@@ -376,7 +469,9 @@ const FloatingCommandHub = () => {
             data-testid="command-hub-btn"
           >
             <Command size={24} className="text-white group-hover:scale-110 transition-transform" />
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-400 rounded-full flex items-center justify-center animate-pulse">
+            <span className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ${
+              tethysStatus?.is_active ? 'bg-green-400 animate-pulse' : 'bg-cyan-400'
+            }`}>
               <Zap size={12} className="text-black" />
             </span>
           </motion.button>
@@ -402,8 +497,8 @@ const FloatingCommandHub = () => {
                   <Command size={16} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-white">Command Hub</h3>
-                  <p className="text-[10px] text-slate-400">AI • Strategy • Commands</p>
+                  <h3 className="text-sm font-semibold text-white">AI Command Hub</h3>
+                  <p className="text-[10px] text-slate-400">Execute • Analyze • Control • Trade</p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -487,6 +582,24 @@ const FloatingCommandHub = () => {
                       <div ref={messagesEndRef} />
                     </div>
                     
+                    {/* Smart Suggestions */}
+                    {suggestions.length > 0 && cmdMessages.length <= 1 && (
+                      <div className="space-y-1 mb-2 flex-shrink-0">
+                        <p className="text-[9px] text-slate-500 uppercase tracking-wide">Try these:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {suggestions[0]?.queries?.slice(0, 3).map((query, i) => (
+                            <button
+                              key={i}
+                              onClick={() => executeCommand(query)}
+                              className="px-2 py-1 rounded-md bg-slate-800/30 hover:bg-slate-700/50 text-[10px] text-slate-400 hover:text-white transition-all border border-slate-700/30"
+                            >
+                              {query}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
                     {/* Input */}
                     <form onSubmit={(e) => { e.preventDefault(); executeCommand(cmdInput); }} className="flex gap-2 mt-2 flex-shrink-0">
                       <Input
@@ -559,6 +672,24 @@ const FloatingCommandHub = () => {
                       )}
                       <div ref={messagesEndRef} />
                     </div>
+                    
+                    {/* Smart Suggestions for Chat */}
+                    {suggestions.length > 0 && chatMessages.length <= 1 && (
+                      <div className="space-y-1 mb-2 flex-shrink-0">
+                        <p className="text-[9px] text-slate-500 uppercase tracking-wide">Suggestions:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {suggestions[1]?.queries?.slice(0, 2).map((query, i) => (
+                            <button
+                              key={i}
+                              onClick={() => sendChatMessage(query)}
+                              className="px-2 py-1 rounded-md bg-slate-800/30 hover:bg-slate-700/50 text-[10px] text-slate-400 hover:text-white transition-all border border-slate-700/30"
+                            >
+                              {query}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     
                     <form onSubmit={(e) => { e.preventDefault(); sendChatMessage(chatInput); }} className="flex gap-2 mt-2 flex-shrink-0">
                       <Input
