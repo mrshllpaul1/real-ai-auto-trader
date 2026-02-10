@@ -26,7 +26,7 @@ def set_dependencies(database, portfolio_manager, kraken_service=None):
     _kraken_service = kraken_service
 
 
-async def get_kraken_portfolio() -> List[Dict[str, Any]]:
+async def _fetch_kraken_holdings() -> List[Dict[str, Any]]:
     """Fetch real Kraken portfolio holdings from internal endpoint"""
     try:
         # Simply call the spot/balance endpoint
