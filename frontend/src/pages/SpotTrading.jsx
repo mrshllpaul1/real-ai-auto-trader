@@ -427,20 +427,25 @@ const SpotTrading = ({ embedded = false }) => {
         
         // Check if response is JSON before parsing
         if (res.ok && contentType && contentType.includes('application/json')) {
-          return await res.json();
+          const data = await res.json();
+          console.log(`[SpotTrading] Fetch success: ${url}`, data ? 'Data received' : 'No data');
+          return data;
         } else if (!res.ok) {
-          console.warn(`Fetch ${url} failed with status ${res.status}, retry ${i + 1}`);
+          console.warn(`[SpotTrading] Fetch ${url} failed with status ${res.status}, retry ${i + 1}/${retries + 1}`);
           if (i < retries) {
             await new Promise(r => setTimeout(r, 1000 * (i + 1)));
           }
+        } else {
+          console.warn(`[SpotTrading] Invalid content type for ${url}:`, contentType);
         }
       } catch (err) {
-        console.error(`Fetch ${url} error:`, err);
+        console.error(`[SpotTrading] Fetch ${url} error:`, err.message);
         if (i < retries) {
           await new Promise(r => setTimeout(r, 1000 * (i + 1)));
         }
       }
     }
+    console.error(`[SpotTrading] All retries failed for ${url}`);
     return null;
   };
 
