@@ -581,7 +581,8 @@ async def _init_phase7_wire_dependencies(db):
     training_scheduler_routes.set_dependencies(_services['training_scheduler'])
     spot_trading_routes.set_dependencies(
         db, _services['kraken'], _services['isolated_portfolio'], _services['auto_trader'],
-        prediction_services=_services['prediction_services']
+        prediction_services=_services['prediction_services'],
+        entry_tracker=_services.get('entry_tracker')
     )
     
     # Portfolio Visualization - pass kraken service for real portfolio data
