@@ -81,3 +81,29 @@ async def test_get_training_status_preserves_live_training():
     # No history/model lookups when actively training
     training_collection.find_one.assert_not_awaited()
     model_collection.find_one.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_get_training_status_uses_model_when_no_history():
+    """Status should fall back to model metadata when history is absent"""
+    model_doc = {
+        "status": "completed",
+        "training_info": {
+            "symbols_trained": 25,
+            "accuracy": 0.76
+        },
+        "completed_at": "2024-02-02T00:00:00Z"
+    }
+    
+    db, training_collection, model_collection = _mock_db(training_doc=None, model_doc=model_doc)
+    service = EnhancedMTFTrainingService(db)
+    
+    status = await service.get_training_status()
+    
+    assert status["status"] == "completed"
+    assert status["coins_trained"] == 25
+    assert status["accuracy"] == 0.76
+    assert status["last_trained"] == model_doc["completed_at"]
+    
+    training_collection.find_one.assert_awaited()
+    model_collection.find_one.assert_awaited()

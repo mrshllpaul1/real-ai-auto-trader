@@ -1556,15 +1556,9 @@ class EnhancedMTFTrainingService:
                 
                 if model_doc:
                     training_info = model_doc.get("training_info", {})
-                    status.setdefault("status", "completed")
-                    status.setdefault(
-                        "last_trained", 
-                        model_doc.get("completed_at") or model_doc.get("created_at")
-                    )
-                    status.setdefault(
-                        "coins_trained", 
-                        training_info.get("symbols_trained", 0)
-                    )
+                    status["status"] = model_doc.get("status", "completed")
+                    status["last_trained"] = model_doc.get("completed_at") or model_doc.get("created_at")
+                    status["coins_trained"] = training_info.get("symbols_trained", 0)
                     
                     if status.get("accuracy") in (None, 0, 0.0):
                         status["accuracy"] = training_info.get("accuracy", 0.0)
