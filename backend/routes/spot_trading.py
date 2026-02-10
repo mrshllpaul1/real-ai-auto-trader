@@ -19,16 +19,18 @@ _kraken_service = None
 _isolated_portfolio = None
 _automated_trader = None
 _prediction_services = None
+_entry_tracker = None
 
 
-def set_dependencies(database, kraken_service, isolated_portfolio=None, automated_trader=None, prediction_services=None):
+def set_dependencies(database, kraken_service, isolated_portfolio=None, automated_trader=None, prediction_services=None, entry_tracker=None):
     """Set dependencies from main app"""
-    global _db, _kraken_service, _isolated_portfolio, _automated_trader, _prediction_services
+    global _db, _kraken_service, _isolated_portfolio, _automated_trader, _prediction_services, _entry_tracker
     _db = database
     _kraken_service = kraken_service
     _isolated_portfolio = isolated_portfolio
     _automated_trader = automated_trader
     _prediction_services = prediction_services
+    _entry_tracker = entry_tracker
 
 
 # Trading Pairs commonly used on Kraken
