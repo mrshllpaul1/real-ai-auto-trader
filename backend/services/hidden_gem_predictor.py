@@ -397,8 +397,6 @@ class HiddenGemPredictor:
         """Estimate expected price move range from quantitative analysis"""
         total_score = gem.get('total_score', 0)
         scores = gem.get('scores', {})
-        vol_surge = scores.get('volume_surge', 0)
-        momentum = scores.get('price_momentum', 0)
         mcap_pot = scores.get('market_cap_potential', 0)
         
         # Higher score = higher expected move
@@ -416,8 +414,8 @@ class HiddenGemPredictor:
     def _generate_fallback_analysis(self, gems: List[Dict], days_ahead: int) -> str:
         """Generate comprehensive rule-based analysis when LLM is unavailable"""
         lines = [
-            f"[Quantitative Analysis - LLM Unavailable]",
-            f"Analysis generated from multi-factor scoring model (v2.0, 92% backtested accuracy).",
+            "[Quantitative Analysis - LLM Unavailable]",
+            "Analysis generated from multi-factor scoring model (v2.0, 92% backtested accuracy).",
             f"Prediction window: {days_ahead} days | Analyzed: {len(gems)} candidates",
             ""
         ]
