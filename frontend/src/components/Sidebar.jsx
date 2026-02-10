@@ -213,6 +213,7 @@ const Sidebar = () => {
     { path: '/auto-trading', icon: Zap, label: 'Auto Trading' },
     { path: '/trading', icon: TrendingUp, label: 'Trading' },
     { path: '/analytics', icon: BarChart3, label: 'Analytics' },
+    { path: '/ai-teacher', icon: GraduationCap, label: 'AI Teacher', highlight: true },
     { path: '/learning', icon: Brain, label: 'AI Learning' },
     { path: '/learning-loop', icon: Brain, label: 'Learning Loop', highlight: true },
     { path: '/ensemble', icon: Layers, label: 'Ensemble AI', highlight: true },
