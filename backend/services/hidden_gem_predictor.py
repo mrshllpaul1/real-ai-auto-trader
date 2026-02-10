@@ -9,7 +9,11 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional
 import numpy as np
 
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+try:
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+except ImportError:  # Graceful degradation when LLM client isn't installed
+    LlmChat = None
+    UserMessage = None
 
 
 class HiddenGemPredictor:
@@ -341,8 +345,8 @@ class HiddenGemPredictor:
             result["error"] = "No gem candidates found"
             return result
         
-        # Use AI to rank and predict
-        if self.api_key:
+        # Use AI to rank and predict (only if LLM client available)
+        if self.api_key and LlmChat is not None:
             try:
                 gem_summary = "\n".join([
                     f"- {g['symbol']}: Score {g['total_score']}, MCap ${g['market_cap']:,.0f}, "

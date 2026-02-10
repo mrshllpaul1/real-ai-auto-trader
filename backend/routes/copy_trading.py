@@ -15,6 +15,55 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/copy-trading", tags=["Copy Trading"])
 
+# Sample traders used when no live data is available or for quick previews
+SAMPLE_TRADERS = [
+    {
+        "trader_id": "sample_trader_1",
+        "display_name": "CryptoWhale",
+        "bio": "10+ years trading experience. Focus on BTC and ETH.",
+        "profit_share_pct": 10,
+        "copiers": 245,
+        "stats": {"total_trades": 892, "win_rate": 67.5, "roi": 142.3, "avg_trade_size": 1500},
+        "joined_at": "2024-01-15T00:00:00Z"
+    },
+    {
+        "trader_id": "sample_trader_2",
+        "display_name": "AltcoinHunter",
+        "bio": "Specializing in finding hidden gem altcoins.",
+        "profit_share_pct": 15,
+        "copiers": 189,
+        "stats": {"total_trades": 567, "win_rate": 71.2, "roi": 198.7, "avg_trade_size": 500},
+        "joined_at": "2024-03-22T00:00:00Z"
+    },
+    {
+        "trader_id": "sample_trader_3",
+        "display_name": "SwingMaster",
+        "bio": "Swing trading with strict risk management.",
+        "profit_share_pct": 12,
+        "copiers": 156,
+        "stats": {"total_trades": 423, "win_rate": 62.8, "roi": 89.4, "avg_trade_size": 2000},
+        "joined_at": "2024-02-10T00:00:00Z"
+    },
+    {
+        "trader_id": "sample_trader_4",
+        "display_name": "AIQuant",
+        "bio": "Quant-driven strategies with strict risk controls.",
+        "profit_share_pct": 8,
+        "copiers": 132,
+        "stats": {"total_trades": 610, "win_rate": 64.1, "roi": 120.5, "avg_trade_size": 1250},
+        "joined_at": "2024-04-18T00:00:00Z"
+    },
+    {
+        "trader_id": "sample_trader_5",
+        "display_name": "DeFiDegen",
+        "bio": "Early on DeFi rotations. High risk, high reward.",
+        "profit_share_pct": 18,
+        "copiers": 98,
+        "stats": {"total_trades": 350, "win_rate": 58.2, "roi": 210.4, "avg_trade_size": 800},
+        "joined_at": "2024-05-05T00:00:00Z"
+    },
+]
+
 # Global database reference
 _db = None
 
@@ -66,6 +115,89 @@ class CopySettings(BaseModel):
 # LEADERBOARD ENDPOINTS
 # =============================================================================
 
+async def _build_leaderboard(db, timeframe: str, sort_by: str, limit: int) -> Dict[str, Any]:
+    """Core leaderboard logic with fallback sample traders."""
+    # Calculate date filter
+    from datetime import timedelta
+
+    days_map = {"7d": 7, "30d": 30, "90d": 90, "all": 3650}
+    days = days_map.get(timeframe, 30)
+
+    start_date = datetime.now(timezone.utc) - timedelta(days=days)
+
+    # Get all public traders with their stats
+    traders = await db.trader_profiles.find(
+        {"is_public": True}
+    ).to_list(100)
+
+    leaderboard = []
+    for trader in traders:
+        trader_id = trader.get("trader_id")
+
+        # Get trade history for this trader
+        trades = await db.copy_trade_history.find({
+            "trader_id": trader_id,
+            "executed_at": {"$gte": start_date.isoformat()}
+        }).to_list(1000)
+
+        if not trades:
+            stats = {
+                "total_trades": 0,
+                "win_rate": 0,
+                "roi": 0,
+                "avg_trade_size": 0,
+                "copiers": 0
+            }
+        else:
+            wins = sum(1 for t in trades if t.get("profit", 0) > 0)
+            total_profit = sum(t.get("profit", 0) for t in trades)
+            total_invested = sum(t.get("amount", 0) for t in trades)
+
+            stats = {
+                "total_trades": len(trades),
+                "win_rate": round((wins / len(trades)) * 100, 1) if trades else 0,
+                "roi": round((total_profit / total_invested) * 100, 1) if total_invested > 0 else 0,
+                "avg_trade_size": round(total_invested / len(trades), 2) if trades else 0
+            }
+
+        # Get copier count
+        copier_count = await db.copy_relationships.count_documents({
+            "trader_id": trader_id,
+            "active": True
+        })
+
+        leaderboard.append({
+            "trader_id": trader_id,
+            "display_name": trader.get("display_name", f"Trader_{trader_id[:8]}"),
+            "bio": trader.get("bio"),
+            "profit_share_pct": trader.get("profit_share_pct", 10),
+            "copiers": copier_count,
+            "stats": stats,
+            "joined_at": trader.get("created_at")
+        })
+
+    # Sort by requested field
+    sort_key = {
+        "roi": lambda x: x["stats"]["roi"],
+        "win_rate": lambda x: x["stats"]["win_rate"],
+        "total_trades": lambda x: x["stats"]["total_trades"],
+        "copiers": lambda x: x["copiers"]
+    }.get(sort_by, lambda x: x["stats"]["roi"])
+
+    leaderboard.sort(key=sort_key, reverse=True)
+
+    # If empty, provide sample data
+    if not leaderboard:
+        leaderboard = SAMPLE_TRADERS.copy()
+
+    return {
+        "leaderboard": leaderboard[:limit],
+        "timeframe": timeframe,
+        "sort_by": sort_by,
+        "total_traders": len(leaderboard)
+    }
+
+
 @router.get("/leaderboard")
 async def get_leaderboard(
     timeframe: str = "30d",
@@ -79,116 +211,41 @@ async def get_leaderboard(
     Sort by: roi, win_rate, total_trades, copiers
     """
     try:
-        # Calculate date filter
-        days_map = {"7d": 7, "30d": 30, "90d": 90, "all": 3650}
-        days = days_map.get(timeframe, 30)
-        
-        from datetime import timedelta
-        start_date = datetime.now(timezone.utc) - timedelta(days=days)
-        
-        # Get all public traders with their stats
-        traders = await db.trader_profiles.find(
-            {"is_public": True}
-        ).to_list(100)
-        
-        leaderboard = []
-        for trader in traders:
-            trader_id = trader.get("trader_id")
-            
-            # Get trade history for this trader
-            trades = await db.copy_trade_history.find({
-                "trader_id": trader_id,
-                "executed_at": {"$gte": start_date.isoformat()}
-            }).to_list(1000)
-            
-            if not trades:
-                # Use mock data for demo
-                stats = {
-                    "total_trades": 0,
-                    "win_rate": 0,
-                    "roi": 0,
-                    "avg_trade_size": 0,
-                    "copiers": 0
-                }
-            else:
-                wins = sum(1 for t in trades if t.get("profit", 0) > 0)
-                total_profit = sum(t.get("profit", 0) for t in trades)
-                total_invested = sum(t.get("amount", 0) for t in trades)
-                
-                stats = {
-                    "total_trades": len(trades),
-                    "win_rate": round((wins / len(trades)) * 100, 1) if trades else 0,
-                    "roi": round((total_profit / total_invested) * 100, 1) if total_invested > 0 else 0,
-                    "avg_trade_size": round(total_invested / len(trades), 2) if trades else 0
-                }
-            
-            # Get copier count
-            copier_count = await db.copy_relationships.count_documents({
-                "trader_id": trader_id,
-                "active": True
-            })
-            
-            leaderboard.append({
-                "trader_id": trader_id,
-                "display_name": trader.get("display_name", f"Trader_{trader_id[:8]}"),
-                "bio": trader.get("bio"),
-                "profit_share_pct": trader.get("profit_share_pct", 10),
-                "copiers": copier_count,
-                "stats": stats,
-                "joined_at": trader.get("created_at")
-            })
-        
-        # Sort by requested field
-        sort_key = {
-            "roi": lambda x: x["stats"]["roi"],
-            "win_rate": lambda x: x["stats"]["win_rate"],
-            "total_trades": lambda x: x["stats"]["total_trades"],
-            "copiers": lambda x: x["copiers"]
-        }.get(sort_by, lambda x: x["stats"]["roi"])
-        
-        leaderboard.sort(key=sort_key, reverse=True)
-        
-        # If empty, provide sample data
-        if not leaderboard:
-            leaderboard = [
-                {
-                    "trader_id": "sample_trader_1",
-                    "display_name": "CryptoWhale",
-                    "bio": "10+ years trading experience. Focus on BTC and ETH.",
-                    "profit_share_pct": 10,
-                    "copiers": 245,
-                    "stats": {"total_trades": 892, "win_rate": 67.5, "roi": 142.3, "avg_trade_size": 1500},
-                    "joined_at": "2024-01-15T00:00:00Z"
-                },
-                {
-                    "trader_id": "sample_trader_2",
-                    "display_name": "AltcoinHunter",
-                    "bio": "Specializing in finding hidden gem altcoins.",
-                    "profit_share_pct": 15,
-                    "copiers": 189,
-                    "stats": {"total_trades": 567, "win_rate": 71.2, "roi": 198.7, "avg_trade_size": 500},
-                    "joined_at": "2024-03-22T00:00:00Z"
-                },
-                {
-                    "trader_id": "sample_trader_3",
-                    "display_name": "SwingMaster",
-                    "bio": "Swing trading with strict risk management.",
-                    "profit_share_pct": 12,
-                    "copiers": 156,
-                    "stats": {"total_trades": 423, "win_rate": 62.8, "roi": 89.4, "avg_trade_size": 2000},
-                    "joined_at": "2024-02-10T00:00:00Z"
-                }
-            ]
-        
-        return {
-            "leaderboard": leaderboard[:limit],
-            "timeframe": timeframe,
-            "sort_by": sort_by,
-            "total_traders": len(leaderboard)
-        }
+        return await _build_leaderboard(db, timeframe, sort_by, limit)
     except Exception as e:
         logger.error(f"Error getting leaderboard: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/top-five")
+async def get_top_five_copy_traders(db = Depends(get_database)):
+    """
+    Quick endpoint to fetch top 5 copy traders (with reliable fallback data).
+    Useful for homepage/marketing surfaces that need a guaranteed list.
+    """
+    try:
+        data = await _build_leaderboard(db, timeframe="30d", sort_by="roi", limit=5)
+        # Guarantee exactly five for consistent UI slots
+        if len(data["leaderboard"]) < 5:
+            combined = data["leaderboard"] + SAMPLE_TRADERS
+            data["leaderboard"] = sorted(
+                combined,
+                key=lambda t: t.get("stats", {}).get("roi", 0),
+                reverse=True
+            )[:5]
+        data["limit"] = 5
+        return data
+    except Exception as e:
+        logger.error(f"Error getting top 5 copy traders: {e}")
+        # Graceful fallback to static sample data so UI still works even if DB is down
+        return {
+            "leaderboard": SAMPLE_TRADERS[:5],
+            "timeframe": "30d",
+            "sort_by": "roi",
+            "total_traders": len(SAMPLE_TRADERS),
+            "limit": 5,
+            "fallback": True
+        }
 
 
 # =============================================================================
