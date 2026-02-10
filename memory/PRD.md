@@ -7,6 +7,37 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ## Session Update - Feb 10, 2026 (Latest)
 
+### ✅ MAJOR REFACTOR: Consolidated 46 Pages into 8 Hub Pages
+
+**Before:** 46 separate pages in sidebar (overwhelming)
+**After:** 8 clean hub pages with tabbed navigation
+
+**New Structure:**
+1. **Command Center** - Main dashboard (unchanged)
+2. **Trading Hub** - 7 tabs: Spot, Positions, Portfolio, Advanced, Options, Perpetuals, Market Maker
+3. **AI & Strategy Hub** - 9 tabs: AI Center, Adaptive, Auto Trade, Execute, Ensemble, Builder, Learning, Models, MTF
+4. **Backtest & Analysis Hub** - 5 tabs: Backtest, Yearly, Gems, Analytics, Risk
+5. **News & Events Hub** - 5 tabs: Sentiment, Intelligence, Triggers, Timeline, Stats
+6. **Scanner & Social Hub** - 3 tabs: Gem Scanner, ML vs DL, Copy Trading
+7. **DeFi Hub** - 3 tabs: Wallet, Yield Farming, Rebalance
+8. **Settings Hub** - 7 tabs: Settings, API Setup, Budget, Telegram, Journal, Guide, Customize
+
+**Files Created:**
+- `frontend/src/pages/TradingHub.jsx`
+- `frontend/src/pages/AIHub.jsx`
+- `frontend/src/pages/BacktestHub.jsx`
+- `frontend/src/pages/NewsHub.jsx`
+- `frontend/src/pages/ScannerHub.jsx`
+- `frontend/src/pages/DeFiHub.jsx`
+- `frontend/src/pages/SettingsHub.jsx`
+
+**Files Updated:**
+- `frontend/src/App.jsx` - New routing with legacy redirects
+- `frontend/src/components/Sidebar.jsx` - Reduced to 8 nav items
+- All 40+ existing pages - Added `embedded` prop support
+
+---
+
 ### ✅ NEW FEATURE: Live Auto-Trading with Adaptive Strategy
 
 **Implemented:**
