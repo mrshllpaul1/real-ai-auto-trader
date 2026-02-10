@@ -7,9 +7,24 @@ Auto-adjust parameters, regime detection, and event prediction.
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Any
-from database import get_database
+
 
 router = APIRouter(prefix="/adaptive-strategy", tags=["Adaptive Strategy"])
+
+_db = None
+
+
+def set_db(db):
+    global _db
+    _db = db
+
+
+async def get_database():
+    global _db
+    if _db is None:
+        from server import db
+        _db = db
+    return _db
 
 
 class PredictEventsRequest(BaseModel):
