@@ -1571,7 +1571,6 @@ class EnhancedMTFTrainingService:
             except Exception as e:
                 logger.debug(f"Enhanced MTF model status lookup failed: {e}")
         
-        self._training_status = status
         return status
     
     async def get_training_history(self, limit: int = 10) -> List[Dict[str, Any]]:
