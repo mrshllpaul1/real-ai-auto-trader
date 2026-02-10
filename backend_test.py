@@ -794,23 +794,228 @@ class BackendTester:
         await self.test_endpoint('GET', '/enhanced-mtf-training/history', 
                                'Enhanced MTF Training History')
 
+    async def test_ai_training_and_backtest_system(self):
+        """Test AI training and backtest system to verify improved win rate and Sharpe ratio"""
+        print("\n=== TESTING AI TRAINING AND BACKTEST SYSTEM ===")
+        print("🎯 OBJECTIVE: Verify improved win rate (>50%) and Sharpe ratio (>0.5)")
+        print("📊 Testing Enhanced MTF Training + Backtest Engine with ML strategy")
+        
+        # 1. Test Enhanced MTF Training endpoints
+        print("\n--- 1. Enhanced MTF Training Endpoints ---")
+        
+        # Test fast sentiment training
+        print("⚡ Testing fast sentiment training...")
+        fast_train_result = await self.test_endpoint('POST', '/enhanced-mtf-training/train-fast', 
+                                   'Enhanced MTF Fast Training (Sentiment Only)',
+                                   data={}, expected_status=[200, 201])
+        
+        if fast_train_result['success']:
+            data = fast_train_result.get('data', {})
+            symbols_trained = data.get('symbols_trained', 0)
+            accuracy = data.get('accuracy', 0)
+            print(f"   📊 Fast training completed: {symbols_trained} symbols, {accuracy*100:.1f}% accuracy")
+        
+        # Test training status
+        await self.test_endpoint('GET', '/enhanced-mtf-training/status', 
+                               'Enhanced MTF Training Status Check')
+        
+        # Test BTC prediction
+        btc_prediction = await self.test_endpoint('GET', '/enhanced-mtf-training/predict/BTC', 
+                               'Enhanced MTF BTC Prediction')
+        
+        if btc_prediction['success']:
+            data = btc_prediction.get('data', {})
+            signal = data.get('signal', 'UNKNOWN')
+            confidence = data.get('confidence', 0)
+            print(f"   📊 BTC Prediction: {signal} signal with {confidence*100:.1f}% confidence")
+        
+        # Test batch predictions
+        batch_predictions = await self.test_endpoint('GET', '/enhanced-mtf-training/predict-all', 
+                               'Enhanced MTF Batch Predictions (All Coins)')
+        
+        if batch_predictions['success']:
+            data = batch_predictions.get('data', {})
+            total_predictions = data.get('total_predictions', 0)
+            buy_signals = data.get('buy_signals', 0)
+            hold_signals = data.get('hold_signals', 0)
+            sell_signals = data.get('sell_signals', 0)
+            print(f"   📊 Batch Predictions: {total_predictions} total ({buy_signals} BUY, {hold_signals} HOLD, {sell_signals} SELL)")
+        
+        # 2. Test Backtest Engine with ML Strategy
+        print("\n--- 2. Backtest Engine - ML Strategy Testing ---")
+        
+        # Configure ML-based backtest
+        ml_backtest_config = {
+            "name": "ML Strategy Test",
+            "strategy_type": "ml_based",
+            "symbols": ["BTC/USD"],
+            "start_date": "2024-01-01T00:00:00Z",
+            "end_date": "2024-12-31T23:59:59Z",
+            "initial_capital": 10000,
+            "position_size_pct": 20,
+            "max_positions": 3,
+            "stop_loss_pct": 5,
+            "take_profit_pct": 15,
+            "commission_pct": 0.1,
+            "slippage_pct": 0.05,
+            "strategy_params": {
+                "lookback": 20,
+                "model": "enhanced_mtf"
+            }
+        }
+        
+        print("🤖 Running ML-based backtest...")
+        ml_backtest_result = await self.test_endpoint('POST', '/backtest-engine/run', 
+                               'Backtest Engine - ML Strategy',
+                               data=ml_backtest_config, expected_status=[200, 201])
+        
+        ml_backtest_id = None
+        if ml_backtest_result['success']:
+            data = ml_backtest_result.get('data', {})
+            ml_backtest_id = data.get('backtest_id')
+            print(f"   📊 ML Backtest started: ID {ml_backtest_id}")
+        
+        # 3. Test Baseline (Random Strategy) for Comparison
+        print("\n--- 3. Baseline Strategy Testing ---")
+        
+        # Configure random strategy backtest
+        random_backtest_config = {
+            "name": "Random Strategy Baseline",
+            "strategy_type": "random",
+            "symbols": ["BTC/USD"],
+            "start_date": "2024-01-01T00:00:00Z",
+            "end_date": "2024-12-31T23:59:59Z",
+            "initial_capital": 10000,
+            "position_size_pct": 20,
+            "max_positions": 3,
+            "stop_loss_pct": 5,
+            "take_profit_pct": 15,
+            "commission_pct": 0.1,
+            "slippage_pct": 0.05,
+            "strategy_params": {}
+        }
+        
+        print("🎲 Running random baseline backtest...")
+        random_backtest_result = await self.test_endpoint('POST', '/backtest-engine/run', 
+                               'Backtest Engine - Random Strategy (Baseline)',
+                               data=random_backtest_config, expected_status=[200, 201])
+        
+        random_backtest_id = None
+        if random_backtest_result['success']:
+            data = random_backtest_result.get('data', {})
+            random_backtest_id = data.get('backtest_id')
+            print(f"   📊 Random Backtest started: ID {random_backtest_id}")
+        
+        # 4. Wait for backtests to complete and get results
+        print("\n--- 4. Backtest Results Analysis ---")
+        
+        import asyncio
+        await asyncio.sleep(5)  # Wait for backtests to complete
+        
+        ml_metrics = None
+        random_metrics = None
+        
+        # Get ML strategy results
+        if ml_backtest_id:
+            ml_results = await self.test_endpoint('GET', f'/backtest-engine/results/{ml_backtest_id}', 
+                                   'ML Strategy Backtest Results')
+            
+            if ml_results['success']:
+                data = ml_results.get('data', {})
+                ml_metrics = data.get('metrics', {})
+                if ml_metrics:
+                    print(f"   🤖 ML Strategy Results:")
+                    print(f"      Win Rate: {ml_metrics.get('win_rate', 0):.1f}%")
+                    print(f"      Sharpe Ratio: {ml_metrics.get('sharpe_ratio', 0):.2f}")
+                    print(f"      Total Return: {ml_metrics.get('total_return_pct', 0):.2f}%")
+                    print(f"      Max Drawdown: {ml_metrics.get('max_drawdown_pct', 0):.2f}%")
+                    print(f"      Profit Factor: {ml_metrics.get('profit_factor', 0):.2f}")
+        
+        # Get Random strategy results
+        if random_backtest_id:
+            random_results = await self.test_endpoint('GET', f'/backtest-engine/results/{random_backtest_id}', 
+                                   'Random Strategy Backtest Results')
+            
+            if random_results['success']:
+                data = random_results.get('data', {})
+                random_metrics = data.get('metrics', {})
+                if random_metrics:
+                    print(f"   🎲 Random Strategy Results:")
+                    print(f"      Win Rate: {random_metrics.get('win_rate', 0):.1f}%")
+                    print(f"      Sharpe Ratio: {random_metrics.get('sharpe_ratio', 0):.2f}")
+                    print(f"      Total Return: {random_metrics.get('total_return_pct', 0):.2f}%")
+                    print(f"      Max Drawdown: {random_metrics.get('max_drawdown_pct', 0):.2f}%")
+                    print(f"      Profit Factor: {random_metrics.get('profit_factor', 0):.2f}")
+        
+        # 5. Performance Comparison and Validation
+        print("\n--- 5. Performance Validation ---")
+        
+        if ml_metrics and random_metrics:
+            ml_win_rate = ml_metrics.get('win_rate', 0)
+            ml_sharpe = ml_metrics.get('sharpe_ratio', 0)
+            random_win_rate = random_metrics.get('win_rate', 0)
+            random_sharpe = random_metrics.get('sharpe_ratio', 0)
+            
+            # Check if ML strategy meets targets
+            win_rate_target_met = ml_win_rate > 50
+            sharpe_target_met = ml_sharpe > 0.5
+            
+            # Check if ML strategy beats baseline
+            beats_baseline_win_rate = ml_win_rate > random_win_rate
+            beats_baseline_sharpe = ml_sharpe > random_sharpe
+            
+            print(f"   🎯 TARGET VALIDATION:")
+            print(f"      Win Rate >50%: {'✅ PASS' if win_rate_target_met else '❌ FAIL'} ({ml_win_rate:.1f}%)")
+            print(f"      Sharpe Ratio >0.5: {'✅ PASS' if sharpe_target_met else '❌ FAIL'} ({ml_sharpe:.2f})")
+            
+            print(f"   📊 BASELINE COMPARISON:")
+            print(f"      ML vs Random Win Rate: {'✅ BETTER' if beats_baseline_win_rate else '❌ WORSE'} ({ml_win_rate:.1f}% vs {random_win_rate:.1f}%)")
+            print(f"      ML vs Random Sharpe: {'✅ BETTER' if beats_baseline_sharpe else '❌ WORSE'} ({ml_sharpe:.2f} vs {random_sharpe:.2f})")
+            
+            # Overall assessment
+            overall_success = win_rate_target_met and sharpe_target_met and beats_baseline_win_rate
+            
+            self.log_result('AI Training & Backtest System Performance', overall_success, 200,
+                          f"ML Strategy: {ml_win_rate:.1f}% win rate, {ml_sharpe:.2f} Sharpe vs Random: {random_win_rate:.1f}%, {random_sharpe:.2f}",
+                          None if overall_success else "ML strategy did not meet performance targets or beat baseline")
+        
+        else:
+            self.log_result('AI Training & Backtest System Performance', False, None, None,
+                          "Could not retrieve backtest results for comparison")
+        
+        # 6. Additional Enhanced MTF Training Tests
+        print("\n--- 6. Additional Enhanced MTF Features ---")
+        
+        # Test Fear & Greed Index
+        await self.test_endpoint('GET', '/enhanced-mtf-training/fear-greed', 
+                               'Fear & Greed Index Data')
+        
+        # Test sentiment analysis
+        await self.test_endpoint('GET', '/enhanced-mtf-training/sentiment/BTC', 
+                               'BTC Sentiment Analysis')
+        
+        # Test model info
+        await self.test_endpoint('GET', '/enhanced-mtf-training/model-info', 
+                               'Enhanced MTF Model Information')
+        
+        # Test training history
+        await self.test_endpoint('GET', '/enhanced-mtf-training/history', 
+                               'Enhanced MTF Training History')
+        
+        print("\n🏁 AI TRAINING AND BACKTEST SYSTEM TESTING COMPLETED")
+
     async def run_all_tests(self):
         """Run all test suites"""
-        print(f"🚀 Starting Backend API Tests - ENHANCED MTF TRAINING API TESTING")
+        print(f"🚀 Starting Backend API Tests - AI TRAINING AND BACKTEST SYSTEM FOCUS")
         print(f"📡 Testing Backend URL: {BASE_URL}")
         print(f"👤 User ID: {USER_ID}")
         print("=" * 60)
         
-        # Run test suites - prioritize Enhanced MTF Training API testing
-        await self.test_enhanced_mtf_training_endpoints()
+        # Focus on AI training and backtest system as requested
+        await self.test_ai_training_and_backtest_system()
+        
+        # Run basic health checks
         await self.test_health_endpoints()
-        await self.test_tethys_trading_engine()
-        await self.test_event_triggers_system()
-        await self.test_ensemble_ai_page()
-        await self.test_portfolio_information()
-        await self.test_model_training()
-        await self.test_comprehensive_endpoints()
-        await self.test_error_handling()
         
         # Print summary
         self.print_summary()
