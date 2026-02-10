@@ -154,8 +154,8 @@ const PositionManagement = () => {
     );
   }
 
-  const totalValue = positions.reduce((sum, p) => sum + (p.current_value || p.amount_usd || 0), 0);
-  const totalPnl = positions.reduce((sum, p) => sum + (p.pnl_usd || 0), 0);
+  const totalValue = positions.reduce((sum, p) => sum + (p.usd_value || p.current_value || p.amount_usd || 0), 0);
+  const totalPnl = positions.reduce((sum, p) => sum + (p.pnl || p.pnl_usd || 0), 0);
   const totalPnlPct = totalValue > 0 ? (totalPnl / (totalValue - totalPnl)) * 100 : 0;
   const profitableCount = positions.filter(p => (p.pnl_pct || 0) > 0).length;
 
