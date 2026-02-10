@@ -127,7 +127,7 @@ async def start_training(
             except Exception as e:
                 logger.error(f"Training task failed: {str(e)}", exc_info=True)
         
-        if background_tasks:
+        if background_tasks is not None:
             background_tasks.add_task(train_task)
             return {
                 "status": "training_started",

@@ -90,7 +90,7 @@ async def trigger_continuous_learning(
 ):
     """Manually trigger AI continuous learning update"""
     try:
-        if not learning_engine:
+        if learning_engine is None:
             raise HTTPException(
                 status_code=503,
                 detail="Learning engine not initialized. Please wait for system startup or check database connection."
