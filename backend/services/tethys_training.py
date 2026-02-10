@@ -53,20 +53,32 @@ class TethysModelRegistry:
     """
     
     def __init__(self):
-        mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-        self.client = MlflowClient()
+        self.mlflow_enabled = MLFLOW_AVAILABLE
+        self.client = None
+        self.experiment_id = None
         
-        # Create or get experiment
-        try:
-            self.experiment_id = mlflow.create_experiment(
-                EXPERIMENT_NAME,
-                tags={"agent": "Tethys", "type": "Rainbow DQN"}
-            )
-        except mlflow.exceptions.MlflowException:
-            experiment = mlflow.get_experiment_by_name(EXPERIMENT_NAME)
-            self.experiment_id = experiment.experiment_id
-        
-        mlflow.set_experiment(EXPERIMENT_NAME)
+        if self.mlflow_enabled and mlflow:
+            try:
+                mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+                self.client = MlflowClient()
+                
+                # Create or get experiment
+                try:
+                    self.experiment_id = mlflow.create_experiment(
+                        EXPERIMENT_NAME,
+                        tags={"agent": "Tethys", "type": "Rainbow DQN"}
+                    )
+                except Exception:
+                    experiment = mlflow.get_experiment_by_name(EXPERIMENT_NAME)
+                    self.experiment_id = experiment.experiment_id if experiment else None
+                
+                if self.experiment_id:
+                    mlflow.set_experiment(EXPERIMENT_NAME)
+            except Exception as e:
+                logger.warning(f"MLflow initialization failed: {e}")
+                self.mlflow_enabled = False
+        else:
+            logger.info("MLflow not available - using simple file-based tracking")
         
         logger.info(f"📊 MLflow Registry initialized: {MLFLOW_TRACKING_URI}")
     
