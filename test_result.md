@@ -416,7 +416,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Real Data Integration Changes - COMPLETED"
+    - "Kraken Portfolio and Trading Pairs Integration - COMPLETED"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
