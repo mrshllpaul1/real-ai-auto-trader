@@ -1411,13 +1411,13 @@ class AdaptiveStrategyTester:
 
     async def run_all_tests(self):
         """Run all test suites"""
-        print(f"🚀 Starting Backend API Tests - AI TRAINING AND BACKTEST SYSTEM FOCUS")
+        print(f"🚀 Starting Backend API Tests - ADAPTIVE STRATEGY AND EVENT PREDICTION SYSTEM")
         print(f"📡 Testing Backend URL: {BASE_URL}")
         print(f"👤 User ID: {USER_ID}")
         print("=" * 60)
         
-        # Focus on AI training and backtest system as requested
-        await self.test_ai_training_and_backtest_system()
+        # Focus on Adaptive Strategy and Event Prediction system as requested
+        await self.test_adaptive_strategy_system()
         
         # Run basic health checks
         await self.test_health_endpoints()
