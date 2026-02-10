@@ -349,7 +349,17 @@ async def get_portfolio_summary():
     # Get real Kraken holdings
     kraken_holdings = await get_kraken_portfolio()
     
+    # Debug and validate
+    print(f"DEBUG: kraken_holdings type: {type(kraken_holdings)}")
     if kraken_holdings:
+        print(f"DEBUG: first item type: {type(kraken_holdings[0]) if kraken_holdings else 'empty'}")
+    
+    # Ensure we have a list of dicts
+    if kraken_holdings and isinstance(kraken_holdings, list):
+        # Filter out any non-dict items
+        kraken_holdings = [h for h in kraken_holdings if isinstance(h, dict)]
+    
+    if kraken_holdings and len(kraken_holdings) > 0:
         # Use Kraken data
         total_value = sum(h.get("usd_value", 0) for h in kraken_holdings)
         positions_count = len([h for h in kraken_holdings if h.get("usd_value", 0) > 1])
