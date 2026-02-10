@@ -635,6 +635,11 @@ async def _init_phase7_wire_dependencies(db):
     master_routes.set_db(db)
     logger.info("✅ Master Orchestrator wired")
     
+    # Wire ML Monitoring routes
+    from routes import ml_monitoring as ml_monitoring_routes
+    ml_monitoring_routes.set_db(db)
+    logger.info("✅ ML Monitoring wired")
+    
     # Start schedulers
     await _services['training_scheduler'].start()
     logger.info("✅ Training Scheduler started")
