@@ -65,11 +65,13 @@ def register_routes(api_router: APIRouter):
     from routes import enhanced_data as enhanced_data_routes
     from routes import mtf_training as mtf_training_routes
     from routes import kraken_expansion as kraken_expansion_routes
+    from routes import data_integration as data_integration_routes
     
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
     api_router.include_router(api_keys.router)  # API Key Management - uses own prefix
     api_router.include_router(cache.router)  # ML Cache Management
+    api_router.include_router(data_integration_routes.router)  # Enhanced Data Integration
     api_router.include_router(trading.router, prefix="/trading", tags=["Trading"])
     api_router.include_router(strategies.router, prefix="/strategies", tags=["Strategies"])
     api_router.include_router(market.router, prefix="/market", tags=["Market Data"])

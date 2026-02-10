@@ -65,9 +65,30 @@ async def _init_phase1_core(db):
     from services.cryptopanic_service import CryptoPanicService, set_cryptopanic_service
     from services.ai_coin_discovery import AICoinDiscoveryService, set_discovery_service
     
+    # Enhanced data integration services
+    from services.historical_sentiment_tracker import HistoricalSentimentTracker
+    from services.enhanced_market_data_integrator import EnhancedMarketDataIntegrator
+    from services.enhanced_correlation_service import EnhancedCorrelationService
+    
     # Market & News
     _services['market'] = MarketDataService()
     _services['news'] = CryptoNewsAggregator()
+    
+    # Enhanced market data integrator
+    market_integrator = EnhancedMarketDataIntegrator()
+    _services['market_integrator'] = market_integrator
+    logger.info("✅ Enhanced market data integrator initialized")
+    
+    # Historical sentiment tracker
+    sentiment_tracker = HistoricalSentimentTracker(db)
+    await sentiment_tracker.initialize_indexes()
+    _services['sentiment_tracker'] = sentiment_tracker
+    logger.info("✅ Historical sentiment tracker initialized")
+    
+    # Enhanced correlation service (depends on sentiment_tracker and market_integrator)
+    correlation_service = EnhancedCorrelationService(db, sentiment_tracker, market_integrator)
+    _services['correlation_service'] = correlation_service
+    logger.info("✅ Enhanced correlation service initialized")
     
     # Kraken (optional)
     kraken_api_key = os.getenv('KRAKEN_API_KEY')
@@ -88,8 +109,8 @@ async def _init_phase1_core(db):
     set_universe_manager(universe_manager)
     _services['universe'] = universe_manager
     
-    # AI Sentiment Service
-    sentiment_service = AINewsSentimentService(db)
+    # AI Sentiment Service (now with historical tracker integration)
+    sentiment_service = AINewsSentimentService(db, historical_tracker=sentiment_tracker)
     set_sentiment_service(sentiment_service)
     _services['ai_sentiment'] = sentiment_service
     
@@ -582,6 +603,15 @@ async def _init_phase7_wire_dependencies(db):
         _services['mtf_historical']
     )
     
+    # Data Integration Routes (new enhanced integration)
+    from routes import data_integration as data_integration_routes
+    data_integration_routes.set_dependencies(
+        db,
+        _services['sentiment_tracker'],
+        _services['market_integrator']
+    )
+    logger.info("✅ Enhanced Data Integration routes wired")
+    
     # MTF Training Routes
     from routes import mtf_training as mtf_training_routes
     mtf_training_routes.set_dependencies(db, _services['mtf_training'])
@@ -632,6 +662,12 @@ async def _init_phase7_wire_dependencies(db):
     
     await _services['scheduler'].start()
     logger.info("✅ Scheduler Service started")
+    
+    # Start daily sentiment snapshot scheduler
+    from services.daily_snapshot_scheduler import setup_daily_snapshot_task
+    snapshot_task = await setup_daily_snapshot_task(_services['sentiment_tracker'])
+    _services['snapshot_task'] = snapshot_task
+    logger.info("✅ Daily Sentiment Snapshot Scheduler started")
     
     # Add scheduled jobs
     await _services['scheduler'].add_stop_loss_job(interval_minutes=5)

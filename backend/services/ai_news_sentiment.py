@@ -30,7 +30,7 @@ class AINewsSentimentService:
     Uses CryptoPanic API library for news and Emergent LLM for sentiment analysis.
     """
     
-    def __init__(self, db):
+    def __init__(self, db, historical_tracker=None):
         self.db = db
         self.api_key = os.getenv('EMERGENT_LLM_KEY')
         self.cryptopanic_key = os.getenv('CRYPTOPANIC_API_KEY', '')
@@ -46,6 +46,9 @@ class AINewsSentimentService:
                 print("✅ CryptoPanic client initialized")
             except Exception as e:
                 print(f"CryptoPanic init error: {e}")
+        
+        # Historical sentiment tracker integration
+        self.historical_tracker = historical_tracker
         
         # Cache settings
         self.cache_ttl = 3600  # 1 hour cache
@@ -533,6 +536,17 @@ Return ONLY the JSON, no other text."""
             'timestamp': datetime.now().isoformat()
         }
         await self.db.sentiment_history.insert_one(record)
+        
+        # Also store in historical tracker if available
+        if self.historical_tracker:
+            try:
+                await self.historical_tracker.store_sentiment(
+                    coin_id=coin_id,
+                    sentiment_data=sentiment,
+                    metadata={'source': 'ai_news_sentiment'}
+                )
+            except Exception as e:
+                print(f"Failed to store in historical tracker: {e}")
     
     async def get_sentiment_history(self, coin_id: str, days: int = 7) -> List[Dict]:
         """Get historical sentiment data for a coin."""
