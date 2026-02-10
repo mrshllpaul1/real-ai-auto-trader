@@ -316,19 +316,6 @@ async def download_symbol_now(symbol: str, timeframes: Optional[str] = None):
     return await _mtf_service.download_all_timeframes(symbol, None, tf_list)
 
 
-@router.get("/multitimeframe/{symbol}/{timeframe}")
-async def get_ohlc_data(
-    symbol: str,
-    timeframe: str,
-    limit: int = 500
-):
-    """Get stored OHLC data for a symbol and timeframe"""
-    if not _mtf_service:
-        raise HTTPException(status_code=500, detail="Multi-Timeframe Service not initialized")
-    
-    return await _mtf_service.get_ohlc_data(symbol, timeframe, limit=limit)
-
-
 @router.get("/multitimeframe/{symbol}/multi")
 async def get_multi_timeframe_data(
     symbol: str,
@@ -353,6 +340,19 @@ async def get_training_features(symbol: str, timeframes: Optional[str] = None):
     tf_list = timeframes.split(",") if timeframes else ["1h", "4h", "1D"]
     
     return await _mtf_service.get_training_features(symbol, tf_list)
+
+
+@router.get("/multitimeframe/{symbol}/{timeframe}")
+async def get_ohlc_data(
+    symbol: str,
+    timeframe: str,
+    limit: int = 500
+):
+    """Get stored OHLC data for a symbol and timeframe"""
+    if not _mtf_service:
+        raise HTTPException(status_code=500, detail="Multi-Timeframe Service not initialized")
+    
+    return await _mtf_service.get_ohlc_data(symbol, timeframe, limit=limit)
 
 
 @router.post("/multitimeframe/backfill")
