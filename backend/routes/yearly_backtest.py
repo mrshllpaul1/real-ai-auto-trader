@@ -510,7 +510,7 @@ async def activate_live_trading(config: LiveTradingConfig):
     _live_trading_active = True
     
     # Save to database
-    if _db:
+    if _db is not None:
         await _db.adaptive_live_trading.replace_one(
             {"type": "config"},
             {"type": "config", **_live_trading_config},
