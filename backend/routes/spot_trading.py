@@ -850,6 +850,30 @@ async def get_open_orders():
         
         return {
             "orders": formatted_orders,
+            "count": len(formatted_orders),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Open orders error: {str(e)}")
+
+
+@router.delete("/order/{order_id}")
+async def cancel_order(order_id: str):
+    """Cancel an open order"""
+    if _kraken_service is None:
+        raise HTTPException(status_code=503, detail="Kraken service not initialized")
+    
+    try:
+        result = await _kraken_service.cancel_order(order_id)
+        
+        return {
+            "success": True,
+            "order_id": order_id,
+            "result": result,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Cancel order error: {str(e)}")
 
 
 # ============= Entry Price Tracking Endpoints =============
