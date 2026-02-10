@@ -202,8 +202,8 @@ async def run_multi_year_backtest_endpoint(request: MultiYearBacktestRequest):
     Returns aggregate metrics including CAGR and overall win rate.
     """
     for year in request.years:
-        if year < 2020 or year > 2025:
-            raise HTTPException(status_code=400, detail=f"Year {year} not supported. Must be between 2020 and 2025")
+        if year < 2020 or year > 2026:
+            raise HTTPException(status_code=400, detail=f"Year {year} not supported. Must be between 2020 and 2026")
     
     try:
         from services.yearly_adaptive_backtest import run_multi_year_backtest
