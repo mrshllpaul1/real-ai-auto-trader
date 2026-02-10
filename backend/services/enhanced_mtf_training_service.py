@@ -940,13 +940,15 @@ class EnhancedMTFTrainingService:
             traceback.print_exc()
             
             current_progress = self._training_status.get("progress", 0)
-            self._training_status = {
+            failure_status = dict(self._training_status)
+            failure_status.update({
                 "status": "failed",
                 "error": str(e),
                 "training_id": training_id,
                 "progress": current_progress,
                 "current_phase": "failed"
-            }
+            })
+            self._training_status = failure_status
             return {
                 "training_id": training_id,
                 "status": "failed",
