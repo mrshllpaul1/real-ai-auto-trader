@@ -360,6 +360,10 @@ async def _init_phase6_scheduling(db):
     from services.kraken_universe import get_kraken_universe
     from services.coindesk_universe import get_coindesk_universe
     from services.custom_strategy_builder import get_strategy_builder
+    # Enhanced Data Services
+    from services.kraken_universe_manager import get_kraken_universe_manager
+    from services.onchain_metrics_service import get_onchain_metrics_service
+    from services.multitimeframe_historical_service import get_multitimeframe_service
     
     auto_trader = _services['auto_trader']
     growth_engine = _services['growth_engine']
