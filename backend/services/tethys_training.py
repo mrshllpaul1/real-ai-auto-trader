@@ -86,15 +86,16 @@ class TethysModelRegistry:
         """Start a new training run"""
         run_name = run_name or f"tethys_train_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
         
-        self.active_run = mlflow.start_run(run_name=run_name)
-        
-        # Log system info
         if self.mlflow_enabled and mlflow:
+            self.active_run = mlflow.start_run(run_name=run_name)
+            
+            # Log system info
             mlflow.log_param("agent", "Tethys")
             mlflow.log_param("model_type", "Rainbow DQN + Transformer")
             mlflow.log_param("timestamp", datetime.utcnow().isoformat())
-        
-        return self.active_run.info.run_id if self.active_run else None
+            
+            return self.active_run.info.run_id
+        return run_name  # Return run name as ID when MLflow is not available
     
     def log_hyperparameters(self, params: Dict[str, Any]):
         """Log hyperparameters"""
