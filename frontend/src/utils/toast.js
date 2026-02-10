@@ -146,6 +146,73 @@ export const toast = {
     },
   },
 
+  // Custom toast for auto-execution operations
+  execution: {
+    started: (mode) => {
+      sonnerToast.success('Auto-execution started', {
+        description: `Running in ${mode.toUpperCase()} mode`,
+        duration: 4000,
+      });
+    },
+
+    stopped: () => {
+      sonnerToast.info('Auto-execution stopped', {
+        description: 'Engine is now inactive',
+        duration: 3000,
+      });
+    },
+
+    enabled: (mode) => {
+      sonnerToast.success('Auto-execution enabled', {
+        description: `Will execute trades in ${mode.toUpperCase()} mode`,
+        duration: 4000,
+      });
+    },
+
+    disabled: () => {
+      sonnerToast.warning('Auto-execution disabled', {
+        description: 'No trades will be executed automatically',
+        duration: 3000,
+      });
+    },
+
+    tradeExecuted: (symbol, profit, mode) => {
+      const emoji = profit >= 0 ? '✅' : '❌';
+      sonnerToast.success(`${emoji} Trade closed: ${symbol}`, {
+        description: `${profit >= 0 ? '+' : ''}${profit.toFixed(2)}% profit (${mode})`,
+        duration: 5000,
+      });
+    },
+
+    scanComplete: (executed, scanned) => {
+      if (executed > 0) {
+        sonnerToast.success(`Scan complete: ${executed} trade(s) executed`, {
+          description: `Analyzed ${scanned} opportunities`,
+          duration: 4000,
+        });
+      } else {
+        sonnerToast.info('Scan complete: No trades executed', {
+          description: 'No HIGH priority gems found',
+          duration: 3000,
+        });
+      }
+    },
+
+    aiOptimized: (optimizations) => {
+      sonnerToast.success('AI strategy optimized', {
+        description: `Made ${optimizations} adjustment(s)`,
+        duration: 4000,
+      });
+    },
+
+    riskProfileSaved: () => {
+      sonnerToast.success('Risk profile saved', {
+        description: 'Settings updated successfully',
+        duration: 3000,
+      });
+    },
+  },
+
   // Dismiss specific toast
   dismiss: (toastId) => {
     sonnerToast.dismiss(toastId);

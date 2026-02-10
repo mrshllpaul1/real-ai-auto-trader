@@ -10,18 +10,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Bot, Play, Square, Brain, TrendingUp, TrendingDown, 
   Zap, Target, AlertTriangle, RefreshCw, Settings2,
-  DollarSign, Shield, Activity, Lightbulb
+  DollarSign, Shield, Activity, Lightbulb, BarChart3,
+  PieChart, Award
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
-import { toast } from 'sonner';
+import toast from '../utils/toast';
 import { useTradingMode } from '../context/TradingModeContext';
 
 const AutoExecution = () => {
   const [status, setStatus] = useState(null);
   const [aiStatus, setAiStatus] = useState(null);
   const [aiPerformance, setAiPerformance] = useState(null);
+  const [signalAnalytics, setSignalAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Constants
+  const DRAWDOWN_SCALE_FACTOR = 4; // Scale factor for drawdown visualization (drawdown * 4 = progress bar width)
   
   // Use global trading mode context
   const { mode: globalMode, setMode, isRealMode } = useTradingMode();
@@ -59,16 +64,18 @@ const AutoExecution = () => {
 
   const loadData = useCallback(async () => {
     try {
-      const [statusRes, aiRes, perfRes, profileRes] = await Promise.all([
+      const [statusRes, aiRes, perfRes, profileRes, signalsRes] = await Promise.all([
         timeoutPromise(api.get('/auto-exec/status'), 8000).catch(() => ({ data: {} })),
         timeoutPromise(api.get('/auto-exec/ai/status'), 8000).catch(() => ({ data: {} })),
         timeoutPromise(api.get('/auto-exec/ai/performance'), 8000).catch(() => ({ data: {} })),
-        timeoutPromise(api.get('/auto-exec/risk-profile'), 8000).catch(() => ({ data: {} }))
+        timeoutPromise(api.get('/auto-exec/risk-profile'), 8000).catch(() => ({ data: {} })),
+        timeoutPromise(api.get('/auto-exec/analytics/signals'), 8000).catch(() => ({ data: {} }))
       ]);
       
       setStatus(statusRes.data);
       setAiStatus(aiRes.data);
       setAiPerformance(perfRes.data);
+      setSignalAnalytics(signalsRes.data);
       if (profileRes.data) {
         // Apply API config but preserve global trading mode
         setRiskProfile(prev => ({ ...prev, ...profileRes.data, mode: isRealMode ? 'live' : 'paper' }));
@@ -90,12 +97,12 @@ const AutoExecution = () => {
     try {
       if (riskProfile.enabled) {
         await api.post('/auto-exec/disable');
-        toast.success('Auto-execution disabled');
+        toast.execution.disabled();
       } else {
         await api.post('/auto-exec/enable', null, { 
           params: { mode: riskProfile.mode }
         });
-        toast.success(`Auto-execution enabled in ${riskProfile.mode.toUpperCase()} mode`);
+        toast.execution.enabled(riskProfile.mode);
       }
       await loadData();
     } catch (error) {
@@ -105,49 +112,44 @@ const AutoExecution = () => {
 
   const startExecution = async () => {
     try {
-      toast.loading('Starting auto-execution engine...');
+      const loadingId = toast.loading('Starting auto-execution engine...');
       await api.post('/auto-exec/start');
-      toast.dismiss();
-      toast.success('Auto-execution engine started!');
+      toast.dismiss(loadingId);
+      toast.execution.started(riskProfile.mode);
       await loadData();
     } catch (error) {
-      toast.dismiss();
-      toast.error('Failed to start');
+      toast.dismiss(loadingId);
+      toast.error('Failed to start execution engine');
     }
   };
 
   const stopExecution = async () => {
     try {
       await api.post('/auto-exec/stop');
-      toast.success('Auto-execution stopped');
+      toast.execution.stopped();
       await loadData();
     } catch (error) {
-      toast.error('Failed to stop');
+      toast.error('Failed to stop execution engine');
     }
   };
 
   const executeNow = async () => {
     try {
-      toast.loading('Scanning and executing...');
+      const loadingId = toast.loading('Scanning market for opportunities...');
       const res = await api.post('/auto-exec/execute-now');
-      toast.dismiss();
+      toast.dismiss(loadingId);
       
-      if (res.data.executed > 0) {
-        toast.success(`Executed ${res.data.executed} trade(s)!`);
-      } else {
-        toast.info('No trades executed - no matching HIGH priority gems');
-      }
+      toast.execution.scanComplete(res.data.executed || 0, res.data.scanned || 0);
       await loadData();
     } catch (error) {
-      toast.dismiss();
-      toast.error('Execution failed');
+      toast.error('Execution scan failed');
     }
   };
 
   const saveRiskProfile = async () => {
     try {
       await api.post('/auto-exec/risk-profile', riskProfile);
-      toast.success('Risk profile saved!');
+      toast.execution.riskProfileSaved();
     } catch (error) {
       toast.error('Failed to save risk profile');
     }
@@ -156,7 +158,7 @@ const AutoExecution = () => {
   const startAILearning = async () => {
     try {
       await api.post('/auto-exec/ai/start-learning');
-      toast.success('AI continuous learning started!');
+      toast.ai.started('AI Continuous Learning');
       await loadData();
     } catch (error) {
       toast.error('Failed to start AI learning');
@@ -165,12 +167,16 @@ const AutoExecution = () => {
 
   const optimizeStrategy = async () => {
     try {
-      toast.loading('AI optimizing strategy...');
+      const loadingId = toast.loading('AI optimizing strategy...');
       const res = await api.post('/auto-exec/ai/optimize');
-      toast.dismiss();
-      toast.success(`Made ${res.data.optimizations_made?.length || 0} optimizations`);
+      toast.dismiss(loadingId);
+      toast.execution.aiOptimized(res.data.optimizations_made?.length || 0);
       await loadData();
     } catch (error) {
+      toast.dismiss(loadingId);
+      toast.error('Strategy optimization failed');
+    }
+  };
       toast.dismiss();
       toast.error('Optimization failed');
     }
@@ -208,6 +214,10 @@ const AutoExecution = () => {
           <TabsTrigger value="execution" data-testid="tab-execution">
             <Zap size={16} className="mr-2" />
             Auto Execution
+          </TabsTrigger>
+          <TabsTrigger value="analytics" data-testid="tab-analytics">
+            <BarChart3 size={16} className="mr-2" />
+            Analytics
           </TabsTrigger>
           <TabsTrigger value="ai" data-testid="tab-ai">
             <Brain size={16} className="mr-2" />
@@ -367,6 +377,181 @@ const AutoExecution = () => {
           )}
         </TabsContent>
 
+        {/* ANALYTICS TAB */}
+        <TabsContent value="analytics" className="space-y-6">
+          {/* Enhanced Performance Metrics */}
+          {status?.analytics && (
+            <Card className="bg-[#0A0A0A] border-[#007AFF]/30" data-testid="performance-metrics">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <BarChart3 className="text-[#007AFF]" size={32} />
+                  <div>
+                    <CardTitle className="text-2xl font-heading">Performance Metrics</CardTitle>
+                    <CardDescription>
+                      Comprehensive execution analytics and statistics
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Key Metrics Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]">
+                    <div className="text-xs text-[#A1A1AA] mb-1">Total Trades</div>
+                    <div className="text-3xl font-data font-bold text-white">
+                      {status.total_closed_trades || 0}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]">
+                    <div className="text-xs text-[#A1A1AA] mb-1">Win Rate</div>
+                    <div className={`text-3xl font-data font-bold ${(status.win_rate || 0) > 50 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                      {(status.win_rate || 0).toFixed(1)}%
+                    </div>
+                  </div>
+                  <div className="p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]">
+                    <div className="text-xs text-[#A1A1AA] mb-1">Profit Factor</div>
+                    <div className={`text-3xl font-data font-bold ${(status.analytics.profit_factor || 0) > 1 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                      {(status.analytics.profit_factor || 0).toFixed(2)}x
+                    </div>
+                  </div>
+                  <div className="p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]">
+                    <div className="text-xs text-[#A1A1AA] mb-1">Max Drawdown</div>
+                    <div className="text-3xl font-data font-bold text-[#FF0055]">
+                      -{(status.analytics.max_drawdown_pct || 0).toFixed(2)}%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Win/Loss Breakdown */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 bg-[#121212] rounded-lg border border-[#00FF94]/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-[#A1A1AA]">Winning Trades</span>
+                      <TrendingUp className="text-[#00FF94]" size={20} />
+                    </div>
+                    <div className="text-2xl font-data font-bold text-[#00FF94]">
+                      {status.analytics.wins || 0}
+                    </div>
+                    <div className="text-sm text-[#A1A1AA] mt-1">
+                      Avg: +{(status.analytics.avg_win_pct || 0).toFixed(2)}%
+                    </div>
+                  </div>
+                  <div className="p-4 bg-[#121212] rounded-lg border border-[#FF0055]/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-[#A1A1AA]">Losing Trades</span>
+                      <TrendingDown className="text-[#FF0055]" size={20} />
+                    </div>
+                    <div className="text-2xl font-data font-bold text-[#FF0055]">
+                      {status.analytics.losses || 0}
+                    </div>
+                    <div className="text-sm text-[#A1A1AA] mt-1">
+                      Avg: {(status.analytics.avg_loss_pct || 0).toFixed(2)}%
+                    </div>
+                  </div>
+                  <div className="p-4 bg-[#121212] rounded-lg border border-[#007AFF]/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-[#A1A1AA]">Avg per Trade</span>
+                      <DollarSign className="text-[#007AFF]" size={20} />
+                    </div>
+                    <div className={`text-2xl font-data font-bold ${(status.analytics.avg_profit_per_trade || 0) >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                      {(status.analytics.avg_profit_per_trade || 0) >= 0 ? '+' : ''}{(status.analytics.avg_profit_per_trade || 0).toFixed(2)}%
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Signal Performance Analysis */}
+          {signalAnalytics?.signal_performance && Object.keys(signalAnalytics.signal_performance).length > 0 && (
+            <Card className="bg-[#0A0A0A] border-[#9D00FF]/30">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <PieChart className="text-[#9D00FF]" size={32} />
+                  <div>
+                    <CardTitle className="text-2xl font-heading">Signal Performance</CardTitle>
+                    <CardDescription>
+                      Win rate and profit breakdown by signal type
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {Object.entries(signalAnalytics.signal_performance)
+                    .sort((a, b) => b[1].win_rate - a[1].win_rate)
+                    .slice(0, 10)
+                    .map(([signal, stats]) => (
+                      <div key={signal} className="p-3 bg-[#121212] rounded-lg border border-[#1F1F1F]">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-bold text-white">{signal.replace(/_/g, ' ')}</span>
+                          <Badge className={
+                            stats.win_rate > 60 ? 'bg-[#00FF94]/20 text-[#00FF94]' :
+                            stats.win_rate > 40 ? 'bg-[#007AFF]/20 text-[#007AFF]' :
+                            'bg-[#FF0055]/20 text-[#FF0055]'
+                          }>
+                            {stats.win_rate.toFixed(1)}% WR
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2 text-sm">
+                          <div>
+                            <span className="text-[#A1A1AA]">Trades: </span>
+                            <span className="font-data text-white">{stats.total_trades}</span>
+                          </div>
+                          <div>
+                            <span className="text-[#A1A1AA]">Wins: </span>
+                            <span className="font-data text-[#00FF94]">{stats.wins}</span>
+                          </div>
+                          <div>
+                            <span className="text-[#A1A1AA]">Losses: </span>
+                            <span className="font-data text-[#FF0055]">{stats.losses}</span>
+                          </div>
+                          <div>
+                            <span className="text-[#A1A1AA]">Profit: </span>
+                            <span className={`font-data ${stats.total_profit_pct >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                              {stats.total_profit_pct >= 0 ? '+' : ''}{stats.total_profit_pct.toFixed(2)}%
+                            </span>
+                          </div>
+                        </div>
+                        {/* Progress bar for win rate */}
+                        <div className="mt-2 h-2 bg-[#1F1F1F] rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full transition-all ${
+                              stats.win_rate > 60 ? 'bg-[#00FF94]' :
+                              stats.win_rate > 40 ? 'bg-[#007AFF]' :
+                              'bg-[#FF0055]'
+                            }`}
+                            style={{ width: `${stats.win_rate}%` }}
+                          />
+                        </div>
+                      </div>
+                  ))}
+                </div>
+
+                {/* Best and Worst Signals */}
+                {status?.analytics?.best_signal && status?.analytics?.worst_signal && (
+                  <div className="grid grid-cols-2 gap-4 mt-6">
+                    <div className="p-4 bg-[#00FF94]/10 border border-[#00FF94]/30 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Award className="text-[#00FF94]" size={20} />
+                        <span className="font-bold text-[#00FF94]">Best Signal</span>
+                      </div>
+                      <p className="text-white">{status.analytics.best_signal.replace(/_/g, ' ')}</p>
+                    </div>
+                    <div className="p-4 bg-[#FF0055]/10 border border-[#FF0055]/30 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle className="text-[#FF0055]" size={20} />
+                        <span className="font-bold text-[#FF0055]">Worst Signal</span>
+                      </div>
+                      <p className="text-white">{status.analytics.worst_signal.replace(/_/g, ' ')}</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
         {/* AI LEARNING TAB */}
         <TabsContent value="ai" className="space-y-6">
           <Card className="bg-[#0A0A0A] border-[#9D00FF]/30" data-testid="ai-learning">
@@ -513,10 +698,152 @@ const AutoExecution = () => {
 
         {/* SETTINGS TAB */}
         <TabsContent value="settings" className="space-y-6">
+          {/* Risk Overview Dashboard */}
+          {status?.analytics && (
+            <Card className="bg-[#0A0A0A] border-[#FFB800]/30">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <Shield className="text-[#FFB800]" size={32} />
+                  <div>
+                    <CardTitle className="text-2xl font-heading">Risk Overview</CardTitle>
+                    <CardDescription>
+                      Current risk exposure and safety metrics
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  {/* Drawdown Risk */}
+                  <div className="p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-[#A1A1AA]">Max Drawdown</span>
+                      <AlertTriangle 
+                        className={
+                          (status.analytics.max_drawdown_pct || 0) > 15 ? 'text-[#FF0055]' :
+                          (status.analytics.max_drawdown_pct || 0) > 10 ? 'text-[#FFB800]' :
+                          'text-[#00FF94]'
+                        } 
+                        size={20} 
+                      />
+                    </div>
+                    <div className={`text-2xl font-data font-bold ${
+                      (status.analytics.max_drawdown_pct || 0) > 15 ? 'text-[#FF0055]' :
+                      (status.analytics.max_drawdown_pct || 0) > 10 ? 'text-[#FFB800]' :
+                      'text-[#00FF94]'
+                    }`}>
+                      -{(status.analytics.max_drawdown_pct || 0).toFixed(2)}%
+                    </div>
+                    <div className="mt-2 h-2 bg-[#1F1F1F] rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all ${
+                          (status.analytics.max_drawdown_pct || 0) > 15 ? 'bg-[#FF0055]' :
+                          (status.analytics.max_drawdown_pct || 0) > 10 ? 'bg-[#FFB800]' :
+                          'bg-[#00FF94]'
+                        }`}
+                        style={{ width: `${Math.min((status.analytics.max_drawdown_pct || 0) * DRAWDOWN_SCALE_FACTOR, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Position Utilization */}
+                  <div className="p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-[#A1A1AA]">Position Usage</span>
+                      <Activity className="text-[#007AFF]" size={20} />
+                    </div>
+                    <div className="text-2xl font-data font-bold text-white">
+                      {status.open_positions || 0} / {riskProfile.max_open_positions || 3}
+                    </div>
+                    <div className="mt-2 h-2 bg-[#1F1F1F] rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-[#007AFF] transition-all"
+                        style={{ 
+                          width: `${((status.open_positions || 0) / (riskProfile.max_open_positions || 3) * 100)}%` 
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Daily Trade Limit */}
+                  <div className="p-4 bg-[#121212] rounded-lg border border-[#1F1F1F]">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-[#A1A1AA]">Daily Limit</span>
+                      <Target 
+                        className={
+                          (status.daily_trades_used || 0) >= (status.daily_trades_limit || 5) ? 'text-[#FF0055]' :
+                          (status.daily_trades_used || 0) / (status.daily_trades_limit || 5) > 0.8 ? 'text-[#FFB800]' :
+                          'text-[#00FF94]'
+                        } 
+                        size={20} 
+                      />
+                    </div>
+                    <div className="text-2xl font-data font-bold text-white">
+                      {status.daily_trades_used || 0} / {status.daily_trades_limit || 5}
+                    </div>
+                    <div className="mt-2 h-2 bg-[#1F1F1F] rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all ${
+                          (status.daily_trades_used || 0) >= (status.daily_trades_limit || 5) ? 'bg-[#FF0055]' :
+                          (status.daily_trades_used || 0) / (status.daily_trades_limit || 5) > 0.8 ? 'bg-[#FFB800]' :
+                          'bg-[#00FF94]'
+                        }`}
+                        style={{ 
+                          width: `${((status.daily_trades_used || 0) / (status.daily_trades_limit || 5) * 100)}%` 
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Risk Warnings */}
+                <AnimatePresence>
+                  {(status.analytics.max_drawdown_pct || 0) > 15 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="bg-[#FF0055]/10 border border-[#FF0055]/30 rounded-lg p-4 mb-4"
+                    >
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="text-[#FF0055] flex-shrink-0" size={20} />
+                        <div>
+                          <p className="font-bold text-[#FF0055] mb-1">HIGH DRAWDOWN WARNING</p>
+                          <p className="text-sm text-[#FF0055]">
+                            Your max drawdown has exceeded 15%. Consider reducing position sizes or pausing auto-execution to preserve capital.
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                  {(status.daily_trades_used || 0) >= (status.daily_trades_limit || 5) && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-lg p-4 mb-4"
+                    >
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="text-[#FFB800] flex-shrink-0" size={20} />
+                        <div>
+                          <p className="font-bold text-[#FFB800] mb-1">DAILY LIMIT REACHED</p>
+                          <p className="text-sm text-[#FFB800]">
+                            You've reached your daily trade limit. No more trades will be executed until tomorrow.
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Risk Profile Settings */}
           <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
             <CardHeader>
               <CardTitle className="text-xl font-heading flex items-center gap-3">
-                <Shield className="text-[#FFB800]" />
+                <Settings2 className="text-[#FFB800]" />
                 Risk Profile Settings
               </CardTitle>
               <CardDescription>
@@ -524,6 +851,63 @@ const AutoExecution = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Quick Preset Profiles */}
+              <div>
+                <Label className="text-white font-bold mb-3 block">Quick Presets</Label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <Button
+                    onClick={() => setRiskProfile(p => ({
+                      ...p,
+                      min_score: 70,
+                      max_position_size_usd: 50,
+                      max_daily_trades: 3,
+                      max_open_positions: 2,
+                      stop_loss_pct: 5,
+                      take_profit_pct: 20
+                    }))}
+                    className="bg-[#00FF94]/20 hover:bg-[#00FF94]/30 text-[#00FF94] border border-[#00FF94]/30 h-auto py-3"
+                  >
+                    <div className="text-left w-full">
+                      <div className="font-bold">Conservative</div>
+                      <div className="text-xs opacity-80">Low risk, small positions</div>
+                    </div>
+                  </Button>
+                  <Button
+                    onClick={() => setRiskProfile(p => ({
+                      ...p,
+                      min_score: 60,
+                      max_position_size_usd: 100,
+                      max_daily_trades: 5,
+                      max_open_positions: 3,
+                      stop_loss_pct: 10,
+                      take_profit_pct: 50
+                    }))}
+                    className="bg-[#007AFF]/20 hover:bg-[#007AFF]/30 text-[#007AFF] border border-[#007AFF]/30 h-auto py-3"
+                  >
+                    <div className="text-left w-full">
+                      <div className="font-bold">Balanced</div>
+                      <div className="text-xs opacity-80">Medium risk, standard positions</div>
+                    </div>
+                  </Button>
+                  <Button
+                    onClick={() => setRiskProfile(p => ({
+                      ...p,
+                      min_score: 50,
+                      max_position_size_usd: 200,
+                      max_daily_trades: 10,
+                      max_open_positions: 5,
+                      stop_loss_pct: 15,
+                      take_profit_pct: 100
+                    }))}
+                    className="bg-[#FF0055]/20 hover:bg-[#FF0055]/30 text-[#FF0055] border border-[#FF0055]/30 h-auto py-3"
+                  >
+                    <div className="text-left w-full">
+                      <div className="font-bold">Aggressive</div>
+                      <div className="text-xs opacity-80">High risk, large positions</div>
+                    </div>
+                  </Button>
+                </div>
+              </div>
               {/* Mode Selection */}
               <div className="flex items-center justify-between p-4 bg-[#121212] rounded-lg">
                 <div>
