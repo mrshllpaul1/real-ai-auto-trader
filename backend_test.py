@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Adaptive Strategy and Event Prediction System Testing
-Tests regime detection, regime variants, auto-adjustment, event prediction, and monitoring.
+On-Chain Data and Enhanced Adaptive Strategy Testing
+Tests new on-chain data endpoints and enhanced adaptive strategy features.
 """
 
 import asyncio
