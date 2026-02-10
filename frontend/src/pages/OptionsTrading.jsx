@@ -39,6 +39,7 @@ const OptionsTrading = () => {
   const [selectedStrategy, setSelectedStrategy] = useState(null);
   const [expandedPosition, setExpandedPosition] = useState(null);
   const [positionAnalytics, setPositionAnalytics] = useState(null);
+  const [legIdCounter, setLegIdCounter] = useState(0);
 
   const loadData = useCallback(async () => {
     try {
@@ -83,7 +84,9 @@ const OptionsTrading = () => {
         description: `${actionText} ${orderForm.quantity} ${orderForm.option_type.toUpperCase()} ${orderForm.symbol} @ $${orderForm.strike_price}`
       });
       loadData();
-      setOrderForm(prev => ({ ...prev, strike_price: 45000, expiry_date: '', quantity: 1 }));
+      // Reset form with appropriate strike based on symbol
+      const currentStrike = chain?.current_price || 45000;
+      setOrderForm(prev => ({ ...prev, strike_price: currentStrike, expiry_date: '', quantity: 1 }));
     } catch (error) {
       toast.dismiss(loadingToast);
       toast.error('Failed to place order', {
@@ -122,8 +125,10 @@ const OptionsTrading = () => {
 
   // Strategy builder functions
   const addLegToStrategy = () => {
+    const newLegId = `leg-${legIdCounter}`;
+    setLegIdCounter(legIdCounter + 1);
     setStrategyLegs([...strategyLegs, {
-      id: Date.now(),
+      id: newLegId,
       action: 'buy',
       option_type: 'call',
       strike_price: chain?.current_price || 45000,
@@ -209,39 +214,41 @@ const OptionsTrading = () => {
     const currentPrice = chain.current_price;
     const atm = Math.round(currentPrice / 1000) * 1000;
     
+    let legCounter = legIdCounter;
     let legs = [];
     
     switch(strategyName) {
       case 'Bull Call Spread':
         legs = [
-          { id: Date.now(), action: 'buy', option_type: 'call', strike_price: atm, expiry_date: selectedExpiry, quantity: 1 },
-          { id: Date.now() + 1, action: 'sell', option_type: 'call', strike_price: atm + (currentPrice * 0.1), expiry_date: selectedExpiry, quantity: 1 }
+          { id: `leg-${legCounter++}`, action: 'buy', option_type: 'call', strike_price: atm, expiry_date: selectedExpiry, quantity: 1 },
+          { id: `leg-${legCounter++}`, action: 'sell', option_type: 'call', strike_price: atm + (currentPrice * 0.1), expiry_date: selectedExpiry, quantity: 1 }
         ];
         break;
       case 'Bear Put Spread':
         legs = [
-          { id: Date.now(), action: 'buy', option_type: 'put', strike_price: atm, expiry_date: selectedExpiry, quantity: 1 },
-          { id: Date.now() + 1, action: 'sell', option_type: 'put', strike_price: atm - (currentPrice * 0.1), expiry_date: selectedExpiry, quantity: 1 }
+          { id: `leg-${legCounter++}`, action: 'buy', option_type: 'put', strike_price: atm, expiry_date: selectedExpiry, quantity: 1 },
+          { id: `leg-${legCounter++}`, action: 'sell', option_type: 'put', strike_price: atm - (currentPrice * 0.1), expiry_date: selectedExpiry, quantity: 1 }
         ];
         break;
       case 'Straddle':
         legs = [
-          { id: Date.now(), action: 'buy', option_type: 'call', strike_price: atm, expiry_date: selectedExpiry, quantity: 1 },
-          { id: Date.now() + 1, action: 'buy', option_type: 'put', strike_price: atm, expiry_date: selectedExpiry, quantity: 1 }
+          { id: `leg-${legCounter++}`, action: 'buy', option_type: 'call', strike_price: atm, expiry_date: selectedExpiry, quantity: 1 },
+          { id: `leg-${legCounter++}`, action: 'buy', option_type: 'put', strike_price: atm, expiry_date: selectedExpiry, quantity: 1 }
         ];
         break;
       case 'Iron Condor':
         legs = [
-          { id: Date.now(), action: 'sell', option_type: 'put', strike_price: atm - (currentPrice * 0.05), expiry_date: selectedExpiry, quantity: 1 },
-          { id: Date.now() + 1, action: 'buy', option_type: 'put', strike_price: atm - (currentPrice * 0.1), expiry_date: selectedExpiry, quantity: 1 },
-          { id: Date.now() + 2, action: 'sell', option_type: 'call', strike_price: atm + (currentPrice * 0.05), expiry_date: selectedExpiry, quantity: 1 },
-          { id: Date.now() + 3, action: 'buy', option_type: 'call', strike_price: atm + (currentPrice * 0.1), expiry_date: selectedExpiry, quantity: 1 }
+          { id: `leg-${legCounter++}`, action: 'sell', option_type: 'put', strike_price: atm - (currentPrice * 0.05), expiry_date: selectedExpiry, quantity: 1 },
+          { id: `leg-${legCounter++}`, action: 'buy', option_type: 'put', strike_price: atm - (currentPrice * 0.1), expiry_date: selectedExpiry, quantity: 1 },
+          { id: `leg-${legCounter++}`, action: 'sell', option_type: 'call', strike_price: atm + (currentPrice * 0.05), expiry_date: selectedExpiry, quantity: 1 },
+          { id: `leg-${legCounter++}`, action: 'buy', option_type: 'call', strike_price: atm + (currentPrice * 0.1), expiry_date: selectedExpiry, quantity: 1 }
         ];
         break;
       default:
         return;
     }
     
+    setLegIdCounter(legCounter);
     setStrategyLegs(legs);
     setSelectedStrategy(strategyName);
     toast.success(`Loaded ${strategyName} strategy`);
@@ -370,6 +377,8 @@ const OptionsTrading = () => {
                 <span className="text-[#A1A1AA]">IV Rank</span>
                 <div className="flex items-center gap-2">
                   <div className="text-2xl font-data text-[#00FF94]">
+                    {/* NOTE: In production, IV Rank should be calculated as percentile within historical range (e.g., 52-week high/low)
+                        This is simplified for demo purposes */}
                     {((chain.volatility * 100 / 100) * 100).toFixed(0)}%
                   </div>
                   <Badge className={
@@ -643,6 +652,7 @@ const OptionsTrading = () => {
                     onChange={(e) => setOrderForm({ ...orderForm, quantity: parseFloat(e.target.value) })}
                     className="bg-[#121212] border-[#1F1F1F] mt-1"
                     min={0.1}
+                    max={1000}
                     step={0.1}
                   />
                 </div>
@@ -840,6 +850,7 @@ const OptionsTrading = () => {
                               className="bg-[#0A0A0A] border-[#1F1F1F] h-8 text-xs"
                               placeholder="Qty"
                               min={0.1}
+                              max={1000}
                               step={0.1}
                             />
                           </div>
@@ -1014,7 +1025,7 @@ const OptionsTrading = () => {
                               <p className={`font-data font-bold ${positionAnalytics.pnl_breakdown.theta_pnl >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
                                 ${positionAnalytics.pnl_breakdown.theta_pnl}
                               </p>
-                              <p className="text-[#666] text-xs mt-1">Time decay ({pos.days_held}d)</p>
+                              <p className="text-[#666] text-xs mt-1">Time decay ({positionAnalytics.days_held || pos.days_held || 0}d)</p>
                             </div>
                             <div className="bg-[#121212] p-3 rounded border border-[#1F1F1F]">
                               <p className="text-[#666] text-xs mb-1">Vega P&L</p>

@@ -19,6 +19,13 @@ router = APIRouter(prefix="/options", tags=["Options Trading"])
 # Global database reference
 _db = None
 
+# Current prices (centralized for consistency across all endpoints)
+CURRENT_PRICES = {
+    "BTC": 45000,
+    "ETH": 2500,
+    "SOL": 100
+}
+
 
 def set_db(db):
     global _db
@@ -151,11 +158,7 @@ async def get_option_chain(
 ):
     """Get available options chain for a symbol"""
     # Generate simulated option chain
-    current_price = {
-        "BTC": 45000,
-        "ETH": 2500,
-        "SOL": 100
-    }.get(symbol.upper(), 1000)
+    current_price = CURRENT_PRICES.get(symbol.upper(), 1000)
     
     # Generate strikes around current price
     strikes = []
@@ -260,8 +263,7 @@ async def place_option_order(
 ):
     """Place an option order (simulated)"""
     # Get current price
-    current_prices = {"BTC": 45000, "ETH": 2500, "SOL": 100}
-    current_price = current_prices.get(order.symbol.upper(), 1000)
+    current_price = CURRENT_PRICES.get(order.symbol.upper(), 1000)
     
     # Calculate days to expiry
     expiry = datetime.fromisoformat(order.expiry_date.replace('Z', '+00:00'))
@@ -342,10 +344,8 @@ async def get_option_positions(
     ).to_list(100)
     
     # Update greeks and P&L for each position
-    current_prices = {"BTC": 45000, "ETH": 2500, "SOL": 100}
-    
     for pos in positions:
-        current_price = current_prices.get(pos["symbol"], 1000)
+        current_price = CURRENT_PRICES.get(pos["symbol"], 1000)
         expiry = datetime.fromisoformat(pos["expiry_date"].replace('Z', '+00:00'))
         days_to_expiry = max((expiry - datetime.now(timezone.utc)).days, 0)
         T = max(days_to_expiry, 0.01) / 365
@@ -419,8 +419,7 @@ async def close_option_position(
         raise HTTPException(status_code=404, detail="Position not found")
     
     # Calculate final P&L
-    current_prices = {"BTC": 45000, "ETH": 2500, "SOL": 100}
-    current_price = current_prices.get(position["symbol"], 1000)
+    current_price = CURRENT_PRICES.get(position["symbol"], 1000)
     
     expiry = datetime.fromisoformat(position["expiry_date"].replace('Z', '+00:00'))
     days_to_expiry = max((expiry - datetime.now(timezone.utc)).days, 0)
@@ -590,8 +589,7 @@ async def get_position_analytics(
         raise HTTPException(status_code=404, detail="Position not found")
     
     # Get current or final price
-    current_prices = {"BTC": 45000, "ETH": 2500, "SOL": 100}
-    current_price = current_prices.get(position["symbol"], 1000)
+    current_price = CURRENT_PRICES.get(position["symbol"], 1000)
     
     # Calculate Greeks at entry and current/exit
     expiry = datetime.fromisoformat(position["expiry_date"].replace('Z', '+00:00'))
@@ -617,21 +615,27 @@ async def get_position_analytics(
     abs_qty = abs(quantity)
     
     price_change = current_greeks["price"] - position["entry_price"]
-    total_pnl = price_change * quantity if not is_short else -price_change * abs_qty
+    # Use consistent P&L calculation formula (same as in get_option_positions)
+    if is_short:
+        total_pnl = (position["entry_price"] - current_greeks["price"]) * abs_qty
+    else:
+        total_pnl = price_change * abs_qty
     
     # Estimate P&L by Greek (simplified)
-    # Delta P&L: change in underlying price * delta
+    # Delta P&L: change in underlying price * delta (adjusted for short positions)
     underlying_move = current_price - position.get("entry_underlying_price", current_price)
-    delta_pnl = underlying_move * entry_greeks.get("delta", 0) * abs_qty
+    delta_multiplier = -1 if is_short else 1
+    delta_pnl = underlying_move * entry_greeks.get("delta", 0) * abs_qty * delta_multiplier
     
     # Theta P&L: time decay
     days_passed = position.get("days_held", 0)
     theta_pnl = entry_greeks.get("theta", 0) * days_passed * abs_qty
     
-    # Vega P&L: IV change (assume 5% IV change for demo)
+    # Vega P&L: IV change (NOTE: This is a placeholder calculation using assumed 5% IV change)
+    # TODO: Store entry IV and calculate actual IV change for accurate attribution
     vega_pnl = entry_greeks.get("vega", 0) * 5 * abs_qty
     
-    # Gamma P&L: second order effect (simplified)
+    # Gamma P&L: second order effect (calculated as remainder)
     gamma_pnl = total_pnl - delta_pnl - theta_pnl - vega_pnl
     
     return {
