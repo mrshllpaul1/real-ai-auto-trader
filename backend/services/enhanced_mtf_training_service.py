@@ -1433,6 +1433,13 @@ class EnhancedMTFTrainingService:
         )
         
         if not model_doc:
+            # Try sentiment_only model
+            model_doc = await self.model_collection.find_one(
+                {"type": "sentiment_only_mtf"},
+                {"_id": 0, "weights": 0, "normalization": 0}
+            )
+        
+        if not model_doc:
             return {"status": "no_model", "message": "No trained model found"}
         
         return {
