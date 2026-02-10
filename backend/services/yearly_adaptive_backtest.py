@@ -65,63 +65,60 @@ MARKET_EVENTS_2025 = [
 
 
 class AdaptiveStrategy:
-    """Adaptive strategy that adjusts parameters based on market conditions - OPTIMIZED FOR 70%+ WIN RATE"""
+    """Adaptive strategy that adjusts parameters based on market conditions - OPTIMIZED FOR 65%+ WIN RATE"""
     
     def __init__(self, initial_params: Dict = None):
         self.params = initial_params or {
             "lookback": 20,
-            "rsi_oversold": 20,  # More extreme for higher probability
-            "rsi_overbought": 80,  # More extreme for higher probability
-            "entry_threshold": 12,  # Higher threshold = fewer but better trades
-            "take_profit_pct": 8,  # Lower target = more frequent wins
+            "rsi_oversold": 22,  # Extreme for higher probability
+            "rsi_overbought": 78,  # Extreme for higher probability
+            "entry_threshold": 9,  # Higher threshold = fewer but better trades
+            "take_profit_pct": 8,  # Achievable target
             "stop_loss_pct": 3,  # Tighter stop for risk management
-            "volatility_filter": 0.025,  # Stricter volatility filter
-            "trend_strength_min": 0.02,  # Require stronger trends
-            "position_size_pct": 8,  # Smaller positions for better risk mgmt
-            "max_positions": 3  # Fewer positions for focus
+            "volatility_filter": 0.028,  # Moderate volatility filter
+            "trend_strength_min": 0.018,  # Require strong trends
+            "position_size_pct": 8,  # Conservative positions
+            "max_positions": 4  # Moderate diversification
         }
         self.performance_history = []
         self.regime_params = {}
         
     def adapt_to_regime(self, regime: str, recent_win_rate: float = 0.5):
-        """Adapt strategy parameters based on market regime and recent performance - OPTIMIZED"""
+        """Adapt strategy parameters based on market regime and recent performance - BALANCED"""
         regime_config = MARKET_REGIMES.get(regime, MARKET_REGIMES["sideways"])
-        
-        # Start with base high-win-rate params
-        self.params["entry_threshold"] = 12  # Always start strict
         
         # Base adjustments per regime
         if regime in ["bull_strong", "bull_weak"]:
-            # Slightly more aggressive in confirmed bull markets
-            self.params["rsi_oversold"] = 25 if regime == "bull_strong" else 22
-            self.params["entry_threshold"] = 10 if regime == "bull_strong" else 11
+            # More aggressive in confirmed bull markets
+            self.params["rsi_oversold"] = 28 if regime == "bull_strong" else 25
+            self.params["entry_threshold"] = 8 if regime == "bull_strong" else 9
             self.params["take_profit_pct"] = 10 if regime == "bull_strong" else 8
             self.params["position_size_pct"] = 10 if regime == "bull_strong" else 9
-            self.params["stop_loss_pct"] = 4 if regime == "bull_strong" else 3
+            self.params["stop_loss_pct"] = 4 if regime == "bull_strong" else 3.5
             
         elif regime in ["bear_strong", "bear_weak"]:
-            # VERY conservative in bear markets - only take best setups
-            self.params["rsi_overbought"] = 75 if regime == "bear_strong" else 78
-            self.params["entry_threshold"] = 14 if regime == "bear_strong" else 13
+            # More conservative in bear markets
+            self.params["rsi_overbought"] = 72 if regime == "bear_strong" else 75
+            self.params["entry_threshold"] = 11 if regime == "bear_strong" else 10
             self.params["stop_loss_pct"] = 2.5 if regime == "bear_strong" else 3
-            self.params["position_size_pct"] = 5 if regime == "bear_strong" else 6
+            self.params["position_size_pct"] = 6 if regime == "bear_strong" else 7
             self.params["take_profit_pct"] = 6 if regime == "bear_strong" else 7
             
         elif regime == "high_volatility":
-            # ULTRA conservative in high volatility - often best to sit out
-            self.params["entry_threshold"] = 16  # Very high bar
+            # Conservative in high volatility
+            self.params["entry_threshold"] = 12
             self.params["volatility_filter"] = 0.04
-            self.params["stop_loss_pct"] = 2
-            self.params["position_size_pct"] = 4
-            self.params["max_positions"] = 2
-            self.params["take_profit_pct"] = 5  # Quick profits
+            self.params["stop_loss_pct"] = 2.5
+            self.params["position_size_pct"] = 5
+            self.params["max_positions"] = 3
+            self.params["take_profit_pct"] = 6
             
         elif regime == "sideways":
-            # Mean reversion focused with strict entries
-            self.params["rsi_oversold"] = 18
-            self.params["rsi_overbought"] = 82
-            self.params["entry_threshold"] = 12
-            self.params["take_profit_pct"] = 6  # Lower target in ranging market
+            # Mean reversion focused
+            self.params["rsi_oversold"] = 20
+            self.params["rsi_overbought"] = 80
+            self.params["entry_threshold"] = 9
+            self.params["take_profit_pct"] = 6
             self.params["stop_loss_pct"] = 2.5
             
         elif regime == "recovery":
