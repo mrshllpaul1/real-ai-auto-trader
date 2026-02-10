@@ -195,6 +195,29 @@ MARKET_EVENTS_2025 = [
     {"week": 52, "regime": "sideways", "event": "Holiday low volume"}
 ]
 
+# 2026 Market calendar - Post-halving cycle peak year (projected)
+MARKET_EVENTS_2026 = [
+    {"week": 1, "regime": "bull_weak", "event": "New Year continuation"},
+    {"week": 3, "regime": "bull_strong", "event": "Q1 rally begins"},
+    {"week": 6, "regime": "euphoria", "event": "BTC supercycle speculation"},
+    {"week": 9, "regime": "high_volatility", "event": "Fed policy uncertainty"},
+    {"week": 12, "regime": "bull_strong", "event": "Institutional adoption wave"},
+    {"week": 15, "regime": "euphoria", "event": "Altseason begins"},
+    {"week": 18, "regime": "high_volatility", "event": "Market overheating warnings"},
+    {"week": 20, "regime": "bear_weak", "event": "May correction"},
+    {"week": 23, "regime": "recovery", "event": "Dip buying"},
+    {"week": 26, "regime": "bull_strong", "event": "Summer rally"},
+    {"week": 29, "regime": "euphoria", "event": "Cycle top speculation"},
+    {"week": 32, "regime": "high_volatility", "event": "Extreme greed phase"},
+    {"week": 35, "regime": "bear_weak", "event": "Early distribution"},
+    {"week": 38, "regime": "sideways", "event": "Market indecision"},
+    {"week": 40, "regime": "bull_weak", "event": "Q4 optimism"},
+    {"week": 43, "regime": "bull_strong", "event": "Year-end FOMO"},
+    {"week": 46, "regime": "high_volatility", "event": "Profit taking begins"},
+    {"week": 49, "regime": "bear_weak", "event": "Cycle top forming"},
+    {"week": 52, "regime": "sideways", "event": "Year-end consolidation"}
+]
+
 # All market events by year
 MARKET_EVENTS_BY_YEAR = {
     2020: MARKET_EVENTS_2020,
@@ -202,7 +225,8 @@ MARKET_EVENTS_BY_YEAR = {
     2022: MARKET_EVENTS_2022,
     2023: MARKET_EVENTS_2023,
     2024: MARKET_EVENTS_2024,
-    2025: MARKET_EVENTS_2025
+    2025: MARKET_EVENTS_2025,
+    2026: MARKET_EVENTS_2026
 }
 
 # Starting prices by year (approximate)
@@ -212,7 +236,8 @@ BASE_PRICES_BY_YEAR = {
     2022: {"BTC": 47000, "ETH": 3700, "SOL": 170, "XRP": 0.83, "ADA": 1.3, "AVAX": 110, "LINK": 25},
     2023: {"BTC": 16500, "ETH": 1200, "SOL": 10, "XRP": 0.35, "ADA": 0.25, "AVAX": 11, "LINK": 5.5},
     2024: {"BTC": 42000, "ETH": 2300, "SOL": 100, "XRP": 0.62, "ADA": 0.60, "AVAX": 38, "LINK": 15},
-    2025: {"BTC": 68000, "ETH": 3500, "SOL": 150, "XRP": 0.55, "ADA": 0.45, "AVAX": 35, "LINK": 15}
+    2025: {"BTC": 68000, "ETH": 3500, "SOL": 150, "XRP": 0.55, "ADA": 0.45, "AVAX": 35, "LINK": 15},
+    2026: {"BTC": 95000, "ETH": 5000, "SOL": 250, "XRP": 1.20, "ADA": 0.80, "AVAX": 60, "LINK": 25, "DOT": 12, "ATOM": 15}
 }
 
 
