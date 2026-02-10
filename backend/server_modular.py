@@ -138,6 +138,7 @@ from routes import prediction_enhancements, strategy_builder as strategy_builder
 from routes import ohlcv_data as ohlcv_routes
 from routes import training_history as training_history_routes
 from routes import training_scheduler as training_scheduler_routes
+from routes import ml_optimization
 
 # =============================================================================
 # REGISTER ROUTES
