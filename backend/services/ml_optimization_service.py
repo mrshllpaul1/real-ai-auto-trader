@@ -69,115 +69,138 @@ class MLOptimizationService:
     """
     
     # Pre-defined strategy parameter combinations for A/B testing
+    # v8 ULTRA HIGH WIN RATE VARIANTS - Optimized for 70%+ win rates
     STRATEGY_VARIANTS = [
-        # Conservative variants - lower risk, fewer trades
+        # ULTRA Conservative - Highest win rate, fewer trades
         {
-            "name": "Conservative Trend",
+            "name": "Ultra Conservative",
+            "parameters": {
+                "lookback": 30,
+                "min_trend_strength": 0.025,
+                "rsi_oversold": 15,
+                "rsi_overbought": 85,
+                "entry_threshold": 10,  # Very strict
+                "take_profit_pct": 12,
+                "stop_loss_pct": 2.5,  # Tight stop
+                "volatility_filter": 0.025,
+                "adx_threshold": 30,
+                "require_macd_confirm": True,
+                "win_rate_target": 0.78
+            }
+        },
+        {
+            "name": "RSI Extreme Hunter",
+            "parameters": {
+                "lookback": 20,
+                "min_trend_strength": 0.02,
+                "rsi_oversold": 12,  # Very extreme
+                "rsi_overbought": 88,  # Very extreme
+                "entry_threshold": 9,
+                "take_profit_pct": 10,
+                "stop_loss_pct": 3,
+                "volatility_filter": 0.03,
+                "adx_threshold": 25,
+                "require_divergence": True,
+                "win_rate_target": 0.75
+            }
+        },
+        # High Quality setups only
+        {
+            "name": "Quality Momentum",
+            "parameters": {
+                "lookback": 25,
+                "min_trend_strength": 0.022,
+                "rsi_oversold": 20,
+                "rsi_overbought": 80,
+                "entry_threshold": 9,
+                "take_profit_pct": 15,
+                "stop_loss_pct": 3,
+                "volatility_filter": 0.028,
+                "adx_threshold": 28,
+                "require_trend_alignment": True,
+                "win_rate_target": 0.73
+            }
+        },
+        {
+            "name": "Trend Precision",
             "parameters": {
                 "lookback": 30,
                 "min_trend_strength": 0.02,
-                "rsi_oversold": 20,
-                "rsi_overbought": 80,
-                "entry_threshold": 6,
-                "take_profit_pct": 20,
-                "stop_loss_pct": 4,
-                "volatility_filter": 0.03
-            }
-        },
-        {
-            "name": "RSI Extreme",
-            "parameters": {
-                "lookback": 20,
-                "min_trend_strength": 0.01,
-                "rsi_oversold": 15,
-                "rsi_overbought": 85,
-                "entry_threshold": 5,
-                "take_profit_pct": 15,
-                "stop_loss_pct": 5,
-                "volatility_filter": 0.04
-            }
-        },
-        # Moderate variants - balanced approach
-        {
-            "name": "Balanced Momentum",
-            "parameters": {
-                "lookback": 20,
-                "min_trend_strength": 0.015,
-                "rsi_oversold": 30,
-                "rsi_overbought": 70,
-                "entry_threshold": 5,
-                "take_profit_pct": 12,
-                "stop_loss_pct": 5,
-                "volatility_filter": 0.035
-            }
-        },
-        {
-            "name": "Trend Follower",
-            "parameters": {
-                "lookback": 25,
-                "min_trend_strength": 0.018,
-                "rsi_oversold": 35,
-                "rsi_overbought": 65,
-                "entry_threshold": 4,
-                "take_profit_pct": 15,
-                "stop_loss_pct": 6,
-                "volatility_filter": 0.04
-            }
-        },
-        # Aggressive variants - more trades, higher risk/reward
-        {
-            "name": "Aggressive Breakout",
-            "parameters": {
-                "lookback": 15,
-                "min_trend_strength": 0.01,
-                "rsi_oversold": 35,
-                "rsi_overbought": 65,
-                "entry_threshold": 4,
+                "rsi_oversold": 22,
+                "rsi_overbought": 78,
+                "entry_threshold": 8,
                 "take_profit_pct": 18,
-                "stop_loss_pct": 4,
-                "volatility_filter": 0.05
+                "stop_loss_pct": 3.5,
+                "volatility_filter": 0.032,
+                "adx_threshold": 32,
+                "ma_alignment_required": True,
+                "win_rate_target": 0.72
             }
         },
+        # Moderate but still high win rate
         {
-            "name": "High Frequency",
-            "parameters": {
-                "lookback": 10,
-                "min_trend_strength": 0.008,
-                "rsi_oversold": 40,
-                "rsi_overbought": 60,
-                "entry_threshold": 3,
-                "take_profit_pct": 8,
-                "stop_loss_pct": 3,
-                "volatility_filter": 0.06
-            }
-        },
-        # Mean reversion variants
-        {
-            "name": "Mean Reversion",
+            "name": "Smart Breakout",
             "parameters": {
                 "lookback": 20,
-                "min_trend_strength": 0.01,
+                "min_trend_strength": 0.018,
                 "rsi_oversold": 25,
                 "rsi_overbought": 75,
-                "entry_threshold": 5,
-                "take_profit_pct": 10,
-                "stop_loss_pct": 5,
-                "volatility_filter": 0.03,
-                "use_mean_reversion": True
+                "entry_threshold": 8,
+                "take_profit_pct": 14,
+                "stop_loss_pct": 3,
+                "volatility_filter": 0.035,
+                "adx_threshold": 25,
+                "breakout_confirmation": 2,  # Days to confirm
+                "win_rate_target": 0.70
             }
         },
         {
-            "name": "Bollinger Bounce",
+            "name": "Momentum Precision",
             "parameters": {
-                "lookback": 20,
-                "min_trend_strength": 0.01,
-                "rsi_oversold": 30,
-                "rsi_overbought": 70,
-                "entry_threshold": 4,
+                "lookback": 18,
+                "min_trend_strength": 0.015,
+                "rsi_oversold": 28,
+                "rsi_overbought": 72,
+                "entry_threshold": 7,
                 "take_profit_pct": 12,
-                "stop_loss_pct": 4,
+                "stop_loss_pct": 3,
                 "volatility_filter": 0.035,
-                "bollinger_bands": True
+                "adx_threshold": 22,
+                "multi_tf_confirm": True,
+                "win_rate_target": 0.68
+            }
+        },
+        # Mean reversion with high precision
+        {
+            "name": "Mean Reversion Pro",
+            "parameters": {
+                "lookback": 25,
+                "min_trend_strength": 0.012,
+                "rsi_oversold": 18,
+                "rsi_overbought": 82,
+                "entry_threshold": 8,
+                "take_profit_pct": 10,
+                "stop_loss_pct": 2.5,
+                "volatility_filter": 0.028,
+                "use_mean_reversion": True,
+                "bollinger_std": 2.5,
+                "win_rate_target": 0.72
+            }
+        },
+        {
+            "name": "Divergence Master",
+            "parameters": {
+                "lookback": 22,
+                "min_trend_strength": 0.015,
+                "rsi_oversold": 20,
+                "rsi_overbought": 80,
+                "entry_threshold": 9,
+                "take_profit_pct": 12,
+                "stop_loss_pct": 2.5,
+                "volatility_filter": 0.03,
+                "require_rsi_divergence": True,
+                "divergence_lookback": 10,
+                "win_rate_target": 0.74
             }
         }
     ]
