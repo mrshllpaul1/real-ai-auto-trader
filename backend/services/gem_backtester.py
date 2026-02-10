@@ -497,7 +497,14 @@ class GemBacktester:
         train_metrics = self._compute_metrics(train_subset)
         val_metrics = self._compute_metrics(val_subset)
         validation_available = bool(val_subset)
-        overfit_gap = max(0.0, train_metrics["f1"] - val_metrics["f1"]) if validation_available else 0.0
+        if not validation_available:
+            val_metrics = {
+                **val_metrics,
+                "precision": None,
+                "recall": None,
+                "f1": None
+            }
+        overfit_gap = max(0.0, train_metrics["f1"] - (val_metrics["f1"] or 0)) if validation_available else 0.0
         
         return {
             "correct_avg_score": round(float(correct_avg_score), 3),
