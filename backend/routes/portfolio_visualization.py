@@ -28,10 +28,48 @@ def set_dependencies(database, portfolio_manager):
 async def get_kraken_portfolio():
     """Fetch real Kraken portfolio holdings"""
     try:
-        # Import the spot trading module to get balance
-        from routes.spot_trading import get_portfolio_balance
-        balance = await get_portfolio_balance()
-        return balance.get("holdings", [])
+        # Import the spot trading route to get balance
+        from routes import spot_trading
+        
+        # Call the Kraken service directly
+        if spot_trading._kraken_service is not None:
+            balance = await spot_trading._kraken_service.get_balance()
+            prices = await spot_trading._kraken_service.get_all_prices()
+            
+            holdings = []
+            for currency, amount in balance.items():
+                if amount <= 0:
+                    continue
+                    
+                # Skip USD
+                if currency in ['ZUSD', 'USD']:
+                    continue
+                
+                # Find price
+                symbol = currency.replace('X', '').replace('Z', '')
+                if symbol == 'XBT':
+                    symbol = 'BTC'
+                
+                price = 0
+                for pair, p in prices.items():
+                    if symbol in pair and ('USD' in pair or 'ZUSD' in pair):
+                        price = p
+                        break
+                
+                usd_value = amount * price if price > 0 else 0
+                
+                if usd_value > 0.5:  # Skip dust
+                    holdings.append({
+                        "symbol": symbol,
+                        "name": symbol,
+                        "amount": amount,
+                        "price": price,
+                        "usd_value": usd_value,
+                        "kraken_currency": currency
+                    })
+            
+            return holdings
+        return []
     except Exception as e:
         print(f"Error fetching Kraken portfolio: {e}")
         return []
