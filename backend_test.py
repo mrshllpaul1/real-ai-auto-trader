@@ -15,7 +15,7 @@ from typing import Dict, Any, List, Optional
 BASE_URL = "https://ai-trading-trainer.preview.emergentagent.com/api"
 USER_ID = "demo_user_test123"
 
-class MLOptimizationTester:
+class AdaptiveStrategyTester:
     def __init__(self):
         self.session = None
         self.results = []
