@@ -130,26 +130,72 @@ MARKET_EVENTS_2020 = [
     {"week": 52, "month": "December", "regime": "bull_strong", "event": "Year-end euphoria", "date_range": "Dec 23-31"}
 ]
 
-# 2021 Market calendar - Bull run and May crash
+# 2021 Market calendar - Bull run and May crash - COMPLETE WEEK BY WEEK
 MARKET_EVENTS_2021 = [
-    {"week": 1, "regime": "bull_strong", "event": "New Year continuation"},
-    {"week": 4, "regime": "euphoria", "event": "Tesla BTC purchase"},
-    {"week": 7, "regime": "bull_strong", "event": "Institutional buying"},
-    {"week": 10, "regime": "high_volatility", "event": "Coinbase IPO"},
-    {"week": 13, "regime": "bull_strong", "event": "BTC new ATH $64k"},
-    {"week": 16, "regime": "bear_weak", "event": "Profit taking begins"},
-    {"week": 19, "regime": "crash", "event": "May crash - China ban"},
-    {"week": 21, "regime": "bear_strong", "event": "Elon FUD - Tesla drops BTC"},
-    {"week": 24, "regime": "bear_weak", "event": "Summer lows"},
-    {"week": 27, "regime": "sideways", "event": "Accumulation phase"},
-    {"week": 30, "regime": "recovery", "event": "Recovery begins"},
-    {"week": 33, "regime": "bull_weak", "event": "NFT mania begins"},
-    {"week": 36, "regime": "bull_strong", "event": "El Salvador BTC adoption"},
-    {"week": 39, "regime": "high_volatility", "event": "China final ban"},
-    {"week": 42, "regime": "bull_strong", "event": "BTC ETF speculation"},
-    {"week": 45, "regime": "euphoria", "event": "BTC ATH $69k - Nov 10"},
-    {"week": 48, "regime": "bear_weak", "event": "Post-ATH correction"},
-    {"week": 51, "regime": "bear_strong", "event": "December selloff"}
+    # January
+    {"week": 1, "month": "January", "regime": "bull_strong", "event": "New Year continuation", "date_range": "Jan 1-7"},
+    {"week": 2, "month": "January", "regime": "euphoria", "event": "BTC $40k milestone", "date_range": "Jan 8-14"},
+    {"week": 3, "month": "January", "regime": "high_volatility", "event": "Volatility spike", "date_range": "Jan 15-21"},
+    {"week": 4, "month": "January", "regime": "euphoria", "event": "Tesla BTC purchase rumors", "date_range": "Jan 22-28"},
+    # February - Tesla Announcement
+    {"week": 5, "month": "February", "regime": "euphoria", "event": "Tesla BTC purchase confirmed", "date_range": "Jan 29-Feb 4"},
+    {"week": 6, "month": "February", "regime": "bull_strong", "event": "BTC $45k", "date_range": "Feb 5-11"},
+    {"week": 7, "month": "February", "regime": "bull_strong", "event": "Institutional buying", "date_range": "Feb 12-18"},
+    {"week": 8, "month": "February", "regime": "euphoria", "event": "BTC $50k milestone", "date_range": "Feb 19-25"},
+    # March
+    {"week": 9, "month": "March", "regime": "bull_strong", "event": "March momentum", "date_range": "Feb 26-Mar 4"},
+    {"week": 10, "month": "March", "regime": "high_volatility", "event": "Coinbase IPO anticipation", "date_range": "Mar 5-11"},
+    {"week": 11, "month": "March", "regime": "bull_strong", "event": "NFT mania grows", "date_range": "Mar 12-18"},
+    {"week": 12, "month": "March", "regime": "bull_strong", "event": "Beeple NFT $69M sale", "date_range": "Mar 19-25"},
+    {"week": 13, "month": "March", "regime": "bull_strong", "event": "BTC new ATH $64k", "date_range": "Mar 26-31"},
+    # April - Coinbase IPO
+    {"week": 14, "month": "April", "regime": "euphoria", "event": "Coinbase IPO week", "date_range": "Apr 1-7"},
+    {"week": 15, "month": "April", "regime": "high_volatility", "event": "Post-IPO volatility", "date_range": "Apr 8-14"},
+    {"week": 16, "month": "April", "regime": "bear_weak", "event": "Profit taking begins", "date_range": "Apr 15-21"},
+    {"week": 17, "month": "April", "regime": "bear_weak", "event": "Correction deepens", "date_range": "Apr 22-28"},
+    # May - Crash
+    {"week": 18, "month": "May", "regime": "sideways", "event": "May consolidation", "date_range": "Apr 29-May 5"},
+    {"week": 19, "month": "May", "regime": "crash", "event": "May crash - China ban", "date_range": "May 6-12"},
+    {"week": 20, "month": "May", "regime": "crash", "event": "BTC drops to $30k", "date_range": "May 13-19"},
+    {"week": 21, "month": "May", "regime": "bear_strong", "event": "Elon FUD - Tesla drops BTC", "date_range": "May 20-26"},
+    # June
+    {"week": 22, "month": "June", "regime": "bear_strong", "event": "China mining ban", "date_range": "May 27-Jun 2"},
+    {"week": 23, "month": "June", "regime": "bear_weak", "event": "Capitulation continues", "date_range": "Jun 3-9"},
+    {"week": 24, "month": "June", "regime": "bear_weak", "event": "Summer lows", "date_range": "Jun 10-16"},
+    {"week": 25, "month": "June", "regime": "bear_strong", "event": "BTC drops below $30k", "date_range": "Jun 17-23"},
+    {"week": 26, "month": "June", "regime": "sideways", "event": "Bottom forming", "date_range": "Jun 24-30"},
+    # July
+    {"week": 27, "month": "July", "regime": "sideways", "event": "Accumulation phase", "date_range": "Jul 1-7"},
+    {"week": 28, "month": "July", "regime": "sideways", "event": "Range bound trading", "date_range": "Jul 8-14"},
+    {"week": 29, "month": "July", "regime": "recovery", "event": "B Word conference pump", "date_range": "Jul 15-21"},
+    {"week": 30, "month": "July", "regime": "recovery", "event": "Recovery begins", "date_range": "Jul 22-28"},
+    # August - NFT Revival
+    {"week": 31, "month": "August", "regime": "bull_weak", "event": "August recovery", "date_range": "Jul 29-Aug 4"},
+    {"week": 32, "month": "August", "regime": "bull_strong", "event": "BTC breaks $40k", "date_range": "Aug 5-11"},
+    {"week": 33, "month": "August", "regime": "bull_weak", "event": "NFT mania begins", "date_range": "Aug 12-18"},
+    {"week": 34, "month": "August", "regime": "bull_strong", "event": "NFT boom - BAYC", "date_range": "Aug 19-25"},
+    # September
+    {"week": 35, "month": "September", "regime": "bull_strong", "event": "El Salvador BTC adoption", "date_range": "Aug 26-Sep 1"},
+    {"week": 36, "month": "September", "regime": "bull_strong", "event": "BTC legal tender day", "date_range": "Sep 2-8"},
+    {"week": 37, "month": "September", "regime": "high_volatility", "event": "El Salvador volatility", "date_range": "Sep 9-15"},
+    {"week": 38, "month": "September", "regime": "bear_weak", "event": "September pullback", "date_range": "Sep 16-22"},
+    {"week": 39, "month": "September", "regime": "high_volatility", "event": "China final ban", "date_range": "Sep 23-29"},
+    # October - Uptober
+    {"week": 40, "month": "October", "regime": "recovery", "event": "Uptober begins", "date_range": "Sep 30-Oct 6"},
+    {"week": 41, "month": "October", "regime": "bull_strong", "event": "BTC recovery rally", "date_range": "Oct 7-13"},
+    {"week": 42, "month": "October", "regime": "bull_strong", "event": "BTC ETF speculation", "date_range": "Oct 14-20"},
+    {"week": 43, "month": "October", "regime": "euphoria", "event": "BTC futures ETF approved", "date_range": "Oct 21-27"},
+    # November - ATH
+    {"week": 44, "month": "November", "regime": "euphoria", "event": "BTC approaches ATH", "date_range": "Oct 28-Nov 3"},
+    {"week": 45, "month": "November", "regime": "euphoria", "event": "BTC ATH $69k - Nov 10", "date_range": "Nov 4-10"},
+    {"week": 46, "month": "November", "regime": "high_volatility", "event": "Post-ATH distribution", "date_range": "Nov 11-17"},
+    {"week": 47, "month": "November", "regime": "bear_weak", "event": "Thanksgiving selloff", "date_range": "Nov 18-24"},
+    {"week": 48, "month": "November", "regime": "bear_weak", "event": "Post-ATH correction", "date_range": "Nov 25-30"},
+    # December
+    {"week": 49, "month": "December", "regime": "bear_strong", "event": "December selloff begins", "date_range": "Dec 1-8"},
+    {"week": 50, "month": "December", "regime": "crash", "event": "Flash crash Dec 4", "date_range": "Dec 9-15"},
+    {"week": 51, "month": "December", "regime": "bear_strong", "event": "December selloff", "date_range": "Dec 16-22"},
+    {"week": 52, "month": "December", "regime": "sideways", "event": "Year-end ranging", "date_range": "Dec 23-31"}
 ]
 
 # 2022 Market calendar - Crypto winter
