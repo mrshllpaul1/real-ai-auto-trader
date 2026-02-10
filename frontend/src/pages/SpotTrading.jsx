@@ -542,7 +542,7 @@ const SpotTrading = ({ embedded = false }) => {
       
       if (res.ok) {
         setOrderResult({ success: true, ...result });
-        fetchBalance(); // Refresh balance
+        refreshData(); // Refresh balance and pairs
       } else {
         setOrderResult({ success: false, error: result.detail || 'Order failed' });
       }
