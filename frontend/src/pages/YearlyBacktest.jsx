@@ -1057,9 +1057,10 @@ const YearlyBacktest = ({ embedded = false }) => {
                     </CardDescription>
                   </div>
                   <Select 
-                    value={marketCalendar?.year?.toString() || '2025'} 
+                    value={calendarYear} 
                     onValueChange={(val) => {
-                      setMarketCalendar(null); // Show loading state immediately
+                      setCalendarYear(val); // Update dropdown immediately
+                      setMarketCalendar(null); // Show loading state
                       api.get(`/yearly-backtest/market-calendar?year=${val}`)
                         .then(res => setMarketCalendar(res.data))
                         .catch(err => {
