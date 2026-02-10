@@ -1117,12 +1117,15 @@ class EnhancedMTFTrainingService:
     ) -> Dict[str, Any]:
         """
         Make prediction for a single symbol.
+        Uses fast sentiment-only prediction if no OHLCV data available.
         """
         if timeframes is None:
             timeframes = self.TRAINING_TIMEFRAMES
         
-        # Get model
+        # Get model - try both types
         model_doc = await self.model_collection.find_one({"type": "enhanced_mtf"})
+        if not model_doc:
+            model_doc = await self.model_collection.find_one({"type": "sentiment_only_mtf"})
         
         if not model_doc:
             return {
@@ -1130,14 +1133,17 @@ class EnhancedMTFTrainingService:
                 "symbol": symbol
             }
         
+        # Check model type - use fast prediction for sentiment-only models
+        model_type = model_doc.get("type", "")
+        if model_type == "sentiment_only_mtf" or model_doc.get("training_info", {}).get("mode") == "sentiment_only":
+            return await self.predict_fast(symbol, model_doc)
+        
         # Extract features
         features = await self.extract_combined_features(symbol, timeframes)
         
         if features is None:
-            return {
-                "error": f"Could not extract features for {symbol}",
-                "symbol": symbol
-            }
+            # Fallback to fast sentiment prediction
+            return await self.predict_fast(symbol, model_doc)
         
         feature_vector = features["feature_vector"]
         
