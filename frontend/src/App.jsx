@@ -144,6 +144,7 @@ function App() {
                     <Route path="/spot" element={<SpotTrading />} />
                     <Route path="/models" element={<ModelPerformanceDashboard />} />
                     <Route path="/model-performance" element={<ModelPerformanceDashboard />} />
+                    <Route path="/mtf-predictions" element={<EnhancedMTFPredictions />} />
                     <Route path="/advanced-ai" element={<AdvancedAI />} />
                     <Route path="/guide" element={<Guide />} />
                     <Route path="/setup" element={<Setup />} />
