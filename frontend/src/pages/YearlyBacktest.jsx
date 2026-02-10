@@ -942,13 +942,28 @@ const YearlyBacktest = () => {
               {/* Live Signals */}
               <Card className="glass-card">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Zap className="w-5 h-5 text-amber-400" />
-                    Trading Signals
-                  </CardTitle>
-                  <CardDescription>
-                    Real-time signals based on adaptive strategy
-                  </CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Zap className="w-5 h-5 text-amber-400" />
+                        Trading Signals
+                      </CardTitle>
+                      <CardDescription>
+                        Real-time signals based on adaptive strategy
+                      </CardDescription>
+                    </div>
+                    {liveTrading.active && liveTrading.signals.filter(s => s.action !== 'HOLD').length > 0 && (
+                      <Button
+                        size="sm"
+                        onClick={executeAllSignals}
+                        disabled={liveTradingLoading}
+                        className="bg-gradient-to-r from-amber-500 to-orange-500"
+                      >
+                        <Rocket className="w-4 h-4 mr-1" />
+                        Execute All
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 max-h-[400px] overflow-y-auto">
