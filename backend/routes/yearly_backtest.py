@@ -105,6 +105,7 @@ async def run_yearly_backtest(
                 _running_backtests[backtest_id]["progress"] = 10
                 
                 results = await run_yearly_adaptive_backtest(
+                    year=year,
                     initial_capital=request.initial_capital,
                     coins=coins,
                     db=_db
@@ -124,7 +125,7 @@ async def run_yearly_backtest(
         return BacktestResponse(
             backtest_id=backtest_id,
             status="started",
-            message=f"Yearly backtest started with {len(coins)} coins and ${request.initial_capital:,.2f} initial capital"
+            message=f"Year {year} backtest started with {len(coins)} coins and ${request.initial_capital:,.2f} initial capital"
         )
         
     except Exception as e:
