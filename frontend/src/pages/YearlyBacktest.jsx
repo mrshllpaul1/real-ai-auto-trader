@@ -7,12 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
+import { Switch } from '@/components/ui/switch';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie, Legend, Area, AreaChart } from 'recharts';
 import {
   Play, TrendingUp, TrendingDown, DollarSign, Percent,
   Target, Calendar, RefreshCw, BarChart3, Zap, Clock, Award,
-  AlertTriangle, CheckCircle, Rocket, Shield, Activity, Layers
+  AlertTriangle, CheckCircle, Rocket, Shield, Activity, Layers,
+  Power, Radio, Settings, Pause
 } from 'lucide-react';
 import api from '../services/api';
 import toast from '../utils/toast';
@@ -29,6 +31,21 @@ const YearlyBacktest = () => {
   const [selectedYears, setSelectedYears] = useState([2020, 2021, 2022, 2023, 2024, 2025, 2026]);
   const [marketCalendar, setMarketCalendar] = useState(null);
   const [recommendedPortfolio, setRecommendedPortfolio] = useState(null);
+  
+  // Live Trading State
+  const [liveTrading, setLiveTrading] = useState({
+    active: false,
+    config: null,
+    status: null,
+    signals: []
+  });
+  const [liveTradingLoading, setLiveTradingLoading] = useState(false);
+  const [tradingConfig, setTradingConfig] = useState({
+    amount_per_trade_usd: 25,
+    max_positions: 5,
+    paper_mode: true,
+    use_regime_adaptation: true
+  });
 
   const years = [2020, 2021, 2022, 2023, 2024, 2025, 2026];
 
