@@ -80,14 +80,18 @@ const AdaptiveStrategy = () => {
         variantsRes,
         eventsRes,
         optimalRes,
-        onChainRes
+        onChainRes,
+        coverageRes,
+        calendarRes
       ] = await Promise.all([
         api.get('/adaptive-strategy/status').catch(() => ({ data: null })),
         api.get('/adaptive-strategy/regime/current').catch(() => ({ data: null })),
         api.get('/adaptive-strategy/variants').catch(() => ({ data: { variants_by_regime: {} } })),
-        api.get('/adaptive-strategy/predicted-events?min_probability=0.5').catch(() => ({ data: { events: [] } })),
+        api.get('/adaptive-strategy/predicted-events?min_probability=0.3').catch(() => ({ data: { events: [] } })),
         api.get('/adaptive-strategy/optimal-strategy').catch(() => ({ data: null })),
-        api.get('/on-chain/whale-activity').catch(() => ({ data: null }))
+        api.get('/on-chain/whale-activity').catch(() => ({ data: null })),
+        api.get('/adaptive-strategy/event-coverage-stats').catch(() => ({ data: null })),
+        api.get('/adaptive-strategy/event-calendar?days_ahead=90').catch(() => ({ data: null }))
       ]);
       
       setStrategyStatus(statusRes.data);
@@ -97,6 +101,8 @@ const AdaptiveStrategy = () => {
       setOptimalStrategy(optimalRes.data);
       setOnChainData(onChainRes.data);
       setIsMonitoring(statusRes.data?.is_monitoring || false);
+      setCoverageStats(coverageRes.data);
+      setEventCalendar(calendarRes.data);
       
     } catch (error) {
       console.error('Error loading adaptive strategy:', error);
