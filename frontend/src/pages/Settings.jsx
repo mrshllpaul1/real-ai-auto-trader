@@ -599,6 +599,223 @@ const Settings = () => {
           </div>
         </TabsContent>
 
+        {/* Data Providers Tab */}
+        <TabsContent value="data-providers">
+          <div className="space-y-6">
+            {/* Kraken Universe Sync */}
+            <Card className="bg-[#0A0A0A] border-[#5741D9]/30" data-testid="kraken-universe-card">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#5741D9]/20 flex items-center justify-center">
+                      <RefreshCcw className="w-5 h-5 text-[#5741D9]" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-heading">Kraken Coin Universe</CardTitle>
+                      <CardDescription>
+                        Auto-sync all tradeable coins from Kraken exchange
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={syncKrakenUniverse}
+                    className="bg-[#5741D9] hover:bg-[#5741D9]/80 text-white"
+                    disabled={syncingUniverse}
+                  >
+                    {syncingUniverse ? (
+                      <>
+                        <RefreshCcw className="w-4 h-4 mr-2 animate-spin" />
+                        Syncing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCcw className="w-4 h-4 mr-2" />
+                        Sync Now
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {universeStats ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-[#121212] rounded-lg p-4 text-center">
+                      <p className="text-2xl font-bold text-[#00FF94]">{universeStats.unique_crypto_coins || 0}</p>
+                      <p className="text-xs text-[#A1A1AA]">Total Coins</p>
+                    </div>
+                    <div className="bg-[#121212] rounded-lg p-4 text-center">
+                      <p className="text-2xl font-bold text-[#5741D9]">{universeStats.total_pairs || 0}</p>
+                      <p className="text-xs text-[#A1A1AA]">Trading Pairs</p>
+                    </div>
+                    <div className="bg-[#121212] rounded-lg p-4 text-center">
+                      <p className="text-2xl font-bold text-[#00D9FF]">{universeStats.usd_pairs || 0}</p>
+                      <p className="text-xs text-[#A1A1AA]">USD Pairs</p>
+                    </div>
+                    <div className="bg-[#121212] rounded-lg p-4 text-center">
+                      <p className="text-sm font-medium text-[#A1A1AA]">
+                        {universeStats.last_sync ? new Date(universeStats.last_sync).toLocaleDateString() : 'Never'}
+                      </p>
+                      <p className="text-xs text-[#A1A1AA]">Last Synced</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-[#A1A1AA]">
+                    <p>No universe data. Click "Sync Now" to fetch all Kraken coins.</p>
+                  </div>
+                )}
+                {universeStats?.new_coins_in_last_sync?.length > 0 && (
+                  <div className="mt-4 p-3 bg-[#00FF94]/10 border border-[#00FF94]/30 rounded-lg">
+                    <p className="text-sm text-[#00FF94] font-medium">
+                      🆕 New coins discovered: {universeStats.new_coins_in_last_sync.join(', ')}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* On-Chain Data Provider Keys */}
+            <Card className="bg-[#0A0A0A] border-[#1F1F1F]" data-testid="data-provider-keys-card">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#9D00FF]/20 flex items-center justify-center">
+                    <Link2 className="w-5 h-5 text-[#9D00FF]" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-heading">On-Chain Data Providers</CardTitle>
+                    <CardDescription>
+                      Add API keys for enhanced on-chain analytics (optional - free APIs work by default)
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-[#9D00FF]/10 border border-[#9D00FF]/30 rounded-lg p-4">
+                  <p className="text-sm text-[#A1A1AA]">
+                    <strong className="text-[#9D00FF]">Note:</strong> The app uses free on-chain APIs by default (Blockchain.com, Blockchair, Mempool.space).
+                    Add premium API keys below for enhanced data and higher rate limits.
+                  </p>
+                </div>
+
+                {/* Provider Status Grid */}
+                {dataProviderStatus?.providers && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+                    {dataProviderStatus.providers.map((provider) => (
+                      <div 
+                        key={provider.key}
+                        className={`p-3 rounded-lg border ${
+                          provider.configured 
+                            ? 'bg-[#00FF94]/10 border-[#00FF94]/30' 
+                            : 'bg-[#121212] border-[#1F1F1F]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm">{provider.name}</span>
+                          {provider.configured ? (
+                            <span className="text-[#00FF94] text-xs">✓ Connected</span>
+                          ) : (
+                            <span className="text-[#A1A1AA] text-xs">Not set</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-[#A1A1AA] mt-1">{provider.description}</p>
+                        <a 
+                          href={provider.signup_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-xs text-[#5741D9] hover:underline mt-1 block"
+                        >
+                          Get API Key →
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* API Key Inputs */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-[#A1A1AA]">Blockchair API Key</Label>
+                    <Input
+                      type="password"
+                      value={dataProviderKeys.blockchair_api_key}
+                      onChange={(e) => setDataProviderKeys({
+                        ...dataProviderKeys,
+                        blockchair_api_key: e.target.value
+                      })}
+                      placeholder="Enter Blockchair API key"
+                      className="bg-[#121212] border-[#1F1F1F] font-data mt-1"
+                    />
+                    <p className="text-xs text-[#A1A1AA] mt-1">Multi-chain on-chain data</p>
+                  </div>
+                  <div>
+                    <Label className="text-[#A1A1AA]">Glassnode API Key</Label>
+                    <Input
+                      type="password"
+                      value={dataProviderKeys.glassnode_api_key}
+                      onChange={(e) => setDataProviderKeys({
+                        ...dataProviderKeys,
+                        glassnode_api_key: e.target.value
+                      })}
+                      placeholder="Enter Glassnode API key"
+                      className="bg-[#121212] border-[#1F1F1F] font-data mt-1"
+                    />
+                    <p className="text-xs text-[#A1A1AA] mt-1">Professional on-chain metrics</p>
+                  </div>
+                  <div>
+                    <Label className="text-[#A1A1AA]">CryptoQuant API Key</Label>
+                    <Input
+                      type="password"
+                      value={dataProviderKeys.cryptoquant_api_key}
+                      onChange={(e) => setDataProviderKeys({
+                        ...dataProviderKeys,
+                        cryptoquant_api_key: e.target.value
+                      })}
+                      placeholder="Enter CryptoQuant API key"
+                      className="bg-[#121212] border-[#1F1F1F] font-data mt-1"
+                    />
+                    <p className="text-xs text-[#A1A1AA] mt-1">Exchange flows & whale tracking</p>
+                  </div>
+                  <div>
+                    <Label className="text-[#A1A1AA]">Coinglass API Key</Label>
+                    <Input
+                      type="password"
+                      value={dataProviderKeys.coinglass_api_key}
+                      onChange={(e) => setDataProviderKeys({
+                        ...dataProviderKeys,
+                        coinglass_api_key: e.target.value
+                      })}
+                      placeholder="Enter Coinglass API key"
+                      className="bg-[#121212] border-[#1F1F1F] font-data mt-1"
+                    />
+                    <p className="text-xs text-[#A1A1AA] mt-1">Derivatives & liquidation data</p>
+                  </div>
+                  <div>
+                    <Label className="text-[#A1A1AA]">Santiment API Key</Label>
+                    <Input
+                      type="password"
+                      value={dataProviderKeys.santiment_api_key}
+                      onChange={(e) => setDataProviderKeys({
+                        ...dataProviderKeys,
+                        santiment_api_key: e.target.value
+                      })}
+                      placeholder="Enter Santiment API key"
+                      className="bg-[#121212] border-[#1F1F1F] font-data mt-1"
+                    />
+                    <p className="text-xs text-[#A1A1AA] mt-1">Social & development metrics</p>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={saveDataProviderKeys}
+                  className="w-full bg-[#9D00FF] hover:bg-[#9D00FF]/80 text-white font-bold rounded-full mt-4"
+                  disabled={loading}
+                >
+                  {loading ? 'Saving...' : 'Save Data Provider Keys'}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
         {/* Risk Management Tab */}
         <TabsContent value="risk">
           <Card className="bg-[#0A0A0A] border-[#1F1F1F]" data-testid="risk-settings-card">
