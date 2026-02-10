@@ -488,8 +488,11 @@ const SpotTrading = () => {
     }
   }, []);
   
-  // Initial load
+  // Initial load with retry
   useEffect(() => {
+    let retryCount = 0;
+    const maxRetries = 3;
+    
     const loadData = async () => {
       setLoading(true);
       await Promise.all([
@@ -501,7 +504,20 @@ const SpotTrading = () => {
       setLoading(false);
     };
     
-    loadData();
+    const loadWithRetry = async () => {
+      await loadData();
+      
+      // If no pairs loaded and haven't exceeded retries, try again
+      if (retryCount < maxRetries) {
+        retryCount++;
+        setTimeout(() => {
+          fetchPairs();
+          fetchBalance();
+        }, 2000 * retryCount); // Exponential backoff
+      }
+    };
+    
+    loadWithRetry();
     
     // Refresh prices every 10 seconds
     const interval = setInterval(fetchPairs, 10000);
