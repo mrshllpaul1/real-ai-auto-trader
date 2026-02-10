@@ -1768,13 +1768,26 @@ class OnChainAndAdaptiveStrategyTester:
 
     async def run_all_tests(self):
         """Run all test suites"""
-        print(f"🚀 Starting Backend API Tests - ADAPTIVE STRATEGY AND EVENT PREDICTION SYSTEM")
+        print(f"🚀 Starting Backend API Tests - ON-CHAIN DATA AND ENHANCED ADAPTIVE STRATEGY")
         print(f"📡 Testing Backend URL: {BASE_URL}")
         print(f"👤 User ID: {USER_ID}")
-        print("=" * 60)
+        print("=" * 80)
         
-        # Focus on Adaptive Strategy and Event Prediction system as requested
-        await self.test_adaptive_strategy_system()
+        # Test new features from review request
+        print("\n🎯 TESTING NEW FEATURES FROM REVIEW REQUEST:")
+        print("1. On-Chain Data Endpoints")
+        print("2. Enhanced Adaptive Strategy")
+        print("3. Frontend AdaptiveStrategy Page Support")
+        print("=" * 80)
+        
+        # 1. Test On-Chain Data Endpoints
+        await self.test_on_chain_data_endpoints()
+        
+        # 2. Test Enhanced Adaptive Strategy
+        await self.test_enhanced_adaptive_strategy_endpoints()
+        
+        # 3. Test Frontend Page Backend Support
+        await self.test_frontend_adaptive_strategy_page()
         
         # Run basic health checks
         await self.test_health_endpoints()
