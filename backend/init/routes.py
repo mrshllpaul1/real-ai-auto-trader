@@ -62,6 +62,7 @@ def register_routes(api_router: APIRouter):
     from routes import risk_analyzer as risk_analyzer_routes
     from routes import telegram_notifications as telegram_routes
     from routes import portfolio_rebalance as rebalance_routes
+    from routes import data_export as data_export_routes
     
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
@@ -150,6 +151,7 @@ def register_routes(api_router: APIRouter):
     api_router.include_router(risk_analyzer_routes.router, tags=["Risk Analyzer"])
     api_router.include_router(telegram_routes.router, tags=["Telegram Notifications"])
     api_router.include_router(rebalance_routes.router, tags=["Portfolio Rebalancing"])
+    api_router.include_router(data_export_routes.router, tags=["Data Export"])
     
     logger.info("✅ All routes registered")
     
