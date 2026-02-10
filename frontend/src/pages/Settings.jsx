@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { motion } from 'framer-motion';
 import api, { authAPI, riskAPI } from '../services/api';
 import toast from '../utils/toast';
-import { Shield, Key, Settings as SettingsIcon, Bell, Smartphone, Vibrate } from 'lucide-react';
+import { Shield, Key, Settings as SettingsIcon, Bell, Smartphone, Vibrate, Database, Link2, RefreshCcw } from 'lucide-react';
 
 const Settings = () => {
   // Kraken credentials
