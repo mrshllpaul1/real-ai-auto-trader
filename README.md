@@ -187,6 +187,24 @@ The AI generates new strategies weekly based on:
 - News sentiment (when available)
 - Risk-adjusted returns
 
+## 📊 Enhanced Historical Market Data
+
+New advanced features for comprehensive market analysis:
+
+### Extended Data Retention
+- **1h candles**: 2 years of data (vs 6 months)
+- **4h candles**: 3 years of data (vs 1 year)
+- **Short timeframes**: 2-6x retention increase
+
+### Advanced Features
+- **Volume Profile**: Identify support/resistance with POC and value area
+- **Quality Scoring**: Automatic data validation (0-100 score)
+- **Event Markers**: Link price movements to real-world events
+- **Enhanced Metrics**: 20+ technical metrics per candle
+- **Pattern Detection**: Automatic candle pattern recognition
+
+See [ENHANCED_HISTORICAL_DATA.md](ENHANCED_HISTORICAL_DATA.md) for complete documentation.
+
 ## ⚖️ Disclaimer
 
 This software is for educational purposes. Cryptocurrency trading involves substantial risk of loss. Only trade with money you can afford to lose. The developers are not responsible for any financial losses incurred through use of this application.

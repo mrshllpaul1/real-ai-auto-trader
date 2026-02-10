@@ -3,7 +3,6 @@ Test Enhanced Historical Data Service
 Tests for extended data retention, volume profile, quality scoring, and event markers
 """
 
-import pytest
 import requests
 import os
 from datetime import datetime, timezone, timedelta
