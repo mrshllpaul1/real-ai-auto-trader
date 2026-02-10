@@ -963,7 +963,8 @@ async def run_yearly_adaptive_backtest(
     try:
         engine = YearlyBacktestEngine(
             initial_capital=initial_capital,
-            coins=coins or TOP_COINS[:30]
+            coins=coins or TOP_COINS[:30],
+            year=year
         )
         
         results = engine.run_full_year_backtest()
@@ -973,6 +974,7 @@ async def run_yearly_adaptive_backtest(
             try:
                 await db.yearly_backtests.insert_one({
                     "backtest_id": str(uuid.uuid4()),
+                    "year": year,
                     "created_at": datetime.utcnow(),
                     "results": results,
                     "equity_curve": engine.equity_curve[-52:],  # Last 52 days
@@ -994,3 +996,69 @@ async def run_yearly_adaptive_backtest(
             "status": "error",
             "error": str(e)
         }
+
+
+async def run_multi_year_backtest(
+    years: List[int] = None,
+    initial_capital: float = 100000,
+    coins: List[str] = None,
+    db = None
+) -> Dict:
+    """
+    Run backtests across multiple years and aggregate results.
+    """
+    if years is None:
+        years = [2020, 2021, 2022, 2023, 2024, 2025]
+    
+    all_results = {}
+    cumulative_capital = initial_capital
+    total_trades = 0
+    total_wins = 0
+    
+    for year in sorted(years):
+        logger.info(f"Running backtest for year {year}")
+        
+        result = await run_yearly_adaptive_backtest(
+            year=year,
+            initial_capital=cumulative_capital,
+            coins=coins,
+            db=db
+        )
+        
+        all_results[year] = result
+        
+        if result.get("status") == "completed":
+            cumulative_capital = result.get("final_capital", cumulative_capital)
+            total_trades += result.get("total_trades", 0)
+            total_wins += result.get("winning_trades", 0)
+    
+    # Calculate aggregate metrics
+    total_return = (cumulative_capital - initial_capital) / initial_capital * 100
+    overall_win_rate = total_wins / total_trades * 100 if total_trades > 0 else 0
+    
+    # Calculate CAGR (Compound Annual Growth Rate)
+    num_years = len(years)
+    cagr = ((cumulative_capital / initial_capital) ** (1 / num_years) - 1) * 100 if num_years > 0 else 0
+    
+    return {
+        "status": "completed",
+        "years_tested": years,
+        "initial_capital": initial_capital,
+        "final_capital": round(cumulative_capital, 2),
+        "total_return_pct": round(total_return, 2),
+        "cagr_pct": round(cagr, 2),
+        "total_trades": total_trades,
+        "total_wins": total_wins,
+        "overall_win_rate": round(overall_win_rate, 2),
+        "yearly_results": all_results,
+        "summary": {
+            year: {
+                "return": result.get("total_return_pct", 0),
+                "win_rate": result.get("win_rate", 0),
+                "trades": result.get("total_trades", 0),
+                "sharpe": result.get("sharpe_ratio", 0)
+            }
+            for year, result in all_results.items()
+            if result.get("status") == "completed"
+        }
+    }
