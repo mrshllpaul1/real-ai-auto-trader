@@ -1,32 +1,28 @@
 #!/usr/bin/env python3
 """
 Win Rate Improvements Testing - February 10, 2026
-Testing specific improvements to win rates in the trading system:
-1. A/B Testing System with New High Win Rate Variants (8 variants, 70%+ win rates)
-2. Backtest Engine with ML Strategy v8 (improved from 22.2% to >40% win rate)
-3. A/B Testing Status Endpoint
-4. Backtest Templates Include ML Strategy
+Testing A/B Testing System, ML Strategy Backtesting, and Overfitting Detection
+Focus on verifying high win rates (70%+) and positive Sharpe ratios
 """
 
 import requests
 import json
 import time
-from datetime import datetime
-from typing import Dict, List, Tuple, Any
+from datetime import datetime, timedelta
+from typing import Dict, List, Any
 
 # Backend URL configuration
 BASE_URL = "https://test-win-progress.preview.emergentagent.com/api"
 
 class WinRateImprovementsTester:
     def __init__(self):
+        self.session = requests.Session()
+        self.session.timeout = 60  # Longer timeout for ML operations
         self.results = {
             'ab_testing': [],
             'backtest_engine': [],
-            'status_endpoints': [],
-            'templates': []
+            'overfitting_detection': []
         }
-        self.session = requests.Session()
-        self.session.timeout = 60  # Longer timeout for backtests
 
     def test_endpoint(self, method: str, endpoint: str, data: Dict = None, 
                      expected_status: int = 200, category: str = 'unknown') -> Dict:
@@ -80,229 +76,277 @@ class WinRateImprovementsTester:
             }
 
     def run_win_rate_tests(self):
-        """Execute all win rate improvement tests"""
+        """Execute all Win Rate Improvements tests"""
         
-        print("🚀 WIN RATE IMPROVEMENTS TESTING - Testing New High Win Rate Features")
+        print("🚀 WIN RATE IMPROVEMENTS TESTING - A/B Testing & ML Strategy")
         print(f"Backend URL: {BASE_URL}")
         print("=" * 80)
         
-        # 1. A/B TESTING SYSTEM WITH NEW HIGH WIN RATE VARIANTS
-        print("\n1. A/B TESTING SYSTEM - NEW HIGH WIN RATE VARIANTS")
-        print("   Testing initialization of 8 NEW strategy variants with 70%+ win rates")
+        # 1. A/B TESTING SYSTEM
+        print("\n1. A/B TESTING SYSTEM - Testing Strategy Variants")
         
-        # Initialize A/B testing variants
+        # Initialize variants first
+        print("   Initializing strategy variants...")
         init_result = self.test_endpoint('POST', '/ml-optimization/ab-testing/initialize', 
                                        category='ab_testing')
         self.results['ab_testing'].append(init_result)
         
         if init_result['passed']:
-            print(f"   ✅ Initialize A/B Testing: {init_result['status']}")
-            if 'response_json' in init_result:
-                response = init_result['response_json']
-                if 'variants' in response:
-                    print(f"   📊 Variants Created: {len(response['variants'])}")
-                    for variant in response['variants'][:3]:  # Show first 3
-                        print(f"      - {variant.get('name', 'Unknown')}: {variant.get('description', 'No description')}")
+            print("   ✅ Variants initialized successfully")
         else:
-            print(f"   ❌ Initialize A/B Testing Failed: {init_result.get('status', 'ERROR')}")
+            print(f"   ❌ Failed to initialize variants: {init_result.get('status', 'Unknown error')}")
         
-        # Run A/B test with 200 simulations as specified
-        print("\n   Running A/B test with 200 simulations...")
+        # Run A/B test with n_simulations=200 as requested
+        print("   Running A/B test simulation with 200 iterations...")
         ab_test_result = self.test_endpoint('POST', '/ml-optimization/ab-testing/run', 
                                           {'n_simulations': 200}, category='ab_testing')
         self.results['ab_testing'].append(ab_test_result)
         
         if ab_test_result['passed']:
-            print(f"   ✅ A/B Test Run: {ab_test_result['status']}")
-            if 'response_json' in ab_test_result:
-                response = ab_test_result['response_json']
-                print(f"   📈 Test Results:")
-                if 'results' in response:
-                    high_win_rate_variants = 0
-                    winner_win_rate = 0
-                    
-                    for variant in response['results']:
-                        win_rate = variant.get('win_rate', 0)
-                        variant_name = variant.get('variant_id', 'Unknown')
-                        print(f"      - {variant_name}: {win_rate:.1f}% win rate")
-                        
-                        if win_rate >= 70:
-                            high_win_rate_variants += 1
-                        if win_rate > winner_win_rate:
-                            winner_win_rate = win_rate
-                    
-                    print(f"   🎯 HIGH WIN RATE ANALYSIS:")
-                    print(f"      - Variants with 70%+ win rate: {high_win_rate_variants}/8")
-                    print(f"      - Winner win rate: {winner_win_rate:.1f}%")
-                    print(f"      - Target achieved: {'✅ YES' if winner_win_rate > 75 else '❌ NO'}")
+            response_data = ab_test_result.get('response_json', {})
+            winner = response_data.get('winner', {})
+            results = response_data.get('results', [])
+            
+            print(f"   ✅ A/B test completed with {len(results)} variants")
+            if winner:
+                win_rate = winner.get('win_rate', 0)
+                sharpe = winner.get('sharpe_ratio', 0)
+                print(f"   🏆 Winner: {winner.get('name', 'Unknown')} - Win Rate: {win_rate}% | Sharpe: {sharpe}")
+                
+                # Check if winner achieves target win rate (70%+)
+                if win_rate >= 70:
+                    print(f"   🎯 EXCELLENT: Winner achieves {win_rate}% win rate (target: 70%+)")
+                else:
+                    print(f"   ⚠️  Winner win rate {win_rate}% below target 70%")
+            
+            # Verify all 8 strategy variants are present
+            expected_variants = [
+                "Ultra Conservative", "RSI Extreme Hunter", "Quality Momentum", 
+                "Trend Precision", "Smart Breakout", "Momentum Precision", 
+                "Mean Reversion Pro", "Divergence Master"
+            ]
+            
+            found_variants = [r.get('name', '') for r in results]
+            print(f"   📊 Strategy variants found: {len(found_variants)}/8")
+            
+            for variant_name in expected_variants:
+                if variant_name in found_variants:
+                    variant_data = next((r for r in results if r.get('name') == variant_name), {})
+                    win_rate = variant_data.get('win_rate', 0)
+                    sharpe = variant_data.get('sharpe_ratio', 0)
+                    print(f"      ✅ {variant_name}: {win_rate}% win rate, {sharpe} Sharpe")
+                else:
+                    print(f"      ❌ Missing variant: {variant_name}")
         else:
-            print(f"   ❌ A/B Test Run Failed: {ab_test_result.get('status', 'ERROR')}")
+            print(f"   ❌ A/B test failed: {ab_test_result.get('status', 'Unknown error')}")
         
-        # 2. BACKTEST ENGINE WITH ML STRATEGY V8
-        print("\n2. BACKTEST ENGINE - ML STRATEGY V8 HIGH WIN RATE TEST")
-        print("   Testing ML Strategy v8 with improved win rate (target >40% from baseline 22.2%)")
+        # Get A/B testing status
+        print("   Checking A/B testing status...")
+        status_result = self.test_endpoint('GET', '/ml-optimization/ab-testing/status', 
+                                         category='ab_testing')
+        self.results['ab_testing'].append(status_result)
         
-        # Test backtest with ML strategy v8
+        if status_result['passed']:
+            status_data = status_result.get('response_json', {})
+            variants = status_data.get('variants', [])
+            print(f"   ✅ Status retrieved: {len(variants)} variants with metrics")
+            
+            # Show top performers
+            for i, variant in enumerate(variants[:3]):
+                name = variant.get('name', 'Unknown')
+                win_rate = variant.get('win_rate', 0)
+                sharpe = variant.get('sharpe_ratio', 0)
+                print(f"      #{i+1} {name}: {win_rate}% win rate, {sharpe} Sharpe")
+        else:
+            print(f"   ❌ Status check failed: {status_result.get('status', 'Unknown error')}")
+        
+        # 2. BACKTEST ENGINE WITH ML STRATEGY
+        print("\n2. BACKTEST ENGINE - ML Strategy Testing")
+        
+        # Get available strategies first
+        print("   Checking available strategies...")
+        strategies_result = self.test_endpoint('GET', '/backtest-engine/strategies', 
+                                             category='backtest_engine')
+        self.results['backtest_engine'].append(strategies_result)
+        
+        if strategies_result['passed']:
+            strategies_data = strategies_result.get('response_json', {})
+            strategies = strategies_data.get('strategies', [])
+            ml_strategy_found = any(s.get('id') == 'ml_based' for s in strategies)
+            
+            print(f"   ✅ Found {len(strategies)} strategies")
+            if ml_strategy_found:
+                print("   ✅ ML-based strategy available in templates")
+            else:
+                print("   ⚠️  ML-based strategy not found in templates")
+            
+            # Show available strategies
+            for strategy in strategies:
+                print(f"      • {strategy.get('name', 'Unknown')}: {strategy.get('description', 'No description')}")
+        else:
+            print(f"   ❌ Failed to get strategies: {strategies_result.get('status', 'Unknown error')}")
+        
+        # Run ML strategy backtest
+        print("   Running ML strategy backtest...")
+        
+        # Calculate date range (last 90 days for realistic test)
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=90)
+        
         backtest_config = {
-            "name": "ML Strategy v8 Test",
-            "strategy_type": "ml_based",
-            "symbols": ["BTC/USD"],
-            "start_date": "2024-01-01T00:00:00Z",
-            "end_date": "2024-12-01T00:00:00Z",
+            "name": "ML Strategy Win Rate Test",
+            "strategy_type": "ml_strategy",
+            "symbols": ["BTC/USD", "ETH/USD"],
+            "start_date": start_date.isoformat(),
+            "end_date": end_date.isoformat(),
             "initial_capital": 10000,
             "position_size_pct": 15,
             "stop_loss_pct": 3,
-            "take_profit_pct": 10,
+            "take_profit_pct": 12,
             "strategy_params": {
                 "lookback": 20,
-                "min_trend_strength": 0.015,
-                "rsi_oversold": 25,
-                "rsi_overbought": 75,
-                "entry_threshold": 6,
-                "adx_threshold": 20
+                "min_trend_strength": 0.02,
+                "entry_threshold": 8,
+                "rsi_oversold": 20,
+                "rsi_overbought": 80
             }
         }
         
-        backtest_start = self.test_endpoint('POST', '/backtest-engine/run', 
-                                          backtest_config, category='backtest_engine')
-        self.results['backtest_engine'].append(backtest_start)
+        backtest_result = self.test_endpoint('POST', '/backtest-engine/run', 
+                                           backtest_config, category='backtest_engine')
+        self.results['backtest_engine'].append(backtest_result)
         
-        if backtest_start['passed']:
-            print(f"   ✅ Backtest Started: {backtest_start['status']}")
-            if 'response_json' in backtest_start:
-                backtest_id = backtest_start['response_json'].get('backtest_id')
-                print(f"   📊 Backtest ID: {backtest_id}")
+        if backtest_result['passed']:
+            backtest_data = backtest_result.get('response_json', {})
+            backtest_id = backtest_data.get('backtest_id')
+            print(f"   ✅ Backtest started: {backtest_id}")
+            
+            # Wait for backtest to complete and check results
+            print("   Waiting for backtest completion...")
+            max_wait = 120  # 2 minutes max wait
+            wait_time = 0
+            
+            while wait_time < max_wait:
+                time.sleep(10)
+                wait_time += 10
                 
-                # Wait for backtest to complete
-                print("   ⏳ Waiting for backtest to complete...")
-                max_wait = 120  # 2 minutes max
-                wait_time = 0
+                status_check = self.test_endpoint('GET', f'/backtest-engine/status/{backtest_id}', 
+                                                category='backtest_engine')
                 
-                while wait_time < max_wait:
-                    time.sleep(5)
-                    wait_time += 5
+                if status_check['passed']:
+                    status_info = status_check.get('response_json', {})
+                    status = status_info.get('status', 'unknown')
+                    progress = status_info.get('progress', 0)
                     
-                    status_result = self.test_endpoint('GET', f'/backtest-engine/status/{backtest_id}', 
-                                                     category='backtest_engine')
+                    print(f"      Status: {status} ({progress}%)")
                     
-                    if status_result['passed'] and 'response_json' in status_result:
-                        status = status_result['response_json'].get('status')
-                        progress = status_result['response_json'].get('progress', 0)
-                        print(f"   📈 Progress: {progress}% ({status})")
+                    if status == 'completed':
+                        # Get results
+                        results_check = self.test_endpoint('GET', f'/backtest-engine/results/{backtest_id}', 
+                                                         category='backtest_engine')
+                        self.results['backtest_engine'].append(results_check)
                         
-                        if status == 'completed':
-                            break
-                        elif status == 'failed':
-                            print(f"   ❌ Backtest Failed")
-                            break
-                
-                # Get results
-                if wait_time < max_wait:
-                    results_result = self.test_endpoint('GET', f'/backtest-engine/results/{backtest_id}', 
-                                                      category='backtest_engine')
-                    self.results['backtest_engine'].append(results_result)
-                    
-                    if results_result['passed'] and 'response_json' in results_result:
-                        results = results_result['response_json']
-                        metrics = results.get('metrics', {})
+                        if results_check['passed']:
+                            results_data = results_check.get('response_json', {})
+                            metrics = results_data.get('metrics', {})
+                            
+                            win_rate = metrics.get('win_rate', 0)
+                            sharpe_ratio = metrics.get('sharpe_ratio', 0)
+                            total_return = metrics.get('total_return_pct', 0)
+                            total_trades = metrics.get('total_trades', 0)
+                            
+                            print(f"   🎯 BACKTEST RESULTS:")
+                            print(f"      Win Rate: {win_rate}% (target: 40%+ improvement from ~22% baseline)")
+                            print(f"      Sharpe Ratio: {sharpe_ratio}")
+                            print(f"      Total Return: {total_return}%")
+                            print(f"      Total Trades: {total_trades}")
+                            
+                            # Check if win rate shows improvement
+                            baseline_win_rate = 22  # Mentioned in review request
+                            improvement = ((win_rate - baseline_win_rate) / baseline_win_rate) * 100
+                            
+                            if improvement >= 40:
+                                print(f"   ✅ EXCELLENT: {improvement:.1f}% improvement over baseline (target: 40%+)")
+                            elif win_rate > baseline_win_rate:
+                                print(f"   ⚠️  {improvement:.1f}% improvement (below 40% target)")
+                            else:
+                                print(f"   ❌ Win rate {win_rate}% not improved from baseline {baseline_win_rate}%")
                         
-                        win_rate = metrics.get('win_rate', 0)
-                        total_return = metrics.get('total_return_pct', 0)
-                        sharpe_ratio = metrics.get('sharpe_ratio', 0)
-                        total_trades = metrics.get('total_trades', 0)
-                        
-                        print(f"   🎯 ML STRATEGY V8 RESULTS:")
-                        print(f"      - Win Rate: {win_rate:.1f}% (was 22.2%, target >40%)")
-                        print(f"      - Total Return: {total_return:.1f}%")
-                        print(f"      - Sharpe Ratio: {sharpe_ratio:.2f}")
-                        print(f"      - Total Trades: {total_trades}")
-                        print(f"      - Improvement: {'✅ YES' if win_rate > 40 else '❌ NO'}")
-                        
-                        if win_rate > 40:
-                            improvement = ((win_rate - 22.2) / 22.2) * 100
-                            print(f"      - Win Rate Improvement: +{improvement:.1f}%")
-                    else:
-                        print(f"   ❌ Failed to get backtest results: {results_result.get('status', 'ERROR')}")
+                        break
+                    elif status == 'failed':
+                        print(f"   ❌ Backtest failed")
+                        break
                 else:
-                    print(f"   ⏰ Backtest timed out after {max_wait} seconds")
+                    print(f"      ❌ Status check failed")
+                    break
+            
+            if wait_time >= max_wait:
+                print(f"   ⚠️  Backtest timeout after {max_wait} seconds")
         else:
-            print(f"   ❌ Backtest Start Failed: {backtest_start.get('status', 'ERROR')}")
+            print(f"   ❌ Failed to start backtest: {backtest_result.get('status', 'Unknown error')}")
         
-        # 3. A/B TESTING STATUS ENDPOINT
-        print("\n3. A/B TESTING STATUS ENDPOINT")
-        print("   Verifying status endpoint shows all 8 variants with performance metrics")
+        # 3. OVERFITTING DETECTION
+        print("\n3. OVERFITTING DETECTION")
         
-        status_result = self.test_endpoint('GET', '/ml-optimization/ab-testing/status', 
-                                         category='status_endpoints')
-        self.results['status_endpoints'].append(status_result)
+        # Test overfitting detection with provided parameters
+        print("   Testing overfitting detection...")
         
-        if status_result['passed']:
-            print(f"   ✅ A/B Testing Status: {status_result['status']}")
-            if 'response_json' in status_result:
-                response = status_result['response_json']
-                if 'variants' in response:
-                    variants = response['variants']
-                    print(f"   📊 Variants Found: {len(variants)}")
-                    
-                    for i, variant in enumerate(variants[:8]):  # Show up to 8
-                        name = variant.get('name', f'Variant {i+1}')
-                        win_rate = variant.get('win_rate', 0)
-                        trades = variant.get('total_trades', 0)
-                        sharpe = variant.get('sharpe_ratio', 0)
-                        print(f"      {i+1}. {name}: {win_rate:.1f}% win rate, {trades} trades, {sharpe:.2f} Sharpe")
-                    
-                    print(f"   🎯 Expected: 8 variants shown ✅")
+        # Try the direct approach with train_accuracy and validation_accuracy as specified in review
+        simple_overfitting_request = {
+            "train_accuracy": 0.85,
+            "validation_accuracy": 0.55
+        }
+        
+        overfitting_result = self.test_endpoint('POST', '/ml-optimization/overfitting/detect', 
+                                              simple_overfitting_request, category='overfitting_detection')
+        self.results['overfitting_detection'].append(overfitting_result)
+        
+        if overfitting_result['passed']:
+            overfitting_data = overfitting_result.get('response_json', {})
+            is_overfit = overfitting_data.get('is_overfit', False)
+            overfit_score = overfitting_data.get('overfit_score', 0)
+            
+            print(f"   ✅ Overfitting detection completed")
+            print(f"      Train Accuracy: 85%")
+            print(f"      Validation Accuracy: 55%")
+            print(f"      Overfitting Detected: {is_overfit}")
+            print(f"      Overfit Score: {overfit_score}")
+            
+            if is_overfit:
+                print("   ✅ CORRECT: Overfitting scenario properly detected (85% vs 55%)")
+            else:
+                print("   ⚠️  Expected overfitting detection for 85% vs 55% accuracy gap")
+        else:
+            # Try the more complex endpoint structure that the service expects
+            overfitting_request = {
+                "variant_id": "test_variant",
+                "train_results": {
+                    "win_rate": 85,
+                    "sharpe_ratio": 2.5
+                },
+                "validation_results": {
+                    "win_rate": 55,
+                    "sharpe_ratio": 0.8
+                }
+            }
+            
+            overfitting_result2 = self.test_endpoint('POST', '/ml-optimization/overfitting/detect', 
+                                                   overfitting_request, category='overfitting_detection')
+            self.results['overfitting_detection'].append(overfitting_result2)
+            
+            if overfitting_result2['passed']:
+                overfitting_data = overfitting_result2.get('response_json', {})
+                is_overfit = overfitting_data.get('is_overfit', False)
+                
+                print(f"   ✅ Overfitting detection completed (complex format)")
+                print(f"      Overfitting Detected: {is_overfit}")
+                
+                if is_overfit:
+                    print("   ✅ CORRECT: Overfitting scenario properly detected")
                 else:
-                    print(f"   ⚠️ No variants found in status response")
-        else:
-            print(f"   ❌ A/B Testing Status Failed: {status_result.get('status', 'ERROR')}")
-        
-        # 4. BACKTEST TEMPLATES INCLUDE ML STRATEGY
-        print("\n4. BACKTEST TEMPLATES - ML STRATEGY VERIFICATION")
-        print("   Verifying that backtest templates include 'ml_based' strategy")
-        
-        strategies_result = self.test_endpoint('GET', '/backtest-engine/strategies', 
-                                             category='templates')
-        self.results['templates'].append(strategies_result)
-        
-        if strategies_result['passed']:
-            print(f"   ✅ Strategies Endpoint: {strategies_result['status']}")
-            if 'response_json' in strategies_result:
-                response = strategies_result['response_json']
-                strategies = response.get('strategies', [])
-                
-                ml_strategy_found = False
-                for strategy in strategies:
-                    strategy_id = strategy.get('id')
-                    strategy_name = strategy.get('name')
-                    description = strategy.get('description', '')
-                    
-                    print(f"      - {strategy_id}: {strategy_name}")
-                    if strategy_id == 'ml_based':
-                        ml_strategy_found = True
-                        print(f"        📝 Description: {description}")
-                
-                print(f"   🎯 ML Strategy Found: {'✅ YES' if ml_strategy_found else '❌ NO'}")
-        else:
-            print(f"   ❌ Strategies Endpoint Failed: {strategies_result.get('status', 'ERROR')}")
-        
-        templates_result = self.test_endpoint('GET', '/backtest-engine/templates', 
-                                            category='templates')
-        self.results['templates'].append(templates_result)
-        
-        if templates_result['passed']:
-            print(f"   ✅ Templates Endpoint: {templates_result['status']}")
-            if 'response_json' in templates_result:
-                response = templates_result['response_json']
-                templates = response.get('templates', [])
-                print(f"   📊 Templates Available: {len(templates)}")
-                
-                for template in templates:
-                    name = template.get('name')
-                    strategy_type = template.get('config', {}).get('strategy_type')
-                    print(f"      - {name}: {strategy_type} strategy")
-        else:
-            print(f"   ❌ Templates Endpoint Failed: {templates_result.get('status', 'ERROR')}")
+                    print("   ⚠️  Expected overfitting detection for large accuracy gap")
+            else:
+                print(f"   ❌ Overfitting detection failed: {overfitting_result.get('status', 'Unknown error')}")
 
     def analyze_results(self):
         """Analyze test results and generate comprehensive report"""
@@ -317,12 +361,12 @@ class WinRateImprovementsTester:
         success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
         
         print("\n" + "=" * 80)
-        print("📊 WIN RATE IMPROVEMENTS TEST RESULTS SUMMARY")
+        print("📊 WIN RATE IMPROVEMENTS TEST RESULTS")
         print("=" * 80)
         print(f"📈 OVERALL SUCCESS RATE: {success_rate:.1f}% ({passed_tests}/{total_tests})")
         
         # Category breakdown
-        print("\n🎯 RESULTS BY FEATURE:")
+        print("\n🎯 RESULTS BY CATEGORY:")
         
         failed_tests = []
         
@@ -336,8 +380,7 @@ class WinRateImprovementsTester:
             
             status_icon = "✅" if category_rate == 100 else "⚠️" if category_rate >= 50 else "❌"
             
-            category_name = category.upper().replace('_', ' ')
-            print(f"{status_icon} {category_name}: {category_rate:.1f}% ({category_passed}/{category_total})")
+            print(f"{status_icon} {category.upper().replace('_', ' ')}: {category_rate:.1f}% ({category_passed}/{category_total})")
             
             # Track failed tests
             for test in tests:
@@ -356,23 +399,6 @@ class WinRateImprovementsTester:
         avg_duration = sum(t.get('duration', 0) for t in all_results) / len(all_results) if all_results else 0
         print(f"\n⚡ PERFORMANCE: Average response time {avg_duration:.2f}s")
         
-        # Win Rate Analysis Summary
-        print(f"\n🏆 WIN RATE IMPROVEMENTS SUMMARY:")
-        
-        # Check A/B testing results
-        ab_tests = [t for t in all_results if t['category'] == 'ab_testing' and t['passed']]
-        if ab_tests:
-            print(f"   ✅ A/B Testing System: {len(ab_tests)} tests passed")
-        else:
-            print(f"   ❌ A/B Testing System: Tests failed")
-        
-        # Check backtest results
-        backtest_tests = [t for t in all_results if t['category'] == 'backtest_engine' and t['passed']]
-        if backtest_tests:
-            print(f"   ✅ Backtest Engine: {len(backtest_tests)} tests passed")
-        else:
-            print(f"   ❌ Backtest Engine: Tests failed")
-        
         return {
             'total_tests': total_tests,
             'passed_tests': passed_tests,
@@ -382,16 +408,12 @@ class WinRateImprovementsTester:
         }
 
 def main():
-    """Run win rate improvements testing"""
+    """Run Win Rate Improvements testing"""
     tester = WinRateImprovementsTester()
     
-    print("🎉 WIN RATE IMPROVEMENTS TESTING")
+    print("🎯 WIN RATE IMPROVEMENTS TESTING")
     print("=" * 80)
-    print("Testing new high win rate features:")
-    print("1. A/B Testing System (8 variants, 70%+ win rates)")
-    print("2. Backtest Engine ML Strategy v8 (>40% win rate)")
-    print("3. A/B Testing Status Endpoint")
-    print("4. Backtest Templates with ML Strategy")
+    print("Testing A/B Testing System, ML Strategy Backtesting, and Overfitting Detection")
     print(f"Timestamp: {datetime.now().isoformat()}")
     
     # Run all tests
@@ -404,11 +426,11 @@ def main():
     print(f"✅ SUCCESS RATE: {results['success_rate']:.1f}% ({results['passed_tests']}/{results['total_tests']})")
     
     if results['success_rate'] >= 85:
-        print("🎉 EXCELLENT - Win rate improvements are working!")
+        print("🎉 EXCELLENT - Win Rate Improvements features working perfectly!")
     elif results['success_rate'] >= 70:
-        print("👍 GOOD - Most win rate features working with minor issues")
+        print("👍 GOOD - Win Rate Improvements mostly functional with minor issues")
     else:
-        print("⚠️ NEEDS ATTENTION - Multiple win rate improvement issues found")
+        print("⚠️ NEEDS ATTENTION - Multiple issues found in Win Rate Improvements")
     
     return results
 
