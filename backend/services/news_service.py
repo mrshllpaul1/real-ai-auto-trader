@@ -1,5 +1,5 @@
 import httpx
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
@@ -76,7 +76,10 @@ class CryptoNewsAggregator:
                         'url': item.get('link', ''),
                         'category': item.get('category', 'crypto'),
                         'time_ago': item.get('timeAgo', ''),
-                        'sentiment': self._infer_sentiment_from_title(item.get('title', '')),
+                        'sentiment': self._infer_sentiment_from_title(
+                            item.get('title', ''),
+                            item.get('description', '')
+                        ),
                         'aggregator': 'free_crypto_news',
                         'currencies': self._extract_currencies_from_text(item.get('title', '') + ' ' + item.get('description', ''))
                     }
@@ -91,17 +94,17 @@ class CryptoNewsAggregator:
             print(f"Free Crypto News error: {str(e)}")
             return []
     
-    def _infer_sentiment_from_title(self, title: str) -> str:
-        """Infer basic sentiment from news title"""
-        title_lower = title.lower()
+    def _infer_sentiment_from_title(self, title: str, description: str = "") -> str:
+        """Infer basic sentiment from news title and description"""
+        text_lower = f"{title} {description}".lower()
         
         positive_keywords = ['surge', 'soar', 'rally', 'gains', 'bull', 'rise', 'up', 'growth', 
                            'adoption', 'partnership', 'launch', 'breakthrough', 'record', 'high']
         negative_keywords = ['crash', 'drop', 'fall', 'plunge', 'bear', 'down', 'loss', 'hack', 
                            'exploit', 'scam', 'fraud', 'lawsuit', 'ban', 'warning', 'risk']
         
-        positive_count = sum(1 for kw in positive_keywords if kw in title_lower)
-        negative_count = sum(1 for kw in negative_keywords if kw in title_lower)
+        positive_count = sum(1 for kw in positive_keywords if kw in text_lower)
+        negative_count = sum(1 for kw in negative_keywords if kw in text_lower)
         
         if positive_count > negative_count:
             return 'positive'
@@ -365,16 +368,40 @@ Be objective and focus on market-moving information.
             user_message = UserMessage(text=prompt)
             response = await chat.send_message(user_message)
             
-            # Extract sentiment from response
-            sentiment_score = self._calculate_sentiment_score(relevant_news)
+            # Enhanced sentiment scoring with keyword and recency weighting
+            scored_items = [self._score_news_item(item) for item in relevant_news]
+            if scored_items:
+                sentiment_score = sum(score for score, _ in scored_items) / len(scored_items)
+            else:
+                sentiment_score = 0.0
+            
+            positive_count = sum(1 for _, label in scored_items if label == 'positive')
+            negative_count = sum(1 for _, label in scored_items if label == 'negative')
+            neutral_count = len(scored_items) - positive_count - negative_count
+            
+            sentiment_label = (
+                'positive' if sentiment_score > 0.15
+                else 'negative' if sentiment_score < -0.15
+                else 'neutral'
+            )
+            
+            coverage_factor = min(1.0, len(relevant_news) / 8)  # more articles -> higher confidence
+            confidence = round(
+                min(1.0, abs(sentiment_score) * 0.7 + coverage_factor * 0.3) * 100,
+                1
+            )
             
             return {
-                'sentiment': 'positive' if sentiment_score > 0.3 else 'negative' if sentiment_score < -0.3 else 'neutral',
-                'confidence': abs(sentiment_score) * 100,
+                'sentiment': sentiment_label,
+                'sentiment_score': round((sentiment_score + 1) * 50, 1),  # -1..1 -> 0..100
+                'confidence': confidence,
                 'ai_analysis': response,
                 'news_count': len(relevant_news),
                 'analyzed_at': datetime.now().isoformat(),
-                'recent_headlines': [item.get('title') for item in relevant_news[:5]]
+                'recent_headlines': [item.get('title') for item in relevant_news[:5]],
+                'positive_articles': positive_count,
+                'negative_articles': negative_count,
+                'neutral_articles': neutral_count
             }
         except Exception as e:
             print(f"Sentiment analysis error: {str(e)}")
@@ -390,10 +417,56 @@ Be objective and focus on market-moving information.
         if not news_items:
             return 0.0
         
-        sentiment_map = {'positive': 1.0, 'negative': -1.0, 'neutral': 0.0}
-        scores = [sentiment_map.get(item.get('sentiment', 'neutral'), 0.0) for item in news_items]
+        scores = []
+        for item in news_items:
+            score, _ = self._score_news_item(item)
+            scores.append(score)
         
         return sum(scores) / len(scores) if scores else 0.0
+
+    def _score_news_item(self, item: Dict[str, Any]) -> Tuple[float, str]:
+        """
+        Score a news item using keyword cues, provided sentiment, and recency weighting.
+        Returns tuple of (score -1..1, label).
+        """
+        sentiment_map = {'positive': 0.6, 'negative': -0.6, 'neutral': 0.0}
+        positive_keywords = [
+            'surge', 'soar', 'rally', 'gains', 'bull', 'rise', 'up', 'growth',
+            'adoption', 'partnership', 'launch', 'breakthrough', 'record', 'high',
+            'upgrade', 'etf approval', 'integration', 'listing', 'support'
+        ]
+        negative_keywords = [
+            'crash', 'drop', 'fall', 'plunge', 'bear', 'down', 'loss', 'hack',
+            'exploit', 'scam', 'fraud', 'lawsuit', 'ban', 'warning', 'risk',
+            'delist', 'halt', 'investigation', 'shutdown'
+        ]
+        
+        text = f"{item.get('title', '')} {item.get('description', '')}".lower()
+        base_score = sentiment_map.get(item.get('sentiment', 'neutral'), 0.0)
+        
+        keyword_score = 0.0
+        if any(kw in text for kw in positive_keywords):
+            keyword_score += 0.25
+        if any(kw in text for kw in negative_keywords):
+            keyword_score -= 0.25
+        
+        combined = max(-1.0, min(1.0, base_score + keyword_score))
+        
+        # Recency weighting (newer news gets higher weight)
+        weight = 1.0
+        published_at = item.get('published_at') or item.get('pubDate')
+        if published_at:
+            try:
+                news_time = datetime.fromisoformat(published_at.replace('Z', '+00:00'))
+                hours_old = max(0, (datetime.now(news_time.tzinfo) - news_time).total_seconds() / 3600)
+                weight = max(0.4, 1 - min(hours_old, 72) / 120)  # decay over 3 days
+            except Exception:
+                weight = 1.0
+        
+        weighted_score = combined * weight
+        label = 'positive' if weighted_score > 0.05 else 'negative' if weighted_score < -0.05 else 'neutral'
+        
+        return weighted_score, label
     
     async def get_market_moving_news(self, limit: int = 10) -> List[Dict[str, Any]]:
         """Get high-impact market-moving news"""
