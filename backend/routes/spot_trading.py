@@ -1047,3 +1047,231 @@ async def invalidate_cache(key: str = None):
         }
     
     return {"message": "Cache invalidation not available"}
+
+
+# ============= Trade History Sync =============
+
+@router.post("/sync-trade-history")
+async def sync_trade_history(
+    days_back: int = Query(365, ge=1, le=1825, description="Number of days of history to sync"),
+    force_resync: bool = Query(False, description="Clear existing entries and resync")
+):
+    """
+    Sync historical trades from Kraken to populate entry prices.
+    
+    This will:
+    1. Fetch all trades from Kraken for the specified period
+    2. Process buys and sells in chronological order
+    3. Update entry prices based on actual trade data
+    
+    Args:
+        days_back: Number of days of history to fetch (default 365, max 1825/5 years)
+        force_resync: If true, clears existing entry data before syncing
+    """
+    if _kraken_service is None:
+        raise HTTPException(status_code=503, detail="Kraken service not initialized")
+    
+    if _entry_tracker is None:
+        raise HTTPException(status_code=503, detail="Entry tracker not initialized")
+    
+    import time
+    
+    # Calculate time range
+    end_time = int(time.time())
+    start_time = end_time - (days_back * 24 * 60 * 60)
+    
+    # Clear existing if force resync
+    if force_resync and _entry_tracker.collection:
+        await _entry_tracker.collection.delete_many({})
+        logger.info("🗑️ Cleared existing entry prices for resync")
+    
+    # Fetch all trades with pagination
+    all_trades = []
+    offset = 0
+    
+    while True:
+        try:
+            # Get raw kraken service if using cache wrapper
+            kraken = _kraken_service._kraken if hasattr(_kraken_service, '_kraken') else _kraken_service
+            
+            result = await kraken.get_trades_history(start=start_time, end=end_time, ofs=offset)
+            trades = result.get("trades", {})
+            
+            if not trades:
+                break
+            
+            all_trades.extend(list(trades.values()))
+            
+            # Check if we have more trades
+            total_count = result.get("count", 0)
+            offset += len(trades)
+            
+            if offset >= total_count or len(trades) < 50:
+                break
+                
+            # Rate limit protection
+            await asyncio.sleep(0.5)
+            
+        except Exception as e:
+            logger.error(f"Error fetching trade history: {e}")
+            break
+    
+    if not all_trades:
+        return {
+            "success": True,
+            "message": "No trades found in the specified period",
+            "trades_processed": 0,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    
+    # Sort trades by time (oldest first)
+    all_trades.sort(key=lambda t: t.get("time", 0))
+    
+    # Map Kraken pair names to symbols
+    pair_to_symbol = {}
+    for symbol, info in TRADING_PAIRS.items():
+        pair_to_symbol[info['pair']] = symbol
+        # Also map without X/Z prefixes
+        alt_pair = info['pair'].replace('X', '').replace('Z', '')
+        pair_to_symbol[alt_pair] = symbol
+    
+    # Process trades
+    processed = 0
+    buys = 0
+    sells = 0
+    errors = 0
+    symbols_updated = set()
+    
+    for trade in all_trades:
+        try:
+            pair = trade.get("pair", "")
+            trade_type = trade.get("type", "").lower()
+            volume = float(trade.get("vol", 0))
+            price = float(trade.get("price", 0))
+            order_id = trade.get("ordertxid", "")
+            
+            # Find symbol from pair
+            symbol = pair_to_symbol.get(pair)
+            if not symbol:
+                # Try alternate formats
+                for s, info in TRADING_PAIRS.items():
+                    if pair in info['pair'] or info['pair'] in pair:
+                        symbol = s
+                        break
+            
+            if not symbol or volume <= 0 or price <= 0:
+                continue
+            
+            if trade_type == "buy":
+                await _entry_tracker.record_buy(
+                    symbol=symbol,
+                    quantity=volume,
+                    price=price,
+                    order_id=order_id,
+                    source="kraken_sync"
+                )
+                buys += 1
+                symbols_updated.add(symbol)
+            elif trade_type == "sell":
+                await _entry_tracker.record_sell(
+                    symbol=symbol,
+                    quantity=volume,
+                    price=price,
+                    order_id=order_id,
+                    source="kraken_sync"
+                )
+                sells += 1
+                symbols_updated.add(symbol)
+            
+            processed += 1
+            
+        except Exception as e:
+            logger.warning(f"Error processing trade: {e}")
+            errors += 1
+    
+    # Get updated entry prices summary
+    entries = await _entry_tracker.get_all_entries()
+    
+    return {
+        "success": True,
+        "message": f"Synced {processed} trades ({buys} buys, {sells} sells)",
+        "summary": {
+            "trades_found": len(all_trades),
+            "trades_processed": processed,
+            "buys": buys,
+            "sells": sells,
+            "errors": errors,
+            "symbols_updated": list(symbols_updated),
+            "positions_with_entry_prices": len(entries)
+        },
+        "entries": [
+            {
+                "symbol": e.get("symbol"),
+                "entry_price": e.get("entry_price"),
+                "quantity": e.get("quantity"),
+                "total_buys": e.get("total_buys", 0),
+                "total_sells": e.get("total_sells", 0),
+                "realized_pnl": e.get("realized_pnl", 0)
+            }
+            for e in entries
+        ],
+        "period": {
+            "start": datetime.fromtimestamp(start_time, timezone.utc).isoformat(),
+            "end": datetime.fromtimestamp(end_time, timezone.utc).isoformat(),
+            "days": days_back
+        },
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@router.get("/trade-history/summary")
+async def get_trade_history_summary():
+    """Get summary of synced trade history and entry prices"""
+    if _entry_tracker is None:
+        return {
+            "has_data": False,
+            "message": "Entry tracker not initialized",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    
+    entries = await _entry_tracker.get_all_entries()
+    
+    total_cost_basis = 0
+    total_realized_pnl = 0
+    total_buys = 0
+    total_sells = 0
+    
+    positions = []
+    for entry in entries:
+        cost_basis = (entry.get("entry_price", 0) or 0) * (entry.get("quantity", 0) or 0)
+        total_cost_basis += cost_basis
+        total_realized_pnl += entry.get("realized_pnl", 0) or 0
+        total_buys += entry.get("total_buys", 0) or 0
+        total_sells += entry.get("total_sells", 0) or 0
+        
+        positions.append({
+            "symbol": entry.get("symbol"),
+            "entry_price": entry.get("entry_price"),
+            "quantity": entry.get("quantity"),
+            "cost_basis": cost_basis,
+            "total_buys": entry.get("total_buys", 0),
+            "total_sells": entry.get("total_sells", 0),
+            "realized_pnl": entry.get("realized_pnl", 0),
+            "first_buy": entry.get("created_at"),
+            "last_updated": entry.get("updated_at")
+        })
+    
+    return {
+        "has_data": len(entries) > 0,
+        "summary": {
+            "positions_tracked": len(entries),
+            "total_cost_basis": round(total_cost_basis, 2),
+            "total_realized_pnl": round(total_realized_pnl, 2),
+            "total_trade_count": total_buys + total_sells,
+            "total_buys": total_buys,
+            "total_sells": total_sells
+        },
+        "positions": positions,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
