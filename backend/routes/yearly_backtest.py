@@ -2,6 +2,7 @@
 Yearly Adaptive Backtest API Routes
 ====================================
 API endpoints for running comprehensive yearly backtests with weekly adaptation.
+Supports years 2020-2025.
 """
 
 import logging
@@ -27,9 +28,16 @@ def set_db(db):
 
 
 class YearlyBacktestRequest(BaseModel):
+    year: int = 2025  # Year to backtest (2020-2025)
     initial_capital: float = 100000
     coins: Optional[List[str]] = None  # None = use top 30 default coins
     use_all_kraken_coins: bool = False  # If true, use all 600+ Kraken coins
+
+
+class MultiYearBacktestRequest(BaseModel):
+    years: List[int] = [2020, 2021, 2022, 2023, 2024, 2025]
+    initial_capital: float = 100000
+    coins: Optional[List[str]] = None
 
 
 class BacktestResponse(BaseModel):
@@ -44,7 +52,9 @@ async def run_yearly_backtest(
     background_tasks: BackgroundTasks
 ):
     """
-    Run a full year 2025 backtest with weekly adaptive strategy.
+    Run a full year backtest with weekly adaptive strategy.
+    
+    Supported years: 2020, 2021, 2022, 2023, 2024, 2025
     
     Features:
     - Tests across selected coins (or all Kraken coins)
@@ -55,9 +65,13 @@ async def run_yearly_backtest(
     Returns backtest_id for tracking progress.
     """
     backtest_id = str(uuid.uuid4())
+    year = request.year
+    
+    if year < 2020 or year > 2025:
+        raise HTTPException(status_code=400, detail="Year must be between 2020 and 2025")
     
     try:
-        from services.yearly_adaptive_backtest import run_yearly_adaptive_backtest, TOP_COINS
+        from services.yearly_adaptive_backtest import run_yearly_adaptive_backtest, TOP_COINS, COINS_BY_YEAR
         
         # Determine coins to use
         coins = request.coins
@@ -70,14 +84,15 @@ async def run_yearly_backtest(
                         coins = universe["crypto_coins"][:100]  # Limit to top 100 for performance
                 except Exception as e:
                     logger.warning(f"Could not fetch Kraken universe: {e}")
-                    coins = TOP_COINS[:50]
+                    coins = COINS_BY_YEAR.get(year, TOP_COINS[:50])
             else:
-                coins = TOP_COINS[:50]
+                coins = COINS_BY_YEAR.get(year, TOP_COINS[:50])
         elif not coins:
-            coins = TOP_COINS[:30]
+            coins = COINS_BY_YEAR.get(year, TOP_COINS[:30])[:30]
         
         _running_backtests[backtest_id] = {
             "status": "starting",
+            "year": year,
             "progress": 0,
             "coins_count": len(coins),
             "initial_capital": request.initial_capital
