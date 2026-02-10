@@ -268,16 +268,11 @@ const BacktestEngine = () => {
 
                 <div>
                   <Label className="text-[#A1A1AA]">Symbol</Label>
-                  <Select value={config.symbols[0]} onValueChange={(v) => setConfig({ ...config, symbols: [v] })}>
-                    <SelectTrigger className="bg-[#121212] border-[#1F1F1F] mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#121212] border-[#1F1F1F]">
-                      <SelectItem value="BTC/USD">BTC/USD</SelectItem>
-                      <SelectItem value="ETH/USD">ETH/USD</SelectItem>
-                      <SelectItem value="SOL/USD">SOL/USD</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <TradingPairSelector 
+                    value={config.symbols[0]} 
+                    onValueChange={(v) => setConfig({ ...config, symbols: [v] })}
+                    className="mt-1"
+                  />
                 </div>
 
                 <div>
