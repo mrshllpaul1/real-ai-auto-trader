@@ -12,7 +12,7 @@ import {
   Mail, Database, Bot, TrendingUp, Shield
 } from 'lucide-react';
 
-const Setup = () => {
+const Setup = ({ embedded = false }) => {
   const [configStatus, setConfigStatus] = useState({});
   const [credentials, setCredentials] = useState({
     RESEND_API_KEY: '',

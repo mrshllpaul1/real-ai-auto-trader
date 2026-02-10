@@ -56,7 +56,7 @@ const StepItem = ({ number, title, children }) => (
   </div>
 );
 
-const Guide = () => {
+const Guide = ({ embedded = false }) => {
   return (
     <div className="p-6 lg:p-12 space-y-6" data-testid="guide-page">
       <motion.div

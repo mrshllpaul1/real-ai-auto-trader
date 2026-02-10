@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
 
-const TradingBudget = () => {
+const TradingBudget = ({ embedded = false }) => {
   const [budgetStatus, setBudgetStatus] = useState(null);
   const [isolation, setIsolation] = useState(null);
   const [positions, setPositions] = useState([]);

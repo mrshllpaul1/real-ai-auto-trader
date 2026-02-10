@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.REACT_APP_BACKEND_URL || '');
 
-const DeFiWallet = () => {
+const DeFiWallet = ({ embedded = false }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [wallets, setWallets] = useState([]);
   const [selectedWallet, setSelectedWallet] = useState(null);

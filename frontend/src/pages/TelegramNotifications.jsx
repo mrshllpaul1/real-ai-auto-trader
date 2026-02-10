@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.REACT_APP_BACKEND_URL || '');
 
-const TelegramNotifications = () => {
+const TelegramNotifications = ({ embedded = false }) => {
   const [status, setStatus] = useState(null);
   const [config, setConfig] = useState(null);
   const [priceAlerts, setPriceAlerts] = useState([]);

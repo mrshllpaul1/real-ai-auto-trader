@@ -16,7 +16,7 @@ import {
 import api from '../services/api';
 import toast from '../utils/toast';
 
-const DashboardCustomization = () => {
+const DashboardCustomization = ({ embedded = false }) => {
   const [layout, setLayout] = useState(null);
   const [layouts, setLayouts] = useState([]);
   const [theme, setTheme] = useState(null);

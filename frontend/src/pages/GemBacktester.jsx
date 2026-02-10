@@ -14,7 +14,7 @@ import { motion } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
 
-const GemBacktester = () => {
+const GemBacktester = ({ embedded = false }) => {
   const [status, setStatus] = useState(null);
   const [backtestHistory, setBacktestHistory] = useState([]);
   const [loading, setLoading] = useState(true);

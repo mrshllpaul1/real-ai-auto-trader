@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import api, { coindeskAPI } from '../services/api';
 import { toast } from 'sonner';
 
-const NewsAndIntelligence = () => {
+const NewsAndIntelligence = ({ embedded = false }) => {
   const [news, setNews] = useState([]);
   const [coindeskNews, setCoindeskNews] = useState([]);
   const [coindeskSentiment, setCoindeskSentiment] = useState(null);

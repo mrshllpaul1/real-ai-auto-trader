@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
 
-const GemScanner = () => {
+const GemScanner = ({ embedded = false }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [alerts, setAlerts] = useState([]);
   const [status, setStatus] = useState(null);

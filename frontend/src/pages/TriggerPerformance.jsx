@@ -36,7 +36,7 @@ const categoryColors = {
   other: '#A1A1AA'
 };
 
-const TriggerPerformance = () => {
+const TriggerPerformance = ({ embedded = false }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(null);

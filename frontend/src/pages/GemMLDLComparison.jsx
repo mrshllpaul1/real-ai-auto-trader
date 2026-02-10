@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
 
-const GemMLDLComparison = () => {
+const GemMLDLComparison = ({ embedded = false }) => {
   const [comparison, setComparison] = useState(null);
   const [modelInfo, setModelInfo] = useState(null);
   const [trainingStatus, setTrainingStatus] = useState(null);

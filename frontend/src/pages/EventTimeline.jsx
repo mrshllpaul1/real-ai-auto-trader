@@ -16,7 +16,7 @@ import { motion } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
 
-const EventTimeline = () => {
+const EventTimeline = ({ embedded = false }) => {
   const [events, setEvents] = useState([]);
   const [correlatedEvents, setCorrelatedEvents] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);

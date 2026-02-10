@@ -16,7 +16,7 @@ import {
 import api from '../services/api';
 import toast from '../utils/toast';
 
-const CopyTrading = () => {
+const CopyTrading = ({ embedded = false }) => {
   const [leaderboard, setLeaderboard] = useState([]);
   const [following, setFollowing] = useState([]);
   const [history, setHistory] = useState([]);

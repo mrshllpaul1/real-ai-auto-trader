@@ -11,7 +11,7 @@ import api, { authAPI, riskAPI } from '../services/api';
 import toast from '../utils/toast';
 import { Shield, Key, Settings as SettingsIcon, Bell, Smartphone, Vibrate, Database, Link2, RefreshCcw } from 'lucide-react';
 
-const Settings = () => {
+const Settings = ({ embedded = false }) => {
   // Kraken credentials
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');

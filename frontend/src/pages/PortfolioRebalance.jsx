@@ -10,7 +10,7 @@ import { ResponsiveContainer, PieChart as RechartsPie, Pie, Cell, Tooltip } from
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.REACT_APP_BACKEND_URL || '');
 
-const PortfolioRebalance = () => {
+const PortfolioRebalance = ({ embedded = false }) => {
   const [analysis, setAnalysis] = useState(null);
   const [suggestions, setSuggestions] = useState(null);
   const [templates, setTemplates] = useState([]);

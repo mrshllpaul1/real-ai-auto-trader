@@ -16,7 +16,7 @@ import { motion } from 'framer-motion';
 import api from '../services/api';
 import toast from '../utils/toast';
 
-const EventTriggers = () => {
+const EventTriggers = ({ embedded = false }) => {
   const [status, setStatus] = useState(null);
   const [triggers, setTriggers] = useState([]);
   const [templates, setTemplates] = useState({});

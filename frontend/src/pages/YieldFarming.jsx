@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.REACT_APP_BACKEND_URL || '');
 
-const YieldFarming = () => {
+const YieldFarming = ({ embedded = false }) => {
   const [activeTab, setActiveTab] = useState('opportunities');
   const [opportunities, setOpportunities] = useState([]);
   const [positions, setPositions] = useState(null);

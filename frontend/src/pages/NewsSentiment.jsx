@@ -10,7 +10,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart,
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.REACT_APP_BACKEND_URL || '');
 
-const NewsSentiment = () => {
+const NewsSentiment = ({ embedded = false }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [marketSentiment, setMarketSentiment] = useState(null);
   const [trendingNews, setTrendingNews] = useState([]);
