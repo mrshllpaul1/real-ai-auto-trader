@@ -560,6 +560,185 @@ BASE_PRICES_BY_YEAR = {
     2026: {"BTC": 95000, "ETH": 5000, "SOL": 250, "XRP": 1.20, "ADA": 0.80, "AVAX": 60, "LINK": 25, "DOT": 12, "ATOM": 15}
 }
 
+# Historical Fear & Greed Index data by year (weekly averages)
+# Values: 0-24 = Extreme Fear, 25-49 = Fear, 50 = Neutral, 51-74 = Greed, 75-100 = Extreme Greed
+HISTORICAL_SENTIMENT_BY_YEAR = {
+    2020: {
+        # COVID crash year - extreme fear in March, DeFi summer euphoria
+        1: 52, 2: 55, 3: 48, 4: 45,  # Jan
+        5: 56, 6: 60, 7: 58, 8: 42,  # Feb
+        9: 35, 10: 20, 11: 8, 12: 15, 13: 22,  # Mar - COVID crash (extreme fear)
+        14: 28, 15: 35, 16: 38, 17: 42,  # Apr - recovery
+        18: 45, 19: 50, 20: 52, 21: 55,  # May
+        22: 58, 23: 62, 24: 65, 25: 68, 26: 70,  # Jun - DeFi summer starts
+        27: 72, 28: 75, 29: 78, 30: 80,  # Jul - DeFi euphoria
+        31: 82, 32: 78, 33: 75, 34: 72,  # Aug
+        35: 68, 36: 65, 37: 62, 38: 58, 39: 55,  # Sep
+        40: 58, 41: 62, 42: 65, 43: 68,  # Oct
+        44: 72, 45: 75, 46: 78, 47: 80, 48: 82,  # Nov - bull run starts
+        49: 85, 50: 88, 51: 82, 52: 78  # Dec
+    },
+    2021: {
+        # Bull market peak year - extreme greed in Q1 and Q4
+        1: 80, 2: 85, 3: 88, 4: 90,  # Jan
+        5: 92, 6: 88, 7: 85, 8: 82,  # Feb
+        9: 78, 10: 82, 11: 85, 12: 80, 13: 75,  # Mar
+        14: 70, 15: 68, 16: 72, 17: 75,  # Apr
+        18: 45, 19: 35, 20: 28, 21: 22,  # May - crash (fear)
+        22: 25, 23: 30, 24: 35, 25: 38, 26: 42,  # Jun - recovery
+        27: 48, 28: 52, 29: 55, 30: 58,  # Jul
+        31: 62, 32: 65, 33: 68, 34: 70,  # Aug
+        35: 68, 36: 65, 37: 62, 38: 58, 39: 55,  # Sep
+        40: 60, 41: 65, 42: 70, 43: 75,  # Oct - Uptober
+        44: 80, 45: 85, 46: 88, 47: 82,  # Nov - ATH $69k
+        48: 75, 49: 65, 50: 55, 51: 48, 52: 45  # Dec - correction
+    },
+    2022: {
+        # Bear market year - mostly fear
+        1: 42, 2: 38, 3: 35, 4: 30,  # Jan
+        5: 28, 6: 32, 7: 28, 8: 25,  # Feb
+        9: 28, 10: 32, 11: 28, 12: 25, 13: 22,  # Mar
+        14: 25, 15: 28, 16: 25, 17: 22,  # Apr
+        18: 18, 19: 12, 20: 8, 21: 6,  # May - LUNA crash (extreme fear)
+        22: 10, 23: 15, 24: 18, 25: 22, 26: 20,  # Jun - 3AC collapse
+        27: 18, 28: 22, 29: 25, 30: 28,  # Jul
+        31: 32, 32: 35, 33: 30, 34: 28,  # Aug
+        35: 22, 36: 20, 37: 22, 38: 25, 39: 28,  # Sep
+        40: 25, 41: 28, 42: 32, 43: 35,  # Oct
+        44: 30, 45: 15, 46: 10, 47: 8,  # Nov - FTX collapse (extreme fear)
+        48: 22, 49: 25, 50: 28, 51: 25, 52: 22  # Dec
+    },
+    2023: {
+        # Recovery year - fear to greed transition
+        1: 25, 2: 32, 3: 38, 4: 45,  # Jan - recovery starts
+        5: 52, 6: 55, 7: 50, 8: 48,  # Feb
+        9: 42, 10: 38, 11: 35, 12: 32, 13: 30,  # Mar - SVB crisis
+        14: 38, 15: 42, 16: 48, 17: 52,  # Apr
+        18: 50, 19: 48, 20: 45, 21: 42,  # May
+        22: 38, 23: 35, 24: 32, 25: 30, 26: 28,  # Jun - SEC lawsuits
+        27: 32, 28: 35, 29: 40, 30: 45,  # Jul - XRP win
+        31: 42, 32: 38, 33: 25, 34: 28,  # Aug - flash crash
+        35: 32, 36: 35, 37: 42, 38: 45, 39: 48,  # Sep
+        40: 52, 41: 58, 42: 65, 43: 70,  # Oct - Uptober
+        44: 72, 45: 68, 46: 65, 47: 62,  # Nov - CZ settlement
+        48: 68, 49: 72, 50: 75, 51: 70, 52: 65  # Dec - ETF optimism
+    },
+    2024: {
+        # ETF year - greed to euphoria cycle
+        1: 70, 2: 85, 3: 65, 4: 58,  # Jan - ETF approved!
+        5: 72, 6: 78, 7: 82, 8: 88,  # Feb
+        9: 92, 10: 95, 11: 90, 12: 75, 13: 65,  # Mar - new ATH $73k
+        14: 58, 15: 55, 16: 68, 17: 55,  # Apr - halving
+        18: 48, 19: 45, 20: 50, 21: 55,  # May
+        22: 52, 23: 48, 24: 42, 25: 38, 26: 32,  # Jun - Mt Gox fears
+        27: 25, 28: 35, 29: 48, 30: 55,  # Jul - crash & recovery
+        31: 45, 32: 22, 33: 35, 34: 45,  # Aug - Black Monday
+        35: 40, 36: 45, 37: 52, 38: 62, 39: 58,  # Sep - Fed cut
+        40: 68, 41: 72, 42: 75, 43: 70,  # Oct - Uptober
+        44: 72, 45: 92, 46: 95, 47: 88,  # Nov - Trump wins, BTC $90k
+        48: 90, 49: 85, 50: 78, 51: 72, 52: 68  # Dec - $100k
+    },
+    2025: {
+        # Continuation year - high greed with corrections
+        1: 72, 2: 78, 3: 82, 4: 85,  # Jan
+        5: 88, 6: 85, 7: 80, 8: 75,  # Feb
+        9: 70, 10: 72, 11: 78, 12: 82, 13: 85,  # Mar
+        14: 80, 15: 75, 16: 70, 17: 65,  # Apr
+        18: 58, 19: 52, 20: 48, 21: 45,  # May - sell in May
+        22: 48, 23: 52, 24: 55, 25: 58, 26: 62,  # Jun
+        27: 65, 28: 68, 29: 72, 30: 75,  # Jul
+        31: 78, 32: 72, 33: 65, 34: 58,  # Aug
+        35: 52, 36: 48, 37: 52, 38: 55, 39: 58,  # Sep
+        40: 62, 41: 65, 42: 70, 43: 75,  # Oct
+        44: 72, 45: 68, 46: 65, 47: 60,  # Nov
+        48: 55, 49: 52, 50: 55, 51: 52, 52: 50  # Dec
+    },
+    2026: {
+        # Projected cycle - bullish first half, distribution second half
+        1: 55, 2: 62, 3: 68, 4: 75,  # Jan - bull continuation
+        5: 85, 6: 88, 7: 78, 8: 72,  # Feb - euphoria then pullback
+        9: 68, 10: 65, 11: 72, 12: 78, 13: 85,  # Mar
+        14: 88, 15: 92, 16: 95, 17: 82,  # Apr - altseason peak
+        18: 75, 19: 58, 20: 52, 21: 42,  # May - correction
+        22: 48, 23: 52, 24: 58, 25: 62, 26: 68,  # Jun - recovery
+        27: 72, 28: 78, 29: 85, 30: 90,  # Jul - summer rally
+        31: 88, 32: 85, 33: 72, 34: 65,  # Aug - distribution starts
+        35: 58, 36: 48, 37: 52, 38: 50, 39: 55,  # Sep
+        40: 58, 41: 62, 42: 68, 43: 72,  # Oct - Q4 attempt
+        44: 75, 45: 68, 46: 62, 47: 55,  # Nov - late cycle
+        48: 48, 49: 45, 50: 42, 51: 40, 52: 38  # Dec - year-end caution
+    }
+}
+
+# Sentiment-based trading adjustments
+SENTIMENT_ADJUSTMENTS = {
+    "extreme_fear": {  # 0-24
+        "position_size_multiplier": 1.3,  # Buy more in fear
+        "entry_threshold_modifier": -2,  # Lower threshold to enter
+        "take_profit_modifier": 1.5,  # Higher targets
+        "signal": "STRONG_BUY",
+        "description": "Extreme fear - historically optimal buying opportunity"
+    },
+    "fear": {  # 25-49
+        "position_size_multiplier": 1.1,
+        "entry_threshold_modifier": -1,
+        "take_profit_modifier": 1.2,
+        "signal": "BUY",
+        "description": "Fear - good accumulation zone"
+    },
+    "neutral": {  # 50
+        "position_size_multiplier": 1.0,
+        "entry_threshold_modifier": 0,
+        "take_profit_modifier": 1.0,
+        "signal": "HOLD",
+        "description": "Neutral - wait for clearer signals"
+    },
+    "greed": {  # 51-74
+        "position_size_multiplier": 0.9,
+        "entry_threshold_modifier": 1,
+        "take_profit_modifier": 0.9,
+        "signal": "HOLD",
+        "description": "Greed - be cautious, tighten stops"
+    },
+    "extreme_greed": {  # 75-100
+        "position_size_multiplier": 0.6,
+        "entry_threshold_modifier": 3,
+        "take_profit_modifier": 0.7,
+        "signal": "REDUCE",
+        "description": "Extreme greed - consider taking profits"
+    }
+}
+
+def get_sentiment_category(value: int) -> str:
+    """Get sentiment category from Fear & Greed value"""
+    if value <= 24:
+        return "extreme_fear"
+    elif value <= 49:
+        return "fear"
+    elif value == 50:
+        return "neutral"
+    elif value <= 74:
+        return "greed"
+    else:
+        return "extreme_greed"
+
+def get_weekly_sentiment(year: int, week: int) -> Dict[str, Any]:
+    """Get sentiment data for a specific week"""
+    sentiment_data = HISTORICAL_SENTIMENT_BY_YEAR.get(year, {})
+    value = sentiment_data.get(week, 50)  # Default to neutral
+    category = get_sentiment_category(value)
+    adjustments = SENTIMENT_ADJUSTMENTS[category]
+    
+    return {
+        "week": week,
+        "year": year,
+        "fear_greed_value": value,
+        "category": category,
+        "adjustments": adjustments,
+        "signal": adjustments["signal"],
+        "description": adjustments["description"]
+    }
+
 # Exportable regime parameters for live trading
 REGIME_PARAMS = {
     "bull_strong": {
