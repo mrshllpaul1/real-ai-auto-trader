@@ -63,6 +63,7 @@ def register_routes(api_router: APIRouter):
     from routes import telegram_notifications as telegram_routes
     from routes import portfolio_rebalance as rebalance_routes
     from routes import enhanced_data as enhanced_data_routes
+    from routes import mtf_training as mtf_training_routes
     
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
