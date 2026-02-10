@@ -335,7 +335,7 @@ const PositionManagement = () => {
                       <div className="p-3 rounded-lg bg-[#111] border border-[#1F1F1F]">
                         <p className="text-xs text-[#A1A1AA] mb-1">Position Value</p>
                         <p className="text-xl font-data font-bold text-white">
-                          ${(pos.current_value || pos.amount_usd || 0).toFixed(2)}
+                          ${(pos.usd_value || pos.current_value || pos.amount_usd || 0).toFixed(2)}
                         </p>
                       </div>
                       <div className={`p-3 rounded-lg border ${
@@ -343,7 +343,7 @@ const PositionManagement = () => {
                       }`}>
                         <p className="text-xs text-[#A1A1AA] mb-1">Unrealized P&L</p>
                         <p className={`text-xl font-data font-bold ${isProfit ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
-                          {isProfit ? '+' : ''}${pnlUsd.toFixed(2)}
+                          {isProfit ? '+' : ''}${(pos.pnl || pnlUsd || 0).toFixed(2)}
                         </p>
                       </div>
                     </div>
