@@ -7,6 +7,20 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+def extract_signal_name(signal: Any) -> str:
+    """
+    Helper function to extract signal name from various signal formats.
+    
+    Args:
+        signal: Can be a dict with 'signal' key or a string
+        
+    Returns:
+        String representation of the signal name
+    """
+    return signal.get('signal') if isinstance(signal, dict) else signal
+
+
 class AutoExecutionEngine:
     """
     Automatic trade execution engine that executes trades
@@ -126,8 +140,7 @@ class AutoExecutionEngine:
                 return False, f"Already have open position in {coin_id}"
         
         # Check signals match allowed signals
-        gem_signals = [s.get('signal') if isinstance(s, dict) else s 
-                      for s in gem.get('matching_signals', [])]
+        gem_signals = [extract_signal_name(s) for s in gem.get('matching_signals', [])]
         allowed = self.risk_profile.get('allowed_signals', [])
         if allowed and not any(s in allowed for s in gem_signals):
             return False, "No matching allowed signals"
@@ -376,15 +389,17 @@ class AutoExecutionEngine:
         losses = sum(1 for t in all_trades if t.get('profit_pct', 0) < 0)
         
         # Enhanced metrics
-        avg_win = sum(t.get('profit_pct', 0) for t in all_trades if t.get('profit_pct', 0) > 0) / wins if wins > 0 else 0
-        avg_loss = sum(t.get('profit_pct', 0) for t in all_trades if t.get('profit_pct', 0) < 0) / losses if losses > 0 else 0
-        profit_factor = abs(avg_win * wins / (avg_loss * losses)) if losses > 0 and avg_loss != 0 else 0
+        total_win_profit = sum(t.get('profit_pct', 0) for t in all_trades if t.get('profit_pct', 0) > 0)
+        total_loss_profit = sum(abs(t.get('profit_pct', 0)) for t in all_trades if t.get('profit_pct', 0) < 0)
+        avg_win = total_win_profit / wins if wins > 0 else 0
+        avg_loss = -total_loss_profit / losses if losses > 0 else 0
+        profit_factor = total_win_profit / total_loss_profit if total_loss_profit > 0 else 0
         
         # Signal performance breakdown
         signal_performance = {}
         for trade in all_trades:
             for signal in trade.get('signals', []):
-                signal_name = signal.get('signal') if isinstance(signal, dict) else signal
+                signal_name = extract_signal_name(signal)
                 if signal_name not in signal_performance:
                     signal_performance[signal_name] = {'wins': 0, 'losses': 0, 'total_profit': 0}
                 

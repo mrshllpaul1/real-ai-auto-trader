@@ -25,6 +25,9 @@ const AutoExecution = () => {
   const [signalAnalytics, setSignalAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   
+  // Constants
+  const DRAWDOWN_SCALE_FACTOR = 4; // Scale factor for drawdown visualization (drawdown * 4 = progress bar width)
+  
   // Use global trading mode context
   const { mode: globalMode, setMode, isRealMode } = useTradingMode();
   
@@ -115,6 +118,7 @@ const AutoExecution = () => {
       toast.execution.started(riskProfile.mode);
       await loadData();
     } catch (error) {
+      toast.dismiss(loadingId);
       toast.error('Failed to start execution engine');
     }
   };
@@ -169,6 +173,10 @@ const AutoExecution = () => {
       toast.execution.aiOptimized(res.data.optimizations_made?.length || 0);
       await loadData();
     } catch (error) {
+      toast.dismiss(loadingId);
+      toast.error('Strategy optimization failed');
+    }
+  };
       toast.dismiss();
       toast.error('Optimization failed');
     }
@@ -733,7 +741,7 @@ const AutoExecution = () => {
                           (status.analytics.max_drawdown_pct || 0) > 10 ? 'bg-[#FFB800]' :
                           'bg-[#00FF94]'
                         }`}
-                        style={{ width: `${Math.min((status.analytics.max_drawdown_pct || 0) * 4, 100)}%` }}
+                        style={{ width: `${Math.min((status.analytics.max_drawdown_pct || 0) * DRAWDOWN_SCALE_FACTOR, 100)}%` }}
                       />
                     </div>
                   </div>

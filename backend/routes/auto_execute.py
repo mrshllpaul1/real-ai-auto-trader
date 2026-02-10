@@ -358,6 +358,8 @@ async def get_performance_analytics(
 async def get_signal_analytics(executor = Depends(get_auto_executor)):
     """Get performance breakdown by signal type"""
     try:
+        from services.auto_execution import extract_signal_name
+        
         trades = await executor.db.auto_positions.find(
             {'status': 'CLOSED'}, 
             {'_id': 0}
@@ -366,7 +368,7 @@ async def get_signal_analytics(executor = Depends(get_auto_executor)):
         signal_stats = {}
         for trade in trades:
             for signal in trade.get('signals', []):
-                signal_name = signal.get('signal') if isinstance(signal, dict) else signal
+                signal_name = extract_signal_name(signal)
                 if signal_name not in signal_stats:
                     signal_stats[signal_name] = {
                         'total_trades': 0,
