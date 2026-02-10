@@ -442,6 +442,103 @@ async def get_funding_rates():
     return {"funding_rates": rates}
 
 
+@router.get("/account")
+async def get_perp_account(
+    user_id: str = "default_user",
+    db = Depends(get_database)
+):
+    """Get perpetual trading account with REAL Kraken balance"""
+    import os
+    
+    account_balance = 0
+    available_balance = 0
+    
+    # Try to get REAL balance from Kraken
+    kraken_api_key = os.getenv('KRAKEN_API_KEY')
+    kraken_api_secret = os.getenv('KRAKEN_API_SECRET')
+    
+    if kraken_api_key and kraken_api_secret:
+        try:
+            from services.kraken_service import KrakenAuthenticator, KrakenTradeService
+            auth = KrakenAuthenticator(kraken_api_key, kraken_api_secret)
+            kraken = KrakenTradeService(auth)
+            balance = await kraken.get_balance()
+            
+            # Sum up USD and stablecoin balances
+            for asset, amount in balance.items():
+                if asset in ['ZUSD', 'USD', 'USDT', 'USDC']:
+                    account_balance += float(amount)
+            
+            available_balance = account_balance
+        except Exception as e:
+            logger.warning(f"Failed to get Kraken balance: {e}")
+    
+    # Get positions to calculate margin used
+    positions = await db.perp_positions.find(
+        {"user_id": user_id, "status": "open"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    margin_used = sum(p.get("margin", 0) for p in positions)
+    unrealized_pnl = sum(p.get("unrealized_pnl", 0) for p in positions)
+    available_balance = max(0, account_balance - margin_used)
+    
+    # Calculate margin ratio
+    margin_ratio = (margin_used / account_balance * 100) if account_balance > 0 else 0
+    
+    return {
+        "account_balance": round(account_balance, 2),
+        "available_balance": round(available_balance, 2),
+        "margin_used": round(margin_used, 2),
+        "unrealized_pnl": round(unrealized_pnl, 2),
+        "margin_ratio": round(margin_ratio, 2),
+        "data_source": "kraken_live" if kraken_api_key else "database"
+    }
+
+
+@router.get("/history")
+async def get_perp_history(
+    user_id: str = "default_user",
+    db = Depends(get_database)
+):
+    """Get perpetual trading history"""
+    closed_positions = await db.perp_positions.find(
+        {"user_id": user_id, "status": "closed"},
+        {"_id": 0}
+    ).sort("closed_at", -1).limit(50).to_list(50)
+    
+    # Calculate stats
+    if closed_positions:
+        total_pnl = sum(p.get("realized_pnl", 0) for p in closed_positions)
+        wins = len([p for p in closed_positions if p.get("realized_pnl", 0) > 0])
+        win_rate = round(wins / len(closed_positions) * 100, 1)
+    else:
+        total_pnl = 0
+        win_rate = 0
+    
+    # Format trades for display
+    trades = []
+    for p in closed_positions:
+        trades.append({
+            "position_id": p.get("position_id"),
+            "symbol": p.get("symbol"),
+            "side": p.get("side"),
+            "entry_price": p.get("entry_price"),
+            "close_price": p.get("exit_price"),
+            "realized_pnl": p.get("realized_pnl", 0),
+            "closed_at": p.get("closed_at")
+        })
+    
+    return {
+        "trades": trades,
+        "stats": {
+            "total_trades": len(trades),
+            "total_pnl": round(total_pnl, 2),
+            "win_rate": win_rate
+        }
+    }
+
+
 # =============================================================================
 # CALCULATORS
 # =============================================================================
