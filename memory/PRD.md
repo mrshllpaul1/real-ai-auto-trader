@@ -7,6 +7,46 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ## Session Update - Feb 10, 2026 (Latest)
 
+### ✅ COMPLETED: Tab URL Persistence & Lazy Loading
+
+**Implemented:**
+- **URL Persistence**: All hub pages now support deep-linking via `?tab=xxx` parameter
+  - Example: `/trading?tab=portfolio` opens directly to Portfolio tab
+  - Example: `/news?tab=triggers` opens directly to Triggers tab
+  - Tab state syncs with URL - browser back/forward navigation works
+- **Lazy Loading**: Tab content loads on-demand for better performance
+  - Uses `React.lazy()` and `React.Suspense`
+  - Loading skeleton shown while content loads
+  - Reduces initial page load time
+- **useTabState Hook**: Reusable hook for URL-synced tab state
+
+**Files Updated:**
+- `frontend/src/components/HubNavigation.jsx` - Added useTabState hook, LazyTabContent component
+- `frontend/src/pages/TradingHub.jsx` - Lazy loading + URL persistence
+- `frontend/src/pages/AIHub.jsx` - Lazy loading + URL persistence
+- `frontend/src/pages/BacktestHub.jsx` - Lazy loading + URL persistence
+- `frontend/src/pages/NewsHub.jsx` - Lazy loading + URL persistence
+- `frontend/src/pages/ScannerHub.jsx` - Lazy loading + URL persistence
+- `frontend/src/pages/DeFiHub.jsx` - Lazy loading + URL persistence
+- `frontend/src/pages/SettingsHub.jsx` - Lazy loading + URL persistence
+
+### ✅ FIXED: SpotTrading Data Loading Issue
+
+**Issue:** SpotTrading page intermittently showed "No crypto holdings" despite API working.
+
+**Root Cause:** 
+- Page was using `process.env.REACT_APP_BACKEND_URL` which doesn't work in Vite
+- Should use `import.meta.env.VITE_BACKEND_URL`
+- This caused API calls to return the frontend HTML instead of JSON data
+
+**Fix Applied:**
+- Changed `SpotTrading.jsx` line 9 to: `const API_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || ''`
+- Added detailed console logging for debugging
+- Implemented staggered API calls to reduce rate-limiting risk
+
+**Files Modified:**
+- `frontend/src/pages/SpotTrading.jsx`
+
 ### ✅ MAJOR REFACTOR: Consolidated 46 Pages into 8 Hub Pages
 
 **Before:** 46 separate pages in sidebar (overwhelming)
