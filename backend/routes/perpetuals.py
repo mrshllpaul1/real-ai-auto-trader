@@ -614,6 +614,74 @@ async def calculate_potential_pnl(
     }
 
 
+@router.post("/calculator")
+async def position_calculator(
+    symbol: str,
+    side: str,
+    entry_price: float,
+    size_usd: float,
+    leverage: float,
+    take_profit: Optional[float] = None,
+    stop_loss: Optional[float] = None
+):
+    """Full position calculator with REAL market prices"""
+    # Get real price if entry_price not provided
+    if not entry_price:
+        entry_price = await get_real_perp_price(symbol)
+        if entry_price is None:
+            raise HTTPException(status_code=503, detail="Unable to fetch real market price")
+    
+    # Calculate position details
+    margin_required = size_usd
+    notional_value = size_usd * leverage
+    size_coin = notional_value / entry_price
+    
+    # Liquidation price
+    if side == "long":
+        liq_price = entry_price * (1 - (1 / leverage) + 0.005)
+    else:
+        liq_price = entry_price * (1 + (1 / leverage) - 0.005)
+    
+    result = {
+        "symbol": symbol,
+        "side": side,
+        "entry_price": entry_price,
+        "size_usd": size_usd,
+        "size_coin": round(size_coin, 6),
+        "leverage": leverage,
+        "margin_required": round(margin_required, 2),
+        "notional_value": round(notional_value, 2),
+        "liquidation_price": round(liq_price, 2)
+    }
+    
+    # Calculate TP/SL if provided
+    if take_profit:
+        if side == "long":
+            tp_pnl = (take_profit - entry_price) / entry_price * size_usd * leverage
+        else:
+            tp_pnl = (entry_price - take_profit) / entry_price * size_usd * leverage
+        tp_roe = tp_pnl / size_usd * 100
+        result["take_profit"] = {
+            "price": take_profit,
+            "pnl": round(tp_pnl, 2),
+            "roe": round(tp_roe, 2)
+        }
+    
+    if stop_loss:
+        if side == "long":
+            sl_pnl = (stop_loss - entry_price) / entry_price * size_usd * leverage
+        else:
+            sl_pnl = (entry_price - stop_loss) / entry_price * size_usd * leverage
+        sl_roe = sl_pnl / size_usd * 100
+        result["stop_loss"] = {
+            "price": stop_loss,
+            "pnl": round(sl_pnl, 2),
+            "roe": round(sl_roe, 2)
+        }
+    
+    return result
+
+
 @router.get("/leaderboard")
 async def get_perp_leaderboard(db = Depends(get_database)):
     """Get perpetual trading leaderboard"""
