@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend environment
-BASE_URL = "https://winrate-booster.preview.emergentagent.com/api"
+BASE_URL = "https://test-win-progress.preview.emergentagent.com/api"
 
 class EnhancedDataTester:
     def __init__(self):

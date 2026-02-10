@@ -18,7 +18,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Any, Optional
 
 # Use production URL from environment
-BACKEND_URL = "https://winrate-booster.preview.emergentagent.com/api"
+BACKEND_URL = "https://test-win-progress.preview.emergentagent.com/api"
 print(f"🔗 Testing Hardened Hidden Gem Prediction at: {BACKEND_URL}")
 
 class HardenedGemTester:
