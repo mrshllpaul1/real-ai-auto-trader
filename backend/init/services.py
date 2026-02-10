@@ -462,7 +462,7 @@ async def _init_phase6_scheduling(db):
                 seed_result = await events_db.seed_major_events()
                 logger.info("🌐 Seeded historical events database with %s curated events", seed_result.get("total_events"))
         except Exception as e:
-            logger.warning(f"⚠️ Auto-seed of historical events skipped: {e}")
+            logger.warning("⚠️ Auto-seed of historical events skipped: %s", e)
     
     # Event Triggers
     trigger_service = get_event_trigger_service(
