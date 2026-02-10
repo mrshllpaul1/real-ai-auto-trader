@@ -482,6 +482,11 @@ async def _init_phase6_scheduling(db):
     _services['onchain_metrics'] = onchain_service
     _services['mtf_historical'] = mtf_service
     
+    # MTF Training Service
+    from services.mtf_training_service import get_mtf_training_service
+    mtf_training_service = get_mtf_training_service(db)
+    _services['mtf_training'] = mtf_training_service
+    
     logger.info("✅ Phase 6: Scheduling and data services initialized")
 
 
