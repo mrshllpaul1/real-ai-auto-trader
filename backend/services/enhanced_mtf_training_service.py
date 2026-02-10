@@ -476,11 +476,13 @@ class EnhancedMTFTrainingService:
             
             # Calculate per-class metrics
             class_metrics = {}
+            label_names = {-1: "sell", 0: "hold", 1: "buy"}
             for label in [-1, 0, 1]:
                 mask = y_train == label
                 if np.sum(mask) > 0:
                     class_acc = np.mean(predictions[mask] == y_train[mask])
-                    class_metrics[label] = {
+                    class_metrics[label_names[label]] = {
+                        "label": label,
                         "count": int(np.sum(mask)),
                         "accuracy": float(class_acc)
                     }
