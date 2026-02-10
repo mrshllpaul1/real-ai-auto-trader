@@ -541,7 +541,7 @@ async def deactivate_live_trading():
     
     _live_trading_active = False
     
-    if _db and _live_trading_config:
+    if _db is not None and _live_trading_config:
         await _db.adaptive_live_trading.update_one(
             {"type": "config"},
             {"$set": {"enabled": False, "deactivated_at": datetime.now(timezone.utc).isoformat()}}
