@@ -738,14 +738,23 @@ async def get_ai_recommendations():
                 
                 # Extract composite signal data
                 composite = signals.get('composite', {})
-                scores = signals.get('scores', {})
+                components = signals.get('components', {})
+                
+                # Extract scores from components (each component has a 'score' key)
+                component_scores = {
+                    "order_book": components.get('order_book', {}).get('score', 50),
+                    "on_chain": components.get('on_chain', {}).get('score', 50),
+                    "social": components.get('social', {}).get('score', 50),
+                    "cross_asset": components.get('cross_asset', {}).get('score', 50),
+                    "advanced_ta": components.get('advanced_ta', {}).get('score', 50)
+                }
                 
                 # Determine recommendation based on signal
                 signal = composite.get('signal', 'hold')
-                if signal == 'buy':
-                    recommendation = 'Buy'
-                elif signal == 'sell':
-                    recommendation = 'Sell'
+                if signal in ['buy', 'strong_buy']:
+                    recommendation = 'Buy' if signal == 'buy' else 'Strong Buy'
+                elif signal in ['sell', 'strong_sell']:
+                    recommendation = 'Sell' if signal == 'sell' else 'Strong Sell'
                 else:
                     recommendation = 'Hold'
                 
@@ -758,13 +767,7 @@ async def get_ai_recommendations():
                     "confidence": composite.get('confidence', 0),
                     "recommendation": recommendation,
                     "models_used": composite.get('models_used', 0),
-                    "components": {
-                        "order_book": scores.get('order_book', 50),
-                        "on_chain": scores.get('on_chain', 50),
-                        "social": scores.get('social', 50),
-                        "cross_asset": scores.get('cross_asset', 50),
-                        "advanced_ta": scores.get('advanced_ta', 50)
-                    }
+                    "components": component_scores
                 })
         except Exception as e:
             logger.warning(f"AI recommendation error for {symbol}: {e}")
