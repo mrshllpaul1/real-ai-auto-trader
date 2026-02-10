@@ -153,6 +153,7 @@ def register_routes(api_router: APIRouter):
     api_router.include_router(telegram_routes.router, tags=["Telegram Notifications"])
     api_router.include_router(rebalance_routes.router, tags=["Portfolio Rebalancing"])
     api_router.include_router(enhanced_data_routes.router, tags=["Enhanced Data Services"])
+    api_router.include_router(mtf_training_routes.router, tags=["MTF Training"])
     
     logger.info("✅ All routes registered")
     
