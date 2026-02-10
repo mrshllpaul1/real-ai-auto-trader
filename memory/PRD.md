@@ -47,19 +47,58 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 **Files Modified:**
 - `frontend/src/pages/SpotTrading.jsx`
 
-### ✅ FIXED: Positions Page Hardcoded P&L
+### ✅ NEW: Backend Caching for Kraken API
 
-**Issue:** All positions showed identical +5.26% gain regardless of actual performance.
+**Implemented:**
+- **KrakenCacheService** (`/backend/services/kraken_cache_service.py`):
+  - Caches balance data (30-second TTL)
+  - Caches ticker data (5-second TTL)
+  - Caches batch ticker requests
+  - Lock mechanism to prevent thundering herd
+  - Cache statistics tracking (hits, misses, hit rate)
+  - Automatic cache invalidation after trades
+- **New API Endpoints**:
+  - `GET /api/spot/cache-stats` - View cache performance
+  - `POST /api/spot/cache-invalidate` - Manually clear cache
 
-**Root Cause:** P&L was hardcoded in the position calculation logic.
+**Benefits:**
+- Reduces Kraken API rate limiting errors
+- Improves response times for frequently accessed data
+- Balance cached for 30s, tickers for 5s
+
+### ✅ NEW: Real Entry Price Tracking for Accurate P&L
+
+**Implemented:**
+- **EntryPriceTracker** (`/backend/services/entry_price_tracker.py`):
+  - Records entry prices when trades are executed
+  - Calculates weighted average for DCA positions
+  - Tracks realized P&L on sells
+  - Stores trade history per position
+  - Archives closed positions
+- **New API Endpoints**:
+  - `GET /api/spot/entry-prices` - Get all entry prices
+  - `GET /api/spot/entry-prices/{symbol}` - Get entry for specific symbol
+  - `POST /api/spot/entry-prices/{symbol}` - Manually set entry price
+  - `DELETE /api/spot/entry-prices/{symbol}` - Delete entry record
+  - `GET /api/spot/portfolio-pnl` - Full portfolio P&L summary
+- **Updated Balance API**: Now returns entry price data when available
+- **Frontend Update**: Position Manager shows "Tracked" badge for real entry prices, falls back to 24h P&L when no entry data
+
+**How Entry Prices Work:**
+1. When you BUY through the app, entry price is automatically recorded
+2. DCA purchases calculate weighted average entry price
+3. SELLs track realized P&L against entry price
+4. Can manually set entry prices for existing positions
+
+### ✅ FIXED: Positions Page P&L Calculation
+
+**Previous Issue:** All positions showed identical +5.26% gain (hardcoded).
 
 **Fix Applied:**
-- Now uses actual 24h change data from Kraken API
-- Labels updated to clarify "24h P&L" timeframe
-- "Entry Price" renamed to "Price 24h Ago" for accuracy
-
-**Files Modified:**
-- `frontend/src/pages/PositionManagement.jsx`
+- Uses real entry price data when available (shows "Tracked" badge)
+- Falls back to actual 24h price change data when no entry recorded
+- Labels clearly indicate data source ("Entry Price" vs "Price 24h Ago")
+- P&L labels show "Unrealized P&L" vs "24h P&L" appropriately
 
 ### ✅ NEW: Market Sentiment Integration for Adaptive Backtest
 
