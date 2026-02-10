@@ -426,7 +426,7 @@ async def close_option_position(
     user_id: str = "default_user",
     db = Depends(get_database)
 ):
-    """Close an option position"""
+    """Close an option position with REAL market prices"""
     position = await db.option_positions.find_one({
         "position_id": position_id,
         "user_id": user_id,
@@ -436,9 +436,10 @@ async def close_option_position(
     if not position:
         raise HTTPException(status_code=404, detail="Position not found")
     
-    # Calculate final P&L
-    current_prices = {"BTC": 45000, "ETH": 2500, "SOL": 100}
-    current_price = current_prices.get(position["symbol"], 1000)
+    # Calculate final P&L with REAL price
+    current_price = await get_real_price(position["symbol"])
+    if current_price is None:
+        current_price = position.get("entry_price", 0)
     
     expiry = datetime.fromisoformat(position["expiry_date"].replace('Z', '+00:00'))
     days_to_expiry = max((expiry - datetime.now(timezone.utc)).days, 0)
