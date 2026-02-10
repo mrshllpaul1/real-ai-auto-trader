@@ -827,7 +827,7 @@ const AILearningLoop = () => {
                                 : 'bg-[#1F1F1F]'
                           }`}>
                             {pred.verified ? (
-                              pred.accuracy_score >= 0.5 
+                              (pred.accuracy_score || 0) >= 0.5 
                                 ? <CheckCircle size={20} className="text-[#00FF94]" />
                                 : <XCircle size={20} className="text-[#FF0055]" />
                             ) : (
