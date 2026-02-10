@@ -485,8 +485,8 @@ const AILearningLoop = () => {
                           </div>
                           <div className="flex items-center gap-4">
                             <div className="text-right">
-                              <div className={`text-2xl font-data font-bold ${getAccuracyColor(model.accuracy)}`}>
-                                {model.accuracy.toFixed(1)}%
+                              <div className={`text-2xl font-data font-bold ${getAccuracyColor(model?.accuracy || 0)}`}>
+                                {(model?.accuracy || 0).toFixed(1)}%
                               </div>
                               <Badge className={badge.color}>{badge.label}</Badge>
                             </div>
