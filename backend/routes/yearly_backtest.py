@@ -2,15 +2,17 @@
 Yearly Adaptive Backtest API Routes
 ====================================
 API endpoints for running comprehensive yearly backtests with weekly adaptation.
-Supports years 2020-2025.
+Supports years 2020-2026.
+Includes Live Trading activation based on proven strategy parameters.
 """
 
 import logging
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +22,8 @@ router = APIRouter(prefix="/yearly-backtest", tags=["Yearly Adaptive Backtest"])
 _db = None
 _running_backtests = {}
 _backtest_results = {}
+_live_trading_active = False
+_live_trading_config = None
 
 
 def set_db(db):
