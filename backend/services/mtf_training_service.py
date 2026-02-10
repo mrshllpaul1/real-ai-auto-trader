@@ -411,12 +411,11 @@ class MTFTrainingService:
             le = LabelEncoder()
             y_encoded = le.fit_transform(y)
             
-            # Train model
+            # Train model - removed multi_class parameter for sklearn 1.5+ compatibility
             model = LogisticRegression(
                 max_iter=epochs * 10,
                 C=1.0 / learning_rate,
-                random_state=42,
-                multi_class='multinomial'
+                random_state=42
             )
             model.fit(X, y_encoded)
             
