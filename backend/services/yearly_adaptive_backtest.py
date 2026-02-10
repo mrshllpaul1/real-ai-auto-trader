@@ -764,10 +764,15 @@ class YearlyBacktestEngine:
                     signal = generate_trading_signal(indicators, self.strategy.params)
                     
                     if signal["signal"] == "buy" and signal["strength"] > 0.5:
-                        # Calculate position size
+                        # Calculate position size - dynamic based on capital
                         position_size = self.capital * (self.strategy.params["position_size_pct"] / 100)
                         
-                        if position_size > 100 and position_size <= self.capital * 0.3:
+                        # Dynamic minimum: 1% of initial capital or $10, whichever is higher
+                        min_position = max(10, self.initial_capital * 0.01)
+                        # Maximum position: 20% of current capital
+                        max_position = self.capital * 0.20
+                        
+                        if position_size >= min_position and position_size <= max_position and self.capital > position_size:
                             self.positions[coin] = {
                                 "entry_price": prices[day],
                                 "size": position_size,
