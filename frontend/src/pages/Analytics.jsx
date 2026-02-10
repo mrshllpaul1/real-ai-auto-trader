@@ -41,7 +41,7 @@ const Analytics = () => {
         timeoutPromise(tradingAPI.getTradeHistory('all', 50), 8000).catch(() => ({ data: { trades: [] } })),
         timeoutPromise(api.get('/growth/stats'), 8000).catch(() => ({ data: {} })),
         timeoutPromise(api.get('/growth/positions?status=OPEN'), 8000).catch(() => ({ data: { positions: [] } })),
-        timeoutPromise(api.get('/trading/balance'), 8000).catch(() => ({ data: null })),
+        timeoutPromise(api.get('/spot/balance'), 8000).catch(() => ({ data: null })),
         timeoutPromise(api.get('/budget/'), 8000).catch(() => ({ data: null })),
         timeoutPromise(api.get('/trading/kraken/trades?limit=50'), 8000).catch(() => ({ data: { trades: [] } }))
       ]);
