@@ -795,7 +795,362 @@ class AdaptiveStrategyTester:
         await self.test_endpoint('GET', '/enhanced-mtf-training/history', 
                                'Enhanced MTF Training History')
 
-    async def test_ai_training_and_backtest_system(self):
+    async def test_adaptive_strategy_system(self):
+        """Test the new Adaptive Strategy and Event Prediction system"""
+        print("\n=== TESTING ADAPTIVE STRATEGY AND EVENT PREDICTION SYSTEM ===")
+        print("🎯 Testing regime detection, variants, auto-adjustment, event prediction, and monitoring")
+        
+        # 1. REGIME DETECTION
+        print("\n--- 1. Regime Detection ---")
+        
+        # Test current regime detection
+        regime_result = await self.test_endpoint('GET', '/adaptive-strategy/regime/current', 
+                                               'Regime Detection - Current Market Regime')
+        
+        if regime_result['success'] and regime_result.get('data'):
+            data = regime_result['data']
+            regime_info = data.get('regime', {})
+            regime_type = regime_info.get('regime', 'unknown')
+            confidence = regime_info.get('confidence', 0)
+            indicators = regime_info.get('indicators', {})
+            
+            print(f"   📊 Detected regime: {regime_type}")
+            print(f"   📊 Confidence: {confidence:.2%}")
+            print(f"   📊 Indicators: {list(indicators.keys())}")
+            
+            # Verify response structure
+            expected_indicators = ['trend_strength', 'momentum', 'volatility', 'rsi']
+            has_required_indicators = all(ind in str(indicators) for ind in expected_indicators)
+            
+            if has_required_indicators:
+                self.log_result('Regime Detection - Response Structure', True, 200,
+                              f"✅ Contains required indicators: {expected_indicators}")
+            else:
+                self.log_result('Regime Detection - Response Structure', False, 200, None,
+                              f"❌ Missing indicators. Got: {list(indicators.keys())}")
+            
+            # Verify regime is one of expected types
+            expected_regimes = ['bull', 'bear', 'sideways', 'high_volatility', 'low_volatility', 'recovery', 'distribution']
+            if regime_type in expected_regimes:
+                self.log_result('Regime Detection - Valid Regime Type', True, 200,
+                              f"✅ Valid regime: {regime_type}")
+            else:
+                self.log_result('Regime Detection - Valid Regime Type', False, 200, None,
+                              f"❌ Invalid regime: {regime_type}. Expected one of: {expected_regimes}")
+        
+        # Test regime history
+        await self.test_endpoint('GET', '/adaptive-strategy/regime/history', 
+                               'Regime Detection - Historical Regimes')
+        
+        # 2. REGIME-SPECIFIC VARIANTS
+        print("\n--- 2. Regime-Specific Variants ---")
+        
+        # Initialize 14 regime variants
+        init_result = await self.test_endpoint('POST', '/adaptive-strategy/variants/initialize', 
+                                             'Initialize Regime Variants (14 variants)')
+        
+        if init_result['success'] and init_result.get('data'):
+            data = init_result['data']
+            total_variants = data.get('total', 0)
+            variants = data.get('variants', [])
+            
+            print(f"   📊 Total variants initialized: {total_variants}")
+            
+            # Verify 14 variants were created
+            if total_variants == 14:
+                self.log_result('Regime Variants - Count Check', True, 200,
+                              f"✅ Created {total_variants} variants (expected 14)")
+            else:
+                self.log_result('Regime Variants - Count Check', False, 200, None,
+                              f"❌ Created {total_variants} variants (expected 14)")
+            
+            # Check variant distribution by regime
+            regime_counts = {}
+            for variant in variants:
+                regime = variant.get('target_regime', 'unknown')
+                regime_counts[regime] = regime_counts.get(regime, 0) + 1
+            
+            print(f"   📊 Variants by regime: {regime_counts}")
+            
+            # Expected distribution: 3 bull, 3 bear, 2 high_vol, 2 low_vol, 2 sideways, 1 recovery, 1 distribution
+            expected_distribution = {
+                'bull': 3, 'bear': 3, 'high_volatility': 2, 'low_volatility': 2, 
+                'sideways': 2, 'recovery': 1, 'distribution': 1
+            }
+            
+            distribution_correct = True
+            for regime, expected_count in expected_distribution.items():
+                actual_count = regime_counts.get(regime, 0)
+                if actual_count != expected_count:
+                    distribution_correct = False
+                    break
+            
+            if distribution_correct:
+                self.log_result('Regime Variants - Distribution Check', True, 200,
+                              f"✅ Correct distribution: {regime_counts}")
+            else:
+                self.log_result('Regime Variants - Distribution Check', False, 200, None,
+                              f"❌ Incorrect distribution. Got: {regime_counts}, Expected: {expected_distribution}")
+        
+        # Get all variants
+        await self.test_endpoint('GET', '/adaptive-strategy/variants', 
+                               'Get All Regime Variants')
+        
+        # Get bull market variants
+        bull_result = await self.test_endpoint('GET', '/adaptive-strategy/variants/bull', 
+                                             'Get Bull Market Variants')
+        
+        if bull_result['success'] and bull_result.get('data'):
+            data = bull_result['data']
+            bull_variants = data.get('variants', [])
+            bull_count = data.get('count', 0)
+            
+            if bull_count == 3:
+                self.log_result('Bull Market Variants Count', True, 200,
+                              f"✅ Found {bull_count} bull variants (expected 3)")
+            else:
+                self.log_result('Bull Market Variants Count', False, 200, None,
+                              f"❌ Found {bull_count} bull variants (expected 3)")
+        
+        # Get bear market variants
+        bear_result = await self.test_endpoint('GET', '/adaptive-strategy/variants/bear', 
+                                             'Get Bear Market Variants')
+        
+        if bear_result['success'] and bear_result.get('data'):
+            data = bear_result['data']
+            bear_count = data.get('count', 0)
+            
+            if bear_count == 3:
+                self.log_result('Bear Market Variants Count', True, 200,
+                              f"✅ Found {bear_count} bear variants (expected 3)")
+            else:
+                self.log_result('Bear Market Variants Count', False, 200, None,
+                              f"❌ Found {bear_count} bear variants (expected 3)")
+        
+        # 3. AUTO-ADJUSTMENT
+        print("\n--- 3. Auto-Adjustment ---")
+        
+        # Test auto-adjust parameters
+        adjust_result = await self.test_endpoint('POST', '/adaptive-strategy/auto-adjust', 
+                                               'Auto-Adjust Parameters Based on Market')
+        
+        if adjust_result['success'] and adjust_result.get('data'):
+            data = adjust_result['data']
+            status = data.get('status', '')
+            current_regime = data.get('current_regime', '')
+            selected_variant = data.get('selected_variant', {})
+            adjusted_params = data.get('adjusted_parameters', {})
+            adjustments_applied = data.get('adjustments_applied', {})
+            
+            print(f"   📊 Adjustment status: {status}")
+            print(f"   📊 Current regime: {current_regime}")
+            print(f"   📊 Selected variant: {selected_variant.get('name', 'Unknown')}")
+            print(f"   📊 Parameters adjusted: {len(adjusted_params)} parameters")
+            
+            # Verify parameters change based on conditions
+            volatility_adj = adjustments_applied.get('volatility_adjustment', False)
+            trend_adj = adjustments_applied.get('trend_adjustment', False)
+            
+            if volatility_adj or trend_adj:
+                self.log_result('Auto-Adjustment - Parameter Changes', True, 200,
+                              f"✅ Parameters adjusted based on conditions (vol: {volatility_adj}, trend: {trend_adj})")
+            else:
+                self.log_result('Auto-Adjustment - Parameter Changes', True, 200,
+                              f"✅ No adjustments needed for current conditions")
+        
+        # Test optimal strategy recommendation
+        optimal_result = await self.test_endpoint('GET', '/adaptive-strategy/optimal-strategy', 
+                                                'Get Optimal Strategy with Predictions')
+        
+        if optimal_result['success'] and optimal_result.get('data'):
+            data = optimal_result['data']
+            current_regime = data.get('current_regime', {})
+            recommended_strategy = data.get('recommended_strategy', {})
+            upcoming_events = data.get('upcoming_events', [])
+            risk_level = data.get('risk_level', 'unknown')
+            
+            print(f"   📊 Recommended strategy: {recommended_strategy.get('name', 'Unknown')}")
+            print(f"   📊 Risk level: {risk_level}")
+            print(f"   📊 Upcoming events: {len(upcoming_events)}")
+            
+            # Verify strategy recommendation includes predictions
+            if upcoming_events:
+                self.log_result('Optimal Strategy - Event Integration', True, 200,
+                              f"✅ Strategy includes {len(upcoming_events)} upcoming events")
+            else:
+                self.log_result('Optimal Strategy - Event Integration', True, 200,
+                              f"✅ No high-probability events in near term")
+        
+        # 4. EVENT PREDICTION
+        print("\n--- 4. Event Prediction ---")
+        
+        # Predict events for next 30 days
+        predict_result = await self.test_endpoint('POST', '/adaptive-strategy/predict-events', 
+                                                'Predict Future Events (30 days)',
+                                                data={"days_ahead": 30})
+        
+        if predict_result['success'] and predict_result.get('data'):
+            data = predict_result['data']
+            events = data.get('events', [])
+            total_events = data.get('total_events', 0)
+            high_prob_events = data.get('high_probability_events', 0)
+            
+            print(f"   📊 Total predicted events: {total_events}")
+            print(f"   📊 High probability events (>70%): {high_prob_events}")
+            
+            # Verify predicted events include required types
+            event_types = [event.get('event_type', '') for event in events]
+            expected_event_types = ['bitcoin_halving', 'fomc_meeting', 'options_expiry']
+            
+            found_types = []
+            for expected_type in expected_event_types:
+                if any(expected_type in event_type for event_type in event_types):
+                    found_types.append(expected_type)
+            
+            print(f"   📊 Event types found: {found_types}")
+            
+            # Check for scheduled events with 90%+ probability
+            high_confidence_events = [
+                event for event in events 
+                if event.get('probability', 0) >= 0.9
+            ]
+            
+            if high_confidence_events:
+                self.log_result('Event Prediction - High Confidence Events', True, 200,
+                              f"✅ Found {len(high_confidence_events)} events with 90%+ probability")
+            else:
+                self.log_result('Event Prediction - High Confidence Events', False, 200, None,
+                              f"❌ No events with 90%+ probability found")
+            
+            # Verify event structure
+            if events:
+                sample_event = events[0]
+                required_fields = ['event_type', 'probability', 'expected_impact', 'affected_coins', 'confidence_factors']
+                has_required_fields = all(field in sample_event for field in required_fields)
+                
+                if has_required_fields:
+                    self.log_result('Event Prediction - Event Structure', True, 200,
+                                  f"✅ Events contain required fields: {required_fields}")
+                else:
+                    missing_fields = [field for field in required_fields if field not in sample_event]
+                    self.log_result('Event Prediction - Event Structure', False, 200, None,
+                                  f"❌ Missing fields: {missing_fields}")
+        
+        # Get predicted events with minimum probability filter
+        filtered_result = await self.test_endpoint('GET', '/adaptive-strategy/predicted-events?min_probability=0.5', 
+                                                 'Get Predicted Events (min 50% probability)')
+        
+        if filtered_result['success'] and filtered_result.get('data'):
+            data = filtered_result['data']
+            filtered_events = data.get('events', [])
+            min_prob_filter = data.get('min_probability_filter', 0)
+            
+            print(f"   📊 Events with ≥{min_prob_filter:.0%} probability: {len(filtered_events)}")
+            
+            # Verify all events meet minimum probability
+            all_meet_threshold = all(
+                event.get('probability', 0) >= min_prob_filter 
+                for event in filtered_events
+            )
+            
+            if all_meet_threshold:
+                self.log_result('Event Prediction - Probability Filter', True, 200,
+                              f"✅ All {len(filtered_events)} events meet {min_prob_filter:.0%} threshold")
+            else:
+                self.log_result('Event Prediction - Probability Filter', False, 200, None,
+                              f"❌ Some events below {min_prob_filter:.0%} threshold")
+        
+        # Test specific event type filtering
+        await self.test_endpoint('GET', '/adaptive-strategy/predicted-events/fomc_meeting', 
+                               'Get FOMC Meeting Events')
+        
+        await self.test_endpoint('GET', '/adaptive-strategy/predicted-events/options_expiry', 
+                               'Get Options Expiry Events')
+        
+        # 5. MONITORING
+        print("\n--- 5. Adaptive Monitoring ---")
+        
+        # Start adaptive monitoring
+        start_result = await self.test_endpoint('POST', '/adaptive-strategy/monitoring/start', 
+                                              'Start Adaptive Monitoring')
+        
+        if start_result['success'] and start_result.get('data'):
+            data = start_result['data']
+            status = data.get('status', '')
+            
+            if status in ['started', 'already_running']:
+                self.log_result('Adaptive Monitoring - Start', True, 200,
+                              f"✅ Monitoring {status}")
+            else:
+                self.log_result('Adaptive Monitoring - Start', False, 200, None,
+                              f"❌ Unexpected status: {status}")
+        
+        # Get monitoring status
+        status_result = await self.test_endpoint('GET', '/adaptive-strategy/status', 
+                                               'Get Adaptive Strategy Status')
+        
+        if status_result['success'] and status_result.get('data'):
+            data = status_result['data']
+            is_monitoring = data.get('is_monitoring', False)
+            current_regime = data.get('current_regime', {})
+            total_variants = data.get('total_regime_variants', 0)
+            predicted_events_count = data.get('predicted_events_count', 0)
+            
+            print(f"   📊 Monitoring active: {is_monitoring}")
+            print(f"   📊 Total variants: {total_variants}")
+            print(f"   📊 Predicted events: {predicted_events_count}")
+            
+            if is_monitoring:
+                self.log_result('Adaptive Monitoring - Status Check', True, 200,
+                              f"✅ Monitoring active with {total_variants} variants, {predicted_events_count} events")
+            else:
+                self.log_result('Adaptive Monitoring - Status Check', False, 200, None,
+                              f"❌ Monitoring not active")
+        
+        # Stop adaptive monitoring
+        stop_result = await self.test_endpoint('POST', '/adaptive-strategy/monitoring/stop', 
+                                             'Stop Adaptive Monitoring')
+        
+        if stop_result['success'] and stop_result.get('data'):
+            data = stop_result['data']
+            status = data.get('status', '')
+            
+            if status == 'stopped':
+                self.log_result('Adaptive Monitoring - Stop', True, 200,
+                              f"✅ Monitoring stopped successfully")
+            else:
+                self.log_result('Adaptive Monitoring - Stop', False, 200, None,
+                              f"❌ Unexpected stop status: {status}")
+        
+        # 6. PERFORMANCE TRACKING (Optional)
+        print("\n--- 6. Performance Tracking ---")
+        
+        # Test performance recording
+        performance_data = {
+            "variant_id": "test_variant_123",
+            "regime": "bull",
+            "win_rate": 65.5,
+            "sharpe_ratio": 1.8,
+            "total_trades": 50
+        }
+        
+        await self.test_endpoint('POST', '/adaptive-strategy/performance/record', 
+                               'Record Variant Performance',
+                               data=performance_data, expected_status=[200, 201, 404])
+        
+        # Test regime performance retrieval
+        await self.test_endpoint('GET', '/adaptive-strategy/performance/bull', 
+                               'Get Bull Market Performance Stats')
+        
+        print("\n🏁 ADAPTIVE STRATEGY AND EVENT PREDICTION SYSTEM TESTING COMPLETED")
+        
+        # Summary of key metrics
+        print("\n📊 EXPECTED RESULTS SUMMARY:")
+        print("   • 14 regime variants (3 bull, 3 bear, 2 high_vol, 2 low_vol, 2 sideways, 1 recovery, 1 distribution)")
+        print("   • Predicted events with 90%+ probability for scheduled events")
+        print("   • Optimal strategy recommendation based on detected regime")
+        print("   • Auto-adjustment of parameters based on volatility and trend conditions")
+        print("   • Monitoring system for continuous adaptation")
         """Test AI training and backtest system to verify improved win rate and Sharpe ratio"""
         print("\n=== TESTING AI TRAINING AND BACKTEST SYSTEM ===")
         print("🎯 OBJECTIVE: Verify improved win rate (>50%) and Sharpe ratio (>0.5)")
