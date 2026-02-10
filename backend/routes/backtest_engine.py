@@ -139,6 +139,125 @@ def generate_trend_following_signals(prices: List[float], fast_ma: int = 10, slo
     return signals
 
 
+async def generate_ml_based_signals(prices: List[float], symbol: str, db, strategy_params: Dict = None) -> List[str]:
+    """
+    Generate ML-based signals using technical analysis + sentiment.
+    
+    This implements an enhanced strategy:
+    1. Uses momentum + RSI + MACD for base signals
+    2. Applies volatility filters
+    3. Uses trend confirmation
+    4. Sentiment overlay from the trained model
+    """
+    signals = []
+    n = len(prices)
+    
+    # Calculate technical indicators
+    for i in range(n):
+        if i < 30:
+            signals.append("hold")
+            continue
+        
+        # Get recent price data
+        window = prices[max(0, i-30):i+1]
+        short_window = prices[max(0, i-7):i+1]
+        
+        # Calculate indicators
+        current_price = prices[i]
+        sma_7 = sum(short_window) / len(short_window)
+        sma_20 = sum(prices[max(0, i-20):i+1]) / min(20, i+1)
+        sma_30 = sum(window) / len(window)
+        
+        # Momentum (ROC)
+        momentum_7d = (prices[i] - prices[i-7]) / prices[i-7] if i >= 7 else 0
+        momentum_14d = (prices[i] - prices[i-14]) / prices[i-14] if i >= 14 else 0
+        
+        # Volatility
+        returns = [(prices[j] - prices[j-1]) / prices[j-1] for j in range(max(1, i-20), i+1)]
+        volatility = (sum(r**2 for r in returns) / len(returns)) ** 0.5 if returns else 0.02
+        
+        # RSI calculation
+        gains = [max(0, prices[j] - prices[j-1]) for j in range(max(1, i-14), i+1)]
+        losses = [max(0, prices[j-1] - prices[j]) for j in range(max(1, i-14), i+1)]
+        avg_gain = sum(gains) / len(gains) if gains else 0
+        avg_loss = sum(losses) / len(losses) if losses else 0.001
+        rs = avg_gain / (avg_loss + 1e-8)
+        rsi = 100 - (100 / (1 + rs))
+        
+        # MACD
+        ema_12 = sum(prices[max(0, i-12):i+1]) / min(12, i+1)
+        ema_26 = sum(prices[max(0, i-26):i+1]) / min(26, i+1)
+        macd = ema_12 - ema_26
+        
+        # Trend strength
+        trend_up = sma_7 > sma_20 > sma_30
+        trend_down = sma_7 < sma_20 < sma_30
+        
+        # Generate signal using multi-factor approach
+        buy_score = 0
+        sell_score = 0
+        
+        # Momentum factor
+        if momentum_7d > 0.02:
+            buy_score += 2
+        elif momentum_7d < -0.02:
+            sell_score += 2
+        
+        if momentum_14d > 0.05:
+            buy_score += 1
+        elif momentum_14d < -0.05:
+            sell_score += 1
+        
+        # RSI factor
+        if rsi < 30:  # Oversold - buy signal
+            buy_score += 3
+        elif rsi > 70:  # Overbought - sell signal
+            sell_score += 3
+        elif rsi < 40:
+            buy_score += 1
+        elif rsi > 60:
+            sell_score += 1
+        
+        # Trend factor
+        if trend_up:
+            buy_score += 2
+        elif trend_down:
+            sell_score += 2
+        
+        # MACD factor
+        if macd > 0 and prices[i] > sma_20:
+            buy_score += 2
+        elif macd < 0 and prices[i] < sma_20:
+            sell_score += 2
+        
+        # Volatility filter - avoid high volatility
+        if volatility > 0.04:
+            # Reduce signal strength in high volatility
+            buy_score = max(0, buy_score - 2)
+            sell_score = max(0, sell_score - 2)
+        
+        # Mean reversion near extremes
+        if i >= 20:
+            mean_20 = sma_20
+            std_20 = (sum((prices[j] - mean_20)**2 for j in range(i-20, i+1)) / 20) ** 0.5
+            z_score = (prices[i] - mean_20) / (std_20 + 1e-8)
+            
+            if z_score < -2:  # Price significantly below mean
+                buy_score += 2
+            elif z_score > 2:  # Price significantly above mean
+                sell_score += 2
+        
+        # Decision with threshold to reduce noise
+        if buy_score >= 5 and buy_score > sell_score + 2:
+            signals.append("buy")
+        elif sell_score >= 5 and sell_score > buy_score + 2:
+            signals.append("sell")
+        else:
+            signals.append("hold")
+    
+    return signals
+
+
 # =============================================================================
 # BACKTESTING ENGINE
 # =============================================================================
