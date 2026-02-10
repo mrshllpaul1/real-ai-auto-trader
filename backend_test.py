@@ -455,15 +455,146 @@ class BackendTester:
         except Exception as e:
             self.log_result('Malformed JSON Test', True, None, None, f"Correctly rejected: {e}")
 
+    async def test_enhanced_data_api_endpoints(self):
+        """Test Enhanced Data API endpoints for historical data integration"""
+        print("\n=== TESTING ENHANCED DATA API ENDPOINTS ===")
+        
+        # 1. KRAKEN UNIVERSE ENDPOINTS
+        print("\n--- 1. Kraken Universe Endpoints ---")
+        await self.test_endpoint('GET', '/enhanced-data/kraken-universe/stats', 
+                               'Kraken Universe Stats')
+        
+        await self.test_endpoint('GET', '/enhanced-data/kraken-universe/coins', 
+                               'Kraken Universe All Coins')
+        
+        await self.test_endpoint('GET', '/enhanced-data/kraken-universe/unique-coins', 
+                               'Kraken Universe Unique Coins')
+        
+        await self.test_endpoint('GET', '/enhanced-data/kraken-universe/check-new', 
+                               'Kraken Universe Check New Coins')
+        
+        await self.test_endpoint('GET', '/enhanced-data/kraken-universe/coin/BTC', 
+                               'Kraken Universe BTC Pairs')
+        
+        await self.test_endpoint('GET', '/enhanced-data/kraken-universe/sync-now', 
+                               'Kraken Universe Sync Now')
+        
+        # 2. ON-CHAIN METRICS ENDPOINTS
+        print("\n--- 2. On-Chain Metrics Endpoints ---")
+        await self.test_endpoint('GET', '/enhanced-data/onchain/supported', 
+                               'On-Chain Supported Chains')
+        
+        await self.test_endpoint('GET', '/enhanced-data/onchain/btc/stats', 
+                               'On-Chain BTC Network Stats')
+        
+        await self.test_endpoint('GET', '/enhanced-data/onchain/eth/stats', 
+                               'On-Chain ETH Stats from Blockchair')
+        
+        await self.test_endpoint('GET', '/enhanced-data/onchain/BTC/whales?min_usd=1000000', 
+                               'On-Chain BTC Whale Transactions')
+        
+        await self.test_endpoint('GET', '/enhanced-data/onchain/btc/mempool', 
+                               'On-Chain BTC Mempool Stats')
+        
+        await self.test_endpoint('GET', '/enhanced-data/onchain/btc/fees', 
+                               'On-Chain BTC Fee Estimates')
+        
+        await self.test_endpoint('GET', '/enhanced-data/onchain/btc/difficulty', 
+                               'On-Chain BTC Difficulty Adjustment')
+        
+        await self.test_endpoint('GET', '/enhanced-data/onchain/BTC/comprehensive', 
+                               'On-Chain BTC Comprehensive Metrics')
+        
+        # Test batch fetch
+        batch_data = {"symbols": ["BTC", "ETH"]}
+        await self.test_endpoint('POST', '/enhanced-data/onchain/batch', 
+                               'On-Chain Batch Fetch Metrics', data=batch_data)
+        
+        # 3. MULTI-TIMEFRAME ENDPOINTS
+        print("\n--- 3. Multi-Timeframe Historical Data Endpoints ---")
+        await self.test_endpoint('GET', '/enhanced-data/multitimeframe/stats', 
+                               'Multi-Timeframe Storage Statistics')
+        
+        await self.test_endpoint('GET', '/enhanced-data/multitimeframe/BTC/features', 
+                               'Multi-Timeframe BTC Training Features')
+        
+        await self.test_endpoint('GET', '/enhanced-data/multitimeframe/BTC/1D', 
+                               'Multi-Timeframe BTC Daily OHLCV Data')
+        
+        await self.test_endpoint('GET', '/enhanced-data/multitimeframe/BTC/multi?timeframes=1h,4h,1D', 
+                               'Multi-Timeframe BTC Multi-Timeframe Data')
+        
+        await self.test_endpoint('GET', '/enhanced-data/multitimeframe/ETH/1h', 
+                               'Multi-Timeframe ETH Hourly Data')
+        
+        await self.test_endpoint('GET', '/enhanced-data/multitimeframe/BTC/features?timeframes=1h,4h', 
+                               'Multi-Timeframe BTC Features with Specific Timeframes')
+        
+        # Test download endpoints (background tasks)
+        await self.test_endpoint('POST', '/enhanced-data/multitimeframe/download/BTC?timeframes=1h,4h', 
+                               'Multi-Timeframe Download BTC Data (Background)', 
+                               expected_status=[200, 201, 202])
+        
+        await self.test_endpoint('GET', '/enhanced-data/multitimeframe/download-now/BTC?timeframes=1D', 
+                               'Multi-Timeframe Download BTC Data (Sync)')
+        
+        # Test backfill
+        backfill_data = {
+            "symbols": ["BTC", "ETH"],
+            "timeframes": ["1h", "4h"],
+            "max_days": 30
+        }
+        await self.test_endpoint('POST', '/enhanced-data/multitimeframe/backfill', 
+                               'Multi-Timeframe Backfill Historical Data', 
+                               data=backfill_data, expected_status=[200, 201, 202])
+        
+        # 4. DATA PROVIDER KEYS ENDPOINTS
+        print("\n--- 4. Data Provider API Keys Endpoints ---")
+        await self.test_endpoint('GET', '/enhanced-data/provider-keys/status', 
+                               'Data Provider Keys Status')
+        
+        # Test saving provider keys (with dummy data)
+        provider_keys_data = {
+            "blockchair_api_key": "test_blockchair_key_123",
+            "glassnode_api_key": "test_glassnode_key_456"
+        }
+        await self.test_endpoint('POST', '/enhanced-data/provider-keys/save', 
+                               'Save Data Provider Keys', 
+                               data=provider_keys_data)
+        
+        # 5. OVERALL STATUS ENDPOINT
+        print("\n--- 5. Enhanced Data Overall Status ---")
+        await self.test_endpoint('GET', '/enhanced-data/status', 
+                               'Enhanced Data Overall Service Status')
+        
+        # 6. ADDITIONAL KRAKEN UNIVERSE ENDPOINTS
+        print("\n--- 6. Additional Kraken Universe Features ---")
+        sync_data = {"force": True}
+        await self.test_endpoint('POST', '/enhanced-data/kraken-universe/sync', 
+                               'Kraken Universe Background Sync', 
+                               data=sync_data, expected_status=[200, 201, 202])
+        
+        # Test with different quote currencies
+        await self.test_endpoint('GET', '/enhanced-data/kraken-universe/coins?quote_currency=EUR', 
+                               'Kraken Universe EUR Pairs')
+        
+        # 7. ON-CHAIN HISTORICAL DATA
+        print("\n--- 7. On-Chain Historical Data ---")
+        await self.test_endpoint('POST', '/enhanced-data/onchain/BTC/snapshot', 
+                               'Store BTC On-Chain Metrics Snapshot')
+        
+        await self.test_endpoint('GET', '/enhanced-data/onchain/BTC/history?days=7&limit=10', 
+                               'Get BTC On-Chain Historical Metrics')
+
     async def run_all_tests(self):
         """Run all test suites"""
-        print(f"🚀 Starting Backend API Tests - 8 ENHANCEMENTS VERIFICATION")
+        print(f"🚀 Starting Backend API Tests - ENHANCED DATA API TESTING")
         print(f"📡 Testing Backend URL: {BASE_URL}")
         print(f"👤 User ID: {USER_ID}")
         print("=" * 60)
         
-        # Run test suites - prioritize 8 enhancements verification
-        await self.test_8_enhancements_verification()
+        # Run test suites - prioritize Enhanced Data API testing
+        await self.test_enhanced_data_api_endpoints()
         await self.test_health_endpoints()
         await self.test_tethys_trading_engine()
         await self.test_event_triggers_system()
