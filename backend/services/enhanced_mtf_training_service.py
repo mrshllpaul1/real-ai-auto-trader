@@ -97,6 +97,95 @@ class EnhancedMTFTrainingService:
         from services.social_sentiment import get_sentiment_scraper
         return get_sentiment_scraper(self.db)
     
+    # ==================== KRAKEN UNIVERSE ====================
+    
+    async def fetch_all_kraken_coins(self, force_refresh: bool = False) -> List[str]:
+        """
+        Fetch all available coins from Kraken exchange.
+        Returns list of unique coin symbols that have USD/USDT pairs.
+        """
+        # Check cache first
+        if self._all_kraken_coins and not force_refresh:
+            return self._all_kraken_coins
+        
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    "https://api.kraken.com/0/public/AssetPairs",
+                    timeout=aiohttp.ClientTimeout(total=30)
+                ) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        pairs = data.get('result', {})
+                        
+                        coins = set()
+                        for pair_name, pair_data in pairs.items():
+                            base = pair_data.get('base', '')
+                            quote = pair_data.get('quote', '')
+                            
+                            # Filter for USD/USDT pairs only
+                            if quote in ['ZUSD', 'USD', 'USDT']:
+                                # Clean base symbol (remove X/Z prefixes)
+                                clean_base = base
+                                if base.startswith('X') and len(base) > 3:
+                                    clean_base = base[1:]
+                                elif base.startswith('Z') and len(base) > 3:
+                                    clean_base = base[1:]
+                                coins.add(clean_base)
+                        
+                        # Sort and cache
+                        self._all_kraken_coins = sorted(list(coins))
+                        
+                        # Store in database for persistence
+                        await self.db.kraken_coin_universe.update_one(
+                            {"type": "all_coins"},
+                            {"$set": {
+                                "coins": self._all_kraken_coins,
+                                "count": len(self._all_kraken_coins),
+                                "updated_at": datetime.now(timezone.utc)
+                            }},
+                            upsert=True
+                        )
+                        
+                        logger.info(f"📊 Fetched {len(self._all_kraken_coins)} coins from Kraken")
+                        return self._all_kraken_coins
+                        
+        except Exception as e:
+            logger.error(f"Failed to fetch Kraken coins: {e}")
+            
+            # Try to load from database cache
+            cached = await self.db.kraken_coin_universe.find_one({"type": "all_coins"})
+            if cached:
+                self._all_kraken_coins = cached.get('coins', [])
+                return self._all_kraken_coins
+        
+        # Fallback to default coins
+        return self.DEFAULT_COINS
+    
+    async def get_kraken_universe_stats(self) -> Dict[str, Any]:
+        """Get statistics about the Kraken coin universe"""
+        coins = await self.fetch_all_kraken_coins()
+        
+        # Check how many have OHLCV data
+        mtf_service = await self.get_mtf_service()
+        coins_with_data = 0
+        
+        if mtf_service:
+            for coin in coins[:50]:  # Sample check
+                try:
+                    data = await mtf_service.get_ohlc_data(coin, "1D", limit=1)
+                    if data.get("count", 0) > 0:
+                        coins_with_data += 1
+                except:
+                    pass
+        
+        return {
+            "total_coins": len(coins),
+            "sample_coins": coins[:20],
+            "coins_with_data": coins_with_data,
+            "data_coverage_sample": f"{coins_with_data}/50"
+        }
+    
     # ==================== DATA DOWNLOAD ====================
     
     async def download_ohlcv_data(
