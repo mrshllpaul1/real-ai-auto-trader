@@ -11,6 +11,7 @@ import useTradingPairs from '../hooks/useTradingPairs';
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.REACT_APP_BACKEND_URL || '');
 
 const AdvancedOrders = () => {
+  const { pairs: tradingPairs } = useTradingPairs();
   const [activeTab, setActiveTab] = useState('trailing');
   const [trailingStops, setTrailingStops] = useState([]);
   const [dcaBots, setDcaBots] = useState([]);
