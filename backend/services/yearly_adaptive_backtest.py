@@ -887,7 +887,8 @@ class YearlyBacktestEngine:
         
         return {
             "status": "completed",
-            "backtest_period": "2025-01-01 to 2025-12-31",
+            "year": self.year,
+            "backtest_period": f"{self.year}-01-01 to {self.year}-12-31",
             "coins_traded": len(set(t["coin"] for t in self.trades)),
             
             # Capital metrics
