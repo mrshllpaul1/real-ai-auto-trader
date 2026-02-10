@@ -223,6 +223,7 @@ async def predict_symbol_get(symbol: str):
     Get MTF prediction for a symbol (GET version).
     
     Simple endpoint to get prediction for a specific coin.
+    Returns a graceful fallback when no model is trained.
     """
     service = get_service()
     if not service:
@@ -231,7 +232,20 @@ async def predict_symbol_get(symbol: str):
     prediction = await service.predict(symbol=symbol.upper())
     
     if "error" in prediction:
-        raise HTTPException(status_code=400, detail=prediction["error"])
+        error_msg = prediction["error"]
+        # Instead of 400, return a structured response with fallback data
+        if "No trained model" in str(error_msg) or "not found" in str(error_msg).lower():
+            return {
+                "symbol": symbol.upper(),
+                "signal": "HOLD",
+                "confidence": 0.0,
+                "prediction_source": "fallback_no_model",
+                "timeframes_analyzed": [],
+                "note": "No trained model available. Run POST /api/mtf-training/train-now to train. Using HOLD as safe default.",
+                "recommendation": "Train the model first for accurate predictions",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+        raise HTTPException(status_code=400, detail=error_msg)
     
     return prediction
 
