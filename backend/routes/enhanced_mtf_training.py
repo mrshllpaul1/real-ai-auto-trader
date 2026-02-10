@@ -131,10 +131,16 @@ async def train_enhanced_model(
     if request is None:
         request = EnhancedTrainingRequest()
     
+    # Handle use_all_kraken flag
+    symbols = request.symbols
+    if request.use_all_kraken:
+        symbols = ["all"]
+        logger.info("🌐 Training on full Kraken universe (600+ coins)...")
+    
     logger.info(f"🚀 Starting Enhanced MTF training with {request.epochs} epochs...")
     
     result = await service.train_enhanced_model(
-        symbols=request.symbols,
+        symbols=symbols,
         timeframes=request.timeframes,
         epochs=request.epochs,
         learning_rate=request.learning_rate,
