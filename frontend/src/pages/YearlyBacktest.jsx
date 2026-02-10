@@ -35,7 +35,7 @@ const YearlyBacktest = () => {
   const runSingleYearBacktest = async () => {
     setLoading(true);
     try {
-      const res = await api.post(`/yearly-backtest/quick-test?year=${selectedYear}`);
+      const res = await api.post(`/yearly-backtest/quick-test?year=${selectedYear}&initial_capital=${initialCapital}`);
       setSingleYearResult(res.data);
       toast.success(`${selectedYear} Backtest Complete!`);
     } catch (error) {
