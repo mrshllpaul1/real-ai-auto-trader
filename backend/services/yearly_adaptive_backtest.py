@@ -560,6 +560,73 @@ BASE_PRICES_BY_YEAR = {
     2026: {"BTC": 95000, "ETH": 5000, "SOL": 250, "XRP": 1.20, "ADA": 0.80, "AVAX": 60, "LINK": 25, "DOT": 12, "ATOM": 15}
 }
 
+# Exportable regime parameters for live trading
+REGIME_PARAMS = {
+    "bull_strong": {
+        "stop_loss": 4.0,
+        "take_profit": 10.0,
+        "position_size": 1.2,
+        "min_confidence": 55,
+        "entry_threshold": 8
+    },
+    "bull_weak": {
+        "stop_loss": 3.5,
+        "take_profit": 8.0,
+        "position_size": 1.0,
+        "min_confidence": 60,
+        "entry_threshold": 9
+    },
+    "bear_strong": {
+        "stop_loss": 2.5,
+        "take_profit": 6.0,
+        "position_size": 0.6,
+        "min_confidence": 70,
+        "entry_threshold": 11
+    },
+    "bear_weak": {
+        "stop_loss": 3.0,
+        "take_profit": 7.0,
+        "position_size": 0.7,
+        "min_confidence": 65,
+        "entry_threshold": 10
+    },
+    "high_volatility": {
+        "stop_loss": 2.5,
+        "take_profit": 6.0,
+        "position_size": 0.5,
+        "min_confidence": 70,
+        "entry_threshold": 12
+    },
+    "sideways": {
+        "stop_loss": 2.5,
+        "take_profit": 6.0,
+        "position_size": 0.8,
+        "min_confidence": 60,
+        "entry_threshold": 9
+    },
+    "recovery": {
+        "stop_loss": 3.0,
+        "take_profit": 8.0,
+        "position_size": 0.9,
+        "min_confidence": 55,
+        "entry_threshold": 8
+    },
+    "crash": {
+        "stop_loss": 2.0,
+        "take_profit": 5.0,
+        "position_size": 0.3,
+        "min_confidence": 80,
+        "entry_threshold": 14
+    },
+    "euphoria": {
+        "stop_loss": 5.0,
+        "take_profit": 12.0,
+        "position_size": 1.1,
+        "min_confidence": 50,
+        "entry_threshold": 7
+    }
+}
+
 
 class AdaptiveStrategy:
     """Adaptive strategy that adjusts parameters based on market conditions - OPTIMIZED FOR 65%+ WIN RATE"""
