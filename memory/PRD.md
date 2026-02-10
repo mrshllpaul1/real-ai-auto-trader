@@ -7,7 +7,7 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ## Session Update - Feb 10, 2026 (Latest)
 
-### ✅ NEW FEATURE: Enhanced Adaptive Backtesting with Month & Week Granularity
+### ✅ COMPLETED: Enhanced Adaptive Backtesting with Month & Week Granularity
 
 **Added:**
 - Complete 52-week market calendar for all years (2020-2026)
@@ -22,6 +22,26 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 - `backend/services/yearly_adaptive_backtest.py` - Added complete week-by-week calendars for all years
 - `backend/routes/yearly_backtest.py` - Enhanced calendar API with year parameter
 - `frontend/src/pages/YearlyBacktest.jsx` - Updated UI with monthly breakdown view
+
+### ✅ FIXED: Portfolio Dashboard & Position Manager
+
+**Issues Resolved:**
+- Portfolio Dashboard now loads correctly (was stuck in infinite loading loop)
+- Position Manager displays actual Kraken portfolio values (BTC $558.90, ETH $93.13, SOL $60.31, etc.)
+- Total P&L calculation fixed (+$41.61 across 7 positions)
+
+**Files Modified:**
+- `frontend/src/pages/PositionManagement.jsx` - Fixed `usd_value` and `pnl` field mappings
+
+### ✅ VERIFIED: Refresh Buttons Across App
+
+**Pages Tested with Working Refresh:**
+- ✅ Command Center - Portfolio data refreshes correctly
+- ✅ Position Manager - Positions reload from Kraken API
+- ✅ Portfolio Dashboard - All visualizations update
+- ✅ Copy Trading - Trader leaderboard refreshes
+- ✅ Backtest Engine - Configuration resets
+- ✅ Yearly Backtest - Calendar and results refresh
 
 ---
 
