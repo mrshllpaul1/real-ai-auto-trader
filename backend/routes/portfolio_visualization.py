@@ -49,7 +49,9 @@ async def _fetch_kraken_holdings() -> List[Dict[str, Any]]:
         # Get prices
         try:
             prices = await spot_trading._kraken_service.get_all_prices()
-        except:
+            print(f"DEBUG: prices type={type(prices)}, len={len(prices) if isinstance(prices, dict) else 'N/A'}")
+        except Exception as pe:
+            print(f"DEBUG: price fetch error: {pe}")
             prices = {}
         
         # Build holdings list
@@ -93,6 +95,10 @@ async def _fetch_kraken_holdings() -> List[Dict[str, Any]]:
                     break
             
             usd_value = amount * price
+            
+            # DEBUG first 3 items
+            if len(holdings) < 3:
+                print(f"DEBUG: currency={currency}, symbol={symbol}, amount={amount}, price={price}, usd_value={usd_value}")
             
             if usd_value > 0.5:
                 holdings.append({
