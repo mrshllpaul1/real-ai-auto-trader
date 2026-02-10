@@ -178,7 +178,7 @@ async def websocket_training_updates(websocket: WebSocket):
 
 # Register all routes
 from init.routes import register_routes
-register_routes(api_router)
+register_routes(api_router, db)
 
 # Include the router
 app.include_router(api_router)
