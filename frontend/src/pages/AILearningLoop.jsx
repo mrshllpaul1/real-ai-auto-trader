@@ -554,7 +554,7 @@ const AILearningLoop = () => {
                             <span className="text-[#A1A1AA]">{area.type}</span>
                           </div>
                           <Badge className="bg-[#FF0055]/20 text-[#FF0055]">
-                            {area.accuracy.toFixed(1)}%
+                            {(area?.accuracy || 0).toFixed(1)}%
                           </Badge>
                         </div>
                       ))}
