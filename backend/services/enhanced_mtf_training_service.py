@@ -366,6 +366,265 @@ class EnhancedMTFTrainingService:
             "signal_confidence": 0.3
         }
     
+    # ==================== FAST SENTIMENT-ONLY TRAINING ====================
+    
+    async def train_sentiment_only(
+        self,
+        symbols: List[str] = None,
+        epochs: int = 100,
+        batch_size: int = 50
+    ) -> Dict[str, Any]:
+        """
+        Fast training using only sentiment features (no OHLCV download required).
+        
+        This is much faster as it only uses:
+        - Fear & Greed Index
+        - Social sentiment signals
+        - FOMO/Fear indicators
+        """
+        training_id = str(uuid.uuid4())
+        started_at = datetime.now(timezone.utc)
+        
+        self._training_status = {
+            "status": "training",
+            "training_id": training_id,
+            "started_at": started_at.isoformat(),
+            "progress": 0,
+            "current_phase": "fast_sentiment_training"
+        }
+        
+        try:
+            # Get all Kraken coins if not specified
+            if symbols is None or symbols == ["all"]:
+                symbols = await self.fetch_all_kraken_coins()
+            
+            logger.info(f"⚡ Fast sentiment training on {len(symbols)} coins...")
+            
+            # Get global fear & greed (same for all coins)
+            fear_greed = await self.fetch_fear_greed_index()
+            
+            X_train = []
+            y_train = []
+            symbol_data = {}
+            processed = 0
+            
+            # Process in batches
+            for i in range(0, len(symbols), batch_size):
+                batch = symbols[i:i+batch_size]
+                self._training_status["progress"] = int((i / len(symbols)) * 70)
+                self._training_status["current_batch"] = f"{i}-{min(i+batch_size, len(symbols))}"
+                
+                # Process batch concurrently
+                tasks = [self.fetch_social_sentiment(sym) for sym in batch]
+                sentiments = await asyncio.gather(*tasks, return_exceptions=True)
+                
+                for sym, sentiment in zip(batch, sentiments):
+                    if isinstance(sentiment, Exception):
+                        sentiment = self._get_neutral_sentiment()
+                    
+                    # Create feature vector from sentiment only
+                    feature_vector = [
+                        sentiment.get("twitter_sentiment", 0.5),
+                        sentiment.get("twitter_volume_change", 0),
+                        sentiment.get("reddit_sentiment", 0.5),
+                        sentiment.get("reddit_activity", 0.3),
+                        fear_greed.get("normalized", 0.5),
+                        fear_greed.get("trend_7d", 0) / 100.0 if fear_greed.get("trend_7d") else 0,
+                        sentiment.get("overall_signal_score", 0.5),
+                        sentiment.get("signal_confidence", 0.3),
+                        sentiment.get("fomo_score", 0.3),
+                        sentiment.get("fear_score", 0.3),
+                        sentiment.get("influencer_sentiment", 0.5),
+                        sentiment.get("hype_phase", 0.5)
+                    ]
+                    
+                    # Generate label from sentiment
+                    label = self._sentiment_to_label(sentiment, fear_greed)
+                    
+                    X_train.append(feature_vector)
+                    y_train.append(label)
+                    
+                    symbol_data[sym] = {
+                        "sentiment": sentiment,
+                        "label": label
+                    }
+                    processed += 1
+                
+                # Small delay between batches
+                await asyncio.sleep(0.1)
+            
+            logger.info(f"📊 Processed {processed} coins")
+            
+            if len(X_train) < 3:
+                raise Exception(f"Insufficient data: only {len(X_train)} samples")
+            
+            # Train model
+            self._training_status["current_phase"] = "training_model"
+            self._training_status["progress"] = 75
+            
+            X_train = np.array(X_train)
+            y_train = np.array(y_train)
+            
+            X_train = np.nan_to_num(X_train, nan=0.0, posinf=1.0, neginf=-1.0)
+            
+            X_mean = np.mean(X_train, axis=0)
+            X_std = np.std(X_train, axis=0) + 1e-8
+            X_normalized = (X_train - X_mean) / X_std
+            
+            # Ensure class diversity
+            unique_labels = set(y_train)
+            if len(unique_labels) < 2:
+                for i in range(len(y_train)):
+                    if i % 3 == 0:
+                        y_train[i] = 1
+                    elif i % 3 == 1:
+                        y_train[i] = -1
+            
+            model_weights, model_info = await self._train_classifier(
+                X_normalized, y_train, epochs, 0.001
+            )
+            
+            self._training_status["progress"] = 90
+            
+            # Evaluate
+            predictions = await self._predict_with_model(X_normalized, model_weights)
+            accuracy = np.mean(predictions == y_train)
+            
+            # Save model
+            label_names = {-1: "sell", 0: "hold", 1: "buy"}
+            class_metrics = {}
+            for label in [-1, 0, 1]:
+                mask = y_train == label
+                if np.sum(mask) > 0:
+                    class_acc = np.mean(predictions[mask] == y_train[mask])
+                    class_metrics[label_names[label]] = {
+                        "label": label,
+                        "count": int(np.sum(mask)),
+                        "accuracy": float(class_acc)
+                    }
+            
+            model_doc = {
+                "model_id": training_id,
+                "type": "sentiment_only_mtf",
+                "weights": model_weights.tolist() if hasattr(model_weights, 'tolist') else list(model_weights),
+                "normalization": {
+                    "mean": X_mean.tolist(),
+                    "std": X_std.tolist()
+                },
+                "feature_info": {
+                    "sentiment_features": self.SENTIMENT_FEATURES,
+                    "n_sentiment": len(self.SENTIMENT_FEATURES),
+                    "total_features": len(self.SENTIMENT_FEATURES)
+                },
+                "training_info": {
+                    "symbols_trained": len(X_train),
+                    "epochs": epochs,
+                    "accuracy": float(accuracy),
+                    "class_metrics": class_metrics,
+                    "mode": "sentiment_only"
+                },
+                "model_info": model_info,
+                "created_at": started_at,
+                "completed_at": datetime.now(timezone.utc)
+            }
+            
+            await self.model_collection.update_one(
+                {"type": "sentiment_only_mtf"},
+                {"$set": model_doc},
+                upsert=True
+            )
+            
+            # Also update the main model
+            await self.model_collection.update_one(
+                {"type": "enhanced_mtf"},
+                {"$set": model_doc},
+                upsert=True
+            )
+            
+            result = {
+                "training_id": training_id,
+                "status": "completed",
+                "mode": "sentiment_only_fast",
+                "symbols_trained": len(X_train),
+                "total_symbols": len(symbols),
+                "epochs": epochs,
+                "accuracy": float(accuracy),
+                "accuracy_pct": f"{accuracy * 100:.1f}%",
+                "class_metrics": class_metrics,
+                "features_used": {
+                    "sentiment": len(self.SENTIMENT_FEATURES),
+                    "total": len(self.SENTIMENT_FEATURES)
+                },
+                "started_at": started_at.isoformat(),
+                "completed_at": datetime.now(timezone.utc).isoformat(),
+                "duration_seconds": (datetime.now(timezone.utc) - started_at).total_seconds()
+            }
+            
+            await self.training_collection.insert_one({
+                **result,
+                "timestamp": datetime.now(timezone.utc)
+            })
+            
+            self._training_status = {
+                "status": "completed",
+                "training_id": training_id,
+                "last_trained": datetime.now(timezone.utc).isoformat(),
+                "coins_trained": len(X_train),
+                "accuracy": float(accuracy),
+                "mode": "sentiment_only"
+            }
+            
+            logger.info(f"✅ Fast sentiment training completed! {len(X_train)} coins, Accuracy: {accuracy * 100:.1f}%")
+            return result
+            
+        except Exception as e:
+            logger.error(f"❌ Fast sentiment training failed: {e}")
+            import traceback
+            traceback.print_exc()
+            
+            self._training_status = {
+                "status": "failed",
+                "error": str(e),
+                "training_id": training_id
+            }
+            return {
+                "training_id": training_id,
+                "status": "failed",
+                "error": str(e)
+            }
+    
+    def _sentiment_to_label(self, sentiment: Dict[str, Any], fear_greed: Dict[str, Any]) -> int:
+        """Convert sentiment scores to trading label"""
+        score = 0
+        
+        # Social sentiment
+        signal_score = sentiment.get("overall_signal_score", 0.5)
+        if signal_score > 0.65:
+            score += 2
+        elif signal_score < 0.35:
+            score -= 2
+        
+        # Fear & Greed (contrarian)
+        fg_value = fear_greed.get("value", 50)
+        if fg_value < 25:
+            score += 1  # Extreme fear = buy
+        elif fg_value > 75:
+            score -= 1  # Extreme greed = sell
+        
+        # FOMO/Fear indicators
+        fomo = sentiment.get("fomo_score", 0.3)
+        fear = sentiment.get("fear_score", 0.3)
+        if fomo > 0.6:
+            score -= 1  # Contrarian
+        if fear > 0.6:
+            score += 1  # Contrarian
+        
+        if score >= 2:
+            return 1  # BUY
+        elif score <= -2:
+            return -1  # SELL
+        return 0  # HOLD
+
     # ==================== FEATURE EXTRACTION ====================
     
     async def extract_combined_features(
