@@ -487,41 +487,56 @@ const SpotTrading = ({ embedded = false }) => {
     }
   }, []);
   
-  // Initial load with retry
+  // Initial load
   useEffect(() => {
-    let retryCount = 0;
-    const maxRetries = 3;
+    console.log('[SpotTrading] Component mounted, starting data load...');
+    let isMounted = true;
     
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([
-        fetchStatus(),
-        fetchPairs(),
-        fetchBalance(),
-        fetchRecommendations()
+      
+      // Fetch all data in parallel
+      const [statusData, pairsData, balanceData, recsData] = await Promise.all([
+        safeFetchJSON(`${API_URL}/api/spot/status`),
+        safeFetchJSON(`${API_URL}/api/spot/pairs`),
+        safeFetchJSON(`${API_URL}/api/spot/balance`),
+        safeFetchJSON(`${API_URL}/api/spot/ai-recommendations`)
       ]);
+      
+      if (!isMounted) return;
+      
+      if (statusData) setTradingStatus(statusData);
+      if (pairsData?.pairs) {
+        setPairs(pairsData.pairs);
+        console.log('[SpotTrading] Pairs loaded:', pairsData.pairs.length);
+      }
+      if (balanceData) {
+        setBalance(balanceData);
+        console.log('[SpotTrading] Balance loaded:', balanceData.holdings?.length, 'holdings');
+      }
+      if (recsData?.recommendations) {
+        setRecommendations(recsData.recommendations);
+      }
+      
       setLoading(false);
     };
     
-    const loadWithRetry = async () => {
-      await loadData();
-      
-      // If no pairs loaded and haven't exceeded retries, try again
-      if (retryCount < maxRetries) {
-        retryCount++;
-        setTimeout(() => {
-          fetchPairs();
-          fetchBalance();
-        }, 2000 * retryCount); // Exponential backoff
-      }
-    };
-    
-    loadWithRetry();
+    loadData();
     
     // Refresh prices every 10 seconds
-    const interval = setInterval(fetchPairs, 10000);
-    return () => clearInterval(interval);
-  }, [fetchStatus, fetchPairs, fetchBalance, fetchRecommendations]);
+    const interval = setInterval(async () => {
+      if (!isMounted) return;
+      const data = await safeFetchJSON(`${API_URL}/api/spot/pairs`);
+      if (data?.pairs && isMounted) {
+        setPairs(data.pairs);
+      }
+    }, 10000);
+    
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []); // Empty dependency array - only run once on mount
   
   // Fetch details when symbol changes
   useEffect(() => {
