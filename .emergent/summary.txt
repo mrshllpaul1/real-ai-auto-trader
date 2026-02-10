@@ -1,159 +1,314 @@
-<analysis>**original_problem_statement:**
-The user initially requested to fix deployment issues for an AI Crypto Trading Platform. After stabilizing the app, the user requested a series of enhancements and new features. In this session, the user's primary goal was to implement a large batch of P0 features: Advanced Order Types, MetaMask integration, DeFi Yield Farming, Perpetual Futures, and a News Sentiment Engine. Following the successful implementation of these, the user requested and approved several subsequent enhancements including a Portfolio Risk Analyzer, Telegram Notifications, and an AI-powered Portfolio Rebalancing tool. The most recent request is to build out a comprehensive suite of advanced ML/AI features, including model monitoring, optimization, and explainability.
+<analysis>**original_problem_statement:** The user wants to continue improving the win rate of their cryptocurrency trading bot. The scope has expanded to include backtesting across multiple historical years (2020-2026), testing with different capital and portfolio configurations, and ensuring the frontend accurately reflects the user's live Kraken portfolio.
 
 **PRODUCT REQUIREMENTS:**
-- Implement Advanced ML/AI features (Monitoring, Optimization, Explainability).
-- Implement Telegram Notifications for trading alerts.
-- Deepen the implementation of previously scaffolded features (Copy Trading, Market Maker Mode, Options Trading, Backtesting Engine) by replacing mock data with real logic.
-- Implement AI-powered portfolio rebalancing suggestions.
+1.  Run backtests for the years 2020, 2021, 2022, 2023, 2024, and 2026.
+2.  Re-run backtests with a starting capital of ,000 and a maximum of 10 positions.
+3.  Create and test a frontend visualization for the backtest results.
+4.  Fix the Position Manager page to show the actual Kraken portfolio instead of zeros.
+5.  Fix the Portfolio Dashboard to accurately reflect the Kraken portfolio's positions, P&L, and allocation.
+6.  Check and fix all Refresh buttons across the application.
+7.  Check and fix any other broken buttons.
 
 **User's preferred language**: English
 
 **what currently exists?**
-A significantly enhanced full-stack AI Crypto Trading Platform (React/FastAPI/MongoDB). The application is stable and includes a broad set of features implemented with functional UIs and mock/simulated backend data.
-
-**Key additions in the last session:**
-- **P0 Features:** Advanced Orders, DeFi Wallet, Yield Farming, Perpetual Futures, News Sentiment Engine.
-- **Enhancements:** A comprehensive Portfolio Risk Analyzer with stress testing, a Telegram Notifications setup page, and an AI-Powered Portfolio Rebalancing suggestion page.
-- **ML Backend:** Initial backend route files (, , ) have been created for the next major task.
+The project is a full-stack cryptocurrency trading bot application using FastAPI for the backend and React for the frontend. It features an advanced adaptive backtesting engine that can run simulations for multiple years (2020-2026) with configurable parameters. The backend is now integrated with the Kraken API to pull live portfolio data, and most of the backend logic for portfolio visualization has been refactored to use this live data. The frontend has pages for portfolio management, a portfolio dashboard, spot trading, and backtesting, including a newly created page for yearly backtest visualization.
 
 **Last working item**:
--   **Last item agent was working:** Implementing a large suite of advanced ML/AI features as requested by the user. The agent began by creating the backend infrastructure.
--   **Status:** IN PROGRESS
--   **Agent Testing Done:** N
--   **Which testing method agent to use?** both (frontend and backend testing agents are recommended due to the large scope and complexity of this feature).
--   **User Testing Done:** N
+*   **Last item agent was working:** The agent was debugging the  page, which was stuck in an infinite loading loop after being modified to fetch live Kraken data. The agent identified that the  state was incorrectly included in a  dependency array, causing the loop.
+*   **Status:** IN PROGRESS
+*   **Agent Testing Done:** N
+*   **Which testing method agent to use?** Frontend testing agent
+*   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-There are no known bugs or issues. All work is focused on new feature development.
+*   **Issue 1:** The Portfolio Dashboard page is stuck in an infinite loading loop. (P0)
+*   **Issue 2:** The Position Management page functionality with live Kraken data needs to be verified on the frontend. (P1)
+*   **Issue 3:** The user requested a check and fix of all Refresh buttons across the entire application, which has not been systematically completed. (P1)
+
+**Issues Detail:**
+*   **Issue 1: Portfolio Dashboard loading loop**
+    *   **Attempted fixes:** The agent identified the cause was the  state variable being in the dependency array of the   hook in . A fix was applied by removing  from the dependency array.
+    *   **Next debug checklist:**
+        1.  Restart the frontend service to apply the changes: frontend: ERROR (not running)
+frontend: ERROR (abnormal termination).
+        2.  Use the screenshot tool to test the page: .
+        3.  Verify that the page loads correctly and displays the portfolio data from the Kraken API.
+    *   **Why fix this issue and what will be achieved with the fix?** The Portfolio Dashboard is a critical feature for the user to monitor their live portfolio. Fixing this will make the page usable and display real-time data from their Kraken account.
+    *   **Status:** IN PROGRESS
+    *   **Is recurring issue?** N
+    *   **Should Test frontend/backend/both after fix?** Frontend
+    *   **Blocked on other issue:** None
+
+*   **Issue 2: Verify Position Management page**
+    *   **Attempted fixes:** The backend was updated to provide Kraken portfolio data, and the  page was updated to call the correct API endpoint ().
+    *   **Next debug checklist:**
+        1.  Use the screenshot tool to test the page: .
+        2.  Confirm that the page correctly displays the list of open positions from the Kraken portfolio.
+    *   **Why fix this issue and what will be achieved with the fix?** This will complete the user's request to fix the Position Manager, which was previously showing no positions.
+    *   **Status:** USER VERIFICATION PENDING
+    *   **Is recurring issue?** N
+    *   **Should Test frontend/backend/both after fix?** Frontend
+    *   **Blocked on other issue:** None
+
+*   **Issue 3: Check all Refresh buttons**
+    *   **Attempted fixes:** None. The agent focused on fixing the underlying data sources rather than systematically testing each refresh button.
+    *   **Next debug checklist:**
+        1.  Get a list of all files with a refresh button: /app/frontend/src/pages/BacktestEngine.jsx:  Target, Calendar, RefreshCw, BarChart3, Zap, Clock, Award,
+/app/frontend/src/pages/BacktestEngine.jsx:          <RefreshCw size={16} className="mr-2" />
+/app/frontend/src/pages/BacktestEngine.jsx:          Refresh
+/app/frontend/src/pages/AIChat.jsx:  RefreshCw,
+/app/frontend/src/pages/Settings.jsx:import { Shield, Key, Settings as SettingsIcon, Bell, Smartphone, Vibrate, Database, Link2, RefreshCcw } from 'lucide-react';
+/app/frontend/src/pages/Settings.jsx:                      <RefreshCcw className="w-5 h-5 text-[#5741D9]" />
+/app/frontend/src/pages/Settings.jsx:                        <RefreshCcw className="w-4 h-4 mr-2 animate-spin" />
+/app/frontend/src/pages/Settings.jsx:                        <RefreshCcw className="w-4 h-4 mr-2" />
+/app/frontend/src/pages/MLDashboard.jsx:  Brain, Activity, AlertTriangle, RefreshCw, TrendingUp, TrendingDown,
+/app/frontend/src/pages/MLDashboard.jsx:          <RefreshCw size={18} className={`text-[#A1A1AA] ${loading ? 'animate-spin' : ''}`} />
+/app/frontend/src/pages/MLDashboard.jsx:          <span className="text-[#A1A1AA]">Refresh</span>
+/app/frontend/src/pages/NewsFilters.jsx:  Search, RefreshCw, ExternalLink, Clock, Filter,
+/app/frontend/src/pages/NewsFilters.jsx:    }, 60000); // Refresh every minute
+/app/frontend/src/pages/NewsFilters.jsx:          <RefreshCw size={16} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
+/app/frontend/src/pages/NewsFilters.jsx:          Refresh
+/app/frontend/src/pages/NewsFilters.jsx:              <RefreshCw size={32} className="animate-spin text-[#9D00FF]" />
+/app/frontend/src/pages/GemMLDLComparison.jsx:  Brain, Cpu, Sparkles, TrendingUp, Trophy, RefreshCw, 
+/app/frontend/src/pages/GemMLDLComparison.jsx:              <RefreshCw size={16} />
+/app/frontend/src/pages/AdvancedOrders.jsx:  Layers, Plus, Play, Pause, Trash2, RefreshCw, AlertTriangle,
+/app/frontend/src/pages/AdvancedOrders.jsx:            <RefreshCw size={18} className="text-[#A1A1AA]" />
+/app/frontend/src/pages/ModelPerformanceDashboard.jsx:  RefreshCw, Play, CheckCircle, XCircle, Clock,
+/app/frontend/src/pages/ModelPerformanceDashboard.jsx:        <RefreshCw className="w-8 h-8 text-cyan-400 animate-spin" />
+/app/frontend/src/pages/ModelPerformanceDashboard.jsx:              <RefreshCw className="w-4 h-4 mr-2" />
+/app/frontend/src/pages/ModelPerformanceDashboard.jsx:              Refresh
+/app/frontend/src/pages/ModelPerformanceDashboard.jsx:                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+/app/frontend/src/pages/MarketMaker.jsx:  DollarSign, BarChart3, RefreshCw, AlertTriangle, Layers,
+/app/frontend/src/pages/MarketMaker.jsx:    const interval = setInterval(loadData, 10000); // Refresh every 10s
+/app/frontend/src/pages/MarketMaker.jsx:  const handleRefreshOrders = async () => {
+/app/frontend/src/pages/MarketMaker.jsx:            <RefreshCw size={16} />
+/app/frontend/src/pages/MarketMaker.jsx:            <Button onClick={handleRefreshOrders} variant="outline" className="border-[#1F1F1F]" disabled={!status?.is_running}>
+/app/frontend/src/pages/MarketMaker.jsx:              <RefreshCw size={16} className="mr-2" />
+/app/frontend/src/pages/MarketMaker.jsx:              Refresh Orders
+/app/frontend/src/pages/NewsAndIntelligence.jsx:import { Newspaper, TrendingUp, Brain, History, Zap, AlertCircle, ExternalLink, RefreshCw } from 'lucide-react';
+/app/frontend/src/pages/NewsAndIntelligence.jsx:                  <RefreshCw size={14} className="mr-1" />
+/app/frontend/src/pages/NewsAndIntelligence.jsx:                  Refresh
+/app/frontend/src/pages/AITeacher.jsx:  BookOpen, Brain, Lightbulb, RefreshCw, Trash2, ChevronDown,
+/app/frontend/src/pages/EnhancedMTFPredictions.jsx:  Brain, Zap, Target, Activity, Play, RefreshCw, TrendingUp, TrendingDown,
+/app/frontend/src/pages/EnhancedMTFPredictions.jsx:                <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Training 634 coins...</>
+/app/frontend/src/pages/EnhancedMTFPredictions.jsx:                <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Predicting...</>
+/app/frontend/src/pages/YieldFarming.jsx:  Sprout, TrendingUp, DollarSign, Shield, AlertTriangle, RefreshCw,
+/app/frontend/src/pages/YieldFarming.jsx:            <RefreshCw size={18} className={`text-[#A1A1AA] ${loading ? 'animate-spin' : ''}`} />
+/app/frontend/src/pages/PerpetualFutures.jsx:  TrendingUp, TrendingDown, DollarSign, Percent, RefreshCw, Plus,
+/app/frontend/src/pages/PerpetualFutures.jsx:    const interval = setInterval(fetchData, 30000); // Refresh every 30s
+/app/frontend/src/pages/PerpetualFutures.jsx:            <RefreshCw size={18} className={`text-[#A1A1AA] ${loading ? 'animate-spin' : ''}`} />
+/app/frontend/src/pages/TethysDashboard.jsx:  RefreshCw, ChevronDown, ChevronUp, Waves, Wifi, WifiOff
+/app/frontend/src/pages/TethysDashboard.jsx:              <RefreshCw className="w-4 h-4 text-cyan-400" />
+/app/frontend/src/pages/TradingBudget.jsx:  Lock, Unlock, RefreshCw, Power, PowerOff, CheckCircle, XCircle,
+/app/frontend/src/pages/TradingBudget.jsx:            <RefreshCw size={16} />
+/app/frontend/src/pages/RiskAnalyzer.jsx:  Shield, AlertTriangle, TrendingUp, TrendingDown, Activity, RefreshCw,
+/app/frontend/src/pages/RiskAnalyzer.jsx:          <RefreshCw size={18} className={`text-[#A1A1AA] ${loading ? 'animate-spin' : ''}`} />
+/app/frontend/src/pages/RiskAnalyzer.jsx:          <span className="text-[#A1A1AA]">Refresh</span>
+/app/frontend/src/pages/PortfolioRebalance.jsx:  RefreshCw, PieChart, ArrowRight, Check, AlertTriangle, Info,
+/app/frontend/src/pages/PortfolioRebalance.jsx:            <RefreshCw size={18} className={`text-[#A1A1AA] ${loading ? 'animate-spin' : ''}`} />
+/app/frontend/src/pages/DashboardCustomization.jsx:  Move, Eye, EyeOff, RefreshCw
+/app/frontend/src/pages/DashboardCustomization.jsx:        description: 'Refresh the page to see changes'
+/app/frontend/src/pages/DashboardCustomization.jsx:          <RefreshCw size={16} className="mr-2" />
+/app/frontend/src/pages/DashboardCustomization.jsx:          Refresh
+/app/frontend/src/pages/DashboardCustomization.jsx:                    <Label className="text-[#A1A1AA]">Auto Refresh Interval (seconds)</Label>
+/app/frontend/src/pages/DashboardCustomization.jsx:                    <Label className="text-white">Auto Refresh Data</Label>
+/app/frontend/src/pages/TradingView.jsx:import { TrendingUp, TrendingDown, CandlestickChart, LineChart as LineChartIcon, BarChart3, RefreshCw } from 'lucide-react';
+/app/frontend/src/pages/TradingView.jsx:          <RefreshCw className="animate-spin text-[#00FF94]" size={32} />
+/app/frontend/src/pages/TradingView.jsx:                <RefreshCw size={16} className={chartLoading ? 'animate-spin' : ''} />
+/app/frontend/src/pages/TelegramNotifications.jsx:  Send, Bell, BellOff, Settings, RefreshCw, Plus, Trash2,
+/app/frontend/src/pages/TelegramNotifications.jsx:            <RefreshCw size={18} className={`text-[#A1A1AA] ${loading ? 'animate-spin' : ''}`} />
+/app/frontend/src/pages/StrategySelector.jsx:import { Sparkles, TrendingUp, TrendingDown, Zap, RefreshCw } from 'lucide-react';
+/app/frontend/src/pages/StrategySelector.jsx:            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+/app/frontend/src/pages/AdvancedAI.jsx:  Zap, RefreshCw, Play, Pause, Activity, Target, AlertTriangle,
+/app/frontend/src/pages/AdvancedAI.jsx:        <RefreshCw className="animate-spin text-[#00FF94]" size={48} />
+/app/frontend/src/pages/AdvancedAI.jsx:          <RefreshCw size={16} className="mr-2" />
+/app/frontend/src/pages/AdvancedAI.jsx:          Refresh
+/app/frontend/src/pages/EventTriggers.jsx:  Plus, Trash2, Play, Pause, History, Target, RefreshCw,
+/app/frontend/src/pages/EventTriggers.jsx:            <RefreshCw size={16} />
+/app/frontend/src/pages/CommandCenter.jsx:  RefreshCw, ArrowUpDown, Shield, MessageCircle, FlaskConical,
+/app/frontend/src/pages/CommandCenter.jsx:        <RefreshCw className="w-8 h-8 animate-spin text-cyan-400" />
+/app/frontend/src/pages/CommandCenter.jsx:          <RefreshCw className="w-4 h-4 mr-2" /> Refresh
+/app/frontend/src/pages/PositionManagement.jsx:  Wallet, TrendingUp, TrendingDown, RefreshCw, Settings, X,
+/app/frontend/src/pages/PositionManagement.jsx:            <RefreshCw size={16} className="mr-2" />
+/app/frontend/src/pages/PositionManagement.jsx:            Refresh
+/app/frontend/src/pages/PositionManagement.jsx:                            <RefreshCw size={14} className="mr-1 animate-spin" />
+/app/frontend/src/pages/NewsSentiment.jsx:  Newspaper, TrendingUp, TrendingDown, AlertCircle, RefreshCw, Filter,
+/app/frontend/src/pages/NewsSentiment.jsx:    const interval = setInterval(fetchData, 60000); // Refresh every minute
+/app/frontend/src/pages/NewsSentiment.jsx:          <RefreshCw size={18} className={`text-[#A1A1AA] ${loading ? 'animate-spin' : ''}`} />
+/app/frontend/src/pages/NewsSentiment.jsx:          <span className="text-[#A1A1AA]">Refresh</span>
+/app/frontend/src/pages/EnsembleAI.jsx:  Brain, RefreshCw, TrendingUp, TrendingDown, Minus, Zap,
+/app/frontend/src/pages/EnsembleAI.jsx:        // Refresh data
+/app/frontend/src/pages/EnsembleAI.jsx:              <RefreshCw className={`text-[#9D00FF] ${rebuilding ? 'animate-spin' : ''}`} size={20} />
+/app/frontend/src/pages/SpotTrading.jsx:  RefreshCw, Search, Zap, Brain, AlertTriangle, CheckCircle, XCircle,
+/app/frontend/src/pages/SpotTrading.jsx:          <RefreshCw size={20} className="animate-spin" />
+/app/frontend/src/pages/SpotTrading.jsx:    // Refresh prices every 10 seconds
+/app/frontend/src/pages/SpotTrading.jsx:        fetchBalance(); // Refresh balance
+/app/frontend/src/pages/SpotTrading.jsx:          <RefreshCw size={24} className="animate-spin" />
+/app/frontend/src/pages/SpotTrading.jsx:              <RefreshCw size={16} />
+/app/frontend/src/pages/SpotTrading.jsx:              Refresh
+/app/frontend/src/pages/GemBacktester.jsx:  Gem, Play, RefreshCw, History, TrendingUp, Target,
+/app/frontend/src/pages/GemBacktester.jsx:    const interval = setInterval(loadData, 10000); // Refresh every 10s when running
+/app/frontend/src/pages/GemBacktester.jsx:            <RefreshCw size={16} />
+/app/frontend/src/pages/GemBacktester.jsx:              <RefreshCw size={20} className="text-[#007AFF]" />
+/app/frontend/src/pages/AICommandCenter.jsx:  Brain, Zap, Target, Activity, Play, Square, RefreshCw,
+/app/frontend/src/pages/AICommandCenter.jsx:      // Refresh status after 2 seconds to allow backend to update
+/app/frontend/src/pages/AICommandCenter.jsx:        <RefreshCw className="w-8 h-8 animate-spin text-purple-400" />
+/app/frontend/src/pages/AICommandCenter.jsx:          <RefreshCw className="w-4 h-4 mr-2" /> Refresh
+/app/frontend/src/pages/GemScanner.jsx:  Radar, Play, Square, RefreshCw, TrendingUp, AlertTriangle, 
+/app/frontend/src/pages/GemScanner.jsx:  const [autoRefresh, setAutoRefresh] = useState(true);
+/app/frontend/src/pages/GemScanner.jsx:    if (autoRefresh) {
+/app/frontend/src/pages/GemScanner.jsx:  }, [autoRefresh, loadAlerts, loadStatus]);
+/app/frontend/src/pages/GemScanner.jsx:      case 'TREND_REVERSAL': return <RefreshCw size={14} />;
+/app/frontend/src/pages/GemScanner.jsx:                <RefreshCw size={16} className={`mr-2 ${scanning ? 'animate-spin' : ''}`} />
+/app/frontend/src/pages/GemScanner.jsx:                checked={autoRefresh}
+/app/frontend/src/pages/GemScanner.jsx:                onCheckedChange={setAutoRefresh}
+/app/frontend/src/pages/GemScanner.jsx:                  <RefreshCw size={12} className="text-[#FF0055]" />
+/app/frontend/src/pages/AILearningLoop.jsx:  AlertTriangle, Award, RefreshCw, Database, LineChart,
+/app/frontend/src/pages/AILearningLoop.jsx:    const interval = setInterval(loadData, 60000); // Refresh every minute
+/app/frontend/src/pages/AILearningLoop.jsx:          <RefreshCw size={16} className="mr-2" />
+/app/frontend/src/pages/AILearningLoop.jsx:          Refresh Data
+/app/frontend/src/pages/AdaptiveStrategy.jsx:  Brain, TrendingUp, TrendingDown, RefreshCw, Activity, Minus,
+/app/frontend/src/pages/AdaptiveStrategy.jsx:    const interval = setInterval(loadData, 60000); // Refresh every minute
+/app/frontend/src/pages/AdaptiveStrategy.jsx:            <RefreshCw size={16} className="mr-2" />
+/app/frontend/src/pages/AdaptiveStrategy.jsx:            Refresh
+/app/frontend/src/pages/AdaptiveStrategy.jsx:                    <RefreshCw size={16} className="mr-2 animate-spin" />
+/app/frontend/src/pages/AdaptiveStrategy.jsx:              <RefreshCw size={14} className="mr-2" />
+/app/frontend/src/pages/AdaptiveStrategy.jsx:                <RefreshCw size={12} className="mr-1" />
+/app/frontend/src/pages/AdaptiveStrategy.jsx:                Refresh
+/app/frontend/src/pages/TriggerPerformance.jsx:  Target, Zap, TrendingUp, TrendingDown, RefreshCw, Activity,
+/app/frontend/src/pages/TriggerPerformance.jsx:          <RefreshCw size={16} className="mr-2" />
+/app/frontend/src/pages/TriggerPerformance.jsx:          Refresh
+/app/frontend/src/pages/YearlyBacktest.jsx:  Target, Calendar, RefreshCw, BarChart3, Zap, Clock, Award,
+/app/frontend/src/pages/YearlyBacktest.jsx:                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+/app/frontend/src/pages/YearlyBacktest.jsx:                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+/app/frontend/src/pages/MLAdvanced.jsx:  Brain, Sparkles, RefreshCw, Target, Zap, TrendingUp, TrendingDown,
+/app/frontend/src/pages/MLAdvanced.jsx:            <RefreshCw size={18} className={`text-[#A1A1AA] ${loading ? 'animate-spin' : ''}`} />
+/app/frontend/src/pages/OptionsTrading.jsx:  BookOpen, RefreshCw, ChevronUp, ChevronDown, Zap, AlertTriangle
+/app/frontend/src/pages/OptionsTrading.jsx:            <RefreshCw size={16} />
+/app/frontend/src/pages/PortfolioDashboard.jsx:  Wallet, TrendingUp, TrendingDown, RefreshCw, DollarSign,
+/app/frontend/src/pages/PortfolioDashboard.jsx:              <RefreshCw size={16} />
+/app/frontend/src/pages/CopyTrading.jsx:  DollarSign, Percent, Target, History, RefreshCw, Search, Filter,
+/app/frontend/src/pages/CopyTrading.jsx:          <RefreshCw size={16} className="mr-2" />
+/app/frontend/src/pages/CopyTrading.jsx:          Refresh
+/app/frontend/src/pages/AutoExecution.jsx:  Zap, Target, AlertTriangle, RefreshCw, Settings2,
+/app/frontend/src/pages/AutoExecution.jsx:                    <RefreshCw size={16} className="mr-2" />
+/app/frontend/src/pages/Analytics.jsx:import { TrendingUp, TrendingDown, DollarSign, Activity, PieChart as PieIcon, BarChart3, Target, Zap, Wallet, TestTube, RefreshCw } from 'lucide-react';
+/app/frontend/src/pages/Analytics.jsx:          <RefreshCw size={16} className="mr-2" />
+/app/frontend/src/pages/Analytics.jsx:          Refresh
+/app/frontend/src/pages/AdvancedFeatures.jsx:import { FlaskConical, Play, TrendingUp, TrendingDown, BarChart3, RefreshCw, Trophy, Users, PieChart } from 'lucide-react';
+/app/frontend/src/pages/AdvancedFeatures.jsx:                    <RefreshCw size={16} className="mr-2" />Execute Rebalance
+/app/frontend/src/pages/DeFiWallet.jsx:  Wallet, Link2, Unlink, RefreshCw, ExternalLink, Copy, Check,
+/app/frontend/src/pages/DeFiWallet.jsx:            <RefreshCw size={18} className={`text-[#A1A1AA] ${loading ? 'animate-spin' : ''}`} />
+/app/frontend/src/pages/TradingJournal.jsx:import { BookOpen, TrendingUp, Calendar, Target, Sparkles, BarChart3, RefreshCw } from 'lucide-react';
+/app/frontend/src/pages/EventTimeline.jsx:  Search, Filter, RefreshCw, ExternalLink, Newspaper,
+/app/frontend/src/pages/EventTimeline.jsx:          <RefreshCw size={16} className="mr-2" />
+/app/frontend/src/pages/EventTimeline.jsx:          Refresh.
+        2.  For each page, manually inspect the code to ensure the refresh button's  handler triggers the appropriate data-fetching function.
+        3.  Use the screenshot tool with a  action on each page to confirm functionality.
+    *   **Why fix this issue and what will be achieved with the fix?** Fulfills a direct user request and ensures a consistent user experience across the app.
+    *   **Status:** NOT STARTED
+    *   **Is recurring issue?** N
+    *   **Should Test frontend/backend/both after fix?** Frontend
+    *   **Blocked on other issue:** None
 
 **In progress Task List**:
--   **Task 1: Advanced ML/AI Features Implementation (P0)**
-    -   **Description:** Implement the user's request for advanced ML features, including UI for uncertainty bounds, multi-timeframe analysis, model explanations, real-time drift alerts, and backend services for Bayesian NNs, transfer learning, SHAP/LIME, and production optimization.
-    -   **Where to resume:**
-        1.  The agent has created three backend route files: , , and .
-        2.  The next step is to implement the business logic and data models within these new backend files.
-        3.  Create the corresponding comprehensive frontend pages for ML Monitoring, Analytics, and Optimization.
-        4.  Register all new routes in .
-        5.  Add the new pages to the router in  and navigation in .
-        6.  Thoroughly test the new dashboards end-to-end.
-    -   **What will be achieved with this?** A major expansion of the platform's analytical capabilities, providing deep insights into the AI models' performance, confidence, and behavior.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** Both
-    -   **Blocked on something:** None
+*   None
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks (P1):**
-    -   **Deepen Existing Scaffolds:** The user explicitly requested to deepen existing scaffolds. This involves replacing the mock data and backend logic for the **Copy Trading**, **Market Maker Mode**, **Options Trading**, and **Backtest Engine** pages with fully functional implementations connected to real data and trading logic.
--   **Future Tasks (P2):**
-    -   **Monetization:** Implement subscription tiers and a referral program.
-    -   **Rule-Based Triggers:** Implement an engine for users to create complex conditional automation rules (e.g., If BTC drops 5% AND risk score then sell 20% position).
-    -   A comprehensive list of ideas is also available in .
+*   **Upcoming Tasks:**
+    *   (P1) Implement live auto-trading based on the proven adaptive strategy.
+*   **Future Tasks:**
+    *   (P2) Enhance the frontend UI/UX for the yearly and multi-year backtest results visualization.
+    *   (P3) Integrate more data sources besides Kraken.
 
 **Completed work in this session**
--   **P0 Features Batch Implementation (DONE):**
-    -   Advanced Order Types page (Trailing Stops, DCA Bots).
-    -   DeFi Yield Farming dashboard.
-    -   Perpetual Futures trading interface.
-    -   News Sentiment Engine page.
-    -   DeFi Wallet connect page (based on MetaMask playbook).
--   **Portfolio Risk Analyzer Enhancement (DONE):**
-    -   Created a unified risk dashboard combining positions from spot, perpetuals, options, and yield farming.
-    -   Implemented a Stress Test feature to simulate market crash scenarios.
--   **Telegram Notifications Integration (DONE):**
-    -   Used  to get the playbook.
-    -   Created backend service and frontend page for configuring Telegram alerts.
--   **AI-Powered Portfolio Rebalancing (DONE):**
-    -   Created a page with analytics on the current portfolio and a button to get AI-driven rebalancing suggestions.
--   **Testing:** Successfully ran the  twice, after each major batch of features, confirming all new endpoints and pages are functional (, ).
--   **Documentation:** Consistently updated  to reflect all newly completed features.
+*   **Multi-Year Adaptive Backtesting (2020-2026):** Implemented a robust backtesting engine capable of running strategies across multiple years with weekly parameter adaptation. (Files: , )
+*   **Frontend for Yearly Backtest:** Created a new page for visualizing single-year and multi-year backtest results, including performance metrics, charts, and top coins. (File: )
+*   **Dynamic Capital & Portfolio Size:** Updated the backtest engine to support user-defined starting capital and a maximum number of positions, successfully testing with ,000 and 10 positions. (File: )
+*   **Kraken Portfolio Integration:** Refactored the entire portfolio visualization backend to use the live Kraken API as the source of truth, replacing the old isolated portfolio system. (File: )
+*   **Button Functionality Testing:** Conducted comprehensive testing across major pages (Spot Trading, Auto Trading, Settings, etc.) to ensure button functionality, resolving a user concern.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Minor Backend Discrepancies**
-    -   The initial handoff mentioned this, but the agent ran two full backend test suites via the testing agent in this session. It is highly likely that any such discrepancies have been resolved.
-    -   **Status:** Considered RESOLVED, but should be re-evaluated if related bugs appear.
+*   None.
 
 **Known issue recurrence from previous fork**
--   None.
+*   None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Frontend:** React, Vite, TailwindCSS, Recharts, Sonner.
--   **Backend:** FastAPI, MongoDB (motor), Pydantic.
--   **Development Pattern:** The agent continued the rapid scaffolding approach, building full UI/mock-API features in batches and getting them validated by the testing agent before moving on.
--   **Integration:** Used  to get verified instructions for MetaMask and Telegram integrations.
+*   **Backend:** FastAPI, Pydantic, MongoDB
+*   **Frontend:** React, Vite, TailwindCSS, shadcn/ui, Recharts
+*   **Trading:** Backtesting, Sharpe Ratio, Profit Factor, Max Drawdown, Adaptive Strategies
+*   **Architecture:** Decoupled full-stack application with a REST API.
 
 **key DB schema**
--   Schema remains implicitly defined by Pydantic models in the backend route files. Numerous new models were created for the features implemented in this session (e.g., , , , etc.).
+*   The application relies less on MongoDB now, primarily using the live Kraken API for portfolio data. Data structures are enforced by Pydantic models in the backend.
 
 **changes in tech stack**
--   None.
+*   No changes in the core technologies, but a major architectural shift was made to use the live Kraken API as the primary data source for portfolio information, deprecating the previous database-backed isolated portfolio.
 
 **All files of reference**
--   **Newly Created Backend Routes:** See Code Architecture section.
--   **Newly Created Frontend Pages:** See Code Architecture section.
--   **Key Modified Files:**
-    -   
-    -   
-    -   
--   **Key Documentation:**
-    -    (Continuously updated with all new features).
+*   **Created:**
+    *   : Logic for the multi-year adaptive backtesting feature.
+    *   : API routes for the new backtesting feature.
+    *   : Frontend page for visualizing yearly backtest results.
+*   **Updated:**
+    *   : Major overhaul to use live Kraken data for all portfolio dashboard endpoints.
+    *   : Modified to consume new backend data, but currently has a loading bug.
+    *   : Updated to fetch positions from the live Kraken portfolio.
+    *   : Updated to correctly inject dependencies for the refactored portfolio service.
+    *   , : Updated to add the new Yearly Backtest page to navigation.
 
 **Areas that need refactoring**:
--   The Deepen Existing Scaffolds task in the upcoming backlog directly addresses this. The **Copy Trading**, **Market Maker**, **Options Trading**, and **Backtest Engine** features need their mock logic replaced with production-ready code.
+*   The  function in  calls another route module () directly. This logic should be moved into  to improve separation of concerns and reduce coupling between route modules.
 
 **key api endpoints**
--   
--   
--   
--   
--   
--   
--   
--   
+*   : Initiates a backtest across a specified range of years.
+*   : Runs a backtest for a single year with specified parameters.
+*   : Provides summary data for the portfolio dashboard (from Kraken).
+*   : Provides asset allocation data for the portfolio pie chart (from Kraken).
+*   : Provides the raw account balance and holdings from Kraken.
 
 **Critical Info for New Agent**
--   **TOP PRIORITY:** Your first task is to implement the advanced ML/AI features. Start by building out the logic in the three empty backend files (, , ) and then create the corresponding frontend dashboards.
--   **USER-APPROVED WORKFLOW:** The user approves of a rapid development cycle: build new features with a functional UI and mock backend, get them tested, and then move to the next set of features. The task to deepen older features is now in the backlog. Follow this pattern.
--   **EXISTING SENTIMENT API:** Do not build a new news sentiment engine from scratch. The agent discovered and used the existing  and  APIs and the . Leverage this existing infrastructure.
+*   The application now uses the live Kraken portfolio as the single source of truth for holdings. Any work on portfolio features must use the  or associated endpoints.
+*   A critical backend bug was resolved where a helper function and an endpoint in  had the same name, causing the helper to be overwritten at runtime. The helper was renamed to . Be aware of potential function name collisions within the same file.
+*   Your first priority is to fix the  page, which is stuck in an infinite loading loop. The previous agent has already applied a potential fix but did not test it.
 
 **documents and test reports created in this job**
--   
--   
--    (Continuously updated)
+*   
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. : User approved the rebalancing enhancement and added two major new tasks: implementing Telegram (next action item) and deepening all prior scaffolds. (COMPLETED/IN PROGRESS)
-9. : User provided a very large and detailed list of advanced ML/AI features they want to be implemented. This is the current P0 task. (IN PROGRESS)
-8. : User approved the Portfolio Risk Analyzer feature. (COMPLETED)
-7. : User approved the plan to implement the 5 P0 features. (COMPLETED)
-6. : User provided a hint that sentiment APIs might already exist. (COMPLETED)
-5. User was asked for plan confirmation. (COMPLETED)
-4. User was asked for plan confirmation. (COMPLETED)
-3. User was asked for plan confirmation. (COMPLETED)
-2. Agent sent a plan to the user. (COMPLETED)
-1. Agent sent a plan to the user. (COMPLETED)
+1.  **check and fix all refresh buttons across the entire app... portfolio dashboard doesn't show the kraken portfolio...** (IN PROGRESS - Main driver of current work)
+2.  **check and fix all buttons across the map.** (DONE)
+3.  **in yearly backtest page final capitol needs to be checked** (DONE)
+4.  **test frontend visualization** (DONE - Led to YearlyBacktest page)
+5.  **backtest 2026** (DONE)
+6.  **do all the backtests again. starting capitol is 1000$...** (DONE)
+7.  **do it again for years 2024, 2023, 2022, 2021, 2020** (DONE)
+8.  **run additional backtests for all of 2025...** (DONE - Led to adaptive backtest feature)
 
 **Project Health Check:**
--   **Broken:** None.
--   **Mocked:** Yes. A significant portion of the application's functionality is mocked at the API level by design. This includes the newly added P0 features and enhancements, as well as the older scaffolded features (Copy Trading, Market Maker, etc.).
+*   **Broken:**
+    *   : Unusable due to an infinite loading loop.
+*   **Mocked:**
+    *   Historical price data for backtesting is synthetically generated in . It does not use real market data.
 
 **3rd Party Integrations**
--   **MetaMask:** Playbook retrieved, frontend page created for connection.
--   **Telegram:** Playbook retrieved, backend service and frontend configuration page created.
--   **CryptoPanic API:** In use for the News Sentiment feature.
--   **CoinDesk API:** Available, but usage not explicitly confirmed.
+*   **Kraken API:** Used for fetching live market data and account balance. Requires user-provided API keys.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES. Used twice (, ) to validate two large batches of new features.
--   **Troubleshoot agent used after agent stuck in loop:** NO.
--   **Test files created:** None. Test reports were generated by the agent.
--   **Known regressions:** None.
+*   **Testing agent used after significant changes:** YES
+*   **Troubleshoot agent used after agent stuck in loop:** NO
+*   **Test files created:** None
+*   **Known regressions:** The Portfolio Dashboard page stopped working after its data source was updated.
 
 **Credentials to test flow:**
--   None required.
+*   Kraken API keys are configured in the environment.
+*   The frontend uses a default demo user and does not require a login.
 
 **What agent forgot to execute**
--   The agent has been very thorough in this session. It correctly identified its own oversight from the previous handoff (missing backend files for P0 features) and has successfully completed every user request in sequence, including multiple large feature batches and two full testing cycles. It is currently at the very beginning of the latest user request and has not forgotten anything yet.</analysis>
+*   The agent applied a fix to  but did not restart the frontend service or use the screenshot tool to verify if the fix for the infinite loading loop was successful.
+*   The agent did not perform a systematic check of all Refresh buttons across the application as requested by the user.</analysis>
