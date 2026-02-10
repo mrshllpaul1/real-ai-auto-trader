@@ -1,0 +1,2 @@
+"""Fallback LLM package shim."""
+
