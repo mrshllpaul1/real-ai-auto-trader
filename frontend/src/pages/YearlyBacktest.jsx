@@ -123,7 +123,22 @@ const YearlyBacktest = () => {
         className="space-y-6"
       >
         {/* Key Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <Card className="glass-card border-slate-500/30">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <DollarSign className="w-4 h-4 text-slate-400" />
+                <span className="text-xs text-slate-400">Initial Capital</span>
+              </div>
+              <p className="text-2xl font-bold text-slate-300">
+                {formatCurrency(data.initial_capital)}
+              </p>
+              <p className="text-sm text-slate-500">
+                Starting amount
+              </p>
+            </CardContent>
+          </Card>
+
           <Card className="glass-card border-green-500/30">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
