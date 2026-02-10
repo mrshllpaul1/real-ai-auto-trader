@@ -602,6 +602,10 @@ const YearlyBacktest = () => {
               <BarChart3 className="w-4 h-4 mr-2" />
               Multi-Year
             </TabsTrigger>
+            <TabsTrigger value="live" className="data-[state=active]:bg-green-500/20">
+              <Radio className="w-4 h-4 mr-2" />
+              Live Trading
+            </TabsTrigger>
             <TabsTrigger value="calendar" className="data-[state=active]:bg-amber-500/20">
               <Clock className="w-4 h-4 mr-2" />
               Market Calendar
