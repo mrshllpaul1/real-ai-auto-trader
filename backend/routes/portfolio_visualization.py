@@ -27,22 +27,88 @@ def set_dependencies(database, portfolio_manager, kraken_service=None):
 
 
 async def _fetch_kraken_holdings() -> List[Dict[str, Any]]:
-    """Fetch real Kraken portfolio holdings from internal endpoint"""
+    """Fetch real Kraken portfolio holdings by calling spot trading directly"""
     try:
-        # Simply call the spot/balance endpoint
-        import aiohttp
-        async with aiohttp.ClientSession() as session:
-            async with session.get("http://127.0.0.1:8001/api/spot/balance", timeout=aiohttp.ClientTimeout(total=5)) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    holdings = data.get("holdings", [])
-                    print(f"DEBUG: fetched {len(holdings)} holdings from spot/balance")
-                    return holdings
-                else:
-                    print(f"DEBUG: spot/balance returned status {resp.status}")
-                    return []
+        # Import and call spot trading balance endpoint directly
+        from routes import spot_trading
+        
+        if spot_trading._kraken_service is None:
+            print("DEBUG: Kraken service not available")
+            return []
+        
+        # Get balance from Kraken service
+        balance = await spot_trading._kraken_service.get_balance()
+        
+        if not isinstance(balance, dict) or not balance:
+            print("DEBUG: Empty or invalid balance from Kraken")
+            return []
+        
+        # Get prices
+        try:
+            prices = await spot_trading._kraken_service.get_all_prices()
+        except:
+            prices = {}
+        
+        # Build holdings list
+        holdings = []
+        
+        # Symbol mapping
+        symbol_map = {
+            'XXBT': 'BTC', 'XETH': 'ETH', 'XXRP': 'XRP', 'XLTC': 'LTC',
+            'XXLM': 'XLM', 'ADA': 'ADA', 'DOT': 'DOT', 'SOL': 'SOL',
+            'LINK': 'LINK', 'MATIC': 'MATIC', 'UNI': 'UNI', 'AVAX': 'AVAX',
+            'ATOM': 'ATOM', 'NEAR': 'NEAR', 'FIL': 'FIL', 'APT': 'APT'
+        }
+        
+        for currency, amount in balance.items():
+            try:
+                amount = float(amount)
+            except:
+                continue
+            
+            if amount <= 0:
+                continue
+            
+            # Skip fiat
+            if currency in ['ZUSD', 'USD', 'ZEUR', 'EUR']:
+                continue
+            
+            # Get standard symbol
+            symbol = symbol_map.get(currency, currency)
+            if symbol.startswith('X') and len(symbol) > 3:
+                symbol = symbol[1:]
+            
+            # Find price
+            price = 0
+            for pair, p in prices.items():
+                # Check for matching pair
+                if symbol == 'BTC' and 'XBT' in pair and 'USD' in pair:
+                    price = p
+                    break
+                elif symbol in pair and 'USD' in pair:
+                    price = p
+                    break
+            
+            usd_value = amount * price
+            
+            if usd_value > 0.5:
+                holdings.append({
+                    "symbol": symbol,
+                    "name": symbol,
+                    "amount": amount,
+                    "price": price,
+                    "usd_value": usd_value,
+                    "kraken_currency": currency
+                })
+        
+        holdings.sort(key=lambda x: x["usd_value"], reverse=True)
+        print(f"DEBUG: _fetch_kraken_holdings returning {len(holdings)} items")
+        return holdings
+        
     except Exception as e:
-        print(f"Error fetching Kraken portfolio via HTTP: {e}")
+        print(f"Error in _fetch_kraken_holdings: {e}")
+        import traceback
+        traceback.print_exc()
         return []
 
 
