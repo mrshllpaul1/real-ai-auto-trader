@@ -1058,9 +1058,13 @@ const YearlyBacktest = ({ embedded = false }) => {
                   <Select 
                     value={marketCalendar?.year?.toString() || '2025'} 
                     onValueChange={(val) => {
+                      setMarketCalendar(null); // Show loading state immediately
                       api.get(`/yearly-backtest/market-calendar?year=${val}`)
                         .then(res => setMarketCalendar(res.data))
-                        .catch(err => console.error('Error loading calendar:', err));
+                        .catch(err => {
+                          console.error('Error loading calendar:', err);
+                          toast.error(`Failed to load ${val} calendar`);
+                        });
                     }}
                   >
                     <SelectTrigger className="w-28">
