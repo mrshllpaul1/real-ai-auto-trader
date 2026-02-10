@@ -43,10 +43,6 @@ const PortfolioDashboard = () => {
       setTopPerformers(topRes.data?.top_performers || []);
       setWorstPerformers(worstRes.data?.worst_performers || []);
       
-      // Show success toast only if manually refreshed (not on initial load or interval)
-      if (!loading && sumRes.data) {
-        toast.portfolio.updated();
-      }
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error('Failed to load portfolio data', {
@@ -55,7 +51,7 @@ const PortfolioDashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedRange, loading]);
+  }, [selectedRange]);
 
   useEffect(() => {
     loadData();
