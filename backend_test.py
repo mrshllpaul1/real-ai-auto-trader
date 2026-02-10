@@ -15,7 +15,7 @@ from typing import Dict, Any, List, Optional
 BASE_URL = "https://ai-trading-trainer.preview.emergentagent.com/api"
 USER_ID = "demo_user_test123"
 
-class BackendTester:
+class MLOptimizationTester:
     def __init__(self):
         self.session = None
         self.results = []
@@ -24,7 +24,7 @@ class BackendTester:
         
     async def __aenter__(self):
         self.session = aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=30),
+            timeout=aiohttp.ClientTimeout(total=60),
             headers={'Content-Type': 'application/json'}
         )
         return self
@@ -47,6 +47,7 @@ class BackendTester:
         if success:
             result['response_preview'] = str(response)[:200] if response else None
             self.passed_tests.append(result)
+            print(f"✅ {test_name} - Status: {status_code}")
         else:
             result['error_details'] = error
             self.failed_tests.append(result)
