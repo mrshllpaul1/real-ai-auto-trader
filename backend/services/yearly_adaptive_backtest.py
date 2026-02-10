@@ -603,27 +603,37 @@ def generate_trading_signal(indicators: Dict, params: Dict, position_held: bool 
 class YearlyBacktestEngine:
     """Engine to run full year backtest with weekly adaptation"""
     
-    def __init__(self, initial_capital: float = 100000, coins: List[str] = None):
+    def __init__(self, initial_capital: float = 100000, coins: List[str] = None, year: int = 2025):
         self.initial_capital = initial_capital
         self.capital = initial_capital
-        self.coins = coins or TOP_COINS[:20]  # Default to top 20 coins
+        self.year = year
+        
+        # Get year-appropriate coins
+        year_coins = COINS_BY_YEAR.get(year, TOP_COINS[:20])
+        if coins:
+            # Filter provided coins to only those available in the year
+            self.coins = [c for c in coins if c in year_coins] or year_coins[:20]
+        else:
+            self.coins = year_coins[:20]
+        
         self.strategy = AdaptiveStrategy()
         self.positions = {}
         self.trades = []
         self.weekly_performance = []
         self.equity_curve = []
         self.regime_history = []
+        self.market_events = MARKET_EVENTS_BY_YEAR.get(year, MARKET_EVENTS_2025)
         
     def run_full_year_backtest(self) -> Dict:
-        """Run complete 2025 backtest with weekly adaptation"""
+        """Run complete yearly backtest with weekly adaptation"""
         days_in_year = 365
         weeks_in_year = 52
         
-        # Generate price data for all coins
-        logger.info(f"Generating price data for {len(self.coins)} coins over {days_in_year} days")
+        # Generate price data for all coins using year-specific events and prices
+        logger.info(f"Generating {self.year} price data for {len(self.coins)} coins over {days_in_year} days")
         coin_prices = {}
         for coin in self.coins:
-            coin_prices[coin] = generate_coin_prices(coin, days_in_year, MARKET_EVENTS_2025)
+            coin_prices[coin] = generate_coin_prices(coin, days_in_year, self.market_events, self.year)
         
         # Initialize tracking
         daily_equity = [self.initial_capital]
@@ -645,7 +655,7 @@ class YearlyBacktestEngine:
                 
                 # Get regime for this week
                 regime = "sideways"
-                for event in MARKET_EVENTS_2025:
+                for event in self.market_events:
                     if event["week"] <= week + 1:
                         regime = event["regime"]
                 
