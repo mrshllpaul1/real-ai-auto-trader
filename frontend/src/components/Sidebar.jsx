@@ -188,6 +188,7 @@ const Sidebar = () => {
     { path: '/market-maker', icon: Activity, label: 'Market Maker', highlight: true },
     { path: '/options-trading', icon: Target, label: 'Options', highlight: true },
     { path: '/backtest-engine', icon: BarChart3, label: 'Backtest Engine', highlight: true },
+    { path: '/yearly-backtest', icon: Calendar, label: 'Yearly Backtest', highlight: true },
     { path: '/advanced-orders', icon: Layers, label: 'Advanced Orders', highlight: true },
     { path: '/defi-wallet', icon: Wallet, label: 'DeFi Wallet', highlight: true },
     { path: '/yield-farming', icon: Sprout, label: 'Yield Farming', highlight: true },
