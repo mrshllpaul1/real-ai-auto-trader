@@ -30,26 +30,29 @@ async def get_kraken_portfolio() -> List[Dict[str, Any]]:
     """Fetch real Kraken portfolio holdings directly from service"""
     global _kraken_service
     
+    print(f"DEBUG get_kraken_portfolio called, _kraken_service is {'set' if _kraken_service else 'None'}")
+    
     if _kraken_service is None:
         # Try to import from spot_trading
         try:
             from routes import spot_trading
             _kraken_service = spot_trading._kraken_service
+            print(f"DEBUG imported kraken_service: {'set' if _kraken_service else 'None'}")
         except Exception as e:
             print(f"Could not get kraken service: {e}")
             return []
     
     if _kraken_service is None:
-        print("DEBUG: _kraken_service is None, returning empty")
+        print("DEBUG: _kraken_service is still None, returning empty list")
         return []
     
     try:
         # Get balance - this returns {currency: amount}
         balance = await _kraken_service.get_balance()
-        print(f"DEBUG: balance type={type(balance)}, len={len(balance) if isinstance(balance, dict) else 'N/A'}")
+        print(f"DEBUG: balance type={type(balance)}")
         
         if not isinstance(balance, dict):
-            print(f"DEBUG: balance is not a dict, returning empty")
+            print(f"DEBUG: balance is not a dict, returning empty list")
             return []
         
         # Get prices for valuation
@@ -102,8 +105,7 @@ async def get_kraken_portfolio() -> List[Dict[str, Any]]:
                             price = float(val['c'][0])
                             break
             except Exception as te:
-                print(f"DEBUG: ticker error for {symbol}: {te}")
-                price = 0
+                pass  # Silently skip price errors
             
             usd_value = amount * price if price > 0 else 0
             
@@ -119,7 +121,7 @@ async def get_kraken_portfolio() -> List[Dict[str, Any]]:
         
         # Sort by value
         holdings.sort(key=lambda x: x["usd_value"], reverse=True)
-        print(f"DEBUG: returning {len(holdings)} holdings")
+        print(f"DEBUG: returning {len(holdings)} holdings as list")
         return holdings
         
     except Exception as e:
