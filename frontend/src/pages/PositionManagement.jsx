@@ -347,6 +347,7 @@ const PositionManagement = ({ embedded = false }) => {
                       }`}>
                         {isProfit ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
                         <span className="font-data font-bold">{isProfit ? '+' : ''}{pnlPct.toFixed(2)}%</span>
+                        <span className="text-xs opacity-70">24h</span>
                       </div>
                     </div>
                   </div>
