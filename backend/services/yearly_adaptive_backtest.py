@@ -279,6 +279,23 @@ class AdaptiveStrategy:
             self.params["take_profit_pct"] = 8
             self.params["position_size_pct"] = 8
             self.params["rsi_oversold"] = 24
+            
+        elif regime == "crash":
+            # ULTRA conservative during crashes - mostly sit out
+            self.params["entry_threshold"] = 14
+            self.params["volatility_filter"] = 0.06
+            self.params["stop_loss_pct"] = 2
+            self.params["position_size_pct"] = 3
+            self.params["max_positions"] = 2
+            self.params["take_profit_pct"] = 5
+            
+        elif regime == "euphoria":
+            # Ride the wave but protect profits
+            self.params["entry_threshold"] = 7
+            self.params["take_profit_pct"] = 12
+            self.params["position_size_pct"] = 10
+            self.params["stop_loss_pct"] = 5
+            self.params["rsi_oversold"] = 35
         
         # Performance-based adjustments
         if recent_win_rate < 0.45:
@@ -292,19 +309,25 @@ class AdaptiveStrategy:
         return self.params
 
 
-def generate_coin_prices(coin: str, days: int, market_events: List[Dict]) -> List[float]:
+def generate_coin_prices(coin: str, days: int, market_events: List[Dict], year: int = 2025) -> List[float]:
     """Generate realistic price data for a coin over the year"""
-    # Base prices for major coins
-    base_prices = {
+    # Get year-specific base prices
+    year_prices = BASE_PRICES_BY_YEAR.get(year, BASE_PRICES_BY_YEAR[2025])
+    
+    # Default base prices for coins not in year-specific dict
+    default_prices = {
         "BTC": 68000, "ETH": 3500, "SOL": 150, "XRP": 0.55, "ADA": 0.45,
         "AVAX": 35, "DOT": 7, "LINK": 15, "MATIC": 0.9, "ATOM": 9,
         "UNI": 7, "NEAR": 5, "FIL": 6, "ARB": 1.2, "OP": 2.5,
         "SUI": 1.5, "APT": 9, "INJ": 25, "TIA": 8, "SEI": 0.5,
         "DOGE": 0.12, "SHIB": 0.000022, "PEPE": 0.0000012, "BONK": 0.00003,
-        "LTC": 85, "BCH": 450, "XMR": 170, "ALGO": 0.20, "HBAR": 0.08
+        "LTC": 85, "BCH": 450, "XMR": 170, "ALGO": 0.20, "HBAR": 0.08,
+        "VET": 0.02, "AAVE": 80, "MKR": 600, "CRV": 0.5, "SNX": 2,
+        "COMP": 50, "SUSHI": 1, "YFI": 8000, "BAL": 5, "1INCH": 0.3
     }
     
-    base_price = base_prices.get(coin, random.uniform(0.1, 100))
+    # Try year-specific price, then default, then random
+    base_price = year_prices.get(coin, default_prices.get(coin, random.uniform(0.1, 100)))
     
     # Coin-specific volatility multiplier
     high_vol_coins = ["PEPE", "BONK", "SHIB", "DOGE", "WIF", "FLOKI", "MEME", "MOG"]
