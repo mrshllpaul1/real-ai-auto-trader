@@ -64,6 +64,55 @@ SAMPLE_TRADERS = [
     },
 ]
 
+# Forward-looking candidates for users seeking new traders to follow soon
+FUTURE_TRADER_PROSPECTS = [
+    {
+        "trader_id": "prospect_ai_quant",
+        "display_name": "AI Quant NextGen",
+        "specialty": "LLM + quant factors on mid-cap alts",
+        "expected_roi": 120.0,
+        "risk": "medium",
+        "trend": "accelerating",
+        "signal_strength": 87,
+    },
+    {
+        "trader_id": "prospect_gem_hunter",
+        "display_name": "Gem Hunter X",
+        "specialty": "Pre-listing narratives & social velocity",
+        "expected_roi": 180.0,
+        "risk": "high",
+        "trend": "breaking out",
+        "signal_strength": 90,
+    },
+    {
+        "trader_id": "prospect_defi_rotator",
+        "display_name": "DeFi Rotator",
+        "specialty": "Yield rotations and airdrop farming",
+        "expected_roi": 95.0,
+        "risk": "medium-high",
+        "trend": "steady",
+        "signal_strength": 82,
+    },
+    {
+        "trader_id": "prospect_btc_structured",
+        "display_name": "BTC Structured",
+        "specialty": "Options overlays on BTC/ETH",
+        "expected_roi": 60.0,
+        "risk": "low",
+        "trend": "stable",
+        "signal_strength": 78,
+    },
+    {
+        "trader_id": "prospect_ai_airdrops",
+        "display_name": "AI Airdrops",
+        "specialty": "AI-curated new chain incentives",
+        "expected_roi": 140.0,
+        "risk": "high",
+        "trend": "momentum",
+        "signal_strength": 85,
+    },
+]
+
 # Global database reference
 _db = None
 
@@ -244,6 +293,54 @@ async def get_top_five_copy_traders(db = Depends(get_database)):
             "sort_by": "roi",
             "total_traders": len(SAMPLE_TRADERS),
             "limit": 5,
+            "fallback": True
+        }
+
+
+@router.get("/trader-finder")
+async def get_trader_finder(db = Depends(get_database)):
+    """
+    Discover 5 forward-looking trader prospects (future possibilities).
+    Uses stored prospects when available, otherwise falls back to curated seeds.
+    """
+    try:
+        prospects = []
+        used_fallback = False
+
+        # Try to fetch prospects from DB (if collection exists)
+        if db is not None and hasattr(db, "trader_prospects"):
+            try:
+                cursor = db.trader_prospects.find({}).sort("signal_strength", -1)
+                prospects = await cursor.to_list(length=5)
+            except Exception:
+                prospects = []
+
+        # Normalize and fallback
+        if prospects:
+            for p in prospects:
+                p.pop("_id", None)
+        else:
+            prospects = FUTURE_TRADER_PROSPECTS.copy()
+            used_fallback = True
+
+        # Sort and trim to 5 by signal strength (or expected ROI as backup)
+        def _get_prospect_sort_key(p: Dict[str, Any]) -> float:
+            return p.get("signal_strength", p.get("expected_roi", 0))
+
+        prospects = sorted(prospects, key=_get_prospect_sort_key, reverse=True)[:5]
+
+        return {
+            "prospects": prospects,
+            "count": len(prospects),
+            "criteria": "signal_strength desc; fallback to curated prospects",
+            "fallback": used_fallback,
+        }
+    except Exception as e:
+        logger.error(f"Error finding trader prospects: {e}")
+        return {
+            "prospects": FUTURE_TRADER_PROSPECTS[:5],
+            "count": 5,
+            "criteria": "fallback",
             "fallback": True
         }
 
