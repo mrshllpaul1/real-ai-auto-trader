@@ -63,6 +63,7 @@ def register_routes(api_router: APIRouter):
     from routes import telegram_notifications as telegram_routes
     from routes import portfolio_rebalance as rebalance_routes
     from routes import enhanced_data as enhanced_data_routes
+    from routes import historical_media as historical_media_routes
     
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
@@ -74,6 +75,7 @@ def register_routes(api_router: APIRouter):
     api_router.include_router(risk.router, prefix="/risk", tags=["Risk Management"])
     api_router.include_router(learning.router, prefix="/learning", tags=["AI Learning"])
     api_router.include_router(news.router, prefix="/news", tags=["Crypto News"])
+    api_router.include_router(historical_media_routes.router)  # Historical Media - includes own prefix
     api_router.include_router(training.router, prefix="/training", tags=["Historical Training"])
     api_router.include_router(auto_trading.router, prefix="/auto-trading", tags=["Auto Trading"])
     api_router.include_router(allocation.router, prefix="/allocation", tags=["Portfolio Allocation"])

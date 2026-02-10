@@ -64,10 +64,17 @@ async def _init_phase1_core(db):
     from services.ai_news_sentiment import AINewsSentimentService, set_sentiment_service
     from services.cryptopanic_service import CryptoPanicService, set_cryptopanic_service
     from services.ai_coin_discovery import AICoinDiscoveryService, set_discovery_service
+    from services.historical_media_service import HistoricalMediaService
     
     # Market & News
     _services['market'] = MarketDataService()
     _services['news'] = CryptoNewsAggregator()
+    
+    # Historical Media Service
+    historical_media_service = HistoricalMediaService(db)
+    await historical_media_service.ensure_indexes()
+    _services['historical_media'] = historical_media_service
+    logger.info("✅ Historical media service initialized")
     
     # Kraken (optional)
     kraken_api_key = os.getenv('KRAKEN_API_KEY')
@@ -504,6 +511,7 @@ async def _init_phase7_wire_dependencies(db):
     from routes.learning import set_learning_service
     from routes import gem_predictor as gem_predictor_routes
     from routes import enhanced_data as enhanced_data_routes
+    from routes import historical_media as historical_media_routes
     
     # Wire route dependencies
     ai_universe.set_dependencies(_services['universe'])
@@ -520,6 +528,7 @@ async def _init_phase7_wire_dependencies(db):
     ensemble.set_dependencies(db, _services['market'], _services['ensemble'], _services['universe_optimizer'], _services['rainbow_agent'])
     coindesk.set_dependencies(_services['coindesk'])
     historical_data.set_dependencies(db, _services['historical_downloader'], _services['cryptocompare'])
+    historical_media_routes.set_dependencies(_services['historical_media'], _services['news'])
     ai_learning_loop.set_dependencies(db, _services['learning_loop'])
     events.set_dependencies(db, _services['correlation_engine'], _services['events_db'])
     event_triggers.set_dependencies(db, _services['trigger_service'])
