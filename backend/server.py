@@ -71,7 +71,7 @@ All trading endpoints are prefixed with `/api`. See below for full documentation
     },
     servers=[
         {
-            "url": "https://crypto-bot-dashboard.preview.emergentagent.com",
+            "url": "https://trade-sentinel-27.preview.emergentagent.com",
             "description": "Production server"
         },
         {
