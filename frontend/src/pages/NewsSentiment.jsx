@@ -19,6 +19,9 @@ const NewsSentiment = () => {
   const [coinSentiment, setCoinSentiment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedCoin, setSelectedCoin] = useState('bitcoin');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [error, setError] = useState('');
 
   const coins = [
     { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin' },
@@ -42,6 +45,7 @@ const NewsSentiment = () => {
 
   const fetchData = async () => {
     setLoading(true);
+    setError('');
     try {
       const [marketRes, trendingRes, bullishRes, bearishRes] = await Promise.all([
         fetch(`${API_URL}/api/sentiment/market`),
@@ -63,8 +67,11 @@ const NewsSentiment = () => {
         const data = await bearishRes.json();
         setBearishNews(data.news || []);
       }
+      setLastUpdated(new Date().toISOString());
     } catch (err) {
       console.error('Error fetching sentiment data:', err);
+      setError('Unable to refresh sentiment. Please try again.');
+      toast.error('Failed to refresh sentiment data.');
     } finally {
       setLoading(false);
     }
@@ -125,6 +132,42 @@ const NewsSentiment = () => {
     { id: 'coin', label: 'Coin Analysis', icon: BarChart3 }
   ];
 
+  const filterNews = (items = []) => {
+    if (!searchTerm) return items;
+    const term = searchTerm.toLowerCase();
+    return items.filter((n) =>
+      (n.title || '').toLowerCase().includes(term) ||
+      (n.source || '').toLowerCase().includes(term) ||
+      (n.currencies || []).some((c) => c.toLowerCase().includes(term))
+    );
+  };
+
+  const renderSearchBar = () => (
+    <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
+      <div className="flex items-center gap-2 bg-[#1F1F1F] border border-[#333] rounded-lg px-3 py-2 w-full md:w-1/2">
+        <Filter size={16} className="text-[#A1A1AA]" />
+        <input
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Filter by keyword, source, or coin (e.g., bitcoin, ETF, SEC)"
+          className="bg-transparent text-white text-sm outline-none flex-1 placeholder:text-[#555]"
+          data-testid="news-filter-input"
+        />
+      </div>
+      <div className="text-xs text-[#A1A1AA]">
+        Showing {filterNews(
+          activeTab === 'trending'
+            ? trendingNews
+            : activeTab === 'bullish'
+            ? bullishNews
+            : activeTab === 'bearish'
+            ? bearishNews
+            : []
+        ).length} articles
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#0A0A0A] p-4 md:p-6" data-testid="news-sentiment-page">
       {/* Header */}
@@ -135,6 +178,11 @@ const NewsSentiment = () => {
             News & Sentiment
           </h1>
           <p className="text-[#A1A1AA] mt-1">AI-powered market sentiment analysis</p>
+          {lastUpdated && (
+            <p className="text-xs text-[#555] mt-1">
+              Last updated {formatTimeAgo(lastUpdated)}
+            </p>
+          )}
         </div>
         <button
           onClick={fetchData}
@@ -147,6 +195,22 @@ const NewsSentiment = () => {
       </div>
 
       {/* Market Sentiment Overview */}
+      {error && (
+        <div className="mb-4 p-3 rounded-lg border border-red-500/40 bg-red-500/10 text-red-200 text-sm">
+          <div className="flex items-center gap-2">
+            <AlertCircle size={16} />
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
+
+      {loading && (
+        <div className="mb-4 p-3 rounded-lg border border-[#333] bg-[#0F0F0F] text-[#A1A1AA] text-sm flex items-center gap-2">
+          <RefreshCw size={14} className="animate-spin" />
+          Refreshing sentiment...
+        </div>
+      )}
+
       {marketSentiment && (
         <div className={`mb-6 p-6 rounded-xl border ${getSentimentBg(marketSentiment.market_score)}`}>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -279,8 +343,9 @@ const NewsSentiment = () => {
               <Flame className="text-orange-400" />
               <h2 className="text-lg font-semibold text-white">Trending News</h2>
             </div>
+            {renderSearchBar()}
             <div className="space-y-3">
-              {trendingNews.map((news, i) => (
+              {filterNews(trendingNews).map((news, i) => (
                 <div
                   key={i}
                   className="p-4 bg-[#0A0A0A] border border-[#333] rounded-lg hover:border-[#555] transition"
@@ -338,11 +403,12 @@ const NewsSentiment = () => {
               <h2 className="text-lg font-semibold text-white">Bullish News</h2>
               <span className="text-sm text-[#A1A1AA]">({bullishNews.length} articles)</span>
             </div>
+            {renderSearchBar()}
             {bullishNews.length === 0 ? (
               <div className="text-center py-8 text-[#A1A1AA]">No bullish news at the moment</div>
             ) : (
               <div className="space-y-3">
-                {bullishNews.map((news, i) => (
+                {filterNews(bullishNews).map((news, i) => (
                   <div
                     key={i}
                     className="p-4 bg-[#00FF94]/5 border border-[#00FF94]/20 rounded-lg"
@@ -376,11 +442,12 @@ const NewsSentiment = () => {
               <h2 className="text-lg font-semibold text-white">Bearish News</h2>
               <span className="text-sm text-[#A1A1AA]">({bearishNews.length} articles)</span>
             </div>
+            {renderSearchBar()}
             {bearishNews.length === 0 ? (
               <div className="text-center py-8 text-[#A1A1AA]">No bearish news at the moment</div>
             ) : (
               <div className="space-y-3">
-                {bearishNews.map((news, i) => (
+                {filterNews(bearishNews).map((news, i) => (
                   <div
                     key={i}
                     className="p-4 bg-red-500/5 border border-red-500/20 rounded-lg"
