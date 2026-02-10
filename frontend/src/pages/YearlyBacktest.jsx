@@ -621,41 +621,139 @@ const YearlyBacktest = () => {
           <TabsContent value="calendar" className="space-y-6">
             <Card className="glass-card">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-amber-400" />
-                  2025 Market Events Calendar
-                </CardTitle>
-                <CardDescription>
-                  Key market events used for regime detection and strategy adaptation
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-amber-400" />
+                      Market Events Calendar
+                    </CardTitle>
+                    <CardDescription>
+                      Week-by-week breakdown with regime detection for strategy adaptation
+                    </CardDescription>
+                  </div>
+                  <Select 
+                    value={marketCalendar?.year?.toString() || '2025'} 
+                    onValueChange={(val) => {
+                      api.get(`/yearly-backtest/market-calendar?year=${val}`)
+                        .then(res => setMarketCalendar(res.data))
+                        .catch(err => console.error('Error loading calendar:', err));
+                    }}
+                  >
+                    <SelectTrigger className="w-28">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {years.map(year => (
+                        <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </CardHeader>
               <CardContent>
                 {marketCalendar?.events ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                    {marketCalendar.events.map((event, i) => (
-                      <div
-                        key={i}
-                        className="p-3 rounded-lg bg-slate-800/50 border border-slate-700"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge variant="outline" className="text-xs">
-                            Week {event.week}
-                          </Badge>
-                          <Badge 
-                            className={`text-xs ${
-                              event.regime.includes('bull') ? 'bg-green-500/20 text-green-400' :
-                              event.regime.includes('bear') ? 'bg-red-500/20 text-red-400' :
-                              event.regime === 'euphoria' ? 'bg-purple-500/20 text-purple-400' :
-                              event.regime === 'crash' ? 'bg-red-600/20 text-red-500' :
-                              'bg-amber-500/20 text-amber-400'
-                            }`}
-                          >
-                            {event.regime}
-                          </Badge>
+                  <div className="space-y-6">
+                    {/* Regime Distribution Summary */}
+                    {marketCalendar.regime_distribution && (
+                      <div className="p-4 rounded-lg bg-slate-800/30 border border-slate-700">
+                        <h4 className="text-sm font-medium text-slate-400 mb-3">Regime Distribution for {marketCalendar.year}</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {Object.entries(marketCalendar.regime_distribution).map(([regime, count]) => (
+                            <Badge
+                              key={regime}
+                              className={`px-3 py-1 ${
+                                regime.includes('bull') ? 'bg-green-500/20 text-green-400' :
+                                regime.includes('bear') ? 'bg-red-500/20 text-red-400' :
+                                regime === 'euphoria' ? 'bg-purple-500/20 text-purple-400' :
+                                regime === 'crash' ? 'bg-red-600/20 text-red-500' :
+                                regime === 'recovery' ? 'bg-cyan-500/20 text-cyan-400' :
+                                'bg-amber-500/20 text-amber-400'
+                              }`}
+                            >
+                              {regime}: {count} weeks
+                            </Badge>
+                          ))}
                         </div>
-                        <p className="text-sm text-slate-300">{event.event}</p>
                       </div>
-                    ))}
+                    )}
+
+                    {/* Month-by-Month View */}
+                    {marketCalendar.events_by_month && (
+                      <div className="space-y-4">
+                        {Object.entries(marketCalendar.events_by_month).map(([month, events]) => (
+                          events.length > 0 && (
+                            <div key={month} className="border border-slate-700 rounded-lg overflow-hidden">
+                              <div className="bg-slate-800/50 px-4 py-2 border-b border-slate-700">
+                                <h4 className="font-medium text-slate-300">{month}</h4>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 p-3">
+                                {events.map((event, i) => (
+                                  <div
+                                    key={i}
+                                    className={`p-3 rounded-lg border ${
+                                      event.regime === 'crash' ? 'bg-red-900/20 border-red-700/50' :
+                                      event.regime === 'euphoria' ? 'bg-purple-900/20 border-purple-700/50' :
+                                      'bg-slate-800/30 border-slate-700/50'
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between mb-1">
+                                      <span className="text-xs text-slate-500">
+                                        Week {event.week}
+                                        {event.date_range && ` • ${event.date_range}`}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                      <p className="text-sm text-slate-300 flex-1">{event.event}</p>
+                                      <Badge 
+                                        className={`text-xs ml-2 ${
+                                          event.regime.includes('bull') ? 'bg-green-500/20 text-green-400' :
+                                          event.regime.includes('bear') ? 'bg-red-500/20 text-red-400' :
+                                          event.regime === 'euphoria' ? 'bg-purple-500/20 text-purple-400' :
+                                          event.regime === 'crash' ? 'bg-red-600/20 text-red-500' :
+                                          event.regime === 'recovery' ? 'bg-cyan-500/20 text-cyan-400' :
+                                          'bg-amber-500/20 text-amber-400'
+                                        }`}
+                                      >
+                                        {event.regime}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Key Events Highlight */}
+                    {marketCalendar.key_events && marketCalendar.key_events.length > 0 && (
+                      <div className="p-4 rounded-lg bg-slate-800/30 border border-amber-700/30">
+                        <h4 className="text-sm font-medium text-amber-400 mb-3 flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4" />
+                          Key Market Events ({marketCalendar.year})
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {marketCalendar.key_events.map((event, i) => (
+                            <div key={i} className="flex items-center justify-between p-2 bg-slate-800/50 rounded">
+                              <div>
+                                <span className="text-slate-400 text-xs">Week {event.week}</span>
+                                <p className="text-sm text-slate-300">{event.event}</p>
+                              </div>
+                              <Badge 
+                                className={`${
+                                  event.regime === 'crash' ? 'bg-red-600/30 text-red-400' :
+                                  event.regime === 'euphoria' ? 'bg-purple-600/30 text-purple-400' :
+                                  'bg-amber-600/30 text-amber-400'
+                                }`}
+                              >
+                                {event.regime}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <p className="text-slate-400">Loading calendar...</p>
