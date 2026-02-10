@@ -59,9 +59,12 @@ class EnhancedMTFTrainingService:
         "influencer_sentiment", "hype_phase"
     ]
     
-    # Default coins for training
+    # Default coins for training (will be expanded from Kraken)
     DEFAULT_COINS = ["BTC", "ETH", "SOL", "ADA", "DOT", "AVAX", "LINK", "MATIC", 
                     "XRP", "DOGE", "ATOM", "UNI", "LTC", "SHIB", "ARB"]
+    
+    # Cache for all Kraken coins
+    _all_kraken_coins: List[str] = []
     
     def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
