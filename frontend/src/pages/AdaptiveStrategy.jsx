@@ -779,7 +779,7 @@ const AdaptiveStrategy = () => {
                   
                   <div className="p-4 rounded-lg bg-[#121212] border border-[#1F1F1F]">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-[#A1A1AA]">Whale Wallets (>1000 BTC)</span>
+                      <span className="text-[#A1A1AA]">Whale Wallets (&gt;1000 BTC)</span>
                       <span className="text-white font-bold">2,142</span>
                     </div>
                     <div className="flex items-center gap-2">
