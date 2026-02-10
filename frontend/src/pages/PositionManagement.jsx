@@ -39,21 +39,30 @@ const PositionManagement = ({ embedded = false }) => {
         pairsMap.set(pair.symbol, pair.change_24h || 0);
       });
       
-      // Transform Kraken holdings to position format with actual 24h P&L
+      // Transform Kraken holdings to position format
+      // Use real entry price data if available, otherwise use 24h P&L
       const krakenPositions = (spotBalanceRes.data?.holdings || [])
         .filter(h => h.usd_value > 1) // Filter out dust
         .map(holding => {
-          // Get 24h change from pairs data
-          const change24h = pairsMap.get(holding.symbol) || 0;
+          // Check if we have real entry price data from tracking
+          const hasRealEntry = holding.has_entry_price && holding.entry_price;
           
-          // Calculate entry price based on 24h change
-          // If price went up 2%, entry was current_price / 1.02
-          const entryPrice = change24h !== 0 
-            ? holding.price / (1 + change24h / 100)
-            : holding.price; // Unknown entry if no change data
+          let entryPrice, pnl, pnlPct;
           
-          // Calculate P&L based on 24h change
-          const pnl = holding.usd_value * (change24h / 100);
+          if (hasRealEntry) {
+            // Use actual tracked entry price
+            entryPrice = holding.entry_price;
+            pnl = holding.unrealized_pnl || 0;
+            pnlPct = holding.pnl_percent || 0;
+          } else {
+            // Fallback to 24h change calculation
+            const change24h = pairsMap.get(holding.symbol) || 0;
+            entryPrice = change24h !== 0 
+              ? holding.price / (1 + change24h / 100)
+              : holding.price;
+            pnl = holding.usd_value * (change24h / 100);
+            pnlPct = change24h;
+          }
           
           return {
             position_id: holding.symbol,
@@ -66,10 +75,15 @@ const PositionManagement = ({ embedded = false }) => {
             current_price: holding.price,
             usd_value: holding.usd_value,
             pnl: pnl,
-            pnl_pct: change24h,
+            pnl_pct: pnlPct,
             status: 'open',
             kraken_currency: holding.kraken_currency,
-            is_24h_data: true // Flag to show this is 24h P&L
+            has_real_entry: hasRealEntry,
+            is_24h_data: !hasRealEntry,
+            cost_basis: holding.cost_basis,
+            realized_pnl: holding.realized_pnl || 0,
+            total_buys: holding.total_buys || 0,
+            total_sells: holding.total_sells || 0
           };
         });
       
