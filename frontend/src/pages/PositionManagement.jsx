@@ -25,31 +25,53 @@ const PositionManagement = ({ embedded = false }) => {
     try {
       setLoading(true);
       
-      // Load from Kraken spot balance (real portfolio)
-      const [spotBalanceRes, trailingRes, partialRes] = await Promise.all([
+      // Load from Kraken spot balance and pairs data (for 24h change)
+      const [spotBalanceRes, pairsRes, trailingRes, partialRes] = await Promise.all([
         api.get('/spot/balance').catch(() => ({ data: { holdings: [] } })),
+        api.get('/spot/pairs').catch(() => ({ data: { pairs: [] } })),
         api.get('/automation/trailing-stop/positions').catch(() => ({ data: { positions: [] } })),
         api.get('/automation/partial-tp/positions').catch(() => ({ data: { positions: [] } }))
       ]);
       
-      // Transform Kraken holdings to position format
+      // Create a map of symbol to 24h change from pairs data
+      const pairsMap = new Map();
+      (pairsRes.data?.pairs || []).forEach(pair => {
+        pairsMap.set(pair.symbol, pair.change_24h || 0);
+      });
+      
+      // Transform Kraken holdings to position format with actual 24h P&L
       const krakenPositions = (spotBalanceRes.data?.holdings || [])
         .filter(h => h.usd_value > 1) // Filter out dust
-        .map(holding => ({
-          position_id: holding.symbol,
-          coin_id: holding.symbol,
-          symbol: holding.symbol,
-          name: holding.name,
-          side: 'long',
-          quantity: holding.amount,
-          entry_price: holding.price * 0.95, // Estimate entry ~5% lower
-          current_price: holding.price,
-          usd_value: holding.usd_value,
-          pnl: holding.usd_value * 0.05, // Estimate 5% profit
-          pnl_pct: 5.26,
-          status: 'open',
-          kraken_currency: holding.kraken_currency
-        }));
+        .map(holding => {
+          // Get 24h change from pairs data
+          const change24h = pairsMap.get(holding.symbol) || 0;
+          
+          // Calculate entry price based on 24h change
+          // If price went up 2%, entry was current_price / 1.02
+          const entryPrice = change24h !== 0 
+            ? holding.price / (1 + change24h / 100)
+            : holding.price; // Unknown entry if no change data
+          
+          // Calculate P&L based on 24h change
+          const pnl = holding.usd_value * (change24h / 100);
+          
+          return {
+            position_id: holding.symbol,
+            coin_id: holding.symbol,
+            symbol: holding.symbol,
+            name: holding.name,
+            side: 'long',
+            quantity: holding.amount,
+            entry_price: entryPrice,
+            current_price: holding.price,
+            usd_value: holding.usd_value,
+            pnl: pnl,
+            pnl_pct: change24h,
+            status: 'open',
+            kraken_currency: holding.kraken_currency,
+            is_24h_data: true // Flag to show this is 24h P&L
+          };
+        });
       
       const mergedPositions = mergePositionData(
         krakenPositions,
