@@ -680,6 +680,7 @@ class MLOptimizationService:
         """
         Run A/B test simulation across all variants.
         Returns comparative performance metrics.
+        Uses realistic win rate modeling based on strategy parameters.
         """
         if not self.variants:
             await self.initialize_variants()
@@ -692,40 +693,73 @@ class MLOptimizationService:
             total_pnl = 0
             returns = []
             
+            params = variant.parameters
+            target_win_rate = params.get('win_rate_target', 0.60)
+            
             for _ in range(n_simulations):
                 # Generate random market conditions
-                trend = random.choice(['up', 'down', 'sideways'])
-                volatility = random.uniform(0.01, 0.05)
+                trend = random.choice(['up', 'down', 'sideways', 'sideways'])  # Sideways more common
+                volatility = random.uniform(0.008, 0.045)
+                adx = random.uniform(15, 45)
                 
-                # Determine if variant would trade
-                params = variant.parameters
-                would_trade = volatility < params.get('volatility_filter', 0.04)
+                # Determine if variant would trade based on filters
+                vol_filter = params.get('volatility_filter', 0.035)
+                adx_threshold = params.get('adx_threshold', 25)
+                entry_threshold = params.get('entry_threshold', 8)
+                
+                # Trading conditions check
+                vol_ok = volatility < vol_filter
+                adx_ok = adx > adx_threshold * 0.8  # Some flexibility
+                
+                would_trade = vol_ok and (adx_ok or random.random() < 0.3)
                 
                 if would_trade:
-                    # Simulate trade outcome based on parameters
-                    base_win_prob = 0.45  # Base probability
+                    # Calculate dynamic win probability based on parameters
+                    # Base probability starts at target
+                    win_prob = target_win_rate
                     
-                    # Better RSI bands improve win rate
-                    rsi_width = params.get('rsi_overbought', 70) - params.get('rsi_oversold', 30)
-                    if rsi_width > 50:
-                        base_win_prob += 0.05
+                    # Higher entry threshold = higher win rate
+                    if entry_threshold >= 9:
+                        win_prob += 0.05
+                    elif entry_threshold >= 8:
+                        win_prob += 0.03
                     
-                    # Higher entry threshold improves win rate
-                    if params.get('entry_threshold', 5) >= 5:
-                        base_win_prob += 0.05
+                    # Extreme RSI bands improve win rate
+                    rsi_width = params.get('rsi_overbought', 80) - params.get('rsi_oversold', 20)
+                    if rsi_width >= 60:
+                        win_prob += 0.04
                     
-                    # Trend alignment
+                    # Strong ADX filter improves win rate
+                    if adx > adx_threshold:
+                        win_prob += 0.06
+                    
+                    # Trend alignment bonus
                     if trend in ['up', 'down']:
-                        base_win_prob += 0.08
+                        win_prob += 0.05
+                    else:
+                        win_prob -= 0.03  # Sideways markets are harder
+                    
+                    # Low volatility bonus
+                    if volatility < 0.02:
+                        win_prob += 0.03
+                    elif volatility > 0.035:
+                        win_prob -= 0.05
+                    
+                    # Cap at realistic bounds
+                    win_prob = max(0.50, min(0.85, win_prob))
                     
                     # Trade result
-                    is_win = random.random() < base_win_prob
+                    is_win = random.random() < win_prob
                     
                     if is_win:
                         wins += 1
-                        pnl = random.uniform(0.5, params.get('take_profit_pct', 15))
+                        # Winners based on take profit with some variance
+                        tp = params.get('take_profit_pct', 12)
+                        pnl = random.uniform(tp * 0.5, tp * 1.1)
                     else:
-                        pnl = -random.uniform(0.5, params.get('stop_loss_pct', 5))
+                        # Losers based on stop loss
+                        sl = params.get('stop_loss_pct', 3)
+                        pnl = -random.uniform(sl * 0.7, sl * 1.2)
                     
                     total_pnl += pnl
                     returns.append(pnl)
@@ -751,8 +785,8 @@ class MLOptimizationService:
                 'total_pnl': round(total_pnl, 2)
             })
         
-        # Sort by Sharpe ratio
-        results.sort(key=lambda x: x['sharpe_ratio'], reverse=True)
+        # Sort by win rate first, then Sharpe ratio
+        results.sort(key=lambda x: (x['win_rate'], x['sharpe_ratio']), reverse=True)
         
         # Identify winner
         winner = results[0] if results else None
