@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Comprehensive Backend Testing for AI Crypto Trading Platform
-Tests all major API endpoints for functionality and response validation.
+ML Optimization and A/B Testing System Testing
+Tests ML optimization endpoints, A/B testing, overfitting detection, and historical events.
 """
 
 import asyncio
