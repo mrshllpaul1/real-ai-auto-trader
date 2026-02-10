@@ -17,13 +17,15 @@ router = APIRouter(prefix="/historical-media", tags=["Historical Media"])
 # Service dependencies
 _historical_media_service = None
 _news_aggregator = None
+_correlation_service = None
 
 
-def set_dependencies(historical_media_service, news_aggregator=None):
+def set_dependencies(historical_media_service, news_aggregator=None, correlation_service=None):
     """Set service dependencies"""
-    global _historical_media_service, _news_aggregator
+    global _historical_media_service, _news_aggregator, _correlation_service
     _historical_media_service = historical_media_service
     _news_aggregator = news_aggregator
+    _correlation_service = correlation_service
 
 
 # Request models
@@ -386,4 +388,167 @@ async def cleanup_old_news(days_to_keep: int = 730):
         }
     except Exception as e:
         logger.error(f"Error cleaning up news: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# NEWS-PRICE CORRELATION ENDPOINTS
+# ============================================================================
+
+@router.post("/correlations/analyze/{coin_symbol}")
+async def analyze_news_price_correlation(
+    coin_symbol: str,
+    days: int = 7,
+    background_tasks: BackgroundTasks = None
+):
+    """
+    Analyze news-price correlations for a cryptocurrency.
+    Runs as background task for large analyses.
+    """
+    if not _correlation_service:
+        raise HTTPException(status_code=500, detail="Correlation service not initialized")
+    
+    try:
+        if background_tasks and days > 7:
+            # Run in background for large analyses
+            background_tasks.add_task(
+                _correlation_service.analyze_batch_correlations,
+                coin_symbol,
+                days,
+                limit=500
+            )
+            
+            return {
+                "status": "started",
+                "message": f"Correlation analysis started for {coin_symbol}",
+                "days": days,
+                "mode": "background"
+            }
+        else:
+            # Run synchronously for small analyses
+            result = await _correlation_service.analyze_batch_correlations(
+                coin_symbol,
+                days,
+                limit=100
+            )
+            
+            return result
+            
+    except Exception as e:
+        logger.error(f"Error analyzing correlations: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/correlations/list")
+async def get_news_price_correlations(
+    coin: Optional[str] = None,
+    days: int = 30,
+    min_correlation: float = 0.5,
+    limit: int = 100
+):
+    """
+    Get news-price correlation records.
+    
+    Parameters:
+    - coin: Filter by cryptocurrency symbol
+    - days: Number of days to look back
+    - min_correlation: Minimum correlation strength (0-1)
+    - limit: Maximum results to return
+    """
+    if not _correlation_service:
+        raise HTTPException(status_code=500, detail="Correlation service not initialized")
+    
+    try:
+        correlations = await _correlation_service.get_correlations(
+            coin_symbol=coin,
+            days=days,
+            min_correlation=min_correlation,
+            limit=limit
+        )
+        
+        return {
+            "correlations": correlations,
+            "count": len(correlations),
+            "filters": {
+                "coin": coin,
+                "days": days,
+                "min_correlation": min_correlation
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error retrieving correlations: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/correlations/statistics")
+async def get_correlation_statistics(
+    coin: Optional[str] = None,
+    days: int = 30
+):
+    """
+    Get statistics about news-price correlations.
+    
+    Parameters:
+    - coin: Filter by cryptocurrency symbol (optional)
+    - days: Number of days to analyze
+    """
+    if not _correlation_service:
+        raise HTTPException(status_code=500, detail="Correlation service not initialized")
+    
+    try:
+        stats = await _correlation_service.get_correlation_statistics(
+            coin_symbol=coin,
+            days=days
+        )
+        
+        return {
+            "status": "success",
+            "statistics": stats
+        }
+    except Exception as e:
+        logger.error(f"Error calculating correlation statistics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/correlations/ml-dataset/{coin_symbol}")
+async def get_ml_training_dataset(
+    coin_symbol: str,
+    days: int = 365,
+    min_correlation: float = 0.3,
+    format: str = "json"
+):
+    """
+    Generate ML training dataset with news+price features.
+    
+    Parameters:
+    - coin_symbol: Cryptocurrency symbol
+    - days: Number of days of historical data
+    - min_correlation: Minimum correlation to include
+    - format: Output format (json or csv)
+    """
+    if not _correlation_service:
+        raise HTTPException(status_code=500, detail="Correlation service not initialized")
+    
+    try:
+        dataset = await _correlation_service.generate_ml_training_dataset(
+            coin_symbol=coin_symbol,
+            days=days,
+            min_correlation=min_correlation
+        )
+        
+        if format == "csv":
+            # TODO: Convert to CSV format
+            raise HTTPException(status_code=501, detail="CSV format not yet implemented")
+        
+        return {
+            "coin_symbol": coin_symbol.upper(),
+            "dataset": dataset,
+            "sample_count": len(dataset),
+            "days_covered": days,
+            "min_correlation": min_correlation,
+            "features": ["sentiment_score", "is_market_moving", "price_before", "hour_of_day", "day_of_week"],
+            "labels": ["1h", "4h", "12h", "24h"]
+        }
+    except Exception as e:
+        logger.error(f"Error generating ML dataset: {e}")
         raise HTTPException(status_code=500, detail=str(e))

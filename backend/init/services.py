@@ -71,10 +71,17 @@ async def _init_phase1_core(db):
     _services['news'] = CryptoNewsAggregator()
     
     # Historical Media Service
+    from services.news_price_correlation import NewsPriceCorrelationService
+    
     historical_media_service = HistoricalMediaService(db)
     await historical_media_service.ensure_indexes()
     _services['historical_media'] = historical_media_service
     logger.info("✅ Historical media service initialized")
+    
+    # News-Price Correlation Service
+    correlation_service = NewsPriceCorrelationService(db, historical_media_service)
+    _services['news_price_correlation'] = correlation_service
+    logger.info("✅ News-price correlation service initialized")
     
     # Kraken (optional)
     kraken_api_key = os.getenv('KRAKEN_API_KEY')
@@ -528,7 +535,11 @@ async def _init_phase7_wire_dependencies(db):
     ensemble.set_dependencies(db, _services['market'], _services['ensemble'], _services['universe_optimizer'], _services['rainbow_agent'])
     coindesk.set_dependencies(_services['coindesk'])
     historical_data.set_dependencies(db, _services['historical_downloader'], _services['cryptocompare'])
-    historical_media_routes.set_dependencies(_services['historical_media'], _services['news'])
+    historical_media_routes.set_dependencies(
+        _services['historical_media'], 
+        _services['news'],
+        _services['news_price_correlation']
+    )
     ai_learning_loop.set_dependencies(db, _services['learning_loop'])
     events.set_dependencies(db, _services['correlation_engine'], _services['events_db'])
     event_triggers.set_dependencies(db, _services['trigger_service'])
