@@ -32,39 +32,73 @@ async def _fetch_kraken_holdings() -> List[Dict[str, Any]]:
         # Import and call spot trading balance endpoint directly
         from routes import spot_trading
         
-        print(f"DEBUG: spot_trading._kraken_service = {spot_trading._kraken_service}")
-        
         if spot_trading._kraken_service is None:
             print("DEBUG: Kraken service not available, returning empty")
             return []
         
         # Get balance from Kraken service
         balance = await spot_trading._kraken_service.get_balance()
-        print(f"DEBUG: balance = {type(balance)}, len = {len(balance) if isinstance(balance, dict) else 'N/A'}")
         
         if not isinstance(balance, dict) or not balance:
             print("DEBUG: Empty or invalid balance from Kraken")
             return []
         
-        # Get prices
-        try:
-            prices = await spot_trading._kraken_service.get_all_prices()
-            print(f"DEBUG: prices type={type(prices)}, len={len(prices) if isinstance(prices, dict) else 'N/A'}")
-        except Exception as pe:
-            print(f"DEBUG: price fetch error: {pe}")
-            prices = {}
-        
         # Build holdings list
         holdings = []
         
-        # Symbol mapping
-        symbol_map = {
-            'XXBT': 'BTC', 'XETH': 'ETH', 'XXRP': 'XRP', 'XLTC': 'LTC',
-            'XXLM': 'XLM', 'ADA': 'ADA', 'DOT': 'DOT', 'SOL': 'SOL',
-            'LINK': 'LINK', 'MATIC': 'MATIC', 'UNI': 'UNI', 'AVAX': 'AVAX',
-            'ATOM': 'ATOM', 'NEAR': 'NEAR', 'FIL': 'FIL', 'APT': 'APT'
+        # Symbol mapping and pairs
+        symbol_info = {
+            'XXBT': ('BTC', 'XXBTZUSD'),
+            'XETH': ('ETH', 'XETHZUSD'),
+            'XXRP': ('XRP', 'XXRPZUSD'),
+            'XLTC': ('LTC', 'XLTCZUSD'),
+            'XXLM': ('XLM', 'XXLMZUSD'),
+            'ADA': ('ADA', 'ADAUSD'),
+            'DOT': ('DOT', 'DOTUSD'),
+            'SOL': ('SOL', 'SOLUSD'),
+            'LINK': ('LINK', 'LINKUSD'),
+            'MATIC': ('MATIC', 'MATICUSD'),
+            'UNI': ('UNI', 'UNIUSD'),
+            'AVAX': ('AVAX', 'AVAXUSD'),
+            'ATOM': ('ATOM', 'ATOMUSD'),
+            'NEAR': ('NEAR', 'NEARUSD'),
+            'FIL': ('FIL', 'FILUSD'),
+            'APT': ('APT', 'APTUSD'),
+            'SUI': ('SUI', 'SUIUSD'),
         }
         
+        # Collect currencies to price
+        currencies_to_price = []
+        for currency, amount in balance.items():
+            try:
+                amt = float(amount)
+                if amt > 0 and currency not in ['ZUSD', 'USD', 'ZEUR', 'EUR']:
+                    currencies_to_price.append(currency)
+            except:
+                pass
+        
+        # Build pairs list for batch request
+        pairs = []
+        for currency in currencies_to_price:
+            if currency in symbol_info:
+                pairs.append(symbol_info[currency][1])
+            else:
+                # Try generic pair name
+                symbol = currency if not currency.startswith('X') else currency[1:]
+                pairs.append(f"{symbol}USD")
+        
+        # Get prices in batch
+        prices = {}
+        if pairs:
+            try:
+                tickers = await spot_trading._kraken_service.get_tickers_batch(pairs)
+                for pair, data in tickers.items():
+                    if isinstance(data, dict) and 'c' in data:
+                        prices[pair] = float(data['c'][0])
+            except Exception as e:
+                print(f"DEBUG: batch ticker error: {e}")
+        
+        # Build holdings
         for currency, amount in balance.items():
             try:
                 amount = float(amount)
@@ -78,27 +112,24 @@ async def _fetch_kraken_holdings() -> List[Dict[str, Any]]:
             if currency in ['ZUSD', 'USD', 'ZEUR', 'EUR']:
                 continue
             
-            # Get standard symbol
-            symbol = symbol_map.get(currency, currency)
-            if symbol.startswith('X') and len(symbol) > 3:
-                symbol = symbol[1:]
+            # Get symbol and pair
+            if currency in symbol_info:
+                symbol, pair = symbol_info[currency]
+            else:
+                symbol = currency if not currency.startswith('X') else currency[1:]
+                pair = f"{symbol}USD"
             
             # Find price
-            price = 0
-            for pair, p in prices.items():
-                # Check for matching pair
-                if symbol == 'BTC' and 'XBT' in pair and 'USD' in pair:
-                    price = p
-                    break
-                elif symbol in pair and 'USD' in pair:
-                    price = p
-                    break
+            price = prices.get(pair, 0)
+            
+            # Try alternate pair names if not found
+            if price == 0:
+                for p, pr in prices.items():
+                    if symbol in p:
+                        price = pr
+                        break
             
             usd_value = amount * price
-            
-            # DEBUG first 3 items
-            if len(holdings) < 3:
-                print(f"DEBUG: currency={currency}, symbol={symbol}, amount={amount}, price={price}, usd_value={usd_value}")
             
             if usd_value > 0.5:
                 holdings.append({
@@ -109,6 +140,16 @@ async def _fetch_kraken_holdings() -> List[Dict[str, Any]]:
                     "usd_value": usd_value,
                     "kraken_currency": currency
                 })
+        
+        holdings.sort(key=lambda x: x["usd_value"], reverse=True)
+        print(f"DEBUG: _fetch_kraken_holdings returning {len(holdings)} items")
+        return holdings
+        
+    except Exception as e:
+        print(f"Error in _fetch_kraken_holdings: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
         
         holdings.sort(key=lambda x: x["usd_value"], reverse=True)
         print(f"DEBUG: _fetch_kraken_holdings returning {len(holdings)} items")
