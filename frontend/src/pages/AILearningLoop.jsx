@@ -842,9 +842,9 @@ const AILearningLoop = () => {
                         <div className="text-right">
                           {pred.verified ? (
                             <div className={`text-lg font-bold ${
-                              pred.accuracy_score >= 0.5 ? 'text-[#00FF94]' : 'text-[#FF0055]'
+                              (pred.accuracy_score || 0) >= 0.5 ? 'text-[#00FF94]' : 'text-[#FF0055]'
                             }`}>
-                              {(pred.accuracy_score * 100).toFixed(0)}%
+                              {((pred.accuracy_score || 0) * 100).toFixed(0)}%
                             </div>
                           ) : (
                             <Badge className="bg-[#1F1F1F] text-[#A1A1AA]">Pending</Badge>
