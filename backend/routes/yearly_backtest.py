@@ -169,10 +169,10 @@ async def run_quick_yearly_test(year: int = 2025):
     Run a quick synchronous yearly backtest with top 20 coins.
     Returns results immediately (may take 5-10 seconds).
     
-    Supported years: 2020, 2021, 2022, 2023, 2024, 2025
+    Supported years: 2020, 2021, 2022, 2023, 2024, 2025, 2026
     """
-    if year < 2020 or year > 2025:
-        raise HTTPException(status_code=400, detail="Year must be between 2020 and 2025")
+    if year < 2020 or year > 2026:
+        raise HTTPException(status_code=400, detail="Year must be between 2020 and 2026")
     
     try:
         from services.yearly_adaptive_backtest import run_yearly_adaptive_backtest, COINS_BY_YEAR
