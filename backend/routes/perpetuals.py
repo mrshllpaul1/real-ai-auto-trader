@@ -252,6 +252,26 @@ async def place_perp_order(
     }
 
 
+@router.post("/position/open")
+async def open_perp_position(
+    order: PerpOrder,
+    user_id: str = "default_user",
+    db = Depends(get_database)
+):
+    """Alias for place_perp_order - Open a perpetual position"""
+    return await place_perp_order(order, user_id, db)
+
+
+@router.post("/position/close")
+async def close_position_by_id(
+    request: ClosePosition,
+    user_id: str = "default_user",
+    db = Depends(get_database)
+):
+    """Alias for close_perp_position - Close a perpetual position"""
+    return await close_perp_position(request, user_id, db)
+
+
 @router.get("/positions")
 async def get_perp_positions(
     user_id: str = "default_user",
