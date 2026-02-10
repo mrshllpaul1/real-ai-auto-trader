@@ -609,6 +609,62 @@ frontend:
 3. **Endpoint Path Mismatches**: Some endpoints have different paths than expected (journal/add vs journal/record)
 4. **Missing Execute Trade Endpoint**: POST /api/tethys/execute-trade not implemented (alternative /api/tethys/evaluate exists)
 
+### New Features Added - Enhanced Historical Data Integration (February 2026):
+- **Kraken Universe Manager**: Auto-sync all 631+ tradeable coins from Kraken
+- **Multi-Timeframe Historical Data**: 1m, 5m, 15m, 30m, 1h, 4h, 1D, 1W OHLCV data
+- **On-Chain Metrics Service**: Free APIs (Blockchain.com, Blockchair, Mempool.space)
+- **Data Provider API Keys**: Settings page for premium on-chain data providers
+- **Training Features Endpoint**: Multi-timeframe features for ML models
+
+### New Backend Tasks:
+  - task: "Kraken Universe Sync"
+    implemented: true
+    working: true
+    file: "/app/backend/services/kraken_universe_manager.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "main"
+        - comment: "✅ WORKING: Kraken universe sync fetches 1478 pairs, 631 unique crypto coins, 727 USD pairs. Auto-discovers new coins when listed on Kraken."
+
+  - task: "Multi-Timeframe Historical Data"
+    implemented: true
+    working: true
+    file: "/app/backend/services/multitimeframe_historical_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "main"
+        - comment: "✅ WORKING: Downloaded BTC data for 1h (721 records), 4h (721 records), 1D (721 records) from Kraken. Features endpoint returns technical indicators."
+
+  - task: "On-Chain Metrics"
+    implemented: true
+    working: true
+    file: "/app/backend/services/onchain_metrics_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "main"
+        - comment: "✅ WORKING: BTC stats from blockchain.com working. ETH stats from Blockchair working. Supports BTC, ETH, LTC, DOGE, and more chains."
+
+  - task: "Data Provider API Keys Settings"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/Settings.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "IMPLEMENTED: Settings page now has Data Providers tab for Blockchair, Glassnode, CryptoQuant, Coinglass, Santiment API keys. Needs frontend testing."
+
 ### Recommendations:
 1. **✅ PRODUCTION READY**: All critical systems (88.9% success rate) are working correctly
 2. Fix TensorFlow import issue in rainbow_dqn.py for full ML capabilities
