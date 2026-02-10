@@ -65,6 +65,7 @@ def register_routes(api_router: APIRouter):
     from routes import enhanced_data as enhanced_data_routes
     from routes import mtf_training as mtf_training_routes
     from routes import kraken_expansion as kraken_expansion_routes
+    from routes import enhanced_historical_data as enhanced_historical_routes
     
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
@@ -156,6 +157,7 @@ def register_routes(api_router: APIRouter):
     api_router.include_router(enhanced_data_routes.router, tags=["Enhanced Data Services"])
     api_router.include_router(mtf_training_routes.router, tags=["MTF Training"])
     api_router.include_router(kraken_expansion_routes.router, tags=["Kraken Data Expansion"])
+    api_router.include_router(enhanced_historical_routes.router, tags=["Enhanced Historical Data"])
     
     logger.info("✅ All routes registered")
     

@@ -482,6 +482,11 @@ async def _init_phase6_scheduling(db):
     _services['onchain_metrics'] = onchain_service
     _services['mtf_historical'] = mtf_service
     
+    # Enhanced Historical Data Service
+    from services.enhanced_historical_data_service import get_enhanced_historical_service
+    enhanced_historical_service = get_enhanced_historical_service(db)
+    _services['enhanced_historical'] = enhanced_historical_service
+    
     # MTF Training Service
     from services.mtf_training_service import get_mtf_training_service
     mtf_training_service = get_mtf_training_service(db)
@@ -581,6 +586,10 @@ async def _init_phase7_wire_dependencies(db):
         _services['onchain_metrics'],
         _services['mtf_historical']
     )
+    
+    # Enhanced Historical Data Routes
+    from routes import enhanced_historical_data as enhanced_historical_routes
+    enhanced_historical_routes.set_dependencies(_services['enhanced_historical'])
     
     # MTF Training Routes
     from routes import mtf_training as mtf_training_routes
