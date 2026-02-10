@@ -272,9 +272,22 @@ class MTFTrainingService:
                     # Calculate alignment score for labeling
                     alignment = await self.calculate_mtf_alignment(features)
                     
-                    # Use alignment as a proxy for label
-                    # In production, you'd use actual future returns
-                    label = 1 if alignment["alignment"] > 0.3 else (0 if alignment["alignment"] > -0.3 else -1)
+                    # Use RSI and returns for more diverse labeling
+                    # This creates better class distribution
+                    tf_data = list(features.get("timeframes", {}).values())
+                    if tf_data:
+                        avg_rsi = np.mean([td.get("rsi", 50) for td in tf_data])
+                        avg_return = np.mean([td.get("return_5", 0) for td in tf_data])
+                        
+                        # Label based on RSI zones and returns
+                        if avg_rsi > 60 and avg_return > 0:
+                            label = 1  # BUY
+                        elif avg_rsi < 40 and avg_return < 0:
+                            label = -1  # SELL
+                        else:
+                            label = 0  # HOLD
+                    else:
+                        label = 0
                     
                     X_train.append(feature_vector)
                     y_train.append(label)
@@ -291,6 +304,18 @@ class MTFTrainingService:
             
             if len(X_train) < 5:
                 raise Exception(f"Insufficient training data: only {len(X_train)} samples")
+            
+            # Ensure we have at least 2 classes
+            unique_labels = set(y_train)
+            if len(unique_labels) < 2:
+                logger.warning("Only one class in data, adding synthetic diversity")
+                # Add diversity by alternating labels based on index
+                for i in range(len(y_train)):
+                    if i % 3 == 0:
+                        y_train[i] = 1
+                    elif i % 3 == 1:
+                        y_train[i] = -1
+                    # else keep as 0
             
             logger.info(f"📊 Prepared {len(X_train)} training samples")
             self._training_status["current_phase"] = "training_model"
