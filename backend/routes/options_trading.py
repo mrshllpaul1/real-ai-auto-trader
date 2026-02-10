@@ -298,10 +298,12 @@ async def place_option_order(
     user_id: str = "default_user",
     db = Depends(get_database)
 ):
-    """Place an option order (simulated)"""
-    # Get current price
-    current_prices = {"BTC": 45000, "ETH": 2500, "SOL": 100}
-    current_price = current_prices.get(order.symbol.upper(), 1000)
+    """Place an option order with REAL market prices"""
+    # Get REAL price from Kraken
+    current_price = await get_real_price(order.symbol.upper())
+    
+    if current_price is None:
+        raise HTTPException(status_code=503, detail=f"Unable to fetch real price for {order.symbol}")
     
     # Calculate days to expiry
     expiry = datetime.fromisoformat(order.expiry_date.replace('Z', '+00:00'))
