@@ -386,7 +386,7 @@ async def backfill_all_coins(
 @router.get("/provider-keys/status")
 async def get_provider_keys_status():
     """Get status of configured data provider API keys"""
-    if not _db:
+    if _db is None:
         raise HTTPException(status_code=500, detail="Database not initialized")
     
     # Check which keys are configured
