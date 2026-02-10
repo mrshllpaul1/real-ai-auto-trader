@@ -64,6 +64,10 @@ const AdaptiveStrategy = () => {
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [loading, setLoading] = useState(true);
   const [autoAdjusting, setAutoAdjusting] = useState(false);
+  const [coverageStats, setCoverageStats] = useState(null);
+  const [eventFilter, setEventFilter] = useState('all');
+  const [probabilityFilter, setProbabilityFilter] = useState(0);
+  const [eventCalendar, setEventCalendar] = useState(null);
 
   const loadData = useCallback(async () => {
     try {
