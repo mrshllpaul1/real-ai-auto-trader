@@ -939,11 +939,12 @@ class EnhancedMTFTrainingService:
             import traceback
             traceback.print_exc()
             
+            current_progress = self._training_status.get("progress", 0)
             self._training_status = {
                 "status": "failed",
                 "error": str(e),
                 "training_id": training_id,
-                "progress": self._training_status.get("progress", 0),
+                "progress": current_progress,
                 "current_phase": "failed"
             }
             return {
