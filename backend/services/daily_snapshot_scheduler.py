@@ -46,7 +46,7 @@ class DailySentimentSnapshotTask:
                 # Calculate time until next midnight UTC
                 now = datetime.utcnow()
                 tomorrow = datetime.combine(
-                    now.date() + asyncio.timedelta(days=1),
+                    now.date() + timedelta(days=1),
                     time(0, 0, 0)
                 )
                 seconds_until_midnight = (tomorrow - now).total_seconds()

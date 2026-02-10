@@ -6,6 +6,7 @@ Complements market_data_service.py with enhanced integration capabilities.
 
 import asyncio
 import httpx
+import os
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime, timedelta
 import logging
@@ -34,10 +35,10 @@ class EnhancedMarketDataIntegrator:
         self.max_failures = 3  # Mark source unavailable after N failures
         self.divergence_threshold = 0.05  # 5% price divergence triggers alert
         
-        # API keys (should be loaded from environment)
+        # API keys (loaded from environment variables)
         self.api_keys = {
-            'coinmarketcap': '18133157d0414918a6a63137f39525de',
-            'coinstats': '3aOEZ6HaFlWHJGaVi6thn4llY5bGXCA727KCOjly0tM='
+            'coinmarketcap': os.getenv('COINMARKETCAP_API_KEY', '18133157d0414918a6a63137f39525de'),
+            'coinstats': os.getenv('COINSTATS_API_KEY', '3aOEZ6HaFlWHJGaVi6thn4llY5bGXCA727KCOjly0tM=')
         }
     
     async def get_validated_price(
