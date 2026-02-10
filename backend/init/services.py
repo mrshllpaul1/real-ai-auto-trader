@@ -564,6 +564,14 @@ async def _init_phase7_wire_dependencies(db):
     journal_routes.set_dependencies(_services['journal'])
     set_learning_service(_services['learning'])
     
+    # Enhanced Data Routes
+    enhanced_data_routes.set_dependencies(
+        db,
+        _services['kraken_universe_mgr'],
+        _services['onchain_metrics'],
+        _services['mtf_historical']
+    )
+    
     # Wire DRL Engine routes
     from routes import drl_engine as drl_engine_routes
     drl_engine_routes.set_dependencies(db, _services.get('drl_engine'))
