@@ -457,7 +457,10 @@ async def _init_phase6_scheduling(db):
     _services['correlation_engine'] = correlation_engine
     _services['events_db'] = events_db
 
-    if events_db:
+    async def ensure_historical_events_ready():
+        """Seed curated historical events if the database is sparse."""
+        if not events_db:
+            return
         try:
             stats = await events_db.get_stats()
             current_total_events = stats.get("total_events", 0)
@@ -506,6 +509,8 @@ async def _init_phase6_scheduling(db):
             )
         except Exception as e:
             logger.warning("⚠️ Auto-seed of historical events failed: %s", e)
+
+    await ensure_historical_events_ready()
     
     # Event Triggers
     trigger_service = get_event_trigger_service(
