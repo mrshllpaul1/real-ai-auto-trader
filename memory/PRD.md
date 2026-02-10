@@ -5,7 +5,36 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ---
 
-## Session Update - Feb 10, 2026 (Latest)
+## Session Update - Feb 11, 2026 (Latest)
+
+### ✅ FIXED: AI Recommendations Display Bug (P0 Blocker)
+
+**Issue:** AI recommendations on the Spot Trading page showed empty/default component scores (all showing 50).
+
+**Root Cause:** 
+- The `get_ai_recommendations` endpoint was accessing `signals.get('scores', {})` expecting a dictionary
+- But `scores` was a **list of tuples** like `[('order_book', 30), ('on_chain', 65), ...]`
+- This caused `.get('order_book', 50)` to fail silently and return the default 50
+
+**Fix Applied:**
+- Changed to extract scores from `signals.get('components', {})` where each component has a `score` key
+- Example: `components.get('order_book', {}).get('score', 50)`
+- Also updated signal display to show "STRONG BUY" / "STRONG SELL" correctly
+- Enhanced frontend to show component score breakdown with color coding
+
+**Frontend Enhancement:**
+- Updated score thresholds to match 0-100 scale (previously expected -1 to 1)
+- Added component breakdown grid showing: Order Book, On-Chain, Social, Cross-Asset, Advanced TA
+- Added confidence percentage display
+- Color-coded scores (green ≥50, red <50)
+
+**Files Modified:**
+- `backend/routes/spot_trading.py` - Fixed AI recommendations data extraction
+- `frontend/src/pages/SpotTrading.jsx` - Enhanced UI display for recommendations
+
+---
+
+## Session Update - Feb 10, 2026
 
 ### ✅ COMPLETED: Tab URL Persistence & Lazy Loading
 
