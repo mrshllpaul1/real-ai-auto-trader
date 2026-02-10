@@ -98,9 +98,88 @@ const YearlyBacktest = () => {
     }
   };
 
+  // Live Trading Functions
+  const loadLiveTradingStatus = async () => {
+    try {
+      const [statusRes, signalsRes] = await Promise.all([
+        api.get('/yearly-backtest/live-trading/status'),
+        api.get('/yearly-backtest/live-trading/signals')
+      ]);
+      setLiveTrading({
+        active: statusRes.data.active,
+        config: statusRes.data.config,
+        status: statusRes.data.current_market,
+        signals: signalsRes.data.signals || []
+      });
+    } catch (error) {
+      console.error('Error loading live trading status:', error);
+    }
+  };
+
+  const activateLiveTrading = async () => {
+    setLiveTradingLoading(true);
+    try {
+      const res = await api.post('/yearly-backtest/live-trading/activate', {
+        enabled: true,
+        ...tradingConfig
+      });
+      setLiveTrading(prev => ({
+        ...prev,
+        active: true,
+        config: res.data.config
+      }));
+      toast.success(res.data.message);
+      loadLiveTradingStatus();
+    } catch (error) {
+      console.error('Error activating live trading:', error);
+      toast.error(error.response?.data?.detail || 'Failed to activate live trading');
+    } finally {
+      setLiveTradingLoading(false);
+    }
+  };
+
+  const deactivateLiveTrading = async () => {
+    setLiveTradingLoading(true);
+    try {
+      const res = await api.post('/yearly-backtest/live-trading/deactivate');
+      setLiveTrading(prev => ({
+        ...prev,
+        active: false,
+        config: null
+      }));
+      toast.success(res.data.message);
+    } catch (error) {
+      console.error('Error deactivating live trading:', error);
+      toast.error('Failed to deactivate live trading');
+    } finally {
+      setLiveTradingLoading(false);
+    }
+  };
+
+  const executeSignal = async (signal) => {
+    try {
+      const res = await api.post('/spot/order', {
+        symbol: signal.coin,
+        side: signal.action.toLowerCase(),
+        type: 'market',
+        amount_usd: tradingConfig.amount_per_trade_usd,
+        use_ai_timing: true
+      });
+      toast.success(`${signal.action} ${signal.coin} order placed!`);
+    } catch (error) {
+      console.error('Error executing signal:', error);
+      toast.error(`Failed to execute ${signal.action} ${signal.coin}`);
+    }
+  };
+
   useEffect(() => {
     loadMarketCalendar();
     loadRecommendedPortfolio();
+    loadLiveTradingStatus();
+    
+    // Refresh live trading status every 30 seconds
+    const interval = setInterval(loadLiveTradingStatus, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const formatCurrency = (value) => {
