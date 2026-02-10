@@ -198,26 +198,72 @@ MARKET_EVENTS_2021 = [
     {"week": 52, "month": "December", "regime": "sideways", "event": "Year-end ranging", "date_range": "Dec 23-31"}
 ]
 
-# 2022 Market calendar - Crypto winter
+# 2022 Market calendar - Crypto winter - COMPLETE WEEK BY WEEK
 MARKET_EVENTS_2022 = [
-    {"week": 1, "regime": "bear_weak", "event": "New Year weakness"},
-    {"week": 4, "regime": "bear_strong", "event": "Fed hawkish pivot"},
-    {"week": 7, "regime": "sideways", "event": "Consolidation"},
-    {"week": 10, "regime": "bear_weak", "event": "Ukraine war begins"},
-    {"week": 13, "regime": "recovery", "event": "Brief relief rally"},
-    {"week": 16, "regime": "bear_weak", "event": "Rate hike fears"},
-    {"week": 19, "regime": "crash", "event": "LUNA/UST collapse"},
-    {"week": 22, "regime": "bear_strong", "event": "Contagion - 3AC, Celsius"},
-    {"week": 25, "regime": "bear_weak", "event": "Summer capitulation"},
-    {"week": 28, "regime": "sideways", "event": "Bottom forming"},
-    {"week": 31, "regime": "recovery", "event": "Bear market rally"},
-    {"week": 34, "regime": "bear_weak", "event": "Merge anticipation"},
-    {"week": 37, "regime": "sideways", "event": "ETH Merge complete"},
-    {"week": 40, "regime": "bear_weak", "event": "Macro weakness"},
-    {"week": 43, "regime": "sideways", "event": "Pre-FTX calm"},
-    {"week": 45, "regime": "crash", "event": "FTX collapse"},
-    {"week": 48, "regime": "bear_strong", "event": "FTX contagion"},
-    {"week": 51, "regime": "bear_weak", "event": "Year-end capitulation"}
+    # January
+    {"week": 1, "month": "January", "regime": "bear_weak", "event": "New Year weakness", "date_range": "Jan 1-7"},
+    {"week": 2, "month": "January", "regime": "bear_weak", "event": "January selloff", "date_range": "Jan 8-14"},
+    {"week": 3, "month": "January", "regime": "bear_strong", "event": "BTC drops below $40k", "date_range": "Jan 15-21"},
+    {"week": 4, "month": "January", "regime": "bear_strong", "event": "Fed hawkish pivot", "date_range": "Jan 22-28"},
+    # February
+    {"week": 5, "month": "February", "regime": "recovery", "event": "Dead cat bounce", "date_range": "Jan 29-Feb 4"},
+    {"week": 6, "month": "February", "regime": "sideways", "event": "Range trading", "date_range": "Feb 5-11"},
+    {"week": 7, "month": "February", "regime": "sideways", "event": "Consolidation", "date_range": "Feb 12-18"},
+    {"week": 8, "month": "February", "regime": "bear_weak", "event": "Ukraine tensions", "date_range": "Feb 19-25"},
+    # March
+    {"week": 9, "month": "March", "regime": "crash", "event": "Russia invades Ukraine", "date_range": "Feb 26-Mar 4"},
+    {"week": 10, "month": "March", "regime": "bear_weak", "event": "Ukraine war continues", "date_range": "Mar 5-11"},
+    {"week": 11, "month": "March", "regime": "recovery", "event": "Relief rally", "date_range": "Mar 12-18"},
+    {"week": 12, "month": "March", "regime": "bull_weak", "event": "Brief relief rally", "date_range": "Mar 19-25"},
+    {"week": 13, "month": "March", "regime": "recovery", "event": "End of Q1 recovery", "date_range": "Mar 26-31"},
+    # April
+    {"week": 14, "month": "April", "regime": "sideways", "event": "April consolidation", "date_range": "Apr 1-7"},
+    {"week": 15, "month": "April", "regime": "bear_weak", "event": "Rate hike fears grow", "date_range": "Apr 8-14"},
+    {"week": 16, "month": "April", "regime": "bear_weak", "event": "Rate hike fears", "date_range": "Apr 15-21"},
+    {"week": 17, "month": "April", "regime": "bear_strong", "event": "BTC below $40k again", "date_range": "Apr 22-28"},
+    # May - LUNA Collapse
+    {"week": 18, "month": "May", "regime": "bear_weak", "event": "May weakness begins", "date_range": "Apr 29-May 5"},
+    {"week": 19, "month": "May", "regime": "crash", "event": "LUNA/UST collapse begins", "date_range": "May 6-12"},
+    {"week": 20, "month": "May", "regime": "crash", "event": "LUNA death spiral", "date_range": "May 13-19"},
+    {"week": 21, "month": "May", "regime": "bear_strong", "event": "Post-LUNA capitulation", "date_range": "May 20-26"},
+    # June - Contagion
+    {"week": 22, "month": "June", "regime": "bear_strong", "event": "Contagion - 3AC, Celsius", "date_range": "May 27-Jun 2"},
+    {"week": 23, "month": "June", "regime": "crash", "event": "Celsius freezes withdrawals", "date_range": "Jun 3-9"},
+    {"week": 24, "month": "June", "regime": "crash", "event": "3AC liquidation", "date_range": "Jun 10-16"},
+    {"week": 25, "month": "June", "regime": "bear_weak", "event": "Summer capitulation", "date_range": "Jun 17-23"},
+    {"week": 26, "month": "June", "regime": "bear_strong", "event": "BTC below $20k", "date_range": "Jun 24-30"},
+    # July
+    {"week": 27, "month": "July", "regime": "sideways", "event": "Bottom fishing begins", "date_range": "Jul 1-7"},
+    {"week": 28, "month": "July", "regime": "sideways", "event": "Bottom forming", "date_range": "Jul 8-14"},
+    {"week": 29, "month": "July", "regime": "recovery", "event": "Dead cat bounce", "date_range": "Jul 15-21"},
+    {"week": 30, "month": "July", "regime": "recovery", "event": "Relief rally", "date_range": "Jul 22-28"},
+    # August - ETH Merge Anticipation
+    {"week": 31, "month": "August", "regime": "recovery", "event": "Bear market rally", "date_range": "Jul 29-Aug 4"},
+    {"week": 32, "month": "August", "regime": "bull_weak", "event": "Merge anticipation", "date_range": "Aug 5-11"},
+    {"week": 33, "month": "August", "regime": "bull_weak", "event": "ETH rally on Merge", "date_range": "Aug 12-18"},
+    {"week": 34, "month": "August", "regime": "bear_weak", "event": "Merge anticipation fades", "date_range": "Aug 19-25"},
+    # September - ETH Merge
+    {"week": 35, "month": "September", "regime": "sideways", "event": "Pre-Merge consolidation", "date_range": "Aug 26-Sep 1"},
+    {"week": 36, "month": "September", "regime": "bear_weak", "event": "Sell the news setup", "date_range": "Sep 2-8"},
+    {"week": 37, "month": "September", "regime": "sideways", "event": "ETH Merge complete", "date_range": "Sep 9-15"},
+    {"week": 38, "month": "September", "regime": "bear_weak", "event": "Post-Merge selloff", "date_range": "Sep 16-22"},
+    {"week": 39, "month": "September", "regime": "bear_weak", "event": "September weakness", "date_range": "Sep 23-29"},
+    # October
+    {"week": 40, "month": "October", "regime": "bear_weak", "event": "Macro weakness", "date_range": "Sep 30-Oct 6"},
+    {"week": 41, "month": "October", "regime": "sideways", "event": "Range bound", "date_range": "Oct 7-13"},
+    {"week": 42, "month": "October", "regime": "sideways", "event": "Consolidation", "date_range": "Oct 14-20"},
+    {"week": 43, "month": "October", "regime": "sideways", "event": "Pre-FTX calm", "date_range": "Oct 21-27"},
+    # November - FTX Collapse
+    {"week": 44, "month": "November", "regime": "high_volatility", "event": "FTX concerns emerge", "date_range": "Oct 28-Nov 3"},
+    {"week": 45, "month": "November", "regime": "crash", "event": "FTX collapse begins", "date_range": "Nov 4-10"},
+    {"week": 46, "month": "November", "regime": "crash", "event": "FTX bankruptcy", "date_range": "Nov 11-17"},
+    {"week": 47, "month": "November", "regime": "bear_strong", "event": "FTX contagion spreads", "date_range": "Nov 18-24"},
+    {"week": 48, "month": "November", "regime": "bear_strong", "event": "FTX contagion", "date_range": "Nov 25-30"},
+    # December
+    {"week": 49, "month": "December", "regime": "bear_weak", "event": "Post-FTX stabilization", "date_range": "Dec 1-8"},
+    {"week": 50, "month": "December", "regime": "bear_weak", "event": "Low volume trading", "date_range": "Dec 9-15"},
+    {"week": 51, "month": "December", "regime": "bear_weak", "event": "Year-end capitulation", "date_range": "Dec 16-22"},
+    {"week": 52, "month": "December", "regime": "sideways", "event": "Year-end bottom", "date_range": "Dec 23-31"}
 ]
 
 # 2023 Market calendar - Recovery year
