@@ -487,6 +487,11 @@ async def _init_phase6_scheduling(db):
     mtf_training_service = get_mtf_training_service(db)
     _services['mtf_training'] = mtf_training_service
     
+    # Kraken Data Expansion Service
+    from services.kraken_data_expansion_service import get_expansion_service
+    expansion_service = get_expansion_service(db)
+    _services['kraken_expansion'] = expansion_service
+    
     logger.info("✅ Phase 6: Scheduling and data services initialized")
 
 
