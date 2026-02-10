@@ -1303,6 +1303,25 @@ class YearlyBacktestEngine:
                 "regime": worst_week.get("regime")
             } if worst_week else {},
             
+            # Monthly summary
+            "monthly_performance": monthly_performance,
+            "best_month": {
+                "month": best_month[0] if best_month else None,
+                "return": f"{best_month[1]['return_pct']:.2f}%" if best_month else "0%",
+                "trades": best_month[1]["trades"] if best_month else 0,
+                "regime": best_month[1]["dominant_regime"] if best_month else None
+            } if best_month else {},
+            "worst_month": {
+                "month": worst_month[0] if worst_month else None,
+                "return": f"{worst_month[1]['return_pct']:.2f}%" if worst_month else "0%",
+                "trades": worst_month[1]["trades"] if worst_month else 0,
+                "regime": worst_month[1]["dominant_regime"] if worst_month else None
+            } if worst_month else {},
+            "profitable_months": len([m for m, data in monthly_performance.items() if data["return_pct"] > 0]),
+            
+            # Weekly performance detail
+            "weekly_performance": self.weekly_performance,
+            
             # Top performing coins
             "top_coins": [
                 {
