@@ -167,6 +167,11 @@ def register_routes(api_router: APIRouter, db=None):
     api_router.include_router(onchain_data_routes.router, tags=["On-Chain Data"])
     api_router.include_router(whale_alerts_routes.router, tags=["Whale Alerts & Backtesting"])
     
+    # Yearly Adaptive Backtest
+    from routes import yearly_backtest as yearly_backtest_routes
+    api_router.include_router(yearly_backtest_routes.router, tags=["Yearly Adaptive Backtest"])
+    yearly_backtest_routes.set_db(db)
+    
     # AI Teaching Service
     from routes import ai_teaching as ai_teaching_routes
     api_router.include_router(ai_teaching_routes.router, tags=["AI Teaching"])
