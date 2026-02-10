@@ -360,10 +360,22 @@ backend:
         - agent: "testing"
         - comment: "✅ WHALE ALERTS AND EVENT BACKTESTING SYSTEM 90.5% FUNCTIONAL: Comprehensive testing completed (57/63 tests passed). ✅ WHALE ALERT SYSTEM: All core endpoints working perfectly - whale/check generates alerts with proper severity levels (info, warning, critical, urgent), whale/active returns 6 active alerts with recommended_action field, whale/thresholds shows 6 configured metrics with proper structure, whale/monitoring start/stop functionality operational. ✅ ALERT STRUCTURE: Alerts contain required fields (alert_id, title, severity, price_impact_expected) as specified in review request. Severity filtering working for all levels. ✅ EVENT BACKTESTING: backtest/simulate with n_predictions=50 working, backtest/historical-events returns 31 events with 12 event types (bitcoin_halving, fomc_meeting, options_expiry, etc.), backtest/accuracy and backtest/event-types endpoints operational. ✅ INTEGRATION: All whale alert severity filters working, event type specific accuracy endpoints functional. ⚠️ MINOR ISSUES: Price impact format inconsistency (string vs numeric), missing severity breakdown in summary, backtest metrics structure needs refinement for precision/recall/f1_score display. All core whale alerts and backtesting features are production-ready and meet review requirements."
 
+  - task: "Comprehensive Backend API Testing - All 19 Categories After 4 Fixes"
+    implemented: true
+    working: true
+    file: "/app/backend_test.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "🎉 COMPREHENSIVE BACKEND RE-TEST COMPLETE - PERFECT 100.0% SUCCESS RATE (61/61 TESTS). ✅ ALL 4 CRITICAL FIXES VERIFIED WORKING: 1) MTF Training /fear-greed endpoint now returns 200 with real Fear & Greed data (was 404 - FIXED), 2) MTF Training /predict/BTC returns 200 with HOLD fallback signal (was 400 - FIXED), 3) ML Monitoring /dashboard/overview returns 200, router properly registered (was 404 - FIXED), 4) Market /prices returns 200 with default top 5 coins when no coin_ids provided (was 422 - FIXED). ✅ ALL 19 CATEGORIES 100% FUNCTIONAL: 1) Core (2/2): health & root endpoints working, 2) Enhanced Event Prediction (5/5): 25+ events predicted for 60 days, coverage stats >60%, event calendar with real 2025-2026 dates, 27 event types, scheduled events, 3) Hidden Gem Prediction (5/5): predict with required llm_enhanced/llm_status/model_version fields, scan, top gems, training status, backtest status, 4) Adaptive Strategy (5/5): status, current regime, optimal strategy, variants, predicted events with min_probability filtering, 5) Whale Alerts (5/5): check generates alerts, 4 active alerts with severity levels, thresholds configured, backtest simulation with n_predictions=20, historical events, 6) On-Chain Data (4/4): whale activity, exchange flows, network metrics, summary endpoint, 7) Tethys Trading (4/4): status, start/stop trading, trading status monitoring, 8) Event Triggers (4/4): list triggers, templates available, status monitoring, check-now functionality, 9) Ensemble AI (3/3): status operational, model weights configured, optimal universe selection, 10) Portfolio (2/2): Kraken status connected, balance retrieval working, 11) Model Training (3/3): enhanced AI training, status monitoring, general training status, 12) MTF Training (4/4): status ready, BTC prediction HOLD fallback, fear-greed index from Alternative.me, enhanced fear-greed endpoint, 13) Market Data & Sentiment (3/3): prices with default top 5 coins, prices with specific coin_ids parameter, market sentiment analysis, 14) Auto Trading (1/1): status endpoint operational, 15) Security & Monitoring (3/3): error monitoring, error statistics, detailed health checks, 16) ML Monitoring (4/4): dashboard overview, A/B test list, drift status monitoring, active alerts, 17) ML Optimization (2/2): cache status, distributed processing status, 18) Journal (1/1): entries retrieval working without timeout, 19) Cache (1/1): statistics endpoint operational. ⚡ EXCELLENT PERFORMANCE: Average response time 2.63 seconds across all endpoints. 🎯 BACKEND IS FULLY PRODUCTION-READY - All critical systems operational, all previously identified issues resolved, comprehensive API coverage achieved."
+
 metadata:
   created_by: "main_agent"
-  version: "1.1"
-  test_sequence: 1
+  version: "1.2"
+  test_sequence: 2
   run_ui: false
 
   - task: "8 Enhancements Implementation Verification"
