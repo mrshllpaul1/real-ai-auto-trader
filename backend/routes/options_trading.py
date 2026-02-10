@@ -149,83 +149,13 @@ async def get_option_chain(
     db = Depends(get_database)
 ):
     """Get available options chain for a symbol"""
-    # Generate simulated option chain
-    current_price = {
-        "BTC": 45000,
-        "ETH": 2500,
-        "SOL": 100
-    }.get(symbol.upper(), 1000)
-    
-    # Generate strikes around current price
-    strikes = []
-    base_strike = round(current_price / 1000) * 1000
-    for i in range(-5, 6):
-        strike = base_strike + i * (current_price * 0.05)
-        strikes.append(round(strike, -2 if current_price > 1000 else 0))
-    
-    # Generate expiry dates (weekly for next 4 weeks, monthly for 3 months)
-    expiries = []
-    today = datetime.now(timezone.utc)
-    
-    # Weekly expiries
-    for i in range(1, 5):
-        expiry = today + timedelta(days=7*i)
-        expiries.append({
-            "date": expiry.strftime("%Y-%m-%d"),
-            "days_to_expiry": 7*i,
-            "type": "weekly"
-        })
-    
-    # Monthly expiries
-    for i in range(1, 4):
-        expiry = today + timedelta(days=30*i)
-        expiries.append({
-            "date": expiry.strftime("%Y-%m-%d"),
-            "days_to_expiry": 30*i,
-            "type": "monthly"
-        })
-    
-    # Generate options for each strike and expiry
-    options = []
-    volatility = 0.65  # 65% annualized volatility for crypto
-    
-    for expiry in expiries:
-        T = expiry["days_to_expiry"] / 365
-        for strike in strikes:
-            call_greeks = calculate_greeks(current_price, strike, T, 0.05, volatility, "call")
-            put_greeks = calculate_greeks(current_price, strike, T, 0.05, volatility, "put")
-            
-            options.append({
-                "strike": strike,
-                "expiry": expiry["date"],
-                "days_to_expiry": expiry["days_to_expiry"],
-                "call": {
-                    "bid": round(call_greeks["price"] * 0.98, 2),
-                    "ask": round(call_greeks["price"] * 1.02, 2),
-                    "last": call_greeks["price"],
-                    "volume": int(1000 * math.exp(-abs(strike - current_price) / current_price)),
-                    "open_interest": int(5000 * math.exp(-abs(strike - current_price) / current_price)),
-                    "greeks": call_greeks
-                },
-                "put": {
-                    "bid": round(put_greeks["price"] * 0.98, 2),
-                    "ask": round(put_greeks["price"] * 1.02, 2),
-                    "last": put_greeks["price"],
-                    "volume": int(800 * math.exp(-abs(strike - current_price) / current_price)),
-                    "open_interest": int(4000 * math.exp(-abs(strike - current_price) / current_price)),
-                    "greeks": put_greeks
-                }
-            })
-    
-    return {
-        "symbol": symbol.upper(),
-        "current_price": current_price,
-        "strikes": strikes,
-        "expiries": expiries,
-        "options": options,
-        "volatility": volatility,
-        "last_updated": datetime.now(timezone.utc).isoformat()
-    }
+    raise HTTPException(
+        status_code=503,
+        detail={
+            "message": "Options chain unavailable. Live options market data required; simulated data is disabled.",
+            "symbol": symbol.upper()
+        }
+    )
 
 
 @router.post("/calculate-greeks")
@@ -257,71 +187,11 @@ async def place_option_order(
     user_id: str = "default_user",
     db = Depends(get_database)
 ):
-    """Place an option order (simulated)"""
-    # Get current price
-    current_prices = {"BTC": 45000, "ETH": 2500, "SOL": 100}
-    current_price = current_prices.get(order.symbol.upper(), 1000)
-    
-    # Calculate days to expiry
-    expiry = datetime.fromisoformat(order.expiry_date.replace('Z', '+00:00'))
-    days_to_expiry = (expiry - datetime.now(timezone.utc)).days
-    T = max(days_to_expiry, 1) / 365
-    
-    # Calculate Greeks and price
-    greeks = calculate_greeks(
-        S=current_price,
-        K=order.strike_price,
-        T=T,
-        r=0.05,
-        sigma=0.65,
-        option_type=order.option_type
+    """Place an option order (live only)"""
+    raise HTTPException(
+        status_code=503,
+        detail="Live options trading not enabled. Simulated orders are disabled to ensure only real executions."
     )
-    
-    # Create order record
-    order_record = {
-        "order_id": str(uuid.uuid4()),
-        "user_id": user_id,
-        "symbol": order.symbol.upper(),
-        "option_type": order.option_type,
-        "strike_price": order.strike_price,
-        "expiry_date": order.expiry_date,
-        "quantity": order.quantity,
-        "order_type": order.order_type,
-        "limit_price": order.limit_price,
-        "fill_price": greeks["price"],
-        "total_cost": greeks["price"] * order.quantity,
-        "greeks": greeks,
-        "status": "filled",  # Simulated instant fill
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "filled_at": datetime.now(timezone.utc).isoformat()
-    }
-    
-    await db.option_orders.insert_one(order_record)
-    
-    # Create position
-    position = {
-        "position_id": str(uuid.uuid4()),
-        "user_id": user_id,
-        "symbol": order.symbol.upper(),
-        "option_type": order.option_type,
-        "strike_price": order.strike_price,
-        "expiry_date": order.expiry_date,
-        "quantity": order.quantity,
-        "entry_price": greeks["price"],
-        "current_price": greeks["price"],
-        "pnl": 0,
-        "greeks": greeks,
-        "status": "open",
-        "opened_at": datetime.now(timezone.utc).isoformat()
-    }
-    
-    await db.option_positions.insert_one(position)
-    
-    return {
-        "status": "success",
-        "order": {k: v for k, v in order_record.items() if k != "_id"},
-        "position": {k: v for k, v in position.items() if k != "_id"}
-    }
 
 
 @router.get("/positions")
