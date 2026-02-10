@@ -17,12 +17,13 @@ async def get_database():
 
 @router.get("/prices")
 async def get_crypto_prices(
-    coin_ids: str,
+    coin_ids: str = "bitcoin,ethereum,solana,binancecoin,ripple",
     enhanced: bool = True,
     market_service = Depends(get_market_service),
     enhanced_service = Depends(get_enhanced_market_service)
 ):
-    """Get current prices for cryptocurrencies from multiple sources"""
+    """Get current prices for cryptocurrencies from multiple sources. 
+    coin_ids defaults to top 5 coins if not provided."""
     import asyncio
     try:
         coin_list = coin_ids.split(',')
