@@ -487,6 +487,11 @@ async def _init_phase6_scheduling(db):
     mtf_training_service = get_mtf_training_service(db)
     _services['mtf_training'] = mtf_training_service
     
+    # Enhanced MTF Training Service (with sentiment integration)
+    from services.enhanced_mtf_training_service import get_enhanced_mtf_service
+    enhanced_mtf_service = get_enhanced_mtf_service(db)
+    _services['enhanced_mtf_training'] = enhanced_mtf_service
+    
     # Kraken Data Expansion Service
     from services.kraken_data_expansion_service import get_expansion_service
     expansion_service = get_expansion_service(db)
