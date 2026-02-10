@@ -66,7 +66,7 @@ async def get_portfolio_composition():
     - Position types (main, gem, swap)
     """
     # Get real Kraken holdings
-    kraken_holdings = await get_kraken_portfolio()
+    kraken_holdings = await _fetch_kraken_holdings()
     
     if not kraken_holdings:
         # Fallback to isolated portfolio if Kraken data unavailable
@@ -281,7 +281,7 @@ async def get_portfolio_summary():
     Uses real Kraken portfolio data.
     """
     # Get real Kraken holdings
-    kraken_holdings = await get_kraken_portfolio()
+    kraken_holdings = await _fetch_kraken_holdings()
     
     # Force convert to list if dict (shouldn't happen but safety)
     if isinstance(kraken_holdings, dict):
@@ -422,7 +422,7 @@ async def get_portfolio_summary():
 async def get_top_performers(limit: int = Query(5, ge=1, le=20)):
     """Get top performing positions from Kraken portfolio"""
     # Get real Kraken holdings
-    kraken_holdings = await get_kraken_portfolio()
+    kraken_holdings = await _fetch_kraken_holdings()
     
     if kraken_holdings:
         # Sort by USD value (as proxy for performance)
@@ -474,7 +474,7 @@ async def get_top_performers(limit: int = Query(5, ge=1, le=20)):
 async def get_worst_performers(limit: int = Query(5, ge=1, le=20)):
     """Get worst performing positions from Kraken portfolio"""
     # Get real Kraken holdings
-    kraken_holdings = await get_kraken_portfolio()
+    kraken_holdings = await _fetch_kraken_holdings()
     
     if kraken_holdings:
         # Sort by USD value ascending (smallest = worst performers)
