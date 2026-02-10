@@ -440,7 +440,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Multi-Year Adaptive Backtest System (2020-2024)" # COMPLETED - 100% functional, all requirements met
+    - "Yearly Backtest Frontend Page Testing" # COMPLETED - 100% functional, all requirements met
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
