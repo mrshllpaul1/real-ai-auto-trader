@@ -1280,8 +1280,10 @@ class EnhancedMTFTrainingService:
         """
         Fast batch predictions using sentiment-only features.
         """
-        # Get model
+        # Get model - try both types
         model_doc = await self.model_collection.find_one({"type": "enhanced_mtf"})
+        if not model_doc:
+            model_doc = await self.model_collection.find_one({"type": "sentiment_only_mtf"})
         
         if not model_doc:
             return {
