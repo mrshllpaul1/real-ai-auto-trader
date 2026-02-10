@@ -502,19 +502,46 @@ class YearlyBacktestEngine:
                     entry_price = pos["entry_price"]
                     pnl_pct = (current_price - entry_price) / entry_price * 100
                     
-                    # Exit conditions
+                    # Track highest price for trailing stop
+                    if "highest_price" not in pos:
+                        pos["highest_price"] = entry_price
+                    pos["highest_price"] = max(pos["highest_price"], current_price)
+                    
+                    drawdown_from_high = (pos["highest_price"] - current_price) / pos["highest_price"] * 100
+                    
+                    # Exit conditions - OPTIMIZED for win rate
                     should_exit = False
                     exit_reason = ""
                     
-                    if pnl_pct >= self.strategy.params["take_profit_pct"]:
+                    # Take profit - scaled based on holding time
+                    take_profit = self.strategy.params["take_profit_pct"]
+                    if pos["holding_days"] > 5:
+                        take_profit = max(5, take_profit * 0.7)  # Lower target after 5 days
+                    
+                    if pnl_pct >= take_profit:
                         should_exit = True
                         exit_reason = "take_profit"
+                    # Trailing stop - lock in profits
+                    elif pnl_pct > 4 and drawdown_from_high > 2:
+                        should_exit = True
+                        exit_reason = "trailing_stop"
+                    # Quick profit taking on small gains
+                    elif pnl_pct > 2 and pos["holding_days"] >= 3 and drawdown_from_high > 1:
+                        should_exit = True
+                        exit_reason = "profit_protection"
+                    # Stop loss
                     elif pnl_pct <= -self.strategy.params["stop_loss_pct"]:
                         should_exit = True
                         exit_reason = "stop_loss"
-                    elif pos["holding_days"] > 30:
+                    # Time-based exit - reduce holding period for better capital efficiency
+                    elif pos["holding_days"] > 15:
                         should_exit = True
                         exit_reason = "time_exit"
+                    # Exit on trend reversal
+                    elif pos["holding_days"] > 3 and indicators.get("valid"):
+                        if indicators["trend_down"] and pnl_pct > 0:
+                            should_exit = True
+                            exit_reason = "trend_reversal"
                     
                     if should_exit:
                         # Close position
