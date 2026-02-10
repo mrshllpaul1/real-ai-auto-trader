@@ -21,7 +21,7 @@ import toast from '../utils/toast';
 
 const COLORS = ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#EC4899', '#06B6D4'];
 
-const YearlyBacktest = () => {
+const YearlyBacktest = ({ embedded = false }) => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('single');
   const [selectedYear, setSelectedYear] = useState('2026');
