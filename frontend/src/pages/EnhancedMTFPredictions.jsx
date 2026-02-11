@@ -162,6 +162,7 @@ const EnhancedMTFPredictions = ({ embedded = false }) => {
   // Train model on all Kraken coins (fast mode)
   const handleTrain = async () => {
     setIsTraining(true);
+    setTrainingTaskId(null);
     toast.loading('Training on ALL 634 Kraken coins...', { id: 'train' });
     
     try {
@@ -169,18 +170,30 @@ const EnhancedMTFPredictions = ({ embedded = false }) => {
         params: { epochs: 100, batch_size: 100 }
       });
       
-      if (response.data.status === 'completed') {
+      // Check if we got a task_id for background tracking
+      if (response.data.task_id) {
+        setTrainingTaskId(response.data.task_id);
+        toast.success('Training started in background...', { id: 'train' });
+      } else if (response.data.status === 'completed') {
         toast.success(`Training completed! ${response.data.symbols_trained} coins, Accuracy: ${response.data.accuracy_pct}`, { id: 'train' });
+        setIsTraining(false);
         fetchData();
       } else {
         toast.error(`Training failed: ${response.data.error}`, { id: 'train' });
+        setIsTraining(false);
       }
     } catch (err) {
       toast.error('Training failed: ' + (err.response?.data?.detail || err.message), { id: 'train' });
-    } finally {
       setIsTraining(false);
     }
   };
+
+  const handleTrainingComplete = useCallback((result) => {
+    setIsTraining(false);
+    setTrainingTaskId(null);
+    toast.success(`Training completed! Accuracy: ${result?.result?.accuracy || 'N/A'}`, { id: 'train-complete' });
+    fetchData();
+  }, [fetchData]);
 
   // Get predictions for ALL Kraken coins
   const handlePredict = async () => {
