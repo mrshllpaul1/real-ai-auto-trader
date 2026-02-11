@@ -13,7 +13,7 @@ import { toast } from 'sonner';
  * Training Progress Monitor Component
  * 
  * Shows real-time progress of long-running training tasks.
- * Uses WebSocket for real-time updates with polling fallback.
+ * Uses HTTP polling for reliable updates in deployment environment.
  * Can be used as a floating notification or embedded component.
  */
 const TrainingProgress = ({ 
