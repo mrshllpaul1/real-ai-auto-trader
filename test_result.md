@@ -480,6 +480,18 @@ agent_communication:
     - message: "YEARLY BACKTEST FRONTEND PAGE TESTING COMPLETED - February 10, 2026. 🎉 YEARLY BACKTEST FRONTEND PAGE 100% FUNCTIONAL - PERFECT SUCCESS RATE (All tests passed). ✅ PAGE LOAD: Title 'Yearly Adaptive Backtest' found, Badge '2020-2026 Available' displayed correctly, all three tabs (Single Year, Multi-Year, Market Calendar) working perfectly. ✅ SINGLE YEAR TAB: Year dropdown with 2020-2026 options working, 'Run Backtest' button functional, results display all key metrics (Final Capital $131,004.73, Win Rate 56.1%, Sharpe Ratio 3.76, Max Drawdown -3.05%), Equity Curve chart and Top Performing Coins chart rendering correctly with recommended portfolio showing ETH, XRP, ADA, TIA, MATIC allocations. ✅ MULTI-YEAR TAB: Initial Capital input field working, Year selection badges (2020-2026) all clickable, 'Run 7-Year Backtest' button functional, comprehensive results showing Final Capital $1,974.39, Total Return +97.4%, CAGR 10.21%, Win Rate 49.0%, Total Trades 1185, Cumulative Growth chart displaying portfolio progression 2020-2026, Yearly Returns bar chart with green/red performance indicators, Year-by-Year Breakdown table with detailed metrics per year. ✅ MARKET CALENDAR TAB: '2025 Market Events Calendar' title displayed, 22 week elements found with comprehensive market events, 16 regime-related elements with proper color coding (bull_weak/bull_strong in green, bear_weak/bear_strong in red, sideways/high_volatility/recovery in yellow), event descriptions include 'New Year consolidation', 'Q1 optimism begins', 'Bitcoin ETF inflows continue', 'Bitcoin halving anniversary rally', etc. ✅ NO ERRORS: No error messages found, all functionality working as specified in review request. All Yearly Backtest frontend features are production-ready and exceed all requirements."
 
 frontend:
+  - task: "WebSocket Connection Fixes Testing"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/components/TrainingProgress.jsx"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+        - agent: "testing"
+        - comment: "❌ WEBSOCKET CONNECTION FIXES PARTIALLY WORKING - CRITICAL ISSUES FOUND: WebSocket connections are still generating error spam in console. Found 15+ WebSocket error messages on Command Center, 33+ on AI Hub, and 21+ on Trading Hub. Specific errors: 'WebSocket connection to wss://github-connect-59.preview.static.emergentagent.com/api/training-progress/ws failed: Error during WebSocket handshake: Unexpected response code: 200' and '[TrainingProgress] WebSocket error: Event' repeating continuously. ❌ INFINITE RECONNECTION LOOPS: TrainingProgress component is still attempting reconnections without proper max attempt limits - found 3 spam patterns with repeated error messages. ❌ NO POLLING FALLBACK MESSAGES: Despite WebSocket failures, no 'using polling fallback' messages were found in console, indicating fallback mechanism may not be working as expected. ⚠️ BACKEND WEBSOCKET ENDPOINT ISSUE: WebSocket endpoint returning HTTP 200 instead of proper WebSocket handshake, suggesting backend WebSocket server may not be properly configured. ✅ PAGES LOAD SUCCESSFULLY: All tested pages (Command Center, AI Hub, Trading Hub) load without blocking errors, but WebSocket error spam continues in background. REQUIRES IMMEDIATE FIX: 1) Backend WebSocket endpoint configuration, 2) Proper max reconnection attempts implementation, 3) Explicit polling fallback messaging, 4) Error spam elimination."
+
   - task: "Comprehensive Frontend Performance Testing"
     implemented: true
     working: true
