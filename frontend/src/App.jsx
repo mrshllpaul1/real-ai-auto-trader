@@ -143,7 +143,24 @@ function App() {
             {/* Floating components */}
             <FloatingCommandHub />
             <TrainingProgress />
-            <Toaster position="top-right" richColors closeButton />
+            
+            {/* Toast notifications - fixed position with highest z-index */}
+            <div className="fixed top-0 right-0 z-[99999] pointer-events-none" style={{ zIndex: 99999 }}>
+              <div className="pointer-events-auto">
+                <Toaster 
+                  position="top-right" 
+                  richColors 
+                  closeButton 
+                  offset="16px"
+                  visibleToasts={5}
+                  toastOptions={{
+                    style: {
+                      zIndex: 99999,
+                    }
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </ErrorBoundary>
       </BrowserRouter>
