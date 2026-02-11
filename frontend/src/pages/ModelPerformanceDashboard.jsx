@@ -217,10 +217,19 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
               ) : (
                 <Play className="w-4 h-4 mr-2" />
               )}
-              Train All Models
+              {training ? 'Training...' : 'Train All Models'}
             </Button>
           </div>
         </div>
+
+        {/* Training Progress Indicator */}
+        {trainingTaskId && (
+          <TrainingProgress 
+            taskId={trainingTaskId} 
+            embedded={true}
+            onComplete={handleTrainingComplete}
+          />
+        )}
 
         {/* Tab Navigation */}
         <div className="flex gap-2 border-b border-gray-800 pb-2 overflow-x-auto">
