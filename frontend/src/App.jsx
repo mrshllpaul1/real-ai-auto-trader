@@ -142,6 +142,7 @@ function App() {
             
             {/* Floating components */}
             <FloatingCommandHub />
+            <TrainingProgress />
             <Toaster position="top-right" richColors closeButton />
           </div>
         </ErrorBoundary>
