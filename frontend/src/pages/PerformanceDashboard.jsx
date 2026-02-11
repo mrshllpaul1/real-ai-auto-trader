@@ -39,6 +39,19 @@ const PerformanceDashboard = ({ embedded = false }) => {
     }
   }, []);
 
+  const loadPnlChart = useCallback(async () => {
+    try {
+      setChartLoading(true);
+      const res = await api.get('/portfolio-performance/pnl-chart?days=30');
+      setPnlChartData(res.data.data || []);
+      setIsSampleData(res.data.is_sample || false);
+    } catch (error) {
+      console.error('Error loading P&L chart:', error);
+    } finally {
+      setChartLoading(false);
+    }
+  }, []);
+
   const syncTradeHistory = async () => {
     try {
       setSyncing(true);
@@ -48,8 +61,9 @@ const PerformanceDashboard = ({ embedded = false }) => {
       setSyncResult(res.data);
       toast.success(`Synced ${res.data.summary?.trades_processed || 0} trades!`);
       
-      // Reload dashboard
+      // Reload dashboard and chart
       await loadDashboard();
+      await loadPnlChart();
     } catch (error) {
       console.error('Sync error:', error);
       toast.error('Failed to sync trade history');
@@ -60,7 +74,8 @@ const PerformanceDashboard = ({ embedded = false }) => {
 
   useEffect(() => {
     loadDashboard();
-  }, [loadDashboard]);
+    loadPnlChart();
+  }, [loadDashboard, loadPnlChart]);
 
   const summary = data?.summary || {};
   const winLoss = data?.win_loss || {};
