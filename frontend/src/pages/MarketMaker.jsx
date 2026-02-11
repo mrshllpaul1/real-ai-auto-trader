@@ -16,6 +16,7 @@ import {
 import api from '../services/api';
 import toast from '../utils/toast';
 import TradingPairSelector from '../components/TradingPairSelector';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const MarketMaker = ({ embedded = false }) => {
   const [status, setStatus] = useState(null);
@@ -132,14 +133,7 @@ const MarketMaker = ({ embedded = false }) => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-[#00B8FF] mx-auto mb-4" />
-          <p className="text-[#A1A1AA]">Loading Market Maker...</p>
-        </div>
-      </div>
-    );
+    return <PageLoadingSkeleton />;
   }
 
   return (
