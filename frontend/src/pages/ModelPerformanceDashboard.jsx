@@ -317,7 +317,7 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={getChartHeight()}>
                     <RadarChart data={radarData}>
                       <PolarGrid stroke="#333" />
                       <PolarAngleAxis dataKey="metric" stroke="#888" fontSize={11} />
@@ -327,7 +327,8 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
                         dataKey="value" 
                         stroke="#06b6d4" 
                         fill="#06b6d4" 
-                        fillOpacity={0.3} 
+                        fillOpacity={0.3}
+                        isAnimationActive={!isLowPowerDevice()}
                       />
                       <Legend />
                     </RadarChart>
