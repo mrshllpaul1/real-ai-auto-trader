@@ -69,8 +69,9 @@ function App() {
 
   return (
     <TradingModeProvider>
-      <BrowserRouter>
-        <ErrorBoundary>
+      <LoadingProvider>
+        <BrowserRouter>
+          <ErrorBoundary>
           <div className="app-root relative">
             {/* Main layout */}
             <div className="flex min-h-screen bg-[#0A0A0A]">
