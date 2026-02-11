@@ -41,7 +41,7 @@ const TrainingProgress = ({
     setWsConnected(false);
   }, []);
 
-  // Fallback polling (less frequent since WebSocket handles most updates)
+  // HTTP polling for reliable real-time updates
   const fetchActiveTasks = useCallback(async () => {
     try {
       const response = await api.get('/training-progress/active');
