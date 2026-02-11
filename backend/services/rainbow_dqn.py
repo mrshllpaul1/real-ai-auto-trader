@@ -566,14 +566,14 @@ class RainbowDQN:
         # Dueling streams with distributional output
         if noisy:
             # Value stream - use keras.ops for Keras 3 compatibility
-            value = NoisyDense(d_model, name='value_noisy_1')(encoded)
+            value = _NoisyDense(d_model, name='value_noisy_1')(encoded)
             value = layers.Activation('relu')(value)
-            value = NoisyDense(n_atoms, name='value_dist')(value)  # (batch, n_atoms)
+            value = _NoisyDense(n_atoms, name='value_dist')(value)  # (batch, n_atoms)
             
             # Advantage stream
-            advantage = NoisyDense(d_model, name='advantage_noisy_1')(encoded)
+            advantage = _NoisyDense(d_model, name='advantage_noisy_1')(encoded)
             advantage = layers.Activation('relu')(advantage)
-            advantage = NoisyDense(action_dim * n_atoms, name='advantage_dist')(advantage)
+            advantage = _NoisyDense(action_dim * n_atoms, name='advantage_dist')(advantage)
             advantage = layers.Reshape((action_dim, n_atoms))(advantage)  # (batch, actions, atoms)
         else:
             value = Dense(d_model, activation='relu', name='value_1')(encoded)
