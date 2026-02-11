@@ -22,6 +22,7 @@ import Analytics from "./pages/Analytics";
 
 import Sidebar from "./components/Sidebar";
 import FloatingCommandHub from "./components/FloatingCommandHub";
+import TrainingProgress from "./components/TrainingProgress";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "framer-motion";
 import { TradingModeProvider } from "./context/TradingModeContext";
