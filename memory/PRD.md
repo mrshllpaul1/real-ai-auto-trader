@@ -7,6 +7,37 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ## Session Update - Feb 11, 2026 (Current Session)
 
+### ✅ NEW: Manual Entry Price Correction (Feb 11, 2026)
+
+**Feature Added:**
+- Full CRUD for entry price management
+- Manual correction of entry prices for any position
+- Track correction history with timestamps and notes
+- Inline editing in the UI with real-time updates
+- "Sync from Kraken" to auto-create entries from holdings
+- Source badges: "Manual" (purple) vs "Auto" (blue)
+- Needs correction indicator for placeholder entries
+
+**API Endpoints:**
+- `GET /api/entry-prices/` - Get all entry prices
+- `GET /api/entry-prices/{symbol}` - Get specific entry
+- `POST /api/entry-prices/correct` - Create/update entry price manually
+- `POST /api/entry-prices/correct/bulk` - Bulk update entries
+- `DELETE /api/entry-prices/{symbol}` - Delete entry
+- `GET /api/entry-prices/{symbol}/history` - Get correction history
+- `POST /api/entry-prices/sync-from-kraken` - Create entries from Kraken holdings
+
+**Files Created:**
+- `backend/routes/entry_prices.py` - API endpoints
+- `frontend/src/components/EntryPriceManager.jsx` - UI component
+
+**Files Modified:**
+- `backend/services/entry_price_tracker.py` - Added manual correction methods
+- `backend/init/routes.py` - Registered entry prices routes
+- `frontend/src/pages/PerformanceDashboard.jsx` - Integrated Entry Price Manager
+
+---
+
 ### ✅ NEW: Model Performance Benchmarking (Feb 11, 2026)
 
 **Feature Added:**
