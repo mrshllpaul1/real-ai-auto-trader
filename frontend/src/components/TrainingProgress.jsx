@@ -76,7 +76,7 @@ const TrainingProgress = ({
       fetchActiveTasks();
     }
 
-    // Fallback polling (only if WebSocket isn't connected)
+    // HTTP polling for updates
     const interval = setInterval(() => {
       if (!wsConnected) {
         if (taskId) {
