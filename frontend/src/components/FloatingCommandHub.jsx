@@ -395,7 +395,7 @@ const FloatingCommandHub = () => {
                           value={strategyInput}
                           onChange={(e) => setStrategyInput(e.target.value)}
                           placeholder="e.g., Buy BTC when RSI is below 30 and sell at 20% profit with 5% stop loss"
-                          className="h-24 bg-slate-800/50 border-slate-700/50 text-sm resize-none"
+                          className="h-24 bg-slate-800/50 border-slate-700/50 text-sm text-white placeholder:text-slate-400 resize-none"
                         />
                         <Button 
                           onClick={generateStrategy}
