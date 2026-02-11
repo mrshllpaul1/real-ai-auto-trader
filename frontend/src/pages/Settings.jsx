@@ -394,6 +394,14 @@ const Settings = ({ embedded = false }) => {
             <Database size={16} className="mr-2" />
             Data Providers
           </TabsTrigger>
+          <TabsTrigger value="blockchain" data-testid="blockchain-tab">
+            <Blocks size={16} className="mr-2" />
+            Blockchain API
+          </TabsTrigger>
+          <TabsTrigger value="social" data-testid="social-tab">
+            <Users size={16} className="mr-2" />
+            Copy Trading
+          </TabsTrigger>
           <TabsTrigger value="risk" data-testid="risk-tab">
             <Shield size={16} className="mr-2" />
             Risk Management
