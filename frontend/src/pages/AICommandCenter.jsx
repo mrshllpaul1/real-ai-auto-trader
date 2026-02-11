@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
-import api from '../services/api';
+import api, { clearAllCacheAndRefresh } from '../services/api';
 import toast from '../utils/toast';
 
 // AI Brain Tab - Enhanced AI Dashboard
