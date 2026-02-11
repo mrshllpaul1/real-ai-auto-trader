@@ -9,7 +9,7 @@ import {
   ChevronRight, Play, Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import api from '../services/api';
+import api, { clearAllCacheAndRefresh } from '../services/api';
 import { toast } from 'sonner';
 import TrainingProgress from '../components/TrainingProgress';
 
@@ -23,8 +23,12 @@ const GemMLDLComparison = ({ embedded = false }) => {
   const [scanning, setScanning] = useState(false);
   const [trainingTaskId, setTrainingTaskId] = useState(null);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (forceRefresh = false) => {
     try {
+      if (forceRefresh) {
+        clearAllCacheAndRefresh();
+        toast.info('Refreshing...');
+      }
       setLoading(true);
       const [compRes, infoRes, statusRes] = await Promise.all([
         api.get('/gems/ml-dl/compare').catch(() => ({ data: null })),
