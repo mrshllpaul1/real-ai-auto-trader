@@ -73,11 +73,26 @@ async def get_manager_status():
     try:
         manager = get_manager()
         if manager is None:
-            return {"initialized": False, "message": "Manager not initialized"}
+            return {
+                "initialized": False, 
+                "agents": {},
+                "environment_ready": False,
+                "training_history": [],
+                "available_algorithms": ["dqn", "ddqn", "ppo", "a2c", "sac"],
+                "message": "Manager not initialized - click Initialize to start"
+            }
         
         return manager.get_status()
     except Exception as e:
-        return {"error": str(e), "initialized": False}
+        logger.error(f"Error getting manager status: {e}")
+        return {
+            "initialized": False, 
+            "error": str(e),
+            "agents": {},
+            "environment_ready": False,
+            "training_history": [],
+            "available_algorithms": ["dqn", "ddqn", "ppo", "a2c", "sac"]
+        }
 
 
 @router.post("/initialize")
