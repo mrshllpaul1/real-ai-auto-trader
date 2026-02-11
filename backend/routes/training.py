@@ -319,8 +319,14 @@ async def train_all_systems(
     from services.enhanced_historical_trainer import EnhancedHistoricalTrainer
     from services.ai_weekly_trainer import AIWeeklyTrainer
     from services.dynamic_coin_universe import get_training_coins
+    from services.training_progress_manager import get_progress_manager
+    import uuid
     
     try:
+        # Create unique task ID
+        task_id = f"train-all-{uuid.uuid4().hex[:8]}"
+        progress_manager = get_progress_manager()
+        
         historical_trainer = HistoricalTrainer(db)
         enhanced_trainer = EnhancedHistoricalTrainer(db)
         weekly_trainer = AIWeeklyTrainer(db)
@@ -335,28 +341,73 @@ async def train_all_systems(
         # Limit for initial training
         training_coins = all_coins[:20]
         
-        # Queue all training tasks
-        background_tasks.add_task(
-            historical_trainer.train_on_historical_data,
-            training_coins, 2020, True
+        # Create progress task
+        progress_manager.create_task(
+            task_id=task_id,
+            task_type="train-all",
+            total_items=len(training_coins),
+            total_steps=4  # 4 training systems
         )
         
-        background_tasks.add_task(
-            enhanced_trainer.train_with_real_data,
-            training_coins
-        )
+        async def train_with_progress():
+            """Background task with progress tracking"""
+            try:
+                progress_manager.start_task(task_id, "Starting comprehensive AI training...")
+                
+                # Step 1: Historical Training
+                progress_manager.update_progress(
+                    task_id, 
+                    progress=10, 
+                    message="Training Historical Patterns...",
+                    steps_completed=0
+                )
+                await historical_trainer.train_on_historical_data(training_coins, 2020, True)
+                
+                # Step 2: Enhanced Historical Training
+                progress_manager.update_progress(
+                    task_id, 
+                    progress=35, 
+                    message="Training Technical Indicators...",
+                    steps_completed=1
+                )
+                await enhanced_trainer.train_with_real_data(training_coins)
+                
+                # Step 3: Profitable Gems Training
+                progress_manager.update_progress(
+                    task_id, 
+                    progress=60, 
+                    message="Training Gem Patterns...",
+                    steps_completed=2
+                )
+                await historical_trainer.train_profitable_gems(training_coins, 2.0, 2020)
+                
+                # Step 4: Save Weights
+                progress_manager.update_progress(
+                    task_id, 
+                    progress=85, 
+                    message="Saving AI Weights...",
+                    steps_completed=3
+                )
+                await weekly_trainer.save_weights()
+                
+                # Complete
+                progress_manager.complete_task(
+                    task_id,
+                    result={
+                        "coins_trained": len(training_coins),
+                        "systems": ["historical", "enhanced", "gems", "weights"]
+                    },
+                    message=f"Completed training on {len(training_coins)} coins"
+                )
+                
+            except Exception as e:
+                progress_manager.fail_task(task_id, str(e))
         
-        background_tasks.add_task(
-            historical_trainer.train_profitable_gems,
-            training_coins, 2.0, 2020
-        )
-        
-        # NEW: Save updated weights with sentiment parameters
-        background_tasks.add_task(
-            weekly_trainer.save_weights
-        )
+        # Queue the background task
+        background_tasks.add_task(train_with_progress)
         
         return {
+            "task_id": task_id,
             "message": "ALL AI training systems started with REAL DATA + SENTIMENT",
             "systems": [
                 "Historical Trainer (patterns + hidden gems)",
@@ -379,7 +430,8 @@ async def train_all_systems(
             "data_source": "REAL_MARKET_DATA_ONLY (Twelve Data API)",
             "sentiment_source": "AI News Analysis (CryptoPanic + LLM)",
             "status": "processing",
-            "note": "Training may take 5-10 minutes. Check /status endpoint for progress."
+            "progress_endpoint": f"/api/training-progress/task/{task_id}",
+            "note": "Training may take 5-10 minutes. Check progress endpoint for real-time updates."
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
