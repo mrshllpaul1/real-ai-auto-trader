@@ -114,12 +114,30 @@ async def get_trade_history(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# Cache for portfolio performance
+_portfolio_cache = {
+    "data": {},
+    "timestamp": {},
+    "ttl": 30  # Cache for 30 seconds
+}
+
+
 @router.get("/portfolio/{user_id}")
 async def get_portfolio_performance(
     user_id: str,
     trading_engine = Depends(get_trading_engine)
 ):
-    """Get portfolio performance metrics"""
+    """Get portfolio performance metrics (cached for 30s)"""
+    global _portfolio_cache
+    
+    # Check cache
+    current_time = time.time()
+    if (user_id in _portfolio_cache["data"] and 
+        user_id in _portfolio_cache["timestamp"] and
+        current_time - _portfolio_cache["timestamp"][user_id] < _portfolio_cache["ttl"]):
+        return _portfolio_cache["data"][user_id]
+    
     try:
         # Get current prices for portfolio calculation
         market_service = await get_market_service()
@@ -135,6 +153,10 @@ async def get_portfolio_performance(
             user_id,
             current_prices
         )
+        
+        # Update cache
+        _portfolio_cache["data"][user_id] = performance
+        _portfolio_cache["timestamp"][user_id] = current_time
         
         return performance
     except Exception as e:
