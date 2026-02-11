@@ -14,6 +14,12 @@ const ScannerHub = lazy(() => import("./pages/ScannerHub"));
 const DeFiHub = lazy(() => import("./pages/DeFiHub"));
 const SettingsHub = lazy(() => import("./pages/SettingsHub"));
 
+// New Enhancement Pages (P0, P1, Quick Wins)
+const PaperLeaderboard = lazy(() => import("./pages/PaperLeaderboard"));
+const StrategyMarketplace = lazy(() => import("./pages/StrategyMarketplace"));
+const TaxReporting = lazy(() => import("./pages/TaxReporting"));
+const SocialFeed = lazy(() => import("./pages/SocialFeed"));
+
 // Keep individual pages for direct access (backwards compatibility)
 import SpotTrading from "./pages/SpotTrading";
 import PositionManagement from "./pages/PositionManagement";
