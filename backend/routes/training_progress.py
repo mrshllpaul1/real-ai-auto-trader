@@ -103,3 +103,96 @@ async def cleanup_old_tasks(max_age_hours: int = 24):
     manager = get_progress_manager()
     manager.cleanup_old_tasks(max_age_hours=max_age_hours)
     return {"message": f"Cleaned up tasks older than {max_age_hours} hours"}
+
+
+@router.post("/stop/{task_id}")
+async def stop_task(task_id: str, reason: str = "Stopped by user"):
+    """Stop a specific training task gracefully"""
+    manager = get_progress_manager()
+    task = manager.get_task(task_id)
+    
+    if task is None:
+        raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    
+    if task["status"] not in ["running", "pending"]:
+        raise HTTPException(status_code=400, detail=f"Task is already {task['status']}")
+    
+    await manager.stop_task(task_id, reason)
+    return {
+        "message": f"Task {task_id} stopped",
+        "reason": reason,
+        "task": manager.get_task(task_id)
+    }
+
+
+@router.post("/stop-all")
+async def stop_all_tasks(reason: str = "Stopped all by user"):
+    """Stop all running training tasks"""
+    manager = get_progress_manager()
+    active_tasks = manager.get_active_tasks()
+    
+    stopped = []
+    for task in active_tasks:
+        await manager.stop_task(task["task_id"], reason)
+        stopped.append(task["task_id"])
+    
+    return {
+        "message": f"Stopped {len(stopped)} tasks",
+        "stopped_tasks": stopped
+    }
+
+
+@router.post("/cancel/{task_id}")
+async def request_cancel(task_id: str):
+    """Request graceful cancellation of a task (will stop at next checkpoint)"""
+    manager = get_progress_manager()
+    success = await manager.request_cancel(task_id)
+    
+    if not success:
+        raise HTTPException(status_code=400, detail="Could not cancel task (may not be running)")
+    
+    return {
+        "message": f"Cancellation requested for {task_id}",
+        "note": "Task will stop at the next checkpoint"
+    }
+
+
+@router.get("/check-stuck")
+async def check_stuck_tasks():
+    """Check for stuck tasks and optionally stop them"""
+    manager = get_progress_manager()
+    active_tasks = manager.get_active_tasks()
+    
+    stuck_tasks = []
+    for task in active_tasks:
+        if manager.is_task_stuck(task["task_id"]):
+            stuck_tasks.append({
+                "task_id": task["task_id"],
+                "task_type": task["task_type"],
+                "message": task["message"],
+                "last_progress": task.get("current_item", "unknown")
+            })
+    
+    return {
+        "stuck_count": len(stuck_tasks),
+        "stuck_tasks": stuck_tasks,
+        "note": "Use POST /stop/{task_id} to stop stuck tasks"
+    }
+
+
+@router.post("/stop-stuck")
+async def stop_stuck_tasks():
+    """Automatically stop all stuck tasks"""
+    manager = get_progress_manager()
+    active_tasks = manager.get_active_tasks()
+    
+    stopped = []
+    for task in active_tasks:
+        if manager.is_task_stuck(task["task_id"]):
+            await manager.stop_task(task["task_id"], "Automatically stopped - task was stuck")
+            stopped.append(task["task_id"])
+    
+    return {
+        "message": f"Stopped {len(stopped)} stuck tasks",
+        "stopped_tasks": stopped
+    }
