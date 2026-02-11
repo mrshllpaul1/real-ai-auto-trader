@@ -19,7 +19,7 @@ from datetime import datetime
 from typing import Dict, List, Any
 
 # Backend URL configuration
-BASE_URL = "https://status-checkup.preview.emergentagent.com/api"
+BASE_URL = "https://github-connect-59.preview.emergentagent.com/api"
 
 class MultiYearBacktestTester:
     def __init__(self):

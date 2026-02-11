@@ -33,7 +33,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 
 # Use production URL from frontend .env
-BACKEND_URL = "https://status-checkup.preview.emergentagent.com/api"
+BACKEND_URL = "https://github-connect-59.preview.emergentagent.com/api"
 print(f"🔗 Testing Comprehensive Backend API at: {BACKEND_URL}")
 
 class ComprehensiveBackendTester:

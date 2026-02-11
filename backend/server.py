@@ -71,7 +71,7 @@ All trading endpoints are prefixed with `/api`. See below for full documentation
     },
     servers=[
         {
-            "url": "https://status-checkup.preview.emergentagent.com",
+            "url": "https://github-connect-59.preview.emergentagent.com",
             "description": "Production server"
         },
         {
