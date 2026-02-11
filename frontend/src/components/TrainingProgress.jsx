@@ -246,10 +246,10 @@ const TrainingProgress = ({
                 <span className="text-sm font-medium text-white">
                   Training Progress ({activeTasks.length})
                 </span>
-                {wsConnected ? (
-                  <Wifi className="w-3 h-3 text-green-400" title="WebSocket connected" />
+                {activeTasks.length > 0 ? (
+                  <WifiOff className="w-3 h-3 text-green-400" title="HTTP Polling Active" />
                 ) : (
-                  <WifiOff className="w-3 h-3 text-orange-400" title="Using polling" />
+                  <WifiOff className="w-3 h-3 text-gray-400" title="HTTP Polling" />
                 )}
               </div>
               <div className="flex items-center gap-1">
