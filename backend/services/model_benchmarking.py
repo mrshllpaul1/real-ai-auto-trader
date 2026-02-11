@@ -490,6 +490,8 @@ class ModelBenchmarkingService:
     
     async def _store_benchmark(self, results: Dict):
         """Store benchmark results in database"""
+        if self.db is None:
+            return
         try:
             collection = self.db["model_benchmarks"]
             await collection.insert_one({
@@ -505,7 +507,7 @@ class ModelBenchmarkingService:
         if self._benchmark_cache:
             return self._benchmark_cache
         
-        if self.db:
+        if self.db is not None:
             try:
                 collection = self.db["model_benchmarks"]
                 result = await collection.find_one(
