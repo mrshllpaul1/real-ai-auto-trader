@@ -58,26 +58,33 @@ const GemMLDLComparison = ({ embedded = false }) => {
   const handleTrain = async () => {
     try {
       setTraining(true);
-      await api.post('/gems/ml-dl/train', {});
-      toast.success('Training started! This may take a few minutes.');
+      setTrainingTaskId(null);
+      const response = await api.post('/gems/ml-dl/train', {});
       
-      // Poll for completion
-      const pollInterval = setInterval(async () => {
-        try {
-          const res = await api.get('/gems/ml-dl/status');
-          setTrainingStatus(res.data);
-          
-          if (!res.data.running) {
+      // Set task ID for progress tracking
+      if (response.data.task_id) {
+        setTrainingTaskId(response.data.task_id);
+        toast.success('Training started! Check progress in the Training Progress panel.');
+      } else {
+        toast.success('Training started! This may take a few minutes.');
+        // Fallback polling for old API
+        const pollInterval = setInterval(async () => {
+          try {
+            const res = await api.get('/gems/ml-dl/status');
+            setTrainingStatus(res.data);
+            
+            if (!res.data.running) {
+              clearInterval(pollInterval);
+              setTraining(false);
+              loadData();
+              toast.success('Training complete!');
+            }
+          } catch (e) {
             clearInterval(pollInterval);
             setTraining(false);
-            loadData();
-            toast.success('Training complete!');
           }
-        } catch (e) {
-          clearInterval(pollInterval);
-          setTraining(false);
-        }
-      }, 5000);
+        }, 5000);
+      }
     } catch (error) {
       toast.error('Failed to start training');
       setTraining(false);
