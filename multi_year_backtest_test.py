@@ -19,7 +19,7 @@ from datetime import datetime
 from typing import Dict, List, Any
 
 # Backend URL configuration
-BASE_URL = "https://trade-sentinel-27.preview.emergentagent.com/api"
+BASE_URL = "https://algotrader-weekly.preview.emergentagent.com/api"
 
 class MultiYearBacktestTester:
     def __init__(self):

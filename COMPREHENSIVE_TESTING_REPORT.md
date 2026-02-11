@@ -372,8 +372,8 @@ nginx-code-proxy RUNNING   pid 45
 - All environment variables set ✅
 
 **URL:**
-- Deployment: https://trade-sentinel-27.preview.emergentagent.com ✅
-- Backend API: https://trade-sentinel-27.preview.emergentagent.com/api ✅
+- Deployment: https://algotrader-weekly.preview.emergentagent.com ✅
+- Backend API: https://algotrader-weekly.preview.emergentagent.com/api ✅
 
 ---
 
