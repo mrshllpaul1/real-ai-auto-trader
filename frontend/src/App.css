@@ -3,6 +3,17 @@
   background: #050505;
 }
 
+/* Toast notifications - highest z-index */
+[data-sonner-toaster],
+.sonner-toast-wrapper,
+.toaster {
+  z-index: 99999 !important;
+}
+
+[data-sonner-toast] {
+  z-index: 99999 !important;
+}
+
 .glow-ai {
   box-shadow: 0 0 20px rgba(157, 0, 255, 0.3);
   transition: box-shadow 0.3s ease;
