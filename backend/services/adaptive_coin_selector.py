@@ -652,20 +652,4 @@ class AdaptiveCoinSelector:
             {'weights': self.criteria_weights, 'updated_at': datetime.now().isoformat()},
             upsert=True
         )
-    
-    async def get_selection_status(self) -> Dict[str, Any]:
-        """Get current selector status and statistics"""
-        total_selections = await self.db.weekly_selection_results.count_documents({})
-        
-        recent_results = await self.db.weekly_selection_results.find(
-            {}, {'_id': 0, 'avg_return': 1}
-        ).sort('week_start', -1).limit(10).to_list(10)
-        
-        avg_recent_return = np.mean([r.get('avg_return', 0) for r in recent_results]) if recent_results else 0
-        
-        return {
-            'total_weeks_analyzed': total_selections,
-            'avg_recent_return': round(avg_recent_return, 2),
-            'current_weights': self.criteria_weights,
-            'coin_universe_size': len(self.coin_universe)
-        }
+
