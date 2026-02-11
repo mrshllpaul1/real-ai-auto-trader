@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import toast from '../utils/toast';
+import TrainingProgress from '../components/TrainingProgress';
 
 // Fear & Greed Gauge Component
 const FearGreedGauge = ({ value, classification }) => {
