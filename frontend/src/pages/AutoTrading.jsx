@@ -364,6 +364,9 @@ const AutoTrading = ({ embedded = false }) => {
       {/* Automated Weekly Trading */}
       <AutomatedTradingSection />
 
+      {/* Weekly Scheduler */}
+      <WeeklySchedulerSection />
+
       {/* AI Portfolio Manager */}
       <Card className="bg-[#0A0A0A] border-[#1F1F1F] border-l-4 border-l-[#9D00FF]" data-testid="ai-portfolio-card">
         <CardHeader>
