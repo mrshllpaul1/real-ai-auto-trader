@@ -302,7 +302,20 @@ const FloatingCommandHub = () => {
                     </div>
                     
                     {/* Messages */}
-                    <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                    <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[200px]">
+                      {cmdMessages.length === 0 && !cmdLoading && (
+                        <div className="flex justify-start">
+                          <div className="max-w-[85%] rounded-xl px-3 py-2 bg-slate-800/80 text-slate-200">
+                            <p className="text-xs leading-relaxed mb-1"><strong className="text-cyan-400">Command Center</strong></p>
+                            <ul className="space-y-0.5">
+                              <li className="ml-3 text-xs leading-relaxed">• "Find hidden gems"</li>
+                              <li className="ml-3 text-xs leading-relaxed">• "Add BTC to watchlist"</li>
+                              <li className="ml-3 text-xs leading-relaxed">• "Go to analytics"</li>
+                              <li className="ml-3 text-xs leading-relaxed">• "Predict ETH price"</li>
+                            </ul>
+                          </div>
+                        </div>
+                      )}
                       {cmdMessages.map((msg, i) => (
                         <div key={i} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                           <div className={`max-w-[85%] rounded-xl px-3 py-2 ${
