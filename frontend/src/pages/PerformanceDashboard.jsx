@@ -3,13 +3,17 @@ import {
   TrendingUp, TrendingDown, DollarSign, Percent, Target, Award,
   RefreshCw, AlertTriangle, CheckCircle, XCircle, ArrowUpRight, 
   ArrowDownRight, Clock, BarChart3, PieChart, Activity, Wallet,
-  History, Zap
+  History, Zap, LineChart as LineChartIcon
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import api from '../services/api';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, 
+  ResponsiveContainer, Area, AreaChart, ReferenceLine
+} from 'recharts';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '';
 
@@ -18,6 +22,9 @@ const PerformanceDashboard = ({ embedded = false }) => {
   const [syncing, setSyncing] = useState(false);
   const [data, setData] = useState(null);
   const [syncResult, setSyncResult] = useState(null);
+  const [pnlChartData, setPnlChartData] = useState([]);
+  const [chartLoading, setChartLoading] = useState(false);
+  const [isSampleData, setIsSampleData] = useState(false);
 
   const loadDashboard = useCallback(async () => {
     try {
