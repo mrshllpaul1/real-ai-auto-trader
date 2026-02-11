@@ -645,7 +645,8 @@ async def run_backtest(backtest_id: str, config: BacktestConfig, db):
             "trades": [],
             "equity_curve": [],
             "daily_returns": [],
-            "positions": []
+            "positions": [],
+            "data_sources": {}  # Track which data sources were used
         }
         
         capital = config.initial_capital
@@ -656,10 +657,12 @@ async def run_backtest(backtest_id: str, config: BacktestConfig, db):
             
             # Try to fetch REAL historical data from Kraken
             prices = await _fetch_real_ohlc_data(symbol, days)
+            used_real_data = bool(prices and len(prices) >= min(days, 720))  # Kraken max ~720 daily candles
             
             # If no real data available, generate synthetic (with warning)
             if not prices or len(prices) < days:
                 logger.warning(f"Using synthetic data for {symbol} - real OHLC not available")
+                results["data_sources"][symbol] = "synthetic"
                 prices = []
                 current_price = base_price
                 
