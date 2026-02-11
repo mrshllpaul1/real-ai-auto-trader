@@ -48,10 +48,28 @@ const BacktestEngine = ({ embedded = false }) => {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
+      
+      // Add timeout wrapper to prevent infinite loading
+      const fetchWithTimeout = async (url, timeout = 8000) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        try {
+          const response = await api.get(url, { signal: controller.signal });
+          clearTimeout(timeoutId);
+          return response;
+        } catch (error) {
+          clearTimeout(timeoutId);
+          if (error.name === 'AbortError' || error.name === 'CanceledError') {
+            console.warn(`Request to ${url} timed out`);
+          }
+          return { data: {} };
+        }
+      };
+      
       const [strategiesRes, templatesRes, historyRes] = await Promise.all([
-        api.get('/backtest-engine/strategies').catch(() => ({ data: { strategies: [] } })),
-        api.get('/backtest-engine/templates').catch(() => ({ data: { templates: [] } })),
-        api.get('/backtest-engine/history').catch(() => ({ data: { history: [] } }))
+        fetchWithTimeout('/backtest-engine/strategies'),
+        fetchWithTimeout('/backtest-engine/templates'),
+        fetchWithTimeout('/backtest-engine/history')
       ]);
 
       setStrategies(strategiesRes.data.strategies || []);
