@@ -225,6 +225,10 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import validation middleware: {e}")
 
+# 5. GZIP Compression - Compress responses >500 bytes for 60-80% smaller transfers
+app.add_middleware(GZipMiddleware, minimum_size=500)
+logger.info("✅ GZIP Compression middleware enabled (min_size=500 bytes)")
+
 # CORS middleware (must be after custom middleware)
 app.add_middleware(
     CORSMiddleware,
