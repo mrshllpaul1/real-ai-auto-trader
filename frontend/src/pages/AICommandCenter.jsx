@@ -298,23 +298,27 @@ const AICommandCenter = ({ embedded = false }) => {
   }, [fetchData]);
 
   const handleTrainModel = async (model) => {
-    const loadingToast = toast.ai.training('AI Models');
     try {
       const response = await api.post('/training/train-all');
-      toast.dismiss(loadingToast);
       
       if (response.data.status === 'lightweight_mode') {
         toast.info('Lightweight Mode Active', {
           description: 'Training disabled for deployment efficiency. Models using pre-computed patterns.',
           duration: 6000,
         });
+      } else if (response.data.task_id) {
+        toast.success('Training Started', {
+          description: `Training ${response.data.coin_count || 77} coins. Check Training Progress panel for real-time updates.`,
+          duration: 5000,
+        });
       } else {
-        toast.ai.trained('AI Models', response.data.accuracy || 75);
+        toast.success('Training Started', {
+          description: 'AI models training in background.',
+        });
       }
       
       fetchData();
     } catch (error) {
-      toast.dismiss(loadingToast);
       toast.error('Failed to start training', {
         description: error.response?.data?.detail || 'Please try again later',
       });
