@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { 
@@ -12,6 +12,16 @@ import {
   PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend
 } from 'recharts';
 import api from '../services/api';
+
+// Performance optimization: Detect low-power devices
+const isLowPowerDevice = () => {
+  const memory = navigator.deviceMemory;
+  const cores = navigator.hardwareConcurrency;
+  return (memory && memory <= 4) || (cores && cores <= 4);
+};
+
+// Optimized chart height for different screens
+const getChartHeight = () => isLowPowerDevice() ? 250 : 300;
 
 const ModelPerformanceDashboard = ({ embedded = false }) => {
   const [drlStatus, setDrlStatus] = useState(null);
