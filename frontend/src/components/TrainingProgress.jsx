@@ -137,25 +137,6 @@ const TrainingProgress = ({
       }
     };
   }, [taskId, onComplete]);
-        };
-        
-      } catch (e) {
-        console.warn('[TrainingProgress] WebSocket not supported, using polling fallback');
-        setWsConnected(false);
-      }
-    };
-    
-    connectWebSocket();
-    
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close(1000, 'Component unmounting'); // Normal closure
-      }
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
-    };
-  }, [taskId, onComplete]);
 
   // Fallback polling (less frequent since WebSocket handles most updates)
   const fetchActiveTasks = useCallback(async () => {
