@@ -513,10 +513,69 @@ class GemPredictionEngine:
         else:
             return GemLabel.NO_GEM.value
     
+    async def _fetch_kraken_ohlc(self, symbol: str, days: int = 720) -> List[Dict]:
+        """
+        Fetch OHLC data directly from Kraken API when database is empty.
+        Returns list of OHLCV dictionaries.
+        """
+        from httpx import AsyncClient
+        
+        # Kraken pair mapping
+        KRAKEN_PAIRS = {
+            'BTC': 'XXBTZUSD', 'ETH': 'XETHZUSD', 'SOL': 'SOLUSD', 'ADA': 'ADAUSD',
+            'DOT': 'DOTUSD', 'AVAX': 'AVAXUSD', 'LINK': 'LINKUSD', 'MATIC': 'MATICUSD',
+            'UNI': 'UNIUSD', 'LTC': 'XLTCZUSD', 'DOGE': 'XDGUSD', 'XRP': 'XXRPZUSD',
+            'ATOM': 'ATOMUSD', 'NEAR': 'NEARUSD', 'APT': 'APTUSD', 'SUI': 'SUIUSD',
+            'ARB': 'ARBUSD', 'OP': 'OPUSD', 'SHIB': 'SHIBUSD', 'PEPE': 'PEPEUSD'
+        }
+        
+        pair = KRAKEN_PAIRS.get(symbol.upper(), f"{symbol.upper()}USD")
+        
+        try:
+            async with AsyncClient(timeout=20.0) as client:
+                response = await client.get(
+                    "https://api.kraken.com/0/public/OHLC",
+                    params={"pair": pair, "interval": 1440},  # Daily candles
+                    headers={"User-Agent": "CryptoTradingBot/1.0"}
+                )
+                data = response.json()
+                
+                if data.get("error") and len(data["error"]) > 0:
+                    logger.warning(f"Kraken OHLC error for {pair}: {data['error']}")
+                    return []
+                
+                result = data.get("result", {})
+                result.pop('last', None)
+                
+                if not result:
+                    return []
+                
+                ohlc_data = list(result.values())[0] if result else []
+                
+                # Convert to our format
+                formatted = []
+                for candle in ohlc_data:
+                    formatted.append({
+                        'timestamp': int(candle[0]),
+                        'open': float(candle[1]),
+                        'high': float(candle[2]),
+                        'low': float(candle[3]),
+                        'close': float(candle[4]),
+                        'volume_to': float(candle[6])
+                    })
+                
+                logger.info(f"Fetched {len(formatted)} OHLC candles from Kraken for {symbol}")
+                return formatted[-days:] if len(formatted) > days else formatted
+                
+        except Exception as e:
+            logger.error(f"Failed to fetch Kraken OHLC for {symbol}: {e}")
+            return []
+
     async def train_models(self, symbols: List[str] = None) -> Dict[str, Any]:
         """
         Train all models on historical gem data.
         Uses coins that had significant price movements.
+        Fetches data from Kraken API if database is empty.
         
         In lightweight mode (for deployment), training is simulated/skipped.
         """
@@ -544,15 +603,26 @@ class GemPredictionEngine:
         
         all_features = []
         all_labels = []
+        data_sources = {}
         
         for symbol in symbols:
             try:
+                # First try to get data from database
                 ohlcv_data = await self.db.historical_ohlcv.find(
                     {'symbol': symbol},
                     {'_id': 0}
-                ).sort('timestamp', 1).limit(600).to_list(600)
+                ).sort('timestamp', 1).limit(720).to_list(720)
+                
+                # If DB is empty, fetch from Kraken API
+                if len(ohlcv_data) < 100:
+                    logger.info(f"DB empty for {symbol}, fetching from Kraken API...")
+                    ohlcv_data = await self._fetch_kraken_ohlc(symbol, 720)
+                    data_sources[symbol] = "kraken_api"
+                else:
+                    data_sources[symbol] = "database"
                 
                 if len(ohlcv_data) < 100:
+                    logger.warning(f"Insufficient data for {symbol}: {len(ohlcv_data)} records")
                     continue
                 
                 X = await self._prepare_features(ohlcv_data)
@@ -571,13 +641,21 @@ class GemPredictionEngine:
                             label = self._determine_gem_label(X[i], future_return)
                             all_features.append(X[i])
                             all_labels.append(label)
+                
+                logger.info(f"Processed {symbol}: {len(X)} feature vectors from {data_sources.get(symbol, 'unknown')}")
                             
             except Exception as e:
                 logger.warning(f"Error processing {symbol}: {e}")
+                import traceback
+                traceback.print_exc()
                 continue
         
         if len(all_features) < 100:
-            return {'error': f'Insufficient training data: {len(all_features)} samples (need 100+)'}
+            return {
+                'error': f'Insufficient training data: {len(all_features)} samples (need 100+)',
+                'data_sources': data_sources,
+                'hint': 'Try downloading historical data first or check Kraken API connectivity'
+            }
         
         X = np.array(all_features)
         y = np.array(all_labels)
