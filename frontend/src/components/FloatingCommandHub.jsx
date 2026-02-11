@@ -353,8 +353,8 @@ const FloatingCommandHub = () => {
                   </TabsContent>
 
                   {/* AI Chat Tab */}
-                  <TabsContent value="chat" className="flex-1 flex flex-col overflow-hidden m-0 p-2">
-                    <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[200px]">
+                  <TabsContent value="chat" className="flex-1 flex flex-col overflow-hidden m-0 p-2 mt-0">
+                    <div className="flex-1 overflow-y-auto space-y-2 pr-1">
                       {chatMessages.length === 0 && !chatLoading && (
                         <div className="flex justify-start">
                           <div className="max-w-[85%] rounded-xl px-3 py-2 bg-slate-800/80 text-slate-200">
@@ -399,7 +399,7 @@ const FloatingCommandHub = () => {
                       <div ref={messagesEndRef} />
                     </div>
                     
-                    <form onSubmit={(e) => { e.preventDefault(); sendChatMessage(chatInput); }} className="flex gap-2 mt-2 flex-shrink-0">
+                    <form onSubmit={(e) => { e.preventDefault(); sendChatMessage(chatInput); }} className="flex gap-2 mt-auto pt-2 flex-shrink-0 border-t border-slate-700/30">
                       <Input
                         value={chatInput}
                         onChange={(e) => setChatInput(e.target.value)}
