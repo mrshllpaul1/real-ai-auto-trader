@@ -556,6 +556,10 @@ async def train_all_systems(
                 )
                 
                 for i, coin in enumerate(training_coins):
+                    if should_stop():
+                        await progress_manager.stop_task(task_id, f"Stopped at Phase 3, coin {i+1}/{total_coins}")
+                        return
+                    
                     await progress_manager.update_progress(
                         task_id,
                         current_item=f"Gems: {coin}",
@@ -568,6 +572,10 @@ async def train_all_systems(
                         logger.warning(f"Gems training failed for {coin}: {e}")
                 
                 items_done += total_coins
+                
+                if should_stop():
+                    await progress_manager.stop_task(task_id, "Stopped after Phase 3")
+                    return
                 
                 # Step 4: Save Weights
                 await progress_manager.update_progress(
