@@ -1,0 +1,277 @@
+{
+  "total_tests": 9,
+  "successful_tests": 8,
+  "success_rate": 88.88888888888889,
+  "total_time": 22.97784686088562,
+  "tethys_working": false,
+  "model_training_working": true,
+  "health_working": true,
+  "results": [
+    {
+      "endpoint": "/tethys-train/status",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": "0.083s",
+      "expected_status": 200,
+      "success": true,
+      "description": "Get Tethys training status - should include is_active field",
+      "timestamp": "2026-02-11T22:37:09.770211",
+      "response_data": {
+        "is_training": false,
+        "is_active": false,
+        "current_episode": 0,
+        "total_episodes": 0,
+        "progress_pct": 0,
+        "best_sharpe": -999.0,
+        "recent_history": [],
+        "rainbow_dqn_status": "Ready",
+        "transformer_status": "Active",
+        "ensemble_status": "Ready",
+        "risk_manager": "Active",
+        "signals_generated": 0,
+        "confidence": 50,
+        "market_regime": "Normal"
+      }
+    },
+    {
+      "endpoint": "/tethys-train/start",
+      "method": "POST",
+      "status_code": "ERROR",
+      "response_time": "0.355s",
+      "expected_status": 200,
+      "success": false,
+      "description": "Start Tethys training with minimal episodes",
+      "error": "Response ended prematurely",
+      "timestamp": "2026-02-11T22:37:10.125466"
+    },
+    {
+      "endpoint": "/tethys-train/status",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": "0.041s",
+      "expected_status": 200,
+      "success": true,
+      "description": "Check status after starting training",
+      "timestamp": "2026-02-11T22:37:12.166655",
+      "response_data": {
+        "is_training": false,
+        "is_active": false,
+        "current_episode": 0,
+        "total_episodes": 10,
+        "progress_pct": 0.0,
+        "best_sharpe": -999.0,
+        "recent_history": [],
+        "rainbow_dqn_status": "Ready",
+        "transformer_status": "Active",
+        "ensemble_status": "Ready",
+        "risk_manager": "Active",
+        "signals_generated": 0,
+        "confidence": 50,
+        "market_regime": "Normal"
+      }
+    },
+    {
+      "endpoint": "/training/models-status",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": "0.054s",
+      "expected_status": 200,
+      "success": true,
+      "description": "Get status for all models (should show 6 models)",
+      "timestamp": "2026-02-11T22:37:12.220790",
+      "response_data": {
+        "historical": {
+          "model_name": "historical",
+          "accuracy": 76,
+          "coins_trained": [
+            "bitcoin"
+          ],
+          "is_trained": true,
+          "last_updated": "2026-02-11T22:34:13.910000",
+          "status": "active",
+          "trained_at": "2026-02-11T22:34:13.910797+00:00"
+        },
+        "gem_ml_dl": {
+          "model_name": "gem_ml_dl",
+          "is_trained": false,
+          "status": "not_trained",
+          "accuracy": 0
+        },
+        "mtf": {
+          "model_name": "mtf",
+          "is_trained": false,
+          "status": "not_trained",
+          "accuracy": 0
+        },
+        "xgboost": {
+          "model_name": "xgboost",
+          "is_trained": false,
+          "status": "not_trained",
+          "accuracy": 0
+        },
+        "lstm_gru": {
+          "model_name": "lstm_gru",
+          "is_trained": false,
+          "status": "not_trained",
+          "accuracy": 0
+        },
+        "finrl": {
+          "model_name": "finrl",
+          "is_trained": false,
+          "status": "not_trained",
+          "accuracy": 0
+        }
+      }
+    },
+    {
+      "endpoint": "/training/train-model",
+      "method": "POST",
+      "status_code": 200,
+      "response_time": "0.014s",
+      "expected_status": 200,
+      "success": true,
+      "description": "Start training historical model with bitcoin",
+      "timestamp": "2026-02-11T22:37:12.235146",
+      "response_data": {
+        "status": "training_started",
+        "task_id": "train-historical-4fe53a9d",
+        "model_name": "historical",
+        "coins": [
+          "bitcoin"
+        ],
+        "message": "Training historical model in background. Check /training-progress/status/train-historical-4fe53a9d for updates."
+      }
+    },
+    {
+      "endpoint": "/training/models-status",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": "17.391s",
+      "expected_status": 200,
+      "success": true,
+      "description": "Check models status after starting historical training",
+      "timestamp": "2026-02-11T22:37:32.626720",
+      "response_data": {
+        "historical": {
+          "model_name": "historical",
+          "accuracy": 76,
+          "coins_trained": [
+            "bitcoin"
+          ],
+          "is_trained": true,
+          "last_updated": "2026-02-11T22:34:13.910000",
+          "status": "active",
+          "trained_at": "2026-02-11T22:34:13.910797+00:00"
+        },
+        "gem_ml_dl": {
+          "model_name": "gem_ml_dl",
+          "is_trained": false,
+          "status": "not_trained",
+          "accuracy": 0
+        },
+        "mtf": {
+          "model_name": "mtf",
+          "is_trained": false,
+          "status": "not_trained",
+          "accuracy": 0
+        },
+        "xgboost": {
+          "model_name": "xgboost",
+          "is_trained": false,
+          "status": "not_trained",
+          "accuracy": 0
+        },
+        "lstm_gru": {
+          "model_name": "lstm_gru",
+          "is_trained": false,
+          "status": "not_trained",
+          "accuracy": 0
+        },
+        "finrl": {
+          "model_name": "finrl",
+          "is_trained": false,
+          "status": "not_trained",
+          "accuracy": 0
+        }
+      }
+    },
+    {
+      "endpoint": "/training/model-status/historical",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": "0.012s",
+      "expected_status": 200,
+      "success": true,
+      "description": "Get specific status for historical model",
+      "timestamp": "2026-02-11T22:37:32.639002",
+      "response_data": {
+        "model_name": "historical",
+        "accuracy": 76,
+        "coins_trained": [
+          "bitcoin"
+        ],
+        "is_trained": true,
+        "last_updated": "2026-02-11T22:37:32.626000",
+        "status": "active",
+        "trained_at": "2026-02-11T22:37:32.626019+00:00"
+      }
+    },
+    {
+      "endpoint": "/training/status",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": "0.011s",
+      "expected_status": 200,
+      "success": true,
+      "description": "Get general training status",
+      "timestamp": "2026-02-11T22:37:32.649987",
+      "response_data": {
+        "trained": true,
+        "summary": {
+          "coins_trained": [
+            "bitcoin"
+          ],
+          "total_patterns": 51,
+          "successful_patterns": 38,
+          "hidden_gems_found": 0,
+          "avg_gem_multiplier": 0,
+          "training_accuracy": 74.50980392156863,
+          "data_source": "REAL_MARKET_DATA_ONLY",
+          "simulated_data_used": false,
+          "started_at": "2026-02-11T22:37:12.231282",
+          "coin_summaries": [
+            {
+              "coin": "bitcoin",
+              "patterns": 51,
+              "success_rate": 74.50980392156863,
+              "hidden_gems": 0
+            }
+          ],
+          "completed_at": "2026-02-11T22:37:32.622350"
+        },
+        "coins_trained": [
+          "bitcoin"
+        ],
+        "total_patterns": 51,
+        "hidden_gems_found": 0,
+        "training_accuracy": 74.50980392156863,
+        "completed_at": "2026-02-11T22:37:32.622350"
+      }
+    },
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": "0.015s",
+      "expected_status": 200,
+      "success": true,
+      "description": "Health check endpoint",
+      "timestamp": "2026-02-11T22:37:32.664982",
+      "response_data": {
+        "status": "healthy",
+        "database": "connected",
+        "version": "1.0.0"
+      }
+    }
+  ]
+}
