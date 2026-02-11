@@ -300,24 +300,40 @@ const AICommandCenter = ({ embedded = false }) => {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  const handleTrainModel = async (model) => {
+  const handleTrainModel = async (mode) => {
     try {
-      const response = await api.post('/training/train-all');
+      let response;
       
-      if (response.data.status === 'lightweight_mode') {
-        toast.info('Lightweight Mode Active', {
-          description: 'Training disabled for deployment efficiency. Models using pre-computed patterns.',
-          duration: 6000,
+      if (mode === 'fast') {
+        // Fast parallel training with batch processing
+        response = await api.post('/training/train-fast', {
+          batch_size: 10,
+          phases: ["historical", "technical", "gems"]
         });
-      } else if (response.data.task_id) {
-        toast.success('Training Started', {
-          description: `Training ${response.data.coin_count || 77} coins. Check Training Progress panel for real-time updates.`,
+        
+        toast.success('Fast Training Started', {
+          description: `Training ${response.data.coin_count || 77} coins in parallel batches. 3-5x faster!`,
           duration: 5000,
         });
       } else {
-        toast.success('Training Started', {
-          description: 'AI models training in background.',
-        });
+        // Standard sequential training
+        response = await api.post('/training/train-all');
+        
+        if (response.data.status === 'lightweight_mode') {
+          toast.info('Lightweight Mode Active', {
+            description: 'Training disabled for deployment efficiency. Models using pre-computed patterns.',
+            duration: 6000,
+          });
+        } else if (response.data.task_id) {
+          toast.success('Training Started', {
+            description: `Training ${response.data.coin_count || 77} coins. Check Training Progress panel for real-time updates.`,
+            duration: 5000,
+          });
+        } else {
+          toast.success('Training Started', {
+            description: 'AI models training in background.',
+          });
+        }
       }
       
       fetchData();
