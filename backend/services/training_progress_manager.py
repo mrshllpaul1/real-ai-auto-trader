@@ -16,7 +16,7 @@ class TrainingTask:
     """Represents a training task with progress tracking"""
     task_id: str
     task_type: str
-    status: str = "pending"  # pending, running, completed, failed
+    status: str = "pending"  # pending, running, completed, failed, cancelled, stopped
     progress: int = 0  # 0-100
     message: str = ""
     started_at: Optional[datetime] = None
@@ -28,6 +28,9 @@ class TrainingTask:
     current_item: str = ""
     items_processed: int = 0
     total_items: int = 0
+    cancel_requested: bool = False
+    last_progress_time: Optional[datetime] = None
+    stuck_threshold_seconds: int = 120  # Consider stuck if no progress for 2 minutes
 
 
 class TrainingProgressManager:
