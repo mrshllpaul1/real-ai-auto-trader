@@ -58,6 +58,24 @@ const Settings = ({ embedded = false }) => {
   const [universeStats, setUniverseStats] = useState(null);
   const [syncingUniverse, setSyncingUniverse] = useState(false);
   
+  // Blockchain API Keys (DeFi)
+  const [blockchainKeys, setBlockchainKeys] = useState({
+    alchemy_api_key: '',
+    moralis_api_key: '',
+    infura_api_key: '',
+    quicknode_api_key: ''
+  });
+  const [blockchainStatus, setBlockchainStatus] = useState({});
+  
+  // Social Trading Platform
+  const [socialPlatform, setSocialPlatform] = useState({
+    platform_type: '', // 'etoro', 'zulutrade', 'naga', 'custom'
+    api_key: '',
+    api_secret: '',
+    username: ''
+  });
+  const [socialPlatformConnected, setSocialPlatformConnected] = useState(false);
+  
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
