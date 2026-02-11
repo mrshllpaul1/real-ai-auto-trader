@@ -25,10 +25,7 @@ const TrainingProgress = ({
   const [task, setTask] = useState(null);
   const [activeTasks, setActiveTasks] = useState([]);
   const [expanded, setExpanded] = useState(true);
-  const [wsConnected, setWsConnected] = useState(false);
-  const wsRef = useRef(null);
-  const reconnectTimeoutRef = useRef(null);
-  const wsEnabledRef = useRef(false); // WebSocket disabled - using polling only
+  const pollingInitializedRef = useRef(false);
 
   // WebSocket is disabled in deployment - infrastructure doesn't support WS through ingress
   // Using HTTP polling instead for reliable real-time updates
