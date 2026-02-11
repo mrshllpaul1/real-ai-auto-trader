@@ -85,10 +85,14 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
 
   const handleTrain = async (engine) => {
     setTraining(true);
+    setTrainingTaskId(null);
     try {
       if (engine === 'all') {
-        // Train ALL models
-        await api.post('/training/train-all');
+        // Train ALL models - returns task_id for progress tracking
+        const response = await api.post('/training/train-all');
+        if (response.data.task_id) {
+          setTrainingTaskId(response.data.task_id);
+        }
       } else if (engine === 'intelligence') {
         await api.post('/trading-intelligence/train', { epochs: 50 });
       } else if (engine === 'drl') {
@@ -97,10 +101,15 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
       setTimeout(fetchAllData, 5000);
     } catch (error) {
       console.error('Training error:', error);
-    } finally {
       setTraining(false);
     }
   };
+
+  const handleTrainingComplete = useCallback((result) => {
+    setTraining(false);
+    setTrainingTaskId(null);
+    fetchAllData();
+  }, [fetchAllData]);
 
   const handleRunBacktest = async () => {
     try {
