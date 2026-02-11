@@ -5,6 +5,7 @@ Lightweight server that delegates to modular initialization
 
 from fastapi import FastAPI, APIRouter, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 import logging
 import asyncio
 
