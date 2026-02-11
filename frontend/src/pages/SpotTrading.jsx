@@ -5,6 +5,7 @@ import {
   ArrowRight, BarChart2, Activity, Clock, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '';
 
@@ -578,14 +579,7 @@ const SpotTrading = ({ embedded = false }) => {
   );
   
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0A0A0A] p-6 flex items-center justify-center">
-        <div className="flex items-center gap-3 text-[#888]">
-          <RefreshCw size={24} className="animate-spin" />
-          <span>Loading spot trading...</span>
-        </div>
-      </div>
-    );
+    return <PageLoadingSkeleton />;
   }
   
   return (
