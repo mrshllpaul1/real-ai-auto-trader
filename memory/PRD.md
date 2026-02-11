@@ -5,7 +5,54 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ---
 
-## Session Update - Feb 11, 2026 (Latest)
+## Session Update - Feb 11, 2026 (Latest - Part 2)
+
+### ✅ FIXED: Train/Test Buttons, Confidence Display, AI Coin Selection, Auto Tab
+
+#### 1. Backtest Engine Loading Issue
+**Issue:** Backtest page stuck on infinite loading spinner.
+**Fix:** 
+- Added timeout wrapper (`fetchWithTimeout`) to prevent infinite loading
+- Set 8-second timeout for all backtest API calls
+- Uses `AbortController` for proper request cancellation
+- Falls back to empty data if requests timeout
+
+#### 2. Confidence Percentage Display Fix
+**Issue:** AI Analysis showed 0% confidence on Spot Trading page.
+**Root Cause:** The `AISignalCard` component was receiving `pairDetails.ai_signal` but accessing wrong fields:
+- Backend returns `ai_signal.composite.confidence` 
+- Frontend was accessing `signal.confidence` directly (undefined)
+**Fix:**
+- Updated `AISignalCard` to extract `composite` object first
+- Now correctly reads: `composite.score`, `composite.confidence`, `composite.signal`
+- Fixed progress bar to use 0-100 scale (was using -1 to 1 formula)
+- Added "Score: X / 100 | Models: N" display
+
+#### 3. Adaptive AI Coin Selection Engine Expansion
+**Issue:** AI only learned from 19 coins, not all Kraken pairs.
+**Fix:**
+- Expanded `coin_universe` from 19 to 83+ coins
+- Added categories: DeFi, Gaming, AI, Layer 2s, Memes, Infrastructure
+- Added `load_kraken_pairs()` method to dynamically load all tradeable pairs from Kraken
+- New coins include: SHIB, PEPE, FLOKI, BONK, WIF, SEI, TIA, JUP, WLD, ARKM, IMX, etc.
+- `coin_universe_size` now shows 83 (was 19)
+
+#### 4. Auto Tab Alerts & Positions
+**Issue:** User wanted to verify alerts and positions were showing.
+**Status:** Working correctly:
+- Active Positions section shows "No active positions" when empty
+- Recent Alerts section displays alerts when available
+- Execute Weekly Rebalance button functional
+- Check Stop/Take Profit button functional
+
+**Files Modified:**
+- `frontend/src/pages/BacktestEngine.jsx` - Added timeout handling
+- `frontend/src/pages/SpotTrading.jsx` - Fixed AISignalCard confidence extraction
+- `backend/services/adaptive_coin_selector.py` - Expanded coin universe to 83+ coins
+
+---
+
+## Session Update - Feb 11, 2026 (Part 1)
 
 ### ✅ FIXED: Multiple Bug Fixes & Performance Optimizations
 
