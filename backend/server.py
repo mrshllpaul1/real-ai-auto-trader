@@ -200,7 +200,15 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import security headers middleware: {e}")
 
-# 2. Error Monitoring
+# 2. Response Compression
+try:
+    from middleware.compression import CompressionMiddleware
+    app.add_middleware(CompressionMiddleware, minimum_size=500, compression_level=6)
+    logger.info("✅ Response Compression middleware enabled")
+except ImportError as e:
+    logger.warning(f"Could not import compression middleware: {e}")
+
+# 3. Error Monitoring
 try:
     from middleware.error_monitoring import ErrorMonitoringMiddleware
     app.add_middleware(ErrorMonitoringMiddleware, log_all_requests=False)
@@ -208,7 +216,7 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import error monitoring middleware: {e}")
 
-# 3. Rate Limiting
+# 4. Rate Limiting
 try:
     from middleware.rate_limiter import RateLimitMiddleware
     app.add_middleware(RateLimitMiddleware)
@@ -216,7 +224,7 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import rate limiting middleware: {e}")
 
-# 4. Request Validation
+# 5. Request Validation
 try:
     from middleware.request_validation import ValidationMiddleware
     app.add_middleware(ValidationMiddleware)
@@ -247,6 +255,14 @@ async def delayed_init():
     
     from init.services import initialize_all_services
     await initialize_all_services(db)
+    
+    # Start periodic memory cleanup
+    try:
+        from services.performance_optimizer import start_periodic_cleanup
+        await start_periodic_cleanup(300)  # Every 5 minutes
+        logger.info("✅ Periodic memory cleanup started")
+    except Exception as e:
+        logger.warning(f"Could not start periodic cleanup: {e}")
 
 
 @app.on_event("shutdown")
