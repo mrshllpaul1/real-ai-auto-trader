@@ -72,6 +72,7 @@ def register_routes(api_router: APIRouter, db=None):
     from routes import ml_optimization as ml_optimization_routes
     from routes import ml_monitoring as ml_monitoring_routes
     from routes import training_progress as training_progress_routes
+    from routes import database_performance as database_performance_routes
     
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
@@ -191,6 +192,9 @@ def register_routes(api_router: APIRouter, db=None):
     
     # Training Progress Monitoring
     api_router.include_router(training_progress_routes.router, tags=["Training Progress"])
+    
+    # Database Performance Monitoring
+    api_router.include_router(database_performance_routes.router, tags=["Database Performance"])
     
     # Model Retrain Scheduler
     from routes import model_retrain_scheduler as retrain_scheduler_routes
