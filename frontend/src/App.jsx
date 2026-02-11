@@ -142,6 +142,12 @@ function App() {
                     <Route path="/yield-farming" element={<Navigate to="/defi" replace />} />
                     <Route path="/rebalance" element={<Navigate to="/defi" replace />} />
                     
+                    {/* New Enhancement Routes (P0, P1, Quick Wins) */}
+                    <Route path="/leaderboard" element={<PageErrorBoundary><SuspenseWrapper><PaperLeaderboard /></SuspenseWrapper></PageErrorBoundary>} />
+                    <Route path="/marketplace" element={<PageErrorBoundary><SuspenseWrapper><StrategyMarketplace /></SuspenseWrapper></PageErrorBoundary>} />
+                    <Route path="/tax" element={<PageErrorBoundary><SuspenseWrapper><TaxReporting /></SuspenseWrapper></PageErrorBoundary>} />
+                    <Route path="/social" element={<PageErrorBoundary><SuspenseWrapper><SocialFeed /></SuspenseWrapper></PageErrorBoundary>} />
+                    
                     <Route path="/setup" element={<Navigate to="/settings" replace />} />
                     <Route path="/budget" element={<Navigate to="/settings" replace />} />
                     <Route path="/telegram" element={<Navigate to="/settings" replace />} />
