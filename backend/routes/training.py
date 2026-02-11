@@ -483,6 +483,10 @@ async def train_all_systems(
                 
                 items_done = 0
                 
+                # Helper to check cancellation
+                def should_stop():
+                    return progress_manager.is_cancel_requested(task_id)
+                
                 # Step 1: Historical Training (per-coin progress)
                 await progress_manager.update_progress(
                     task_id, 
@@ -492,6 +496,10 @@ async def train_all_systems(
                 )
                 
                 for i, coin in enumerate(training_coins):
+                    if should_stop():
+                        await progress_manager.stop_task(task_id, f"Stopped at Phase 1, coin {i+1}/{total_coins}")
+                        return
+                    
                     await progress_manager.update_progress(
                         task_id,
                         current_item=f"Historical: {coin}",
@@ -505,6 +513,10 @@ async def train_all_systems(
                 
                 items_done += total_coins
                 
+                if should_stop():
+                    await progress_manager.stop_task(task_id, "Stopped after Phase 1")
+                    return
+                
                 # Step 2: Enhanced Historical Training (per-coin progress)
                 await progress_manager.update_progress(
                     task_id, 
@@ -514,6 +526,10 @@ async def train_all_systems(
                 )
                 
                 for i, coin in enumerate(training_coins):
+                    if should_stop():
+                        await progress_manager.stop_task(task_id, f"Stopped at Phase 2, coin {i+1}/{total_coins}")
+                        return
+                    
                     await progress_manager.update_progress(
                         task_id,
                         current_item=f"Technical: {coin}",
@@ -526,6 +542,10 @@ async def train_all_systems(
                         logger.warning(f"Enhanced training failed for {coin}: {e}")
                 
                 items_done += total_coins
+                
+                if should_stop():
+                    await progress_manager.stop_task(task_id, "Stopped after Phase 2")
+                    return
                 
                 # Step 3: Profitable Gems Training (per-coin progress)
                 await progress_manager.update_progress(
