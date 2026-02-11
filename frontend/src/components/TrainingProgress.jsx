@@ -266,6 +266,11 @@ const TrainingProgress = ({
                 <span className="text-sm font-medium text-white">
                   Training Progress ({activeTasks.length})
                 </span>
+                {wsConnected ? (
+                  <Wifi className="w-3 h-3 text-green-400" title="WebSocket connected" />
+                ) : (
+                  <WifiOff className="w-3 h-3 text-orange-400" title="Using polling" />
+                )}
               </div>
               {expanded ? (
                 <ChevronDown className="w-4 h-4 text-gray-400" />
