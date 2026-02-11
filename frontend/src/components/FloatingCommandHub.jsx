@@ -400,7 +400,7 @@ const FloatingCommandHub = () => {
       if (msgLower.includes('help') || msgLower === '?') {
         setCmdMessages(prev => [...prev, { 
           type: 'ai', 
-          content: `📚 **Available Commands:**\n\n**Navigation:**\n• "Go to dashboard/trading/ai/settings"\n\n**Training:**\n• "Train all models"\n• "Train fast" (parallel)\n• "Train bitcoin" (single coin)\n• "Stop training"\n\n**Analysis:**\n• "Find gems"\n• "Predict bitcoin"\n• "Status"\n\n**Other:**\n• "Refresh"\n• "Help"`
+          content: `📚 **Available Commands:**\n\n**🎯 AI Recommendations:**\n• "Recommend" / "What should I do"\n• "Analyze" / "Next steps"\n\n**🧠 Training (Full):**\n• "Train all models" - Complete training\n• "Train fast" - 3-5x parallel\n\n**🔧 Training (Individual):**\n• "Train historical" - Patterns\n• "Train technical" - Indicators\n• "Train gem patterns" - Gems\n• "Train ML" - Machine Learning\n• "Train DL" - Deep Learning\n• "Train ensemble" - Combined AI\n• "Train tethys" - Autonomous\n• "Train DRL" - Reinforcement\n• "Train bitcoin" - Single coin\n• "Stop training"\n\n**📊 Analysis:**\n• "Find gems" - Scan for hidden gems\n• "Predict bitcoin/ETH" - AI forecast\n• "Status" - System health\n\n**🧭 Navigation:**\n• "Go to trading/ai/settings"\n\n**🔄 Other:**\n• "Refresh" - Reload page\n• "Train" - Show all options`
         }]);
         return;
       }
