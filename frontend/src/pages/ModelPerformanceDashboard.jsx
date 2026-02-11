@@ -35,6 +35,9 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
   const [trainingTaskId, setTrainingTaskId] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [refreshing, setRefreshing] = useState(false);
+  const [trainingStatus, setTrainingStatus] = useState(null);
+  const [gemMlDlStatus, setGemMlDlStatus] = useState(null);
+  const [mtfStatus, setMtfStatus] = useState(null);
 
   // Fetch with timeout to prevent infinite loading
   const fetchWithTimeout = async (url, timeout = 10000) => {
@@ -53,17 +56,23 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
 
   const fetchAllData = useCallback(async () => {
     try {
-      const [drl, intelligence, backtest, sb3] = await Promise.all([
+      const [drl, intelligence, backtest, sb3, training, gemMlDl, mtf] = await Promise.all([
         fetchWithTimeout('/drl-engine/status'),
         fetchWithTimeout('/trading-intelligence/status'),
         fetchWithTimeout('/drl-engine/backtest/status'),
-        fetchWithTimeout('/sb3-agents/status')
+        fetchWithTimeout('/sb3-agents/status'),
+        fetchWithTimeout('/training/status'),
+        fetchWithTimeout('/gems/ml-dl/status'),
+        fetchWithTimeout('/enhanced-mtf-training/status')
       ]);
       
       setDrlStatus(drl.data);
       setIntelligenceStatus(intelligence.data);
       setBacktestResults(backtest.data);
       setSb3Status(sb3.data);
+      setTrainingStatus(training.data);
+      setGemMlDlStatus(gemMlDl.data);
+      setMtfStatus(mtf.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
