@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Progress } from './ui/progress';
+import { Button } from './ui/button';
 import { 
   Brain, CheckCircle, XCircle, Clock, Loader2,
-  ChevronDown, ChevronUp, Wifi, WifiOff
+  ChevronDown, ChevronUp, Wifi, WifiOff, Square, StopCircle
 } from 'lucide-react';
 import api from '../services/api';
+import { toast } from 'sonner';
 
 /**
  * Training Progress Monitor Component
