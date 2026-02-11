@@ -354,7 +354,21 @@ const FloatingCommandHub = () => {
 
                   {/* AI Chat Tab */}
                   <TabsContent value="chat" className="flex-1 flex flex-col overflow-hidden m-0 p-2">
-                    <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                    <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[200px]">
+                      {chatMessages.length === 0 && !chatLoading && (
+                        <div className="flex justify-start">
+                          <div className="max-w-[85%] rounded-xl px-3 py-2 bg-slate-800/80 text-slate-200">
+                            <p className="text-xs leading-relaxed mb-1"><strong className="text-purple-400">AI Assistant</strong></p>
+                            <p className="text-xs leading-relaxed mb-1">Ask me about:</p>
+                            <ul className="space-y-0.5">
+                              <li className="ml-3 text-xs leading-relaxed">• Coin analysis</li>
+                              <li className="ml-3 text-xs leading-relaxed">• Market conditions</li>
+                              <li className="ml-3 text-xs leading-relaxed">• Trading advice</li>
+                              <li className="ml-3 text-xs leading-relaxed">• News & sentiment</li>
+                            </ul>
+                          </div>
+                        </div>
+                      )}
                       {chatMessages.map((msg, i) => (
                         <div key={i} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                           <div className={`max-w-[85%] rounded-xl px-3 py-2 ${
