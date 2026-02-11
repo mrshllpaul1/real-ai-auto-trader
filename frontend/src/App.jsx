@@ -44,6 +44,8 @@ const SuspenseWrapper = ({ children }) => (
 );
 
 function App() {
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  
   useEffect(() => {
     // Initialize user session
     let uid = localStorage.getItem('user_id');
