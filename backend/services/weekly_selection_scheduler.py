@@ -471,7 +471,8 @@ class WeeklySelectionScheduler:
     async def update_config(self, updates: Dict[str, Any]) -> Dict[str, Any]:
         """Update scheduler configuration"""
         valid_keys = ["enabled", "run_day", "run_hour", "run_minute", 
-                      "main_coins_count", "gem_coins_count", "auto_execute"]
+                      "main_coins_count", "gem_coins_count", "auto_execute",
+                      "paper_trade", "position_size_pct", "use_isolated_budget"]
         
         for key, value in updates.items():
             if key in valid_keys:
@@ -489,6 +490,57 @@ class WeeklySelectionScheduler:
             projection={"_id": 0}
         )
         return selection
+    
+    async def get_last_execution(self) -> Optional[Dict[str, Any]]:
+        """Get the last trade execution result"""
+        return self._last_execution
+    
+    async def execute_selection(self, selection_id: str = None, paper_trade: bool = None) -> Dict[str, Any]:
+        """
+        Manually execute trades for an existing selection.
+        
+        Args:
+            selection_id: Optional ID of selection to execute. If None, uses latest.
+            paper_trade: Override paper_trade setting. If None, uses config.
+        """
+        if not self.auto_trader:
+            return {"success": False, "error": "Auto trader not connected"}
+        
+        # Get the selection
+        if selection_id:
+            selection = await self.db.weekly_selections.find_one({"_id": selection_id})
+        else:
+            selection = await self.db.weekly_selections.find_one(
+                {}, sort=[("selection_date", -1)]
+            )
+        
+        if not selection:
+            return {"success": False, "error": "No selection found"}
+        
+        if selection.get("auto_executed"):
+            return {"success": False, "error": "Selection already executed", "executed_at": selection.get("executed_at")}
+        
+        # Execute trades
+        use_paper = paper_trade if paper_trade is not None else self._config.get("paper_trade", True)
+        
+        result = await self._execute_trades(
+            selection.get("main_coins", []),
+            selection.get("gem_coins", []),
+            selection.get("market_condition", "neutral")
+        )
+        
+        # Update selection with execution
+        if result.get("success"):
+            await self.db.weekly_selections.update_one(
+                {"_id": selection.get("_id")},
+                {"$set": {
+                    "auto_executed": True,
+                    "execution_result": result,
+                    "executed_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+        
+        return result
 
 
 def get_weekly_scheduler() -> Optional[WeeklySelectionScheduler]:
@@ -496,12 +548,12 @@ def get_weekly_scheduler() -> Optional[WeeklySelectionScheduler]:
     return _scheduler_instance
 
 
-async def initialize_weekly_scheduler(db: AsyncIOMotorDatabase, coin_selector=None) -> WeeklySelectionScheduler:
+async def initialize_weekly_scheduler(db: AsyncIOMotorDatabase, coin_selector=None, auto_trader=None) -> WeeklySelectionScheduler:
     """Initialize the weekly scheduler"""
     global _scheduler_instance
     
     if _scheduler_instance is None:
-        _scheduler_instance = WeeklySelectionScheduler(db, coin_selector)
+        _scheduler_instance = WeeklySelectionScheduler(db, coin_selector, auto_trader)
         await _scheduler_instance.load_config()
     
     return _scheduler_instance
