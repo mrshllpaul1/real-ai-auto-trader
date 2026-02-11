@@ -63,11 +63,43 @@ async def get_engine_status():
     try:
         engine = get_engine()
         if engine is None:
-            return {"initialized": False, "message": "Engine not initialized"}
+            return {
+                "initialized": False, 
+                "lstm_trained": False,
+                "dqn_epsilon": 1.0,
+                "dqn_memory_size": 0,
+                "hft_metrics": {
+                    "total_orders": 0,
+                    "successful_orders": 0,
+                    "failed_orders": 0,
+                    "avg_latency_ms": 0,
+                    "total_slippage": 0,
+                    "avg_slippage_pct": 0.0,
+                    "success_rate": 0.0,
+                    "queue_size": 0
+                },
+                "backtest_approved": False,
+                "latest_backtest": {"message": "No backtest run yet"},
+                "message": "Engine not initialized - click Initialize to start"
+            }
         
         return engine.get_status()
     except Exception as e:
-        return {"error": str(e), "initialized": False}
+        logger.error(f"Error getting engine status: {e}")
+        return {
+            "initialized": False, 
+            "error": str(e),
+            "lstm_trained": False,
+            "dqn_epsilon": 1.0,
+            "dqn_memory_size": 0,
+            "hft_metrics": {
+                "total_orders": 0,
+                "successful_orders": 0,
+                "failed_orders": 0,
+                "avg_latency_ms": 0
+            },
+            "backtest_approved": False
+        }
 
 
 @router.post("/initialize")
