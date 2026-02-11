@@ -20,6 +20,9 @@ const WeeklySchedulerSection = () => {
   const [latestSelection, setLatestSelection] = useState(null);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
+  const [executing, setExecuting] = useState(false);
+  const [autoExecute, setAutoExecute] = useState(false);
+  const [paperTrade, setPaperTrade] = useState(true);
 
   useEffect(() => {
     loadSchedulerData();
@@ -32,7 +35,11 @@ const WeeklySchedulerSection = () => {
         api.get('/weekly-scheduler/latest-selection')
       ]);
       
-      if (statusRes.status === 'fulfilled') setSchedulerStatus(statusRes.value.data);
+      if (statusRes.status === 'fulfilled') {
+        setSchedulerStatus(statusRes.value.data);
+        setAutoExecute(statusRes.value.data.config?.auto_execute || false);
+        setPaperTrade(statusRes.value.data.config?.paper_trade !== false);
+      }
       if (selectionRes.status === 'fulfilled' && !selectionRes.value.data.message) {
         setLatestSelection(selectionRes.value.data);
       }
@@ -51,7 +58,10 @@ const WeeklySchedulerSection = () => {
       toast.dismiss();
       
       if (res.data.success) {
-        toast.success(`Selected ${res.data.total_selected} coins for the week!`);
+        const msg = res.data.auto_executed 
+          ? `Selected ${res.data.total_selected} coins and executed ${res.data.execution_result?.trades_count || 0} trades!`
+          : `Selected ${res.data.total_selected} coins for the week!`;
+        toast.success(msg);
         setLatestSelection(res.data);
         await loadSchedulerData();
       }
@@ -60,6 +70,36 @@ const WeeklySchedulerSection = () => {
       toast.error('Failed to run selection');
     } finally {
       setRunning(false);
+    }
+  };
+
+  const executeSelection = async () => {
+    try {
+      setExecuting(true);
+      toast.loading(`Executing ${paperTrade ? 'PAPER' : 'REAL'} trades...`);
+      const res = await api.post('/weekly-scheduler/execute', { paper_trade: paperTrade });
+      toast.dismiss();
+      
+      if (res.data.success) {
+        toast.success(`Executed ${res.data.trades_count} trades! Total: $${res.data.total_invested?.toFixed(2) || 0}`);
+        await loadSchedulerData();
+      }
+    } catch (error) {
+      toast.dismiss();
+      toast.error(error.response?.data?.detail || 'Failed to execute trades');
+    } finally {
+      setExecuting(false);
+    }
+  };
+
+  const updateConfig = async (key, value) => {
+    try {
+      await api.put('/weekly-scheduler/config', { [key]: value });
+      if (key === 'auto_execute') setAutoExecute(value);
+      if (key === 'paper_trade') setPaperTrade(value);
+      toast.success('Config updated');
+    } catch (error) {
+      toast.error('Failed to update config');
     }
   };
 
@@ -99,27 +139,86 @@ const WeeklySchedulerSection = () => {
               <Badge className={`${schedulerStatus?.running ? 'bg-[#00FF94]/20 text-[#00FF94]' : 'bg-[#666]/20 text-[#666]'} border-transparent`}>
                 {schedulerStatus?.running ? 'ACTIVE' : 'INACTIVE'}
               </Badge>
+              {autoExecute && (
+                <Badge className="bg-[#9D00FF]/20 text-[#9D00FF] border-transparent">
+                  AUTO-TRADE
+                </Badge>
+              )}
             </CardTitle>
             <CardDescription>
               Automatically select top 10 coins + 1 gem every Sunday at midnight UTC
             </CardDescription>
           </div>
-          <Button
-            onClick={runSelectionNow}
-            disabled={running}
-            className="bg-[#06b6d4] hover:bg-[#06b6d4]/80 text-black"
-            data-testid="run-selection-btn"
-          >
-            {running ? (
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Play className="mr-2 h-4 w-4" />
+          <div className="flex gap-2">
+            <Button
+              onClick={runSelectionNow}
+              disabled={running}
+              className="bg-[#06b6d4] hover:bg-[#06b6d4]/80 text-black"
+              data-testid="run-selection-btn"
+            >
+              {running ? (
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Play className="mr-2 h-4 w-4" />
+              )}
+              Select
+            </Button>
+            {latestSelection && !latestSelection.auto_executed && (
+              <Button
+                onClick={executeSelection}
+                disabled={executing}
+                className="bg-[#00FF94] hover:bg-[#00FF94]/80 text-black"
+                data-testid="execute-trades-btn"
+              >
+                {executing ? (
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Zap className="mr-2 h-4 w-4" />
+                )}
+                Execute
+              </Button>
             )}
-            Run Now
-          </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Auto-Execute Controls */}
+        <div className="bg-[#121212] rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={autoExecute}
+                  onCheckedChange={(v) => updateConfig('auto_execute', v)}
+                  data-testid="auto-execute-switch"
+                />
+                <Label className="text-white">Auto-Execute Trades</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={!paperTrade}
+                  onCheckedChange={(v) => updateConfig('paper_trade', !v)}
+                  data-testid="real-trade-switch"
+                />
+                <Label className={!paperTrade ? "text-[#FF4444]" : "text-[#888]"}>
+                  {paperTrade ? 'Paper Trading' : 'REAL TRADING'}
+                </Label>
+              </div>
+            </div>
+            {autoExecute && (
+              <Badge className={paperTrade ? 'bg-[#FFB800]/20 text-[#FFB800]' : 'bg-[#FF4444]/20 text-[#FF4444]'}>
+                {paperTrade ? 'PAPER MODE' : '⚠️ REAL MONEY'}
+              </Badge>
+            )}
+          </div>
+          {autoExecute && (
+            <p className="text-xs text-[#666] mt-2">
+              When enabled, trades will be automatically executed after each weekly selection.
+              {!paperTrade && <span className="text-[#FF4444]"> ⚠️ Real money will be used!</span>}
+            </p>
+          )}
+        </div>
+
         {/* Scheduler Status */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-[#121212] rounded-lg p-4">
@@ -150,6 +249,11 @@ const WeeklySchedulerSection = () => {
               <div className="flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-[#00FF94]" />
                 <span className="text-white font-medium">Latest Selection</span>
+                {latestSelection.auto_executed && (
+                  <Badge className="bg-[#00FF94]/20 text-[#00FF94] border-transparent text-xs">
+                    EXECUTED
+                  </Badge>
+                )}
               </div>
               <Badge className={`${
                 latestSelection.market_condition === 'bullish' ? 'bg-[#00FF94]/20 text-[#00FF94]' :
@@ -176,7 +280,7 @@ const WeeklySchedulerSection = () => {
             
             {/* Gem Coins */}
             {latestSelection.gem_coins?.length > 0 && (
-              <div>
+              <div className="mb-3">
                 <div className="text-xs text-[#666] mb-2">Gem Coins 💎</div>
                 <div className="flex flex-wrap gap-2">
                   {latestSelection.gem_coins.map((coin, idx) => (
@@ -188,13 +292,33 @@ const WeeklySchedulerSection = () => {
                 </div>
               </div>
             )}
+
+            {/* Execution Result */}
+            {latestSelection.execution_result && (
+              <div className="mt-3 pt-3 border-t border-[#333]">
+                <div className="text-xs text-[#666] mb-2">Execution Result</div>
+                <div className="flex items-center gap-4">
+                  <div className="text-sm">
+                    <span className="text-[#888]">Trades: </span>
+                    <span className="text-white font-medium">{latestSelection.execution_result.trades_count}</span>
+                  </div>
+                  <div className="text-sm">
+                    <span className="text-[#888]">Invested: </span>
+                    <span className="text-[#00FF94] font-medium">${latestSelection.execution_result.total_invested?.toFixed(2) || 0}</span>
+                  </div>
+                  <Badge className={latestSelection.execution_result.paper_trade ? 'bg-[#FFB800]/20 text-[#FFB800]' : 'bg-[#00FF94]/20 text-[#00FF94]'}>
+                    {latestSelection.execution_result.paper_trade ? 'PAPER' : 'REAL'}
+                  </Badge>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {!latestSelection && (
           <div className="bg-[#121212] rounded-lg p-6 text-center">
             <Calendar size={32} className="mx-auto text-[#666] mb-2" />
-            <p className="text-[#666]">No selection yet. Click "Run Now" to select coins for this week.</p>
+            <p className="text-[#666]">No selection yet. Click "Select" to choose coins for this week.</p>
           </div>
         )}
       </CardContent>
