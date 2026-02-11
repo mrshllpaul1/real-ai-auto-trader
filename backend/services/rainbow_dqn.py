@@ -551,7 +551,7 @@ class RainbowDQN:
         )
         
         # Transformer encoder
-        encoder = CausalTransformerEncoder(
+        encoder = _CausalTransformerEncoder(
             sequence_length=sequence_length,
             input_dim=state_dim,
             d_model=d_model,
