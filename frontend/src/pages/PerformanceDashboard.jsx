@@ -158,6 +158,40 @@ const PerformanceDashboard = ({ embedded = false }) => {
         </div>
       )}
 
+      {/* Quick Actions Bar for Embedded Mode */}
+      {embedded && (
+        <div className="flex items-center justify-end gap-2 mb-4">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowEntryManager(!showEntryManager)}
+            className={`border-slate-700 ${showEntryManager ? 'bg-green-500/20 text-green-400 border-green-500/50' : ''}`}
+          >
+            <Edit3 className="w-4 h-4 mr-1" />
+            {showEntryManager ? 'Hide' : 'Edit'} Entry Prices
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={loadDashboard}
+            disabled={loading}
+            className="border-slate-700"
+          >
+            <RefreshCw className={`w-4 h-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button 
+            size="sm"
+            onClick={syncTradeHistory}
+            disabled={syncing}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            <History className={`w-4 h-4 mr-1 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? 'Syncing...' : 'Sync'}
+          </Button>
+        </div>
+      )}
+
       {/* Entry Price Manager Section */}
       {showEntryManager && (
         <motion.div
@@ -182,7 +216,7 @@ const PerformanceDashboard = ({ embedded = false }) => {
             <div>
               <h3 className="font-medium text-amber-400">No Entry Price Data</h3>
               <p className="text-sm text-slate-400 mt-1">
-                Click "Sync Trades" to import your trade history from Kraken, or use "Edit Entry Prices" to manually set your cost basis.
+                Click "Sync" to import your trade history from Kraken, or use "Edit Entry Prices" to manually set your cost basis.
               </p>
             </div>
           </div>
