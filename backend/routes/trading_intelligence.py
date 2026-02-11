@@ -53,11 +53,36 @@ async def get_engine_status():
     try:
         engine = get_engine()
         if engine is None:
-            return {"initialized": False, "message": "Engine not initialized"}
+            return {
+                "initialized": False, 
+                "models": {
+                    "ensemble": {"trained": False, "xgboost_available": True, "lightgbm_available": True},
+                    "time_series": {"trained": False, "lstm": False, "gru": False, "transformer": False},
+                    "finrl_agent": {"trained": False, "epsilon": 1.0, "memory_size": 0, "training_steps": 0}
+                },
+                "environment": {
+                    "transaction_cost": 0.001,
+                    "slippage": 0.0005,
+                    "max_position": 0.25
+                },
+                "training_results": {},
+                "message": "Engine not initialized - click Initialize to start"
+            }
         
         return engine.get_status()
     except Exception as e:
-        return {"error": str(e), "initialized": False}
+        logger.error(f"Error getting engine status: {e}")
+        return {
+            "initialized": False, 
+            "error": str(e),
+            "models": {
+                "ensemble": {"trained": False},
+                "time_series": {"trained": False},
+                "finrl_agent": {"trained": False}
+            },
+            "environment": {},
+            "training_results": {}
+        }
 
 
 @router.post("/initialize")
