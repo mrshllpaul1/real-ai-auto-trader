@@ -5,7 +5,7 @@ import { Progress } from '../components/ui/progress';
 import { 
   Brain, TrendingUp, Activity, Cpu, BarChart3, 
   RefreshCw, Play, CheckCircle, XCircle, Clock,
-  Zap, Target, Award, Settings, LineChart, Box
+  Zap, Target, Award, Settings, LineChart, Box, Trophy
 } from 'lucide-react';
 import { 
   LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, 
@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 import api from '../services/api';
 import TrainingProgress from '../components/TrainingProgress';
+import ModelBenchmarkDashboard from '../components/ModelBenchmarkDashboard';
 
 // Performance optimization: Detect low-power devices
 const isLowPowerDevice = () => {
