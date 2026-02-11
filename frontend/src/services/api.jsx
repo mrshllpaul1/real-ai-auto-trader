@@ -89,24 +89,13 @@ const api = axios.create({
   timeout: 60000,
 });
 
-// Request interceptor with caching
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
     config.params = {
       ...config.params,
       user_id: localStorage.getItem('user_id') || 'demo_user'
     };
-    
-    // Check cache for GET requests
-    if (config.method === 'get') {
-      const cacheKey = getCacheKey(config);
-      const cached = getFromCache(cacheKey);
-      if (cached) {
-        config._cached = true;
-        config._cachedData = cached;
-      }
-    }
-    
     return config;
   },
   (error) => Promise.reject(error)
@@ -115,8 +104,8 @@ api.interceptors.request.use(
 // Response interceptor with caching
 api.interceptors.response.use(
   (response) => {
-    // Cache GET responses
-    if (response.config.method === 'get') {
+    // Cache GET responses (only if not a forced refresh)
+    if (response.config.method === 'get' && !response.config._skipCache) {
       const duration = getCacheDuration(response.config.url);
       if (duration) {
         const cacheKey = getCacheKey(response.config);
@@ -131,20 +120,31 @@ api.interceptors.response.use(
   }
 );
 
-// Wrapper for cached GET requests
+// Wrapper for cached GET requests with cache-first strategy
 const cachedGet = async (url, config = {}) => {
   const fullConfig = { ...config, url, method: 'get' };
   const cacheKey = getCacheKey(fullConfig);
   const duration = getCacheDuration(url);
   
-  // Return cached if available
-  if (duration) {
+  // Return cached if available and not forcing refresh
+  if (duration && !config._skipCache) {
     const cached = getFromCache(cacheKey);
-    if (cached) return cached;
+    if (cached) {
+      console.log('[API Cache] Hit:', url);
+      return cached;
+    }
   }
   
   // Deduplicate concurrent requests
   return deduplicateRequest(cacheKey, () => api.get(url, config));
+};
+
+// Force refresh - bypasses cache
+export const forceRefresh = async (url, config = {}) => {
+  // Clear cache for this URL pattern
+  clearCache(url);
+  // Make request with skip cache flag
+  return api.get(url, { ...config, _skipCache: true });
 };
 
 // Clear cache utility
@@ -156,6 +156,14 @@ export const clearCache = (pattern = null) => {
   } else {
     cache.clear();
   }
+  console.log('[API Cache] Cleared:', pattern || 'all');
+};
+
+// Clear all cache and force refresh
+export const clearAllCacheAndRefresh = () => {
+  cache.clear();
+  pendingRequests.clear();
+  console.log('[API Cache] All cache cleared');
 };
 
 // Preload critical data
