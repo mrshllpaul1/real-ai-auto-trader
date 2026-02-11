@@ -7,6 +7,37 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ## Session Update - Feb 11, 2026 (Latest - Part 3)
 
+### ✅ DATA AUDIT & FIX: Backtest Now Uses Real Kraken OHLC Data
+
+**Issue:** Backtest engine was generating synthetic price data instead of real historical data.
+
+**Fix Applied:**
+- Added `_fetch_real_ohlc_data()` function to fetch real OHLC candles from Kraken API
+- Supports major trading pairs (BTC, ETH, SOL, ADA, DOT, AVAX, LINK, etc.)
+- Fetches daily candles (interval=1440) from Kraken public API
+- Falls back to synthetic data ONLY if real data unavailable
+- Added `data_sources` tracking to show which data was used
+- Logs clearly indicate: "Fetched 365 REAL OHLC data points for BTC"
+
+**Data Source Status:**
+| Feature | Data Source | Status |
+|---------|-------------|--------|
+| Portfolio Holdings | Kraken API | ✅ REAL |
+| Live Prices | Kraken Ticker | ✅ REAL |
+| 24h Changes | Kraken Ticker | ✅ REAL |
+| Order Book | Kraken API | ✅ REAL |
+| Trade Execution | Kraken API | ✅ REAL |
+| AI Signals | Computed from real data | ✅ REAL |
+| **Backtest OHLC** | **Kraken OHLC API** | **✅ FIXED** |
+| DeFi Wallet | Placeholder | ⚠️ Simulated |
+| ML Metrics History | Random | ⚠️ Simulated |
+| Copy Trading | Sample data | ⚠️ Simulated |
+
+**Files Modified:**
+- `backend/routes/backtest_engine.py` - Added real OHLC fetching
+
+---
+
 ### ✅ NEW FEATURE: Auto-Execute Trades from Weekly Selection
 
 #### Connected Scheduler to Auto-Trading Execution
