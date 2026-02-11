@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
-import api, { tradingAPI, marketAPI } from '../services/api';
+import api, { tradingAPI, marketAPI, clearAllCacheAndRefresh } from '../services/api';
 import { toast } from 'sonner';
 import MarketOverview from '../components/MarketOverview';
 import { CardSkeleton, TableSkeleton } from '../components/LoadingSkeleton';
