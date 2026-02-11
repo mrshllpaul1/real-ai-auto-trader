@@ -1,7 +1,7 @@
 """
 Weekly Coin Selection Scheduler
 Automatically runs coin selection every Sunday to pick the best 10 coins + 1 gem
-for the upcoming trading week.
+for the upcoming trading week. Can optionally auto-execute trades.
 """
 
 import asyncio
@@ -23,11 +23,13 @@ class WeeklySelectionScheduler:
     - Selects 10 main coins + 1 gem coin
     - Stores results in database for auto-trading to use
     - Sends notifications/alerts when selection is ready
+    - NEW: Can auto-execute trades based on selections
     """
     
-    def __init__(self, db: AsyncIOMotorDatabase, coin_selector=None):
+    def __init__(self, db: AsyncIOMotorDatabase, coin_selector=None, auto_trader=None):
         self.db = db
         self.coin_selector = coin_selector
+        self.auto_trader = auto_trader  # AutomatedWeeklyTrader instance
         self._running = False
         self._task: Optional[asyncio.Task] = None
         self._config = {
@@ -37,10 +39,19 @@ class WeeklySelectionScheduler:
             "run_minute": 0,
             "main_coins_count": 10,
             "gem_coins_count": 1,
-            "auto_execute": False,  # If True, automatically place trades
+            "auto_execute": False,  # If True, automatically place trades after selection
+            "paper_trade": True,    # If True, use paper trading; False for real trades
+            "position_size_pct": 9, # Position size per coin (percentage of budget)
+            "use_isolated_budget": True,  # Use isolated budget for trades
         }
         self._last_run: Optional[datetime] = None
         self._next_run: Optional[datetime] = None
+        self._last_execution: Optional[Dict] = None
+    
+    def set_auto_trader(self, auto_trader):
+        """Set the auto trader instance (can be set after initialization)"""
+        self.auto_trader = auto_trader
+        logger.info("✅ Auto trader connected to weekly scheduler")
     
     async def load_config(self):
         """Load scheduler configuration from database"""
