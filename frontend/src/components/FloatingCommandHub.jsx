@@ -233,8 +233,8 @@ const FloatingCommandHub = () => {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className={`fixed z-50 bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden flex flex-col ${
-              isMinimized ? 'bottom-20 right-4 w-72 h-12' : 'bottom-20 right-4 w-[95vw] sm:w-[420px] h-[70vh] sm:h-[520px] max-h-[80vh]'
+            className={`fixed z-[60] bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden flex flex-col ${
+              isMinimized ? 'bottom-36 right-4 w-72 h-12' : 'bottom-36 right-4 w-[95vw] sm:w-[420px] h-[70vh] sm:h-[520px] max-h-[80vh]'
             }`}
             data-testid="command-hub-window"
           >
