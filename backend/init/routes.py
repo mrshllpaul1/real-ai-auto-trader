@@ -197,6 +197,11 @@ def register_routes(api_router: APIRouter, db=None):
     api_router.include_router(retrain_scheduler_routes.router, tags=["Model Retrain Scheduler"])
     retrain_scheduler_routes.set_dependencies(db)
     
+    # Model Benchmarking
+    from routes import model_benchmarking as model_benchmark_routes
+    api_router.include_router(model_benchmark_routes.router, tags=["Model Benchmarking"])
+    model_benchmark_routes.init_router(db)
+    
     logger.info("✅ All routes registered")
     
     return api_router
