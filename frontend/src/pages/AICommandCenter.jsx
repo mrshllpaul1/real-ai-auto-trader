@@ -276,8 +276,11 @@ const AICommandCenter = ({ embedded = false }) => {
   const [tethysStatus, setTethysStatus] = useState(null);
   const [learningStatus, setLearningStatus] = useState(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (forceRefresh = false) => {
     try {
+      if (forceRefresh) {
+        clearAllCacheAndRefresh();
+      }
       const [enhancedRes, tethysRes, learningRes] = await Promise.allSettled([
         api.get('/enhanced-ai/status'),
         api.get('/tethys-train/status'),
@@ -287,8 +290,13 @@ const AICommandCenter = ({ embedded = false }) => {
       if (enhancedRes.status === 'fulfilled') setEnhancedStatus(enhancedRes.value.data);
       if (tethysRes.status === 'fulfilled') setTethysStatus(tethysRes.value.data);
       if (learningRes.status === 'fulfilled') setLearningStatus(learningRes.value.data);
+      
+      if (forceRefresh) {
+        toast.success('Data refreshed');
+      }
     } catch (error) {
       console.error('Error loading AI data:', error);
+      if (forceRefresh) toast.error('Refresh failed');
     } finally {
       setLoading(false);
     }
