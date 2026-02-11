@@ -1,31 +1,47 @@
-import React, { useEffect } from "react";
+/**
+ * Code-Split App Component with Lazy Loading
+ * Optimized version that loads routes on-demand
+ */
+
+import React, { useEffect, lazy, Suspense } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ErrorBoundary, { PageErrorBoundary } from "./components/ErrorBoundary";
 
-// Hub Pages (consolidated)
-import CommandCenter from "./pages/CommandCenter";
-import TradingHub from "./pages/TradingHub";
-import AIHub from "./pages/AIHub";
-import BacktestHub from "./pages/BacktestHub";
-import NewsHub from "./pages/NewsHub";
-import ScannerHub from "./pages/ScannerHub";
-import DeFiHub from "./pages/DeFiHub";
-import SettingsHub from "./pages/SettingsHub";
-
-// Keep individual pages for direct access (backwards compatibility)
-import SpotTrading from "./pages/SpotTrading";
-import PositionManagement from "./pages/PositionManagement";
-import PortfolioDashboard from "./pages/PortfolioDashboard";
-import YearlyBacktest from "./pages/YearlyBacktest";
-import Analytics from "./pages/Analytics";
-
+// Core components - loaded immediately
 import Sidebar from "./components/Sidebar";
 import FloatingCommandHub from "./components/FloatingCommandHub";
 import TrainingProgress from "./components/TrainingProgress";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "framer-motion";
 import { TradingModeProvider } from "./context/TradingModeContext";
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen bg-[#0A0A0A]">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00FF94] mx-auto mb-4"></div>
+      <p className="text-gray-400">Loading...</p>
+    </div>
+  </div>
+);
+
+// Lazy-load Hub Pages (loaded on-demand)
+const CommandCenter = lazy(() => import("./pages/CommandCenter"));
+const TradingHub = lazy(() => import("./pages/TradingHub"));
+const AIHub = lazy(() => import("./pages/AIHub"));
+const BacktestHub = lazy(() => import("./pages/BacktestHub"));
+const NewsHub = lazy(() => import("./pages/NewsHub"));
+const ScannerHub = lazy(() => import("./pages/ScannerHub"));
+const DeFiHub = lazy(() => import("./pages/DeFiHub"));
+const SettingsHub = lazy(() => import("./pages/SettingsHub"));
+
+// Lazy-load individual pages (for backwards compatibility)
+const SpotTrading = lazy(() => import("./pages/SpotTrading"));
+const PositionManagement = lazy(() => import("./pages/PositionManagement"));
+const PortfolioDashboard = lazy(() => import("./pages/PortfolioDashboard"));
+const YearlyBacktest = lazy(() => import("./pages/YearlyBacktest"));
+const Analytics = lazy(() => import("./pages/Analytics"));
 
 function App() {
   useEffect(() => {
@@ -56,6 +72,13 @@ function App() {
       document.removeEventListener('click', unlockAudio);
     };
     document.addEventListener('click', unlockAudio);
+
+    // Preload critical routes after initial render
+    setTimeout(() => {
+      // Preload most commonly used routes
+      import("./pages/TradingHub");
+      import("./pages/AIHub");
+    }, 2000);
   }, []);
 
   return (
@@ -73,77 +96,56 @@ function App() {
                   transition={{ duration: 0.3 }}
                   className="min-h-screen"
                 >
-                  <Routes>
-                    {/* Main Hub Routes */}
-                    <Route path="/" element={<PageErrorBoundary><CommandCenter /></PageErrorBoundary>} />
-                    <Route path="/trading" element={<PageErrorBoundary><TradingHub /></PageErrorBoundary>} />
-                    <Route path="/ai" element={<PageErrorBoundary><AIHub /></PageErrorBoundary>} />
-                    <Route path="/backtest" element={<PageErrorBoundary><BacktestHub /></PageErrorBoundary>} />
-                    <Route path="/news" element={<PageErrorBoundary><NewsHub /></PageErrorBoundary>} />
-                    <Route path="/scanner" element={<PageErrorBoundary><ScannerHub /></PageErrorBoundary>} />
-                    <Route path="/defi" element={<PageErrorBoundary><DeFiHub /></PageErrorBoundary>} />
-                    <Route path="/settings" element={<PageErrorBoundary><SettingsHub /></PageErrorBoundary>} />
-                    
-                    {/* Legacy routes - redirect to hubs */}
-                    <Route path="/spot-trading" element={<Navigate to="/trading" replace />} />
-                    <Route path="/positions" element={<Navigate to="/trading" replace />} />
-                    <Route path="/portfolio-dashboard" element={<Navigate to="/trading" replace />} />
-                    <Route path="/advanced-orders" element={<Navigate to="/trading" replace />} />
-                    <Route path="/options-trading" element={<Navigate to="/trading" replace />} />
-                    <Route path="/perpetuals" element={<Navigate to="/trading" replace />} />
-                    <Route path="/market-maker" element={<Navigate to="/trading" replace />} />
-                    
-                    <Route path="/ai-center" element={<Navigate to="/ai" replace />} />
-                    <Route path="/adaptive" element={<Navigate to="/ai" replace />} />
-                    <Route path="/auto-trading" element={<Navigate to="/ai" replace />} />
-                    <Route path="/auto-exec" element={<Navigate to="/ai" replace />} />
-                    <Route path="/ensemble" element={<Navigate to="/ai" replace />} />
-                    <Route path="/strategies" element={<Navigate to="/ai" replace />} />
-                    <Route path="/learning" element={<Navigate to="/ai" replace />} />
-                    <Route path="/learning-loop" element={<Navigate to="/ai" replace />} />
-                    <Route path="/ai-teacher" element={<Navigate to="/ai" replace />} />
-                    <Route path="/training" element={<Navigate to="/ai" replace />} />
-                    <Route path="/model-performance" element={<Navigate to="/ai" replace />} />
-                    <Route path="/mtf-predictions" element={<Navigate to="/ai" replace />} />
-                    
-                    <Route path="/backtest-engine" element={<Navigate to="/backtest" replace />} />
-                    <Route path="/yearly-backtest" element={<Navigate to="/backtest" replace />} />
-                    <Route path="/gem-backtest" element={<Navigate to="/backtest" replace />} />
-                    <Route path="/analytics" element={<Navigate to="/backtest" replace />} />
-                    <Route path="/risk-analyzer" element={<Navigate to="/backtest" replace />} />
-                    
-                    <Route path="/news-sentiment" element={<Navigate to="/news" replace />} />
-                    <Route path="/news-intel" element={<Navigate to="/news" replace />} />
-                    <Route path="/triggers" element={<Navigate to="/news" replace />} />
-                    <Route path="/event-timeline" element={<Navigate to="/news" replace />} />
-                    <Route path="/trigger-performance" element={<Navigate to="/news" replace />} />
-                    
-                    <Route path="/gem-scanner" element={<Navigate to="/scanner" replace />} />
-                    <Route path="/gem-ml-dl" element={<Navigate to="/scanner" replace />} />
-                    <Route path="/copy-trading" element={<Navigate to="/scanner" replace />} />
-                    
-                    <Route path="/defi-wallet" element={<Navigate to="/defi" replace />} />
-                    <Route path="/yield-farming" element={<Navigate to="/defi" replace />} />
-                    <Route path="/rebalance" element={<Navigate to="/defi" replace />} />
-                    
-                    <Route path="/setup" element={<Navigate to="/settings" replace />} />
-                    <Route path="/budget" element={<Navigate to="/settings" replace />} />
-                    <Route path="/telegram" element={<Navigate to="/settings" replace />} />
-                    <Route path="/journal" element={<Navigate to="/settings" replace />} />
-                    <Route path="/guide" element={<Navigate to="/settings" replace />} />
-                    <Route path="/dashboard-settings" element={<Navigate to="/settings" replace />} />
-                    
-                    {/* Catch-all redirect */}
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
+                  <Suspense fallback={<PageLoader />}>
+                    <Routes>
+                      {/* Main Hub Routes - Lazy Loaded */}
+                      <Route path="/" element={<PageErrorBoundary><CommandCenter /></PageErrorBoundary>} />
+                      <Route path="/trading" element={<PageErrorBoundary><TradingHub /></PageErrorBoundary>} />
+                      <Route path="/ai" element={<PageErrorBoundary><AIHub /></PageErrorBoundary>} />
+                      <Route path="/backtest" element={<PageErrorBoundary><BacktestHub /></PageErrorBoundary>} />
+                      <Route path="/news" element={<PageErrorBoundary><NewsHub /></PageErrorBoundary>} />
+                      <Route path="/scanner" element={<PageErrorBoundary><ScannerHub /></PageErrorBoundary>} />
+                      <Route path="/defi" element={<PageErrorBoundary><DeFiHub /></PageErrorBoundary>} />
+                      <Route path="/settings" element={<PageErrorBoundary><SettingsHub /></PageErrorBoundary>} />
+                      
+                      {/* Legacy routes - redirect to hubs */}
+                      <Route path="/spot-trading" element={<Navigate to="/trading" replace />} />
+                      <Route path="/positions" element={<Navigate to="/trading" replace />} />
+                      <Route path="/portfolio-dashboard" element={<Navigate to="/trading" replace />} />
+                      <Route path="/advanced-orders" element={<Navigate to="/trading" replace />} />
+                      <Route path="/options-trading" element={<Navigate to="/trading" replace />} />
+                      <Route path="/perpetuals" element={<Navigate to="/trading" replace />} />
+                      <Route path="/market-maker" element={<Navigate to="/trading" replace />} />
+                      
+                      <Route path="/ai-center" element={<Navigate to="/ai" replace />} />
+                      <Route path="/adaptive" element={<Navigate to="/ai" replace />} />
+                      <Route path="/auto-trading" element={<Navigate to="/ai" replace />} />
+                      <Route path="/auto-exec" element={<Navigate to="/ai" replace />} />
+                      <Route path="/ensemble" element={<Navigate to="/ai" replace />} />
+                      
+                      {/* Individual pages (if needed) */}
+                      <Route path="/spot" element={<PageErrorBoundary><SpotTrading /></PageErrorBoundary>} />
+                      <Route path="/portfolio" element={<PageErrorBoundary><PortfolioDashboard /></PageErrorBoundary>} />
+                      <Route path="/analytics" element={<PageErrorBoundary><Analytics /></PageErrorBoundary>} />
+                      
+                      {/* Catch-all redirect to home */}
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                  </Suspense>
                 </motion.div>
               </main>
             </div>
-            
-            {/* Floating components */}
+
+            {/* Global components */}
             <FloatingCommandHub />
             <TrainingProgress />
-            <Toaster position="top-right" richColors closeButton />
+            <Toaster 
+              position="top-right" 
+              toastOptions={{
+                className: 'toast-custom',
+                duration: 4000,
+              }}
+            />
           </div>
         </ErrorBoundary>
       </BrowserRouter>
