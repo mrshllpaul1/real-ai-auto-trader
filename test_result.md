@@ -452,7 +452,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "WebSocket Connection Fixes Testing" # COMPLETED - Tested WebSocket error handling and fallback mechanisms
+    - "Tethys Training and Model Training API Testing" # CURRENT - Testing AI model training and Tethys functionality
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
