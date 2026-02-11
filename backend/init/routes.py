@@ -183,6 +183,11 @@ def register_routes(api_router: APIRouter, db=None):
     from routes import weekly_scheduler as weekly_scheduler_routes
     api_router.include_router(weekly_scheduler_routes.router, tags=["Weekly Scheduler"])
     
+    # Integrations (Blockchain API, Social Trading)
+    from routes import integrations as integrations_routes
+    api_router.include_router(integrations_routes.router, tags=["Integrations"])
+    integrations_routes.set_db(db)
+    
     logger.info("✅ All routes registered")
     
     return api_router
