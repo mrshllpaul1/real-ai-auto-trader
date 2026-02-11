@@ -7,7 +7,59 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ## Session Update - Feb 11, 2026 (Latest)
 
-### ✅ FIXED: AI Recommendations Display Bug (P0 Blocker)
+### ✅ FIXED: Multiple Bug Fixes & Performance Optimizations
+
+#### 1. 24h Change on Dashboard (Command Center)
+**Issue:** Portfolio 24h change was not being calculated/displayed.
+**Fix:** 
+- Updated `/api/trading/kraken/portfolio` to extract 24h price change from Kraken ticker data (`o` field = open price)
+- Calculate individual asset 24h change: `((current - open) / open) * 100`
+- Calculate total portfolio 24h change based on historical value
+- Added `change_24h` to both portfolio-level and holding-level responses
+- Fixed field name from `price_change_24h` to `change_24h` for consistency
+
+#### 2. AI Analysis in Spot Tab (Trading Hub)
+**Issue:** AI recommendations showed empty/default component scores (all 50).
+**Fix:** 
+- Changed to extract scores from `signals.get('components', {})` where each has a nested `score` key
+- Updated frontend to match 0-100 scale (was expecting -1 to 1)
+- Added component breakdown grid with color coding
+
+#### 3. Models & MTF Tabs Failing (AI & Strategy Hub)
+**Issue:** `NameError: name 'Model' is not defined` crashed these endpoints.
+**Root Cause:** TensorFlow `Model` type was used for type hints but TF wasn't installed, so `Model` was undefined.
+**Fix:**
+- Added fallback type definitions in exception handlers:
+  ```python
+  except ImportError:
+      Model = type(None)  # Placeholder for type hints
+      Sequential = type(None)
+  ```
+- Applied to: `trading_intelligence_engine.py`, `deep_rl_trading_engine.py`
+
+#### 4. Loading Time Optimizations
+- **SpotTrading.jsx:** Parallelized non-Kraken API calls (status + recommendations) with `Promise.all`
+- **EnhancedMTFPredictions.jsx:** Parallelized data fetching with `Promise.allSettled`
+- **ModelPerformanceDashboard.jsx:** Added device detection for chart optimization
+
+#### 5. Analytics & Graphs for Chromebook (Acer Chromebook 315)
+- Added `isLowPowerDevice()` detection using `navigator.deviceMemory` and `navigator.hardwareConcurrency`
+- Reduced chart height from 300px to 250px on low-power devices
+- Disabled chart animations on low-power devices (`isAnimationActive={!isLowPowerDevice()}`)
+- Optimized ResponsiveContainer configurations
+
+**Files Modified:**
+- `backend/routes/trading.py` - 24h change calculation
+- `backend/routes/spot_trading.py` - AI recommendations fix
+- `backend/services/trading_intelligence_engine.py` - Model type fallback
+- `backend/services/deep_rl_trading_engine.py` - Model type fallback
+- `frontend/src/pages/SpotTrading.jsx` - Parallel loading, UI fix
+- `frontend/src/pages/ModelPerformanceDashboard.jsx` - Performance optimization
+- `frontend/src/pages/EnhancedMTFPredictions.jsx` - Parallel loading
+
+---
+
+### Previous Session Fix (AI Recommendations Display Bug)
 
 **Issue:** AI recommendations on the Spot Trading page showed empty/default component scores (all showing 50).
 
@@ -27,10 +79,6 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 - Added component breakdown grid showing: Order Book, On-Chain, Social, Cross-Asset, Advanced TA
 - Added confidence percentage display
 - Color-coded scores (green ≥50, red <50)
-
-**Files Modified:**
-- `backend/routes/spot_trading.py` - Fixed AI recommendations data extraction
-- `frontend/src/pages/SpotTrading.jsx` - Enhanced UI display for recommendations
 
 ---
 
