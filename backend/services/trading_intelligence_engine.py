@@ -1237,8 +1237,19 @@ class TradingIntelligenceEngine:
         try:
             prices = df['close'].values
             self.environment.prices = prices
-            self.environment.features = features
-            logger.info(f"FinRL environment setup - prices: {len(prices)}, features: {len(features)}")
+            
+            # Convert features DataFrame to numpy array with correct shape
+            # The environment expects shape (n_samples, 30) for market features
+            feature_cols = features.select_dtypes(include=[np.number]).columns[:30]
+            features_array = features[feature_cols].fillna(0).values
+            
+            # Ensure we have at least 30 features, pad with zeros if needed
+            if features_array.shape[1] < 30:
+                padding = np.zeros((features_array.shape[0], 30 - features_array.shape[1]))
+                features_array = np.hstack([features_array, padding])
+            
+            self.environment.features = features_array
+            logger.info(f"FinRL environment setup - prices: {len(prices)}, features shape: {features_array.shape}")
             
             finrl_result = await self.finrl_agent.train(self.environment, episodes=min(epochs, 50))
             results['finrl_agent'] = finrl_result
