@@ -28,10 +28,11 @@ const TrainingProgress = ({
   const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
+  const reconnectAttemptsRef = useRef(0);
+  const wsInitializedRef = useRef(false);
 
-  // WebSocket connection
+  // WebSocket connection - with graceful fallback to polling
   useEffect(() => {
-    let reconnectAttempts = 0;
     const maxReconnectAttempts = 3;
     
     const connectWebSocket = () => {
@@ -39,8 +40,16 @@ const TrainingProgress = ({
       const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_BACKEND_URL || '';
       
       if (!backendUrl) {
-        console.warn('[TrainingProgress] No backend URL configured, using polling fallback');
+        if (!wsInitializedRef.current) {
+          console.info('[TrainingProgress] No backend URL, using polling mode');
+          wsInitializedRef.current = true;
+        }
         setWsConnected(false);
+        return;
+      }
+      
+      // Skip WebSocket if already at max attempts
+      if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
         return;
       }
       
@@ -55,9 +64,9 @@ const TrainingProgress = ({
         wsRef.current = ws;
         
         ws.onopen = () => {
-          console.log('[TrainingProgress] WebSocket connected');
+          console.info('[TrainingProgress] WebSocket connected');
           setWsConnected(true);
-          reconnectAttempts = 0; // Reset on successful connection
+          reconnectAttemptsRef.current = 0;
         };
         
         ws.onmessage = (event) => {
@@ -65,7 +74,6 @@ const TrainingProgress = ({
             const data = JSON.parse(event.data);
             
             if (data.type === 'progress_update' || data.type === 'initial_state') {
-              // Update specific task if we're tracking one
               if (taskId && data.task_id === taskId) {
                 setTask(data);
                 if (data.status === 'completed' && onComplete) {
@@ -73,7 +81,6 @@ const TrainingProgress = ({
                 }
               }
               
-              // Update active tasks list
               setActiveTasks(prev => {
                 const updated = prev.filter(t => t.task_id !== data.task_id);
                 if (data.status === 'running') {
@@ -83,31 +90,53 @@ const TrainingProgress = ({
               });
             }
           } catch (e) {
-            console.error('[TrainingProgress] Error parsing WebSocket message:', e);
+            // Silent parse error - non-critical
           }
         };
         
         ws.onclose = (event) => {
-          console.log('[TrainingProgress] WebSocket disconnected', event.code, event.reason);
           setWsConnected(false);
           
-          // Only reconnect if not a normal closure and under max attempts
-          if (event.code !== 1000 && reconnectAttempts < maxReconnectAttempts) {
-            reconnectAttempts++;
-            const delay = Math.min(3000 * reconnectAttempts, 10000); // Exponential backoff
-            console.log(`[TrainingProgress] Reconnecting in ${delay}ms (attempt ${reconnectAttempts}/${maxReconnectAttempts})`);
+          // Only reconnect on abnormal closure and under max attempts
+          if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
+            reconnectAttemptsRef.current++;
+            const delay = Math.min(5000 * reconnectAttemptsRef.current, 15000);
             reconnectTimeoutRef.current = setTimeout(connectWebSocket, delay);
-          } else if (reconnectAttempts >= maxReconnectAttempts) {
-            console.log('[TrainingProgress] Max reconnect attempts reached, falling back to polling');
+          } else if (reconnectAttemptsRef.current >= maxReconnectAttempts && !wsInitializedRef.current) {
+            console.info('[TrainingProgress] WebSocket unavailable, using polling mode');
+            wsInitializedRef.current = true;
           }
         };
         
-        ws.onerror = (error) => {
-          // Only log on first attempt to reduce console spam
-          if (reconnectAttempts === 0) {
-            console.warn('[TrainingProgress] WebSocket connection unavailable, using polling fallback');
+        ws.onerror = () => {
+          // Log only once on first failure
+          if (!wsInitializedRef.current && reconnectAttemptsRef.current === 0) {
+            console.info('[TrainingProgress] WebSocket unavailable, falling back to polling');
+            wsInitializedRef.current = true;
           }
           setWsConnected(false);
+        };
+        
+      } catch (e) {
+        if (!wsInitializedRef.current) {
+          console.info('[TrainingProgress] WebSocket not supported, using polling');
+          wsInitializedRef.current = true;
+        }
+        setWsConnected(false);
+      }
+    };
+    
+    connectWebSocket();
+    
+    return () => {
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.close(1000, 'Component unmounting');
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+    };
+  }, [taskId, onComplete]);
         };
         
       } catch (e) {
