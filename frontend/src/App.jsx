@@ -174,6 +174,7 @@ function App() {
           </div>
         </ErrorBoundary>
       </BrowserRouter>
+      </LoadingProvider>
     </TradingModeProvider>
   );
 }
