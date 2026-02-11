@@ -372,8 +372,8 @@ nginx-code-proxy RUNNING   pid 45
 - All environment variables set ✅
 
 **URL:**
-- Deployment: https://github-connect-59.preview.emergentagent.com ✅
-- Backend API: https://github-connect-59.preview.emergentagent.com/api ✅
+- Deployment: https://fast-analyzer.preview.emergentagent.com ✅
+- Backend API: https://fast-analyzer.preview.emergentagent.com/api ✅
 
 ---
 

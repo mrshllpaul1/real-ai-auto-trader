@@ -15,7 +15,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Any
 
 # Backend URL configuration
-BASE_URL = "https://github-connect-59.preview.emergentagent.com/api"
+BASE_URL = "https://fast-analyzer.preview.emergentagent.com/api"
 
 class ComprehensiveBackendTester:
     def __init__(self):
