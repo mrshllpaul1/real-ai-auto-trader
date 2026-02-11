@@ -194,19 +194,154 @@ class WeeklySelectionScheduler:
             
             logger.info(f"✅ Weekly selection complete: {len(main_coins)} main + {len(gem_coins)} gems")
             
-            return {
+            result = {
                 "success": True,
                 "week_start": week_start.isoformat(),
                 "market_condition": market_condition,
                 "main_coins": main_coins,
                 "gem_coins": gem_coins,
                 "total_selected": len(main_coins) + len(gem_coins),
-                "universe_size": len(self.coin_selector.coin_universe)
+                "universe_size": len(self.coin_selector.coin_universe),
+                "auto_executed": False,
+                "execution_result": None
             }
+            
+            # Auto-execute trades if enabled
+            if self._config.get("auto_execute", False):
+                logger.info("🚀 Auto-execute enabled - executing trades...")
+                execution_result = await self._execute_trades(main_coins, gem_coins, market_condition)
+                result["auto_executed"] = True
+                result["execution_result"] = execution_result
+                self._last_execution = execution_result
+                
+                # Update selection record with execution status
+                await self.db.weekly_selections.update_one(
+                    {"selection_date": start_time.isoformat()},
+                    {"$set": {
+                        "auto_executed": True,
+                        "execution_result": execution_result,
+                        "executed_at": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+            
+            return result
             
         except Exception as e:
             logger.error(f"Selection error: {e}")
             return {"error": str(e)}
+    
+    async def _execute_trades(
+        self, 
+        main_coins: List[Dict], 
+        gem_coins: List[Dict],
+        market_condition: str
+    ) -> Dict[str, Any]:
+        """
+        Execute trades based on the coin selection.
+        Uses the AutomatedWeeklyTrader to place orders.
+        """
+        if not self.auto_trader:
+            return {
+                "success": False,
+                "error": "Auto trader not connected",
+                "trades": []
+            }
+        
+        paper_trade = self._config.get("paper_trade", True)
+        trades_executed = []
+        errors = []
+        
+        logger.info(f"📈 Executing {'PAPER' if paper_trade else 'REAL'} trades for {len(main_coins)} main + {len(gem_coins)} gem coins")
+        
+        try:
+            # Store selections in the format the auto_trader expects
+            await self.db.ai_weekly_selection.delete_many({})  # Clear old selection
+            
+            selection_data = {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "market_condition": market_condition,
+                "main_coins": [
+                    {
+                        "coin_id": c.get("coin_id"),
+                        "symbol": c.get("symbol", c.get("coin_id", "").upper()[:4]),
+                        "score": c.get("total_score", 50),
+                        "reasoning": c.get("reasoning", "")
+                    }
+                    for c in main_coins
+                ],
+                "gem_coins": [
+                    {
+                        "coin_id": c.get("coin_id"),
+                        "symbol": c.get("symbol", c.get("coin_id", "").upper()[:4]),
+                        "score": c.get("total_score", c.get("gem_score", 50)),
+                        "is_gem": True
+                    }
+                    for c in gem_coins
+                ]
+            }
+            await self.db.ai_weekly_selection.insert_one(selection_data)
+            
+            # Execute the weekly rebalance using the auto trader
+            execution_result = await self.auto_trader.execute_weekly_rebalance(paper_trade=paper_trade)
+            
+            if execution_result.get("success"):
+                trades_executed = execution_result.get("trades", [])
+                logger.info(f"✅ Successfully executed {len(trades_executed)} trades")
+                
+                # Create success alert
+                await self._create_execution_alert(
+                    trades_executed, 
+                    paper_trade, 
+                    execution_result.get("total_invested", 0)
+                )
+            else:
+                errors.append(execution_result.get("error", "Unknown error"))
+                logger.error(f"❌ Trade execution failed: {errors}")
+            
+            return {
+                "success": len(errors) == 0,
+                "paper_trade": paper_trade,
+                "trades_count": len(trades_executed),
+                "trades": trades_executed,
+                "total_invested": execution_result.get("total_invested", 0),
+                "errors": errors,
+                "execution_time": datetime.now(timezone.utc).isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Trade execution error: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "trades": []
+            }
+    
+    async def _create_execution_alert(
+        self,
+        trades: List[Dict],
+        paper_trade: bool,
+        total_invested: float
+    ):
+        """Create an alert for trade execution"""
+        trade_count = len(trades)
+        mode = "PAPER" if paper_trade else "REAL"
+        
+        alert = {
+            "title": f"💰 Weekly Trades Executed ({mode})",
+            "message": f"Executed {trade_count} trades\n"
+                      f"Total invested: ${total_invested:,.2f}\n"
+                      f"Mode: {mode} Trading",
+            "priority": "high" if not paper_trade else "medium",
+            "type": "trade_execution",
+            "created_at": datetime.now(timezone.utc),
+            "read": False,
+            "data": {
+                "trades_count": trade_count,
+                "paper_trade": paper_trade,
+                "total_invested": total_invested
+            }
+        }
+        await self.db.alerts.insert_one(alert)
     
     async def _determine_market_condition(self) -> str:
         """Determine current market condition based on BTC trend"""
