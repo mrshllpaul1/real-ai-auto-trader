@@ -98,9 +98,11 @@ async def train_models(request: TrainRequest, background_tasks: BackgroundTasks)
     - ML: RandomForest, GradientBoosting, SVM
     - DL: LSTM, GRU, BiLSTM, CNN-LSTM, Attention
     
-    Training runs in background. Check /status for progress.
+    Training runs in background with real-time progress tracking.
     """
     global _training_status
+    from services.training_progress_manager import get_progress_manager
+    import uuid
     
     engine = get_gem_engine()
     if not engine:
@@ -113,20 +115,80 @@ async def train_models(request: TrainRequest, background_tasks: BackgroundTasks)
             "message": _training_status["message"]
         }
     
+    # Create task for progress tracking
+    task_id = f"gem-ml-dl-{uuid.uuid4().hex[:8]}"
+    progress_manager = get_progress_manager()
+    progress_manager.create_task(
+        task_id=task_id,
+        task_type="gem-ml-dl-train",
+        total_items=8,  # 3 ML + 5 DL models
+        total_steps=2   # ML phase + DL phase
+    )
+    
     _training_status = {
         "running": True,
         "started_at": datetime.utcnow().isoformat(),
         "progress": 0,
         "message": "Starting training...",
-        "result": None
+        "result": None,
+        "task_id": task_id
     }
     
-    background_tasks.add_task(_run_training, request.symbols)
+    async def _run_training_with_progress(symbols: List[str] = None):
+        """Background training task with progress tracking"""
+        global _training_status
+        try:
+            await progress_manager.start_task(task_id, "Training ML/DL models...")
+            
+            # Check for cancellation
+            if progress_manager.is_cancel_requested(task_id):
+                await progress_manager.stop_task(task_id, "Cancelled by user")
+                _training_status["running"] = False
+                return
+            
+            engine = get_gem_engine()
+            if engine is None:
+                raise Exception("Gem prediction engine not available")
+            
+            await progress_manager.update_progress(
+                task_id, 
+                progress=10, 
+                message="Training ML models (RandomForest, GradientBoosting, SVM)...",
+                current_item="ML Models"
+            )
+            
+            result = await engine.train_models(symbols)
+            
+            await progress_manager.update_progress(
+                task_id,
+                progress=90,
+                message="Finalizing...",
+                current_item="Saving models"
+            )
+            
+            _training_status["result"] = result
+            _training_status["message"] = "Training complete"
+            
+            await progress_manager.complete_task(
+                task_id,
+                result={"models_trained": 8, "status": "success"},
+                message="ML/DL training complete"
+            )
+        except Exception as e:
+            _training_status["result"] = {"error": str(e)}
+            _training_status["message"] = f"Training failed: {str(e)}"
+            await progress_manager.fail_task(task_id, str(e))
+        finally:
+            _training_status["running"] = False
+    
+    background_tasks.add_task(_run_training_with_progress, request.symbols)
     
     return {
         "status": "started",
+        "task_id": task_id,
         "message": "Training ML and DL models in background",
-        "check_status": "/api/gems/ml-dl/status"
+        "check_status": "/api/gems/ml-dl/status",
+        "progress_endpoint": f"/api/training-progress/task/{task_id}"
     }
 
 
