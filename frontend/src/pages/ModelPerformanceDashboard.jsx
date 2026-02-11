@@ -60,14 +60,15 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
 
   const fetchAllData = useCallback(async () => {
     try {
-      const [drl, intelligence, backtest, sb3, training, gemMlDl, mtf] = await Promise.all([
+      const [drl, intelligence, backtest, sb3, training, gemMlDl, mtf, allModels] = await Promise.all([
         fetchWithTimeout('/drl-engine/status'),
         fetchWithTimeout('/trading-intelligence/status'),
         fetchWithTimeout('/drl-engine/backtest/status'),
         fetchWithTimeout('/sb3-agents/status'),
         fetchWithTimeout('/training/status'),
         fetchWithTimeout('/gems/ml-dl/status'),
-        fetchWithTimeout('/enhanced-mtf-training/status')
+        fetchWithTimeout('/enhanced-mtf-training/status'),
+        fetchWithTimeout('/training/models-status')
       ]);
       
       setDrlStatus(drl.data);
@@ -77,6 +78,7 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
       setTrainingStatus(training.data);
       setGemMlDlStatus(gemMlDl.data);
       setMtfStatus(mtf.data);
+      setModelsStatus(allModels.data || {});
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
