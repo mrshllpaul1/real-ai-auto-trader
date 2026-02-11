@@ -13,6 +13,8 @@ The Tethys platform has evolved into a comprehensive AI-powered trading system w
 - **Connection reuse**: Pool HTTP clients (market/news APIs) and database connections; set sensible keepalive to cut handshake overhead.
 - **Front-end payload**: Ship lazy-loaded routes for heavy pages (AI Center, Model Performance, Options Trading) and prefetch critical CSS to trim initial paint time.
 - **Observability**: Add RED/USE dashboards (latency, error rate, saturation) with 95/99th percentiles and alerting on rate-limit/timeout spikes.
+- **App performance (frontend)**: Code-split chart-heavy widgets, memoize Recharts configs, lazy-load images/avatars via CDN, and cache API responses (RTK Query/React Query) for model status + portfolio summaries. Set Web Vitals budgets (LCP <2.5s, TTI <3.5s) and add bundle analyzer to keep vendor chunks lean.
+- **App performance (backend)**: Cache stable reference data (coin universe, indicator metadata) in Redis for 5–15m, use async HTTP clients with pooling, and cap concurrent external calls per host to avoid head-of-line blocking.
 
 ---
 
