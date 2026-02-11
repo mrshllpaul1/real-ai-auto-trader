@@ -7,6 +7,35 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ## Session Update - Feb 11, 2026 (Current Session)
 
+### ✅ ENHANCED: Training Progress System with WebSocket & All Coins (Feb 11, 2026)
+
+**Improvements Made:**
+
+1. **Removed 20-Coin Limit** - Now trains on ALL coins from dynamic universe
+   - Previous: Limited to 20 coins
+   - Now: Trains on 77+ coins (full dynamic universe)
+
+2. **Granular Per-Coin Progress** - Shows exactly which coin is being trained
+   - Shows: "Phase 1/4: Training bitcoin (1/77)"
+   - Shows: "Current: Historical: bitcoin"
+   - Shows: "4/231 items" (total = coins × 3 training phases)
+
+3. **WebSocket Real-Time Updates** - Instant progress without polling
+   - Endpoint: `/api/training-progress/ws`
+   - Falls back to polling if WebSocket disconnects
+   - Shows WiFi icon to indicate connection status
+
+**Files Created:**
+- `backend/services/websocket_manager.py` - WebSocket connection manager
+
+**Files Modified:**
+- `backend/services/training_progress_manager.py` - Made async, added WebSocket broadcast
+- `backend/routes/training_progress.py` - Added WebSocket endpoint
+- `backend/routes/training.py` - Removed 20-coin limit, added per-coin progress
+- `frontend/src/components/TrainingProgress.jsx` - Added WebSocket support
+
+---
+
 ### ✅ NEW: Training Progress Monitoring System (Feb 11, 2026)
 
 **Features Added:**
