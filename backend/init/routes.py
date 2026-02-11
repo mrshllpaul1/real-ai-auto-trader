@@ -192,6 +192,11 @@ def register_routes(api_router: APIRouter, db=None):
     # Training Progress Monitoring
     api_router.include_router(training_progress_routes.router, tags=["Training Progress"])
     
+    # Model Retrain Scheduler
+    from routes import model_retrain_scheduler as retrain_scheduler_routes
+    api_router.include_router(retrain_scheduler_routes.router, tags=["Model Retrain Scheduler"])
+    retrain_scheduler_routes.set_dependencies(db)
+    
     logger.info("✅ All routes registered")
     
     return api_router
