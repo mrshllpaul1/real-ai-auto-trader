@@ -94,11 +94,10 @@ const handleCmdKeyDown = (e) => {
 ```javascript
 // Using framer-motion's drag functionality
 <motion.div
-  drag={!isMinimized && !isDragging}
+  drag={!isMinimized}
   dragControls={dragControls}
   dragMomentum={false}
   dragElastic={0}
-  onDragStart={() => setIsDragging(true)}
   onDragEnd={handleDragEnd}
   style={position ? { left: position.x, top: position.y } : {}}
 >
@@ -183,7 +182,6 @@ const [chatHistory, setChatHistory] = useState([]);
 const [chatHistoryIndex, setChatHistoryIndex] = useState(-1);
 
 // Drag & position
-const [isDragging, setIsDragging] = useState(false);
 const [position, setPosition] = useState(() => {
   const saved = localStorage.getItem('commandHubPosition');
   return saved ? JSON.parse(saved) : null;

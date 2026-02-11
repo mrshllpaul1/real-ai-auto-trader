@@ -44,7 +44,6 @@ const FloatingCommandHub = () => {
   const [generatedStrategy, setGeneratedStrategy] = useState(null);
   
   // Enhanced UI state
-  const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState(() => {
     const saved = localStorage.getItem('commandHubPosition');
     return saved ? JSON.parse(saved) : null;
@@ -147,7 +146,6 @@ const FloatingCommandHub = () => {
     const newPosition = { x: info.point.x, y: info.point.y };
     setPosition(newPosition);
     localStorage.setItem('commandHubPosition', JSON.stringify(newPosition));
-    setIsDragging(false);
   };
 
   // Initialize welcome messages
@@ -656,7 +654,6 @@ const FloatingCommandHub = () => {
             dragControls={dragControls}
             dragMomentum={false}
             dragElastic={0}
-            onDragStart={() => setIsDragging(true)}
             onDragEnd={handleDragEnd}
             style={position ? { left: position.x, top: position.y, bottom: 'auto', right: 'auto' } : {}}
             className={`fixed z-[60] bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden flex flex-col ${
