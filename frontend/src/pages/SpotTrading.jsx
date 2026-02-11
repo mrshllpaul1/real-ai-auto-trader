@@ -290,13 +290,20 @@ const OrderForm = ({ symbol, pairDetails, onOrder, balance }) => {
 const AISignalCard = ({ signal }) => {
   if (!signal) return null;
   
-  const getSignalColor = (score) => {
-    if (score > 0.3) return '#00FF94';
-    if (score < -0.3) return '#FF4444';
-    return '#FFB800';
+  // Extract composite data from signal
+  const composite = signal.composite || {};
+  const score = composite.score || signal.score || 50;
+  const confidence = composite.confidence || signal.confidence || 0;
+  const signalText = composite.signal || signal.signal || 'hold';
+  const components = signal.components || {};
+  
+  const getSignalColor = (s) => {
+    if (s >= 60) return '#00FF94';  // Bullish
+    if (s <= 40) return '#FF4444';  // Bearish
+    return '#FFB800';  // Neutral
   };
   
-  const signalColor = getSignalColor(signal.score);
+  const signalColor = getSignalColor(score);
   
   return (
     <div className="bg-[#111] border border-[#222] rounded-xl p-4">
@@ -307,11 +314,11 @@ const AISignalCard = ({ signal }) => {
       
       <div className="flex items-center justify-between mb-4">
         <div className="text-2xl font-bold" style={{ color: signalColor }}>
-          {signal.signal?.toUpperCase() || 'NEUTRAL'}
+          {signalText.toUpperCase().replace('_', ' ')}
         </div>
         <div className="text-right">
           <div className="text-xs text-[#888]">Confidence</div>
-          <div className="text-lg font-bold text-white">{(signal.confidence || 0).toFixed(0)}%</div>
+          <div className="text-lg font-bold text-white">{confidence.toFixed(0)}%</div>
         </div>
       </div>
       
@@ -319,7 +326,7 @@ const AISignalCard = ({ signal }) => {
         <div 
           className="h-full rounded-full transition-all"
           style={{ 
-            width: `${Math.min(100, Math.max(0, signal.score || 50))}%`, 
+            width: `${Math.min(100, Math.max(0, score))}%`, 
             backgroundColor: signalColor 
           }}
         />
