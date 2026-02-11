@@ -809,7 +809,7 @@ class TradingEnvironment:
     
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, Dict]:
         """
-        Execute one step in the environment.
+        Execute one step in the environment - OPTIMIZED.
         
         Args:
             action: 0=strong_sell, 1=sell, 2=hold, 3=buy, 4=strong_buy
@@ -823,8 +823,9 @@ class TradingEnvironment:
         current_price = self.prices[self.current_idx]
         next_price = self.prices[self.current_idx + 1]
         
-        # Calculate position change based on action
-        position_change = self._action_to_position_change(action)
+        # Fast action mapping (avoid function call)
+        position_changes = [-1.0, -0.5, 0.0, 0.5, 1.0]
+        position_change = position_changes[action] if 0 <= action < 5 else 0.0
         
         # Execute trade with costs and slippage
         reward, trade_info = self._execute_trade(position_change, current_price)
@@ -843,10 +844,8 @@ class TradingEnvironment:
             total_reward -= drawdown * 0.5
         
         self.reward_history.append(total_reward)
+        # Simplified history tracking (only keep essential data)
         self.portfolio_history.append({
-            'step': self.step_count,
-            'capital': self.capital,
-            'position': self.position,
             'portfolio_value': portfolio_value,
             'price': next_price
         })
