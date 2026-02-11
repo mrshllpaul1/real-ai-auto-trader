@@ -171,6 +171,8 @@ function App() {
                     <Route path="/marketplace" element={<PageErrorBoundary><SuspenseWrapper><StrategyMarketplace /></SuspenseWrapper></PageErrorBoundary>} />
                     <Route path="/tax" element={<PageErrorBoundary><SuspenseWrapper><TaxReporting /></SuspenseWrapper></PageErrorBoundary>} />
                     <Route path="/social" element={<PageErrorBoundary><SuspenseWrapper><SocialFeed /></SuspenseWrapper></PageErrorBoundary>} />
+                    <Route path="/web3-wallet" element={<PageErrorBoundary><SuspenseWrapper><Web3Wallet /></SuspenseWrapper></PageErrorBoundary>} />
+                    <Route path="/ai-explain" element={<PageErrorBoundary><SuspenseWrapper><AIExplainability /></SuspenseWrapper></PageErrorBoundary>} />
                     
                     <Route path="/setup" element={<Navigate to="/settings" replace />} />
                     <Route path="/budget" element={<Navigate to="/settings" replace />} />
