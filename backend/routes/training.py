@@ -63,6 +63,127 @@ async def train_on_historical_data(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+class SingleModelTrainingRequest(BaseModel):
+    coin: str
+    model_type: str = "all"  # "historical", "technical", "gems", "all"
+
+
+@router.post("/train-single")
+async def train_single_model(
+    request: SingleModelTrainingRequest,
+    background_tasks: BackgroundTasks,
+    db = Depends(get_database)
+):
+    """
+    Train a single coin/model combination.
+    - model_type: "historical" | "technical" | "gems" | "all"
+    - coin: The coin ID to train (e.g., "bitcoin", "ethereum")
+    """
+    from services.historical_trainer import HistoricalTrainer
+    from services.enhanced_historical_trainer import EnhancedHistoricalTrainer
+    from services.training_progress_manager import get_progress_manager
+    import uuid
+    
+    try:
+        coin = request.coin.lower()
+        model_type = request.model_type.lower()
+        
+        task_id = f"train-single-{coin}-{uuid.uuid4().hex[:8]}"
+        progress_manager = get_progress_manager()
+        
+        historical_trainer = HistoricalTrainer(db)
+        enhanced_trainer = EnhancedHistoricalTrainer(db)
+        
+        # Calculate total items based on model type
+        total_items = 1 if model_type != "all" else 3
+        
+        progress_manager.create_task(
+            task_id=task_id,
+            task_type=f"train-single-{model_type}",
+            total_items=total_items,
+            total_steps=total_items
+        )
+        
+        async def train_single_with_progress():
+            try:
+                await progress_manager.start_task(task_id, f"Training {coin}...")
+                items_done = 0
+                
+                # Check for cancellation
+                if progress_manager.is_cancel_requested(task_id):
+                    await progress_manager.stop_task(task_id, "Cancelled by user")
+                    return
+                
+                if model_type in ["historical", "all"]:
+                    await progress_manager.update_progress(
+                        task_id,
+                        message=f"Training historical patterns for {coin}",
+                        current_item=f"Historical: {coin}",
+                        items_processed=items_done
+                    )
+                    try:
+                        await historical_trainer.train_on_historical_data([coin], 2020, True)
+                    except Exception as e:
+                        logger.warning(f"Historical training failed for {coin}: {e}")
+                    items_done += 1
+                    
+                    if progress_manager.is_cancel_requested(task_id):
+                        await progress_manager.stop_task(task_id, "Cancelled by user")
+                        return
+                
+                if model_type in ["technical", "all"]:
+                    await progress_manager.update_progress(
+                        task_id,
+                        message=f"Training technical indicators for {coin}",
+                        current_item=f"Technical: {coin}",
+                        items_processed=items_done
+                    )
+                    try:
+                        await enhanced_trainer.train_with_real_data([coin])
+                    except Exception as e:
+                        logger.warning(f"Technical training failed for {coin}: {e}")
+                    items_done += 1
+                    
+                    if progress_manager.is_cancel_requested(task_id):
+                        await progress_manager.stop_task(task_id, "Cancelled by user")
+                        return
+                
+                if model_type in ["gems", "all"]:
+                    await progress_manager.update_progress(
+                        task_id,
+                        message=f"Training gem patterns for {coin}",
+                        current_item=f"Gems: {coin}",
+                        items_processed=items_done
+                    )
+                    try:
+                        await historical_trainer.train_profitable_gems([coin], 2.0, 2020)
+                    except Exception as e:
+                        logger.warning(f"Gems training failed for {coin}: {e}")
+                    items_done += 1
+                
+                await progress_manager.complete_task(
+                    task_id,
+                    result={"coin": coin, "model_type": model_type, "items_trained": items_done},
+                    message=f"Completed training {coin}"
+                )
+                
+            except Exception as e:
+                await progress_manager.fail_task(task_id, str(e))
+        
+        background_tasks.add_task(train_single_with_progress)
+        
+        return {
+            "task_id": task_id,
+            "message": f"Training started for {coin}",
+            "coin": coin,
+            "model_type": model_type,
+            "progress_endpoint": f"/api/training-progress/task/{task_id}"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/train-profitable-gems")
 async def train_profitable_gems(
     request: ProfitableGemsRequest,
