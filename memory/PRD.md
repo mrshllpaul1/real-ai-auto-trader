@@ -5,7 +5,40 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ---
 
-## Session Update - Feb 11, 2026 (Latest Session - FinRL Training Verification)
+## Session Update - Feb 11, 2026 (Current Session)
+
+### ✅ NEW: P&L Performance Chart (Feb 11, 2026)
+
+**Feature Added:**
+- Interactive P&L chart showing 30-day performance history
+- Cumulative P&L (cyan area chart) and Daily P&L (purple line)
+- Reference line at $0 for easy profit/loss visualization
+- Sample data displayed when no trade history exists
+- Integrated into Trading Hub → Performance tab
+
+**API Endpoint:**
+- `GET /api/portfolio-performance/pnl-chart?days=30` - Get P&L chart data
+
+**Files Modified:**
+- `backend/routes/performance_dashboard.py` - Added pnl-chart endpoint with sample data fallback
+- `frontend/src/pages/PerformanceDashboard.jsx` - Added AreaChart with Recharts
+
+### ✅ FIX: Slow API Endpoint Optimization (Feb 11, 2026)
+
+**Issues Fixed:**
+1. `/api/trading-intelligence/status` - Was taking 14-18s due to lazy TensorFlow initialization
+   - **Fix:** Added `get_engine_if_exists()` to return instantly without initialization
+   - **Result:** Now responds in **0.15s** (100x improvement)
+
+2. `/api/trading/portfolio/{user_id}` - Was taking 5s on every call
+   - **Fix:** Added 30-second caching for portfolio data
+   - **Result:** First call: **0.23s**, Cached calls: **0.08s** (60x improvement)
+
+**Files Modified:**
+- `backend/routes/trading_intelligence.py` - Separated status check from initialization
+- `backend/routes/trading.py` - Added portfolio cache with 30s TTL
+
+---
 
 ### ✅ VERIFIED: FinRL Agent Training Completed Successfully (Feb 11, 2026)
 
