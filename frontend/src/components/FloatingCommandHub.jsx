@@ -424,18 +424,75 @@ const FloatingCommandHub = () => {
                   {/* Strategy Builder Tab */}
                   <TabsContent value="strategy" className="flex-1 flex flex-col m-0 p-0 mt-0 data-[state=inactive]:hidden" style={{ minHeight: 0 }}>
                     <div className="flex flex-col h-full p-2">
-                      <div className="space-y-2">
-                        <label className="text-xs text-slate-400">Describe your strategy:</label>
+                      {/* Strategy Content - scrollable */}
+                      <div className="flex-1 overflow-y-auto space-y-3 pr-1 min-h-0">
+                        {generatedStrategy && (
+                          <div className="space-y-2 p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-sm font-medium text-white">{generatedStrategy.name || 'Generated Strategy'}</h4>
+                              <Button size="sm" variant="ghost" onClick={saveStrategy} className="h-7 text-xs text-green-400 hover:text-green-300">
+                                <Save size={12} className="mr-1" /> Save
+                              </Button>
+                            </div>
+                            
+                            <div className="space-y-1.5 text-xs">
+                              {generatedStrategy.entry_conditions && (
+                                <div>
+                                  <span className="text-green-400">Entry:</span>
+                                  <p className="text-slate-300 ml-2">{generatedStrategy.entry_conditions.join(', ')}</p>
+                                </div>
+                              )}
+                              {generatedStrategy.exit_conditions && (
+                                <div>
+                                  <span className="text-red-400">Exit:</span>
+                                  <p className="text-slate-300 ml-2">{generatedStrategy.exit_conditions.join(', ')}</p>
+                                </div>
+                              )}
+                              {generatedStrategy.risk_params && (
+                                <div className="flex gap-2 mt-2">
+                                  <Badge variant="outline" className="text-[10px] border-yellow-500/50 text-yellow-300">
+                                    SL: {generatedStrategy.risk_params.stop_loss_pct}%
+                                  </Badge>
+                                  <Badge variant="outline" className="text-[10px] border-green-500/50 text-green-300">
+                                    TP: {generatedStrategy.risk_params.take_profit_pct}%
+                                  </Badge>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Quick Templates */}
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] text-slate-500 uppercase tracking-wide">Quick Templates</p>
+                          {[
+                            'RSI oversold bounce with volume confirmation',
+                            'Moving average golden cross strategy',
+                            'Whale accumulation follower'
+                          ].map((template, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setStrategyInput(template)}
+                              className="w-full text-left px-2 py-1.5 rounded-lg bg-slate-800/30 hover:bg-slate-700/50 text-xs text-slate-400 hover:text-white transition-all"
+                            >
+                              {template}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Strategy Input - FIXED at bottom */}
+                      <div className="flex-shrink-0 pt-3 mt-2 border-t border-slate-700/30 space-y-2">
                         <Textarea
                           value={strategyInput}
                           onChange={(e) => setStrategyInput(e.target.value)}
                           placeholder="e.g., Buy BTC when RSI is below 30 and sell at 20% profit with 5% stop loss"
-                          className="h-24 bg-slate-800/50 border-slate-700/50 text-sm text-white placeholder:text-slate-400 resize-none"
+                          className="h-20 bg-slate-800/50 border-slate-700/50 text-sm text-white placeholder:text-slate-400 resize-none"
                         />
                         <Button 
                           onClick={generateStrategy}
                           disabled={strategyLoading || !strategyInput.trim()}
-                          className="w-full h-9 bg-gradient-to-r from-pink-500/20 to-purple-500/20 hover:from-pink-500/30 hover:to-purple-500/30 text-pink-300 border border-pink-500/30"
+                          className="w-full h-10 bg-gradient-to-r from-pink-500/20 to-purple-500/20 hover:from-pink-500/30 hover:to-purple-500/30 text-pink-300 border border-pink-500/30"
                         >
                           {strategyLoading ? (
                             <><Loader2 size={14} className="animate-spin mr-2" /> Generating...</>
@@ -443,60 +500,6 @@ const FloatingCommandHub = () => {
                             <><Wand2 size={14} className="mr-2" /> Generate Strategy</>
                           )}
                         </Button>
-                      </div>
-
-                      {generatedStrategy && (
-                        <div className="space-y-2 p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
-                          <div className="flex items-center justify-between">
-                            <h4 className="text-sm font-medium text-white">{generatedStrategy.name || 'Generated Strategy'}</h4>
-                            <Button size="sm" variant="ghost" onClick={saveStrategy} className="h-7 text-xs text-green-400 hover:text-green-300">
-                              <Save size={12} className="mr-1" /> Save
-                            </Button>
-                          </div>
-                          
-                          <div className="space-y-1.5 text-xs">
-                            {generatedStrategy.entry_conditions && (
-                              <div>
-                                <span className="text-green-400">Entry:</span>
-                                <p className="text-slate-300 ml-2">{generatedStrategy.entry_conditions.join(', ')}</p>
-                              </div>
-                            )}
-                            {generatedStrategy.exit_conditions && (
-                              <div>
-                                <span className="text-red-400">Exit:</span>
-                                <p className="text-slate-300 ml-2">{generatedStrategy.exit_conditions.join(', ')}</p>
-                              </div>
-                            )}
-                            {generatedStrategy.risk_params && (
-                              <div className="flex gap-2 mt-2">
-                                <Badge variant="outline" className="text-[10px] border-yellow-500/50 text-yellow-300">
-                                  SL: {generatedStrategy.risk_params.stop_loss_pct}%
-                                </Badge>
-                                <Badge variant="outline" className="text-[10px] border-green-500/50 text-green-300">
-                                  TP: {generatedStrategy.risk_params.take_profit_pct}%
-                                </Badge>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Quick Templates */}
-                      <div className="space-y-1.5">
-                        <p className="text-[10px] text-slate-500 uppercase tracking-wide">Quick Templates</p>
-                        {[
-                          'RSI oversold bounce with volume confirmation',
-                          'Moving average golden cross strategy',
-                          'Whale accumulation follower'
-                        ].map((template, i) => (
-                          <button
-                            key={i}
-                            onClick={() => setStrategyInput(template)}
-                            className="w-full text-left px-2 py-1.5 rounded-lg bg-slate-800/30 hover:bg-slate-700/50 text-xs text-slate-400 hover:text-white transition-all"
-                          >
-                            {template}
-                          </button>
-                        ))}
                       </div>
                     </div>
                   </TabsContent>
