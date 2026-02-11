@@ -194,7 +194,6 @@ const GemMLDLComparison = ({ embedded = false }) => {
             onComplete={handleTrainingComplete}
           />
         )}
-        </div>
       </motion.div>
 
       {/* Training Status Banner */}
