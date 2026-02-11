@@ -173,7 +173,7 @@ function App() {
             </div>
           </div>
         </ErrorBoundary>
-      </BrowserRouter>
+        </BrowserRouter>
       </LoadingProvider>
     </TradingModeProvider>
   );
