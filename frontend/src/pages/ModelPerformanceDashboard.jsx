@@ -32,6 +32,7 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
   const [sb3Status, setSb3Status] = useState(null);
   const [loading, setLoading] = useState(true);
   const [training, setTraining] = useState(false);
+  const [trainingTaskId, setTrainingTaskId] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [refreshing, setRefreshing] = useState(false);
 
