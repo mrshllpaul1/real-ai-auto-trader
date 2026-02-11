@@ -1116,19 +1116,21 @@ class FinRLAgent:
         return loss
     
     async def train(self, env: TradingEnvironment, episodes: int = 100) -> Dict[str, Any]:
-        """Train agent in environment"""
+        """Train agent in environment with optimized settings for faster training"""
         if not TF_AVAILABLE:
             return {"error": "TensorFlow not available"}
         
         episode_rewards = []
         episode_metrics = []
+        max_steps_per_episode = 100  # Limit steps to speed up training
         
         for episode in range(episodes):
             state = env.reset(env.prices, env.features)
             total_reward = 0
             done = False
+            step = 0
             
-            while not done:
+            while not done and step < max_steps_per_episode:
                 action = self.select_action(state, training=True)
                 next_state, reward, done, info = env.step(action)
                 
@@ -1137,13 +1139,14 @@ class FinRLAgent:
                 
                 state = next_state
                 total_reward += reward
+                step += 1
             
             episode_rewards.append(total_reward)
             metrics = env.get_metrics()
             episode_metrics.append(metrics)
             
-            if episode % 10 == 0:
-                avg_reward = np.mean(episode_rewards[-10:])
+            if episode % 5 == 0:
+                avg_reward = np.mean(episode_rewards[-5:]) if episode_rewards else 0
                 logger.info(f"Episode {episode}/{episodes}, Avg Reward: {avg_reward:.4f}, "
                            f"Epsilon: {self.epsilon:.4f}, Sharpe: {metrics.get('sharpe_ratio', 0):.2f}")
         
@@ -1152,9 +1155,9 @@ class FinRLAgent:
         return {
             "episodes": episodes,
             "final_epsilon": self.epsilon,
-            "avg_reward": float(np.mean(episode_rewards)),
-            "best_sharpe": float(max(m.get('sharpe_ratio', 0) for m in episode_metrics)),
-            "best_return": float(max(m.get('total_return', 0) for m in episode_metrics)),
+            "avg_reward": float(np.mean(episode_rewards)) if episode_rewards else 0,
+            "best_sharpe": float(max((m.get('sharpe_ratio', 0) for m in episode_metrics), default=0)),
+            "best_return": float(max((m.get('total_return', 0) for m in episode_metrics), default=0)),
             "training_steps": self.training_steps
         }
 
