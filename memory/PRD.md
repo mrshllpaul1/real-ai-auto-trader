@@ -5,6 +5,51 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ---
 
+## Session Update - Feb 11, 2026 (Latest - Part 3)
+
+### ✅ NEW FEATURE: Dynamic Kraken Pair Loading & Weekly Scheduler
+
+#### 1. Dynamic Kraken Pair Loading
+**Implementation:**
+- Updated `AdaptiveCoinSelector.load_kraken_pairs()` to dynamically fetch all tradeable USD pairs
+- First checks database (from KrakenUniverseManager) for cached pairs
+- Falls back to direct Kraken API call if database is empty
+- Filters to USD/USDT/USDC quote pairs only
+- **Result: Coin universe expanded from 83 to 696 coins**
+
+#### 2. Weekly Coin Selection Scheduler
+**New Service:** `services/weekly_selection_scheduler.py`
+- Runs automatically every Sunday at midnight UTC
+- Selects 10 main coins + 1 gem coin based on market conditions
+- Configurable via API (day, hour, coin counts)
+- Stores selection history in MongoDB
+- Creates alerts when new selections are ready
+
+**API Endpoints:**
+- `GET /api/weekly-scheduler/status` - Get scheduler status
+- `POST /api/weekly-scheduler/run-now` - Manual trigger
+- `GET /api/weekly-scheduler/latest-selection` - Get current selection
+- `PUT /api/weekly-scheduler/config` - Update settings
+- `GET /api/weekly-scheduler/history` - Selection history
+
+**Frontend:**
+- New `WeeklySchedulerSection` component in Auto Trading tab
+- Shows next run time, universe size, latest selection
+- "Run Now" button for manual selection
+- Displays selected coins with scores and market condition
+
+**Files Created:**
+- `backend/services/weekly_selection_scheduler.py`
+- `backend/routes/weekly_scheduler.py`
+
+**Files Modified:**
+- `backend/services/adaptive_coin_selector.py` - Dynamic pair loading
+- `backend/init/services.py` - Scheduler initialization
+- `backend/init/routes.py` - Route registration
+- `frontend/src/pages/AutoTrading.jsx` - WeeklySchedulerSection component
+
+---
+
 ## Session Update - Feb 11, 2026 (Latest - Part 2)
 
 ### ✅ FIXED: Train/Test Buttons, Confidence Display, AI Coin Selection, Auto Tab
