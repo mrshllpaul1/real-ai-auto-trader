@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_URL = window.__RUNTIME_CONFIG__?.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+const API_URL = window.__RUNTIME_CONFIG__?.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_BACKEND_URL;
 const WS_URL = API_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
 
 // Mobile-optimized Tethys Dashboard for Galaxy S22 (1080x2340)
@@ -26,47 +26,66 @@ const TethysDashboard = () => {
   const [expandedCard, setExpandedCard] = useState(null);
   const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef(null);
+  const reconnectAttemptsRef = useRef(0);
+  const maxReconnectAttempts = 3;
 
   // WebSocket connection for real-time training updates
   useEffect(() => {
     const connectWebSocket = () => {
+      if (!WS_URL) {
+        console.warn('[TethysDashboard] No WebSocket URL configured, using polling');
+        return;
+      }
+      
       try {
         const ws = new WebSocket(`${WS_URL}/api/tethys-train/ws/progress`);
         
         ws.onopen = () => {
           setWsConnected(true);
-          console.log('Training WebSocket connected');
+          reconnectAttemptsRef.current = 0;
+          console.log('[TethysDashboard] WebSocket connected');
         };
         
         ws.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          if (data.type === 'episode' || data.type === 'status') {
-            setTrainingData(prev => ({
-              ...prev,
-              training: {
-                ...prev?.training,
-                ...data.data,
-                recent_history: data.type === 'episode' 
-                  ? [...(prev?.training?.recent_history || []).slice(-19), data.data]
-                  : prev?.training?.recent_history
-              }
-            }));
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'episode' || data.type === 'status') {
+              setTrainingData(prev => ({
+                ...prev,
+                training: {
+                  ...prev?.training,
+                  ...data.data,
+                  recent_history: data.type === 'episode' 
+                    ? [...(prev?.training?.recent_history || []).slice(-19), data.data]
+                    : prev?.training?.recent_history
+                }
+              }));
+            }
+          } catch (e) {
+            console.warn('[TethysDashboard] Error parsing WebSocket message');
           }
         };
         
-        ws.onclose = () => {
+        ws.onclose = (event) => {
           setWsConnected(false);
-          // Attempt reconnect after 5 seconds
-          setTimeout(connectWebSocket, 5000);
+          // Only reconnect if not normal closure and under max attempts
+          if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
+            reconnectAttemptsRef.current++;
+            const delay = Math.min(5000 * reconnectAttemptsRef.current, 15000);
+            setTimeout(connectWebSocket, delay);
+          }
         };
         
         ws.onerror = () => {
+          if (reconnectAttemptsRef.current === 0) {
+            console.warn('[TethysDashboard] WebSocket unavailable, using polling fallback');
+          }
           setWsConnected(false);
         };
         
         wsRef.current = ws;
       } catch (e) {
-        console.log('WebSocket not available');
+        console.warn('[TethysDashboard] WebSocket not available, using polling');
       }
     };
     
@@ -74,7 +93,7 @@ const TethysDashboard = () => {
     
     return () => {
       if (wsRef.current) {
-        wsRef.current.close();
+        wsRef.current.close(1000, 'Component unmounting');
       }
     };
   }, []);
