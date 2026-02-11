@@ -27,13 +27,22 @@ const TethysDashboard = () => {
   const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef(null);
   const reconnectAttemptsRef = useRef(0);
+  const wsInitializedRef = useRef(false);
   const maxReconnectAttempts = 3;
 
-  // WebSocket connection for real-time training updates
+  // WebSocket connection for real-time training updates - with graceful fallback
   useEffect(() => {
     const connectWebSocket = () => {
       if (!WS_URL) {
-        console.warn('[TethysDashboard] No WebSocket URL configured, using polling');
+        if (!wsInitializedRef.current) {
+          console.info('[TethysDashboard] No WebSocket URL, using polling mode');
+          wsInitializedRef.current = true;
+        }
+        return;
+      }
+      
+      // Skip if already at max attempts
+      if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
         return;
       }
       
@@ -43,7 +52,7 @@ const TethysDashboard = () => {
         ws.onopen = () => {
           setWsConnected(true);
           reconnectAttemptsRef.current = 0;
-          console.log('[TethysDashboard] WebSocket connected');
+          console.info('[TethysDashboard] WebSocket connected');
         };
         
         ws.onmessage = (event) => {
@@ -62,30 +71,36 @@ const TethysDashboard = () => {
               }));
             }
           } catch (e) {
-            console.warn('[TethysDashboard] Error parsing WebSocket message');
+            // Silent parse error
           }
         };
         
         ws.onclose = (event) => {
           setWsConnected(false);
-          // Only reconnect if not normal closure and under max attempts
           if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
             reconnectAttemptsRef.current++;
             const delay = Math.min(5000 * reconnectAttemptsRef.current, 15000);
             setTimeout(connectWebSocket, delay);
+          } else if (reconnectAttemptsRef.current >= maxReconnectAttempts && !wsInitializedRef.current) {
+            console.info('[TethysDashboard] WebSocket unavailable, using polling mode');
+            wsInitializedRef.current = true;
           }
         };
         
         ws.onerror = () => {
-          if (reconnectAttemptsRef.current === 0) {
-            console.warn('[TethysDashboard] WebSocket unavailable, using polling fallback');
+          if (!wsInitializedRef.current && reconnectAttemptsRef.current === 0) {
+            console.info('[TethysDashboard] WebSocket unavailable, falling back to polling');
+            wsInitializedRef.current = true;
           }
           setWsConnected(false);
         };
         
         wsRef.current = ws;
       } catch (e) {
-        console.warn('[TethysDashboard] WebSocket not available, using polling');
+        if (!wsInitializedRef.current) {
+          console.info('[TethysDashboard] WebSocket not available, using polling');
+          wsInitializedRef.current = true;
+        }
       }
     };
     
