@@ -16,7 +16,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Any
 
 # Backend URL configuration
-BASE_URL = "https://fast-analyzer.preview.emergentagent.com/api"
+BASE_URL = "https://code-improver-71.preview.emergentagent.com/api"
 
 class KrakenIntegrationTester:
     def __init__(self):

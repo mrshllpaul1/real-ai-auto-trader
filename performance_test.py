@@ -11,7 +11,7 @@ from typing import Dict, List, Tuple
 import statistics
 
 # Backend URL from environment configuration
-BASE_URL = "https://fast-analyzer.preview.emergentagent.com/api"
+BASE_URL = "https://code-improver-71.preview.emergentagent.com/api"
 
 class PerformanceTester:
     def __init__(self):
