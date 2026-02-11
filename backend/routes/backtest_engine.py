@@ -2,6 +2,7 @@
 Backtesting Engine API Routes
 ==============================
 Comprehensive backtesting engine for testing trading strategies on historical data.
+Uses REAL Kraken OHLC data when available, falls back to synthetic data only when necessary.
 """
 
 import logging
@@ -12,6 +13,7 @@ from datetime import datetime, timezone, timedelta
 import uuid
 import random
 import math
+from httpx import AsyncClient
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +22,93 @@ router = APIRouter(prefix="/backtest-engine", tags=["Backtesting Engine"])
 # Global state
 _db = None
 _running_backtests = {}
+
+# Kraken pair mapping for OHLC
+KRAKEN_OHLC_PAIRS = {
+    'BTC': 'XXBTZUSD',
+    'ETH': 'XETHZUSD',
+    'SOL': 'SOLUSD',
+    'ADA': 'ADAUSD',
+    'DOT': 'DOTUSD',
+    'AVAX': 'AVAXUSD',
+    'LINK': 'LINKUSD',
+    'MATIC': 'MATICUSD',
+    'UNI': 'UNIUSD',
+    'LTC': 'XLTCZUSD',
+    'DOGE': 'XDGUSD',
+    'XRP': 'XXRPZUSD',
+    'ATOM': 'ATOMUSD',
+    'NEAR': 'NEARUSD',
+    'APT': 'APTUSD',
+    'SUI': 'SUIUSD',
+    'ARB': 'ARBUSD',
+    'OP': 'OPUSD',
+    'SHIB': 'SHIBUSD',
+}
+
+
+async def _fetch_real_ohlc_data(symbol: str, days: int) -> List[float]:
+    """
+    Fetch REAL historical OHLC data from Kraken API.
+    Returns list of closing prices for the requested days.
+    
+    Args:
+        symbol: Asset symbol (e.g., 'BTC', 'ETH')
+        days: Number of days of historical data needed
+        
+    Returns:
+        List of closing prices, or empty list if unavailable
+    """
+    pair = KRAKEN_OHLC_PAIRS.get(symbol.upper())
+    if not pair:
+        # Try constructing the pair
+        pair = f"{symbol.upper()}USD"
+    
+    # Calculate interval - Kraken supports: 1, 5, 15, 30, 60, 240, 1440 (daily), 10080 (weekly)
+    interval = 1440  # Daily candles
+    
+    try:
+        async with AsyncClient(timeout=15.0) as client:
+            response = await client.get(
+                "https://api.kraken.com/0/public/OHLC",
+                params={
+                    "pair": pair,
+                    "interval": interval
+                },
+                headers={"User-Agent": "CryptoTradingBot/1.0"}
+            )
+            data = response.json()
+            
+            if data.get("error") and len(data["error"]) > 0:
+                logger.warning(f"Kraken OHLC error for {pair}: {data['error']}")
+                return []
+            
+            result = data.get("result", {})
+            # Remove 'last' key and get the OHLC data
+            result.pop('last', None)
+            
+            if not result:
+                return []
+            
+            # Get the first (and only) pair's data
+            ohlc_data = list(result.values())[0] if result else []
+            
+            if not ohlc_data:
+                return []
+            
+            # Extract closing prices (index 4 in Kraken OHLC: time, open, high, low, close, vwap, volume, count)
+            prices = [float(candle[4]) for candle in ohlc_data]
+            
+            # Return most recent 'days' of data
+            if len(prices) > days:
+                prices = prices[-days:]
+            
+            logger.info(f"Fetched {len(prices)} REAL OHLC data points for {symbol}")
+            return prices
+            
+    except Exception as e:
+        logger.error(f"Failed to fetch OHLC data for {symbol}: {e}")
+        return []
 
 
 def set_db(db):
