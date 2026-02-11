@@ -464,8 +464,8 @@ async def train_fast_parallel(
         historical_trainer = HistoricalTrainer(db)
         enhanced_trainer = EnhancedHistoricalTrainer(db)
         
-        # Get coins with priority ordering
-        all_coins = get_training_coins()
+        # Get coins with priority ordering (await async function)
+        all_coins = await get_training_coins()
         priority_set = set(request.priority_coins)
         priority_coins = [c for c in request.priority_coins if c in all_coins]
         other_coins = [c for c in all_coins if c not in priority_set]
