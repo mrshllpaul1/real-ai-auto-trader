@@ -91,7 +91,10 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
+    clearAllCacheAndRefresh();
+    toast.info('Refreshing data...');
     await fetchAllData();
+    toast.success('Data refreshed!');
   };
 
   const handleTrain = async (engine) => {
