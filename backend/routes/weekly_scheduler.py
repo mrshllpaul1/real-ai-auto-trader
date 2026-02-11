@@ -30,6 +30,14 @@ class SchedulerConfigUpdate(BaseModel):
     main_coins_count: Optional[int] = None
     gem_coins_count: Optional[int] = None
     auto_execute: Optional[bool] = None
+    paper_trade: Optional[bool] = None
+    position_size_pct: Optional[float] = None
+    use_isolated_budget: Optional[bool] = None
+
+
+class ExecuteRequest(BaseModel):
+    selection_id: Optional[str] = None
+    paper_trade: Optional[bool] = None
 
 
 @router.get("/status")
