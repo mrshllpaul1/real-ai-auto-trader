@@ -914,6 +914,8 @@ def get_rainbow_agent(
     """Get or create Rainbow DQN agent"""
     global _rainbow_agent
     if _rainbow_agent is None:
+        # Ensure TensorFlow classes are created
+        _create_tf_classes()
         _rainbow_agent = RainbowDQN(
             state_dim=state_dim,
             action_dim=action_dim,
