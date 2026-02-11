@@ -185,6 +185,35 @@ const TrainingProgress = ({
     return `${mins}m ${secs}s`;
   };
 
+  const handleStopTask = async (taskId) => {
+    try {
+      await api.post(`/training-progress/stop/${taskId}`);
+      toast.success('Training stopped', {
+        description: 'The training task has been stopped gracefully'
+      });
+      // Remove task from activeTasks
+      setActiveTasks(prev => prev.filter(t => t.task_id !== taskId));
+    } catch (error) {
+      toast.error('Failed to stop training', {
+        description: error.response?.data?.detail || 'Please try again'
+      });
+    }
+  };
+
+  const handleStopAllTasks = async () => {
+    try {
+      await api.post('/training-progress/stop-all');
+      toast.success('All training stopped', {
+        description: 'All training tasks have been stopped'
+      });
+      setActiveTasks([]);
+    } catch (error) {
+      toast.error('Failed to stop training', {
+        description: error.response?.data?.detail || 'Please try again'
+      });
+    }
+  };
+
   const renderTask = (t) => (
     <div 
       key={t.task_id}
