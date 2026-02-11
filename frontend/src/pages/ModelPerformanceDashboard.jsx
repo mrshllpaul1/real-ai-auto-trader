@@ -285,7 +285,7 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
                     <div>
                       <p className="text-gray-400 text-sm">Models Trained</p>
                       <p className="text-2xl font-bold text-white">
-                        {modelAccuracyData.filter(m => m.status === 'active').length}/6
+                        {modelAccuracyData.filter(m => m.status === 'active').length}/{modelAccuracyData.length}
                       </p>
                     </div>
                     <div className="p-3 rounded-full bg-cyan-500/20">
