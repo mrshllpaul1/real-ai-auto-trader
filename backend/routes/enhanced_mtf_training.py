@@ -343,29 +343,73 @@ async def train_all_kraken(
     
     Note: This operation may take several minutes to complete.
     """
+    from services.training_progress_manager import get_progress_manager
+    import uuid
+    
     service = get_service()
     if not service:
         raise HTTPException(status_code=500, detail="Enhanced MTF Training service not initialized")
     
+    # Create unique task ID
+    task_id = f"mtf-kraken-{uuid.uuid4().hex[:8]}"
+    progress_manager = get_progress_manager()
+    
     # Get all Kraken coins
     all_coins = await service.fetch_all_kraken_coins()
     
-    logger.info(f"🌐 Starting training on {len(all_coins)} Kraken coins...")
-    
-    # Run training
-    result = await service.train_enhanced_model(
-        symbols=all_coins,
-        epochs=epochs,
-        download_data=download_data
+    # Create progress task
+    progress_manager.create_task(
+        task_id=task_id,
+        task_type="mtf-train-all-kraken",
+        total_items=len(all_coins)
     )
     
-    return result
+    logger.info(f"🌐 Starting training on {len(all_coins)} Kraken coins...")
+    
+    async def train_with_progress():
+        try:
+            progress_manager.start_task(task_id, f"Training on {len(all_coins)} Kraken coins...")
+            
+            # Run training with progress updates
+            result = await service.train_enhanced_model(
+                symbols=all_coins,
+                epochs=epochs,
+                download_data=download_data,
+                progress_callback=lambda p, m: progress_manager.update_progress(task_id, progress=p, message=m)
+            )
+            
+            progress_manager.complete_task(
+                task_id,
+                result={"accuracy": result.get("accuracy_pct"), "coins": len(all_coins)},
+                message=f"Completed training on {len(all_coins)} coins"
+            )
+        except Exception as e:
+            progress_manager.fail_task(task_id, str(e))
+    
+    if background_tasks:
+        background_tasks.add_task(train_with_progress)
+        return {
+            "task_id": task_id,
+            "status": "started",
+            "message": f"Training on {len(all_coins)} Kraken coins in background",
+            "progress_endpoint": f"/api/training-progress/task/{task_id}",
+            "coins_count": len(all_coins)
+        }
+    else:
+        # Run synchronously for now (original behavior)
+        result = await service.train_enhanced_model(
+            symbols=all_coins,
+            epochs=epochs,
+            download_data=download_data
+        )
+        return result
 
 
 @router.post("/train-fast")
 async def train_fast(
     epochs: int = 100,
-    batch_size: int = 50
+    batch_size: int = 50,
+    background_tasks: BackgroundTasks = None
 ):
     """
     Fast training on ALL Kraken coins using sentiment features only.
@@ -375,18 +419,57 @@ async def train_fast(
     
     Typically completes in under 2 minutes for 600+ coins.
     """
+    from services.training_progress_manager import get_progress_manager
+    import uuid
+    
     service = get_service()
     if not service:
         raise HTTPException(status_code=500, detail="Enhanced MTF Training service not initialized")
     
+    task_id = f"mtf-fast-{uuid.uuid4().hex[:8]}"
+    progress_manager = get_progress_manager()
+    
     logger.info(f"⚡ Starting fast sentiment training...")
     
+    async def train_with_progress():
+        try:
+            progress_manager.create_task(task_id, "mtf-train-fast", total_steps=3)
+            progress_manager.start_task(task_id, "Initializing fast training...")
+            
+            progress_manager.update_progress(task_id, progress=10, message="Fetching coin data...")
+            
+            result = await service.train_sentiment_only(
+                symbols=["all"],
+                epochs=epochs,
+                batch_size=batch_size,
+                progress_callback=lambda p, m: progress_manager.update_progress(task_id, progress=p, message=m)
+            )
+            
+            progress_manager.complete_task(
+                task_id,
+                result={"accuracy": result.get("accuracy_pct"), "symbols": result.get("symbols_trained")},
+                message="Fast training completed"
+            )
+            return result
+        except Exception as e:
+            progress_manager.fail_task(task_id, str(e))
+            raise
+    
+    if background_tasks:
+        background_tasks.add_task(train_with_progress)
+        return {
+            "task_id": task_id,
+            "status": "started",
+            "message": "Fast sentiment training started in background",
+            "progress_endpoint": f"/api/training-progress/task/{task_id}"
+        }
+    
+    # Run synchronously
     result = await service.train_sentiment_only(
         symbols=["all"],
         epochs=epochs,
         batch_size=batch_size
     )
-    
     return result
 
 
