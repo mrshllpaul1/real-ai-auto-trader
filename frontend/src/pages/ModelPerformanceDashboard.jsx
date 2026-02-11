@@ -166,15 +166,15 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
     }
   };
 
-  // Prepare data for charts - use actual training status
-  // Now with TensorFlow available, all 6 models can be trained
-  const historicalTrained = trainingStatus?.trained || false;
-  const gemMlDlTrained = gemMlDlStatus?.is_trained || false;
-  const mtfTrained = mtfStatus?.accuracy > 0 || mtfStatus?.status === 'completed' || false;
-  const ensembleTrained = intelligenceStatus?.models?.ensemble?.trained || false;
-  const timeSeriesTrained = intelligenceStatus?.models?.time_series?.trained || 
+  // Prepare data for charts - use actual training status from database
+  // Models persist their trained state
+  const historicalTrained = modelsStatus?.historical?.is_trained || trainingStatus?.trained || false;
+  const gemMlDlTrained = modelsStatus?.gem_ml_dl?.is_trained || gemMlDlStatus?.is_trained || false;
+  const mtfTrained = modelsStatus?.mtf?.is_trained || mtfStatus?.accuracy > 0 || mtfStatus?.status === 'completed' || false;
+  const ensembleTrained = modelsStatus?.xgboost?.is_trained || intelligenceStatus?.models?.ensemble?.trained || false;
+  const timeSeriesTrained = modelsStatus?.lstm_gru?.is_trained || intelligenceStatus?.models?.time_series?.trained || 
                             intelligenceStatus?.models?.time_series?.lstm || false;
-  const finrlTrained = intelligenceStatus?.models?.finrl_agent?.trained || false;
+  const finrlTrained = modelsStatus?.finrl?.is_trained || intelligenceStatus?.models?.finrl_agent?.trained || false;
   
   const modelAccuracyData = [
     { 
