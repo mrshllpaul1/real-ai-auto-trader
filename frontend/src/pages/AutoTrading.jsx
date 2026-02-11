@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Zap, Play, Square, Smartphone, TrendingUp, AlertCircle } from 'lucide-react';
+import { Zap, Play, Square, Smartphone, TrendingUp, AlertCircle, Calendar, Clock, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
@@ -13,6 +13,194 @@ import AIPortfolioSection from '../components/AIPortfolioSection';
 import AICoinSelectionSection from '../components/AICoinSelectionSection';
 import AutomatedTradingSection from '../components/AutomatedTradingSection';
 import { useTradingMode } from '../context/TradingModeContext';
+
+// Weekly Scheduler Section Component
+const WeeklySchedulerSection = () => {
+  const [schedulerStatus, setSchedulerStatus] = useState(null);
+  const [latestSelection, setLatestSelection] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState(false);
+
+  useEffect(() => {
+    loadSchedulerData();
+  }, []);
+
+  const loadSchedulerData = async () => {
+    try {
+      const [statusRes, selectionRes] = await Promise.allSettled([
+        api.get('/weekly-scheduler/status'),
+        api.get('/weekly-scheduler/latest-selection')
+      ]);
+      
+      if (statusRes.status === 'fulfilled') setSchedulerStatus(statusRes.value.data);
+      if (selectionRes.status === 'fulfilled' && !selectionRes.value.data.message) {
+        setLatestSelection(selectionRes.value.data);
+      }
+    } catch (error) {
+      console.error('Error loading scheduler data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const runSelectionNow = async () => {
+    try {
+      setRunning(true);
+      toast.loading('Running coin selection...');
+      const res = await api.post('/weekly-scheduler/run-now');
+      toast.dismiss();
+      
+      if (res.data.success) {
+        toast.success(`Selected ${res.data.total_selected} coins for the week!`);
+        setLatestSelection(res.data);
+        await loadSchedulerData();
+      }
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Failed to run selection');
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const formatNextRun = (dateStr) => {
+    if (!dateStr) return 'Not scheduled';
+    const date = new Date(dateStr);
+    return date.toLocaleString('en-US', { 
+      weekday: 'long', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short'
+    });
+  };
+
+  if (loading) {
+    return (
+      <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
+        <CardContent className="py-8">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-[#00FF94]" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="bg-[#0A0A0A] border-[#1F1F1F] border-l-4 border-l-[#06b6d4]" data-testid="weekly-scheduler-card">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-2xl font-heading flex items-center gap-3">
+              <Calendar className="text-[#06b6d4]" size={28} />
+              Weekly Coin Scheduler
+              <Badge className={`${schedulerStatus?.running ? 'bg-[#00FF94]/20 text-[#00FF94]' : 'bg-[#666]/20 text-[#666]'} border-transparent`}>
+                {schedulerStatus?.running ? 'ACTIVE' : 'INACTIVE'}
+              </Badge>
+            </CardTitle>
+            <CardDescription>
+              Automatically select top 10 coins + 1 gem every Sunday at midnight UTC
+            </CardDescription>
+          </div>
+          <Button
+            onClick={runSelectionNow}
+            disabled={running}
+            className="bg-[#06b6d4] hover:bg-[#06b6d4]/80 text-black"
+            data-testid="run-selection-btn"
+          >
+            {running ? (
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Play className="mr-2 h-4 w-4" />
+            )}
+            Run Now
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Scheduler Status */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-[#121212] rounded-lg p-4">
+            <div className="text-xs text-[#666] mb-1">Next Scheduled Run</div>
+            <div className="flex items-center gap-2">
+              <Clock size={16} className="text-[#06b6d4]" />
+              <span className="text-white font-medium">{formatNextRun(schedulerStatus?.next_run)}</span>
+            </div>
+          </div>
+          <div className="bg-[#121212] rounded-lg p-4">
+            <div className="text-xs text-[#666] mb-1">Coins to Select</div>
+            <div className="text-white font-medium">
+              {schedulerStatus?.config?.main_coins_count || 10} Main + {schedulerStatus?.config?.gem_coins_count || 1} Gem
+            </div>
+          </div>
+          <div className="bg-[#121212] rounded-lg p-4">
+            <div className="text-xs text-[#666] mb-1">Universe Size</div>
+            <div className="text-white font-medium text-[#00FF94]">
+              {latestSelection?.universe_size || '600+'} Kraken Coins
+            </div>
+          </div>
+        </div>
+
+        {/* Latest Selection */}
+        {latestSelection && latestSelection.main_coins && (
+          <div className="bg-[#121212] rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-[#00FF94]" />
+                <span className="text-white font-medium">Latest Selection</span>
+              </div>
+              <Badge className={`${
+                latestSelection.market_condition === 'bullish' ? 'bg-[#00FF94]/20 text-[#00FF94]' :
+                latestSelection.market_condition === 'bearish' ? 'bg-[#FF4444]/20 text-[#FF4444]' :
+                'bg-[#FFB800]/20 text-[#FFB800]'
+              } border-transparent`}>
+                {latestSelection.market_condition?.toUpperCase() || 'NEUTRAL'}
+              </Badge>
+            </div>
+            
+            {/* Main Coins */}
+            <div className="mb-3">
+              <div className="text-xs text-[#666] mb-2">Main Coins ({latestSelection.main_coins?.length})</div>
+              <div className="flex flex-wrap gap-2">
+                {latestSelection.main_coins?.slice(0, 10).map((coin, idx) => (
+                  <div key={idx} className="bg-[#1F1F1F] rounded px-2 py-1 flex items-center gap-1">
+                    <span className="text-xs text-[#06b6d4] font-bold">{idx + 1}</span>
+                    <span className="text-sm text-white">{coin.symbol || coin.coin_id}</span>
+                    <span className="text-xs text-[#666]">{coin.total_score?.toFixed(0)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Gem Coins */}
+            {latestSelection.gem_coins?.length > 0 && (
+              <div>
+                <div className="text-xs text-[#666] mb-2">Gem Coins 💎</div>
+                <div className="flex flex-wrap gap-2">
+                  {latestSelection.gem_coins.map((coin, idx) => (
+                    <div key={idx} className="bg-[#9D00FF]/10 border border-[#9D00FF]/30 rounded px-2 py-1 flex items-center gap-1">
+                      <span className="text-sm text-[#9D00FF] font-medium">{coin.symbol || coin.coin_id}</span>
+                      <span className="text-xs text-[#666]">{coin.total_score?.toFixed(0) || coin.gem_score?.toFixed(0)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {!latestSelection && (
+          <div className="bg-[#121212] rounded-lg p-6 text-center">
+            <Calendar size={32} className="mx-auto text-[#666] mb-2" />
+            <p className="text-[#666]">No selection yet. Click "Run Now" to select coins for this week.</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
 const AutoTrading = ({ embedded = false }) => {
   // Use global trading mode context
