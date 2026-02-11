@@ -318,8 +318,14 @@ const CommandCenter = () => {
   const [orchestratorStatus, setOrchestratorStatus] = useState(null);
   const [upgradesStatus, setUpgradesStatus] = useState(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (forceRefresh = false) => {
     try {
+      // Clear cache if forcing refresh
+      if (forceRefresh) {
+        clearAllCacheAndRefresh();
+        toast.info('Refreshing data...');
+      }
+      
       const [portfolioRes, krakenRes, pricesRes, growthRes, orchRes, upgradesRes] = await Promise.allSettled([
         tradingAPI.getPortfolio(),
         tradingAPI.getKrakenPortfolio(),
@@ -335,8 +341,15 @@ const CommandCenter = () => {
       if (growthRes.status === 'fulfilled') setGrowthStatus(growthRes.value.data);
       if (orchRes.status === 'fulfilled') setOrchestratorStatus(orchRes.value.data);
       if (upgradesRes.status === 'fulfilled') setUpgradesStatus(upgradesRes.value.data);
+      
+      if (forceRefresh) {
+        toast.success('Data refreshed!');
+      }
     } catch (error) {
       console.error('Error loading data:', error);
+      if (forceRefresh) {
+        toast.error('Failed to refresh data');
+      }
     } finally {
       setLoading(false);
     }
