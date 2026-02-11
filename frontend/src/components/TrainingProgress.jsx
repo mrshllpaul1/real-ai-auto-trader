@@ -226,9 +226,20 @@ const TrainingProgress = ({
             {t.task_type?.replace(/-/g, ' ') || 'Training'}
           </span>
         </div>
-        <span className="text-xs text-gray-400">
-          {formatDuration(t.duration_seconds)}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-400">
+            {formatDuration(t.duration_seconds)}
+          </span>
+          {t.status === 'running' && (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleStopTask(t.task_id); }}
+              className="p-1 rounded hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors"
+              title="Stop this training"
+            >
+              <Square className="w-3 h-3" />
+            </button>
+          )}
+        </div>
       </div>
       
       {t.status === 'running' && (
@@ -263,6 +274,12 @@ const TrainingProgress = ({
       {t.status === 'failed' && (
         <div className="text-xs text-red-400">
           ✗ {t.error || 'Task failed'}
+        </div>
+      )}
+      
+      {t.status === 'stopped' && (
+        <div className="text-xs text-orange-400">
+          ⏹ {t.message || 'Training stopped'}
         </div>
       )}
     </div>
