@@ -7,6 +7,45 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ## Session Update - Feb 11, 2026 (Latest - Part 3)
 
+### ✅ NEW: Settings for Blockchain API & Social Trading Platform
+
+**Added to Settings Page:**
+
+1. **Blockchain API Tab** (for DeFi data)
+   - Alchemy integration (input + link to get free key)
+   - Moralis integration (input + link to get free key)
+   - Infura integration
+   - QuickNode integration
+   - Explains: "DeFi Hub currently shows placeholder data. Connect to enable real wallet balances, DeFi positions, NFTs, and transaction history."
+
+2. **Copy Trading Tab** (for social trading)
+   - Platform selector dropdown with:
+     - eToro - Popular Social Trading
+     - ZuluTrade - Professional Copy Trading
+     - NAGA - Social Investing
+     - 3Commas - Crypto Copy Trading
+     - Shrimpy - Portfolio Automation
+     - Custom API Integration
+   - API Key / Secret inputs
+   - Platform-specific setup instructions
+   - Connection status indicator
+
+**Backend API Endpoints:**
+- `POST /api/integrations/blockchain/save` - Save blockchain API keys
+- `GET /api/integrations/blockchain/status` - Check blockchain integration status
+- `POST /api/integrations/social-trading/connect` - Connect social platform
+- `GET /api/integrations/social-trading/status` - Check social platform status
+- `GET /api/integrations/status` - Get all integration statuses
+
+**Files Created:**
+- `backend/routes/integrations.py` - Integration API endpoints
+
+**Files Modified:**
+- `frontend/src/pages/Settings.jsx` - Added Blockchain API and Copy Trading tabs
+- `backend/init/routes.py` - Registered integrations router
+
+---
+
 ### ✅ DATA AUDIT & FIX: Backtest Now Uses Real Kraken OHLC Data
 
 **Issue:** Backtest engine was generating synthetic price data instead of real historical data.
