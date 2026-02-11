@@ -130,6 +130,7 @@ const EnhancedMTFPredictions = ({ embedded = false }) => {
   const [fearGreed, setFearGreed] = useState({ value: 50, classification: 'Neutral' });
   const [modelInfo, setModelInfo] = useState(null);
   const [isTraining, setIsTraining] = useState(false);
+  const [trainingTaskId, setTrainingTaskId] = useState(null);
   const [isPredicting, setIsPredicting] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
