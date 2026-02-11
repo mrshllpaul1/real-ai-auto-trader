@@ -78,13 +78,16 @@ const FloatingCommandHub = () => {
     const msgLower = message.toLowerCase();
     
     try {
-      // Navigation
-      if (msgLower.includes('go to') || msgLower.includes('open') || msgLower.includes('show')) {
+      // Navigation commands
+      if (msgLower.includes('go to') || msgLower.includes('open') || msgLower.includes('show') || msgLower.includes('navigate')) {
         const routes = {
-          'dashboard': '/', 'growth': '/growth', 'journal': '/journal',
+          'dashboard': '/', 'command center': '/', 'home': '/',
+          'growth': '/growth', 'journal': '/journal',
           'scanner': '/scanner', 'trading': '/trading', 'analytics': '/analytics',
           'tethys': '/tethys', 'news': '/news', 'settings': '/settings',
-          'portfolio': '/portfolio-dashboard', 'positions': '/positions'
+          'portfolio': '/portfolio-dashboard', 'positions': '/positions',
+          'ai': '/ai', 'ai hub': '/ai', 'backtest': '/backtest',
+          'defi': '/defi', 'model': '/model-performance'
         };
         for (const [key, path] of Object.entries(routes)) {
           if (msgLower.includes(key)) {
@@ -96,19 +99,134 @@ const FloatingCommandHub = () => {
         }
       }
       
+      // Training commands
+      if (msgLower.includes('train')) {
+        // Train all models
+        if (msgLower.includes('all') || msgLower.includes('everything')) {
+          setCmdMessages(prev => [...prev, { type: 'ai', content: '🧠 Starting full AI training...' }]);
+          const res = await api.post('/training/train-all');
+          setCmdMessages(prev => [...prev, { 
+            type: 'ai', 
+            content: `✅ **Training Started!**\n• Task: ${res.data.task_id}\n• Coins: ${res.data.coin_count || 77}\n• Check Training Progress panel for updates.`
+          }]);
+          return;
+        }
+        
+        // Fast training
+        if (msgLower.includes('fast') || msgLower.includes('quick')) {
+          setCmdMessages(prev => [...prev, { type: 'ai', content: '⚡ Starting fast parallel training...' }]);
+          const res = await api.post('/training/train-fast', { batch_size: 10, phases: ["historical", "technical", "gems"] });
+          setCmdMessages(prev => [...prev, { 
+            type: 'ai', 
+            content: `✅ **Fast Training Started!**\n• Mode: Parallel (3-5x faster)\n• Task: ${res.data.task_id}\n• Check Training Progress panel.`
+          }]);
+          return;
+        }
+        
+        // Train specific model
+        if (msgLower.includes('ml') || msgLower.includes('dl') || msgLower.includes('gem')) {
+          setCmdMessages(prev => [...prev, { type: 'ai', content: '🔬 Starting ML/DL gem model training...' }]);
+          const res = await api.post('/gems/ml-dl/train', {});
+          setCmdMessages(prev => [...prev, { 
+            type: 'ai', 
+            content: `✅ **ML/DL Training Started!**\n• Task: ${res.data.task_id || 'gem-training'}\n• Models: RandomForest, GradientBoosting, LSTM, GRU, etc.`
+          }]);
+          return;
+        }
+        
+        // Train single coin
+        const coinMatch = msgLower.match(/train\s+(bitcoin|ethereum|solana|cardano|polkadot|avalanche|chainlink)/);
+        if (coinMatch) {
+          const coin = coinMatch[1];
+          setCmdMessages(prev => [...prev, { type: 'ai', content: `🎯 Training models for ${coin}...` }]);
+          const res = await api.post('/training/train-single', { coin, model_type: 'all' });
+          setCmdMessages(prev => [...prev, { 
+            type: 'ai', 
+            content: `✅ **Single Coin Training Started!**\n• Coin: ${coin}\n• Task: ${res.data.task_id}`
+          }]);
+          return;
+        }
+        
+        // Generic train command
+        setCmdMessages(prev => [...prev, { type: 'ai', content: '🧠 Starting AI training...' }]);
+        const res = await api.post('/training/train-all');
+        setCmdMessages(prev => [...prev, { 
+          type: 'ai', 
+          content: `✅ Training started! Task: ${res.data.task_id}. Check Training Progress panel.`
+        }]);
+        return;
+      }
+      
+      // Stop training commands
+      if (msgLower.includes('stop') && msgLower.includes('train')) {
+        setCmdMessages(prev => [...prev, { type: 'ai', content: '⏹️ Stopping all training...' }]);
+        const res = await api.post('/training-progress/stop-all');
+        setCmdMessages(prev => [...prev, { 
+          type: 'ai', 
+          content: `✅ Stopped ${res.data.stopped_tasks?.length || 0} training tasks.`
+        }]);
+        return;
+      }
+      
       // Find gems
       if (msgLower.includes('find') && (msgLower.includes('gem') || msgLower.includes('hidden'))) {
+        setCmdMessages(prev => [...prev, { type: 'ai', content: '🔍 Scanning for hidden gems...' }]);
         const res = await api.get('/scanner/scan-quick?limit=5');
         const gems = res.data.results?.slice(0, 3) || [];
         const gemList = gems.map(g => `• **${g.symbol}**: Score ${g.score?.toFixed(0) || 'N/A'}`).join('\n');
         setCmdMessages(prev => [...prev, { 
           type: 'ai', 
-          content: gems.length ? `💎 **Top Gems Found:**\n${gemList}` : 'No gems found right now.'
+          content: gems.length ? `💎 **Top Gems Found:**\n${gemList}` : 'No gems found right now. Try running a full scan.'
         }]);
         return;
       }
       
-      // AI fallback
+      // Status commands
+      if (msgLower.includes('status') || msgLower.includes('health')) {
+        const [tethys, training, ensemble] = await Promise.all([
+          api.get('/tethys/status').catch(() => ({ data: { active: false } })),
+          api.get('/training-progress/active').catch(() => ({ data: { active_count: 0 } })),
+          api.get('/ensemble/status').catch(() => ({ data: { ensemble_initialized: false } }))
+        ]);
+        setCmdMessages(prev => [...prev, { 
+          type: 'ai', 
+          content: `📊 **System Status:**\n• Tethys: ${tethys.data.active ? '✅ Active' : '⏸️ Inactive'}\n• Training: ${training.data.active_count} active tasks\n• Ensemble AI: ${ensemble.data.ensemble_initialized ? '✅ Ready' : '⏸️ Not initialized'}`
+        }]);
+        return;
+      }
+      
+      // Predict commands
+      if (msgLower.includes('predict') || msgLower.includes('forecast')) {
+        const coinMatch = msgLower.match(/(bitcoin|btc|ethereum|eth|solana|sol)/i);
+        const coin = coinMatch ? coinMatch[1].toLowerCase() : 'bitcoin';
+        const coinId = { btc: 'bitcoin', eth: 'ethereum', sol: 'solana' }[coin] || coin;
+        
+        setCmdMessages(prev => [...prev, { type: 'ai', content: `🔮 Getting prediction for ${coinId}...` }]);
+        const res = await api.get(`/enhanced-ai/predict/${coinId}`);
+        setCmdMessages(prev => [...prev, { 
+          type: 'ai', 
+          content: `🔮 **${coinId.toUpperCase()} Prediction:**\n• Signal: ${res.data.signal || 'HOLD'}\n• Confidence: ${(res.data.confidence * 100 || 50).toFixed(0)}%`
+        }]);
+        return;
+      }
+      
+      // Refresh command
+      if (msgLower.includes('refresh') || msgLower.includes('reload')) {
+        setCmdMessages(prev => [...prev, { type: 'ai', content: '🔄 Refreshing data...' }]);
+        window.location.reload();
+        return;
+      }
+      
+      // Help command
+      if (msgLower.includes('help') || msgLower === '?') {
+        setCmdMessages(prev => [...prev, { 
+          type: 'ai', 
+          content: `📚 **Available Commands:**\n\n**Navigation:**\n• "Go to dashboard/trading/ai/settings"\n\n**Training:**\n• "Train all models"\n• "Train fast" (parallel)\n• "Train bitcoin" (single coin)\n• "Stop training"\n\n**Analysis:**\n• "Find gems"\n• "Predict bitcoin"\n• "Status"\n\n**Other:**\n• "Refresh"\n• "Help"`
+        }]);
+        return;
+      }
+      
+      // AI fallback for complex queries
       const response = await api.post('/ai-chat/command', {
         command: message,
         session_id: cmdSessionId
@@ -117,7 +235,7 @@ const FloatingCommandHub = () => {
       setCmdMessages(prev => [...prev, { type: 'ai', content: response.data.response || 'Command processed.' }]);
       
     } catch (error) {
-      setCmdMessages(prev => [...prev, { type: 'ai', content: '❌ Error processing command. Try again.' }]);
+      setCmdMessages(prev => [...prev, { type: 'ai', content: '❌ Error processing command. Try "help" for available commands.' }]);
     } finally {
       setCmdLoading(false);
     }
