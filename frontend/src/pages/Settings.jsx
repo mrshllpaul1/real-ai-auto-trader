@@ -6,10 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import api, { authAPI, riskAPI } from '../services/api';
 import toast from '../utils/toast';
-import { Shield, Key, Settings as SettingsIcon, Bell, Smartphone, Vibrate, Database, Link2, RefreshCcw } from 'lucide-react';
+import { Shield, Key, Settings as SettingsIcon, Bell, Smartphone, Vibrate, Database, Link2, RefreshCcw, Blocks, Users, ExternalLink, CheckCircle, XCircle } from 'lucide-react';
 
 const Settings = ({ embedded = false }) => {
   // Kraken credentials
