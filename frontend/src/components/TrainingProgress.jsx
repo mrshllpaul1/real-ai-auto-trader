@@ -31,10 +31,24 @@ const TrainingProgress = ({
 
   // WebSocket connection
   useEffect(() => {
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 3;
+    
     const connectWebSocket = () => {
-      // Get WebSocket URL from current location
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/api/training-progress/ws`;
+      // Get backend URL from environment and convert to WebSocket URL
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_BACKEND_URL || '';
+      
+      if (!backendUrl) {
+        console.warn('[TrainingProgress] No backend URL configured, using polling fallback');
+        setWsConnected(false);
+        return;
+      }
+      
+      // Convert HTTP(S) URL to WS(S) URL
+      const wsUrl = backendUrl
+        .replace(/^https:/, 'wss:')
+        .replace(/^http:/, 'ws:')
+        + '/api/training-progress/ws';
       
       try {
         const ws = new WebSocket(wsUrl);
@@ -43,6 +57,7 @@ const TrainingProgress = ({
         ws.onopen = () => {
           console.log('[TrainingProgress] WebSocket connected');
           setWsConnected(true);
+          reconnectAttempts = 0; // Reset on successful connection
         };
         
         ws.onmessage = (event) => {
@@ -72,20 +87,31 @@ const TrainingProgress = ({
           }
         };
         
-        ws.onclose = () => {
-          console.log('[TrainingProgress] WebSocket disconnected');
+        ws.onclose = (event) => {
+          console.log('[TrainingProgress] WebSocket disconnected', event.code, event.reason);
           setWsConnected(false);
-          // Reconnect after 3 seconds
-          reconnectTimeoutRef.current = setTimeout(connectWebSocket, 3000);
+          
+          // Only reconnect if not a normal closure and under max attempts
+          if (event.code !== 1000 && reconnectAttempts < maxReconnectAttempts) {
+            reconnectAttempts++;
+            const delay = Math.min(3000 * reconnectAttempts, 10000); // Exponential backoff
+            console.log(`[TrainingProgress] Reconnecting in ${delay}ms (attempt ${reconnectAttempts}/${maxReconnectAttempts})`);
+            reconnectTimeoutRef.current = setTimeout(connectWebSocket, delay);
+          } else if (reconnectAttempts >= maxReconnectAttempts) {
+            console.log('[TrainingProgress] Max reconnect attempts reached, falling back to polling');
+          }
         };
         
         ws.onerror = (error) => {
-          console.error('[TrainingProgress] WebSocket error:', error);
+          // Only log on first attempt to reduce console spam
+          if (reconnectAttempts === 0) {
+            console.warn('[TrainingProgress] WebSocket connection unavailable, using polling fallback');
+          }
           setWsConnected(false);
         };
         
       } catch (e) {
-        console.error('[TrainingProgress] Failed to create WebSocket:', e);
+        console.warn('[TrainingProgress] WebSocket not supported, using polling fallback');
         setWsConnected(false);
       }
     };
@@ -94,7 +120,7 @@ const TrainingProgress = ({
     
     return () => {
       if (wsRef.current) {
-        wsRef.current.close();
+        wsRef.current.close(1000, 'Component unmounting'); // Normal closure
       }
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
