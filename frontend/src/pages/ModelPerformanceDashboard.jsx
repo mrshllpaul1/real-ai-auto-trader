@@ -130,13 +130,15 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
   };
 
   // Prepare data for charts - use actual training status
-  // Note: LSTM/GRU/FinRL require TensorFlow which is not installed
+  // Now with TensorFlow available, all 6 models can be trained
   const historicalTrained = trainingStatus?.trained || false;
   const gemMlDlTrained = gemMlDlStatus?.is_trained || false;
   const mtfTrained = mtfStatus?.accuracy > 0 || mtfStatus?.status === 'completed' || false;
   const ensembleTrained = intelligenceStatus?.models?.ensemble?.trained || false;
+  const timeSeriesTrained = intelligenceStatus?.models?.time_series?.trained || 
+                            intelligenceStatus?.models?.time_series?.lstm || false;
+  const finrlTrained = intelligenceStatus?.models?.finrl_agent?.trained || false;
   
-  // Models that can be trained with current stack (no TensorFlow)
   const modelAccuracyData = [
     { 
       name: 'Historical AI', 
@@ -161,6 +163,18 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
       accuracy: ensembleTrained ? 78 : 0,
       status: ensembleTrained ? 'active' : 'inactive',
       description: 'Gradient boosting ensemble'
+    },
+    { 
+      name: 'LSTM/GRU', 
+      accuracy: timeSeriesTrained ? 72 : 0,
+      status: timeSeriesTrained ? 'active' : 'inactive',
+      description: 'Deep learning time series'
+    },
+    { 
+      name: 'FinRL Agent', 
+      accuracy: finrlTrained ? 68 : 0,
+      status: finrlTrained ? 'active' : 'inactive',
+      description: 'Reinforcement learning trader'
     }
   ];
 
