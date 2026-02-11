@@ -525,7 +525,7 @@ class ModelBenchmarkingService:
     
     async def get_benchmark_history(self, limit: int = 10) -> List[Dict]:
         """Get historical benchmark results"""
-        if not self.db:
+        if self.db is None:
             return []
         
         try:
