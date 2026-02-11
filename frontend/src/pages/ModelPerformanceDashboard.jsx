@@ -287,7 +287,7 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={getChartHeight()}>
                     <BarChart data={modelAccuracyData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                       <XAxis dataKey="name" stroke="#888" fontSize={12} />
@@ -301,6 +301,7 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
                         fill="#06b6d4" 
                         radius={[4, 4, 0, 0]}
                         name="Accuracy %"
+                        isAnimationActive={!isLowPowerDevice()}
                       />
                     </BarChart>
                   </ResponsiveContainer>
