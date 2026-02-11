@@ -695,6 +695,17 @@ async def _init_phase7_wire_dependencies(db):
     await _services['weekly_scheduler'].start()
     logger.info("✅ Weekly Selection Scheduler started")
     
+    # Model Retrain Scheduler (Sunday 3AM UTC)
+    from services.model_retrain_scheduler import get_retrain_scheduler
+    retrain_scheduler = get_retrain_scheduler(db)
+    await retrain_scheduler.start()
+    _services['retrain_scheduler'] = retrain_scheduler
+    logger.info("✅ Model Retrain Scheduler started (Sunday 3AM UTC)")
+    
+    # Wire retrain scheduler routes
+    from routes import model_retrain_scheduler as retrain_scheduler_routes
+    retrain_scheduler_routes.set_dependencies(db, retrain_scheduler)
+    
     # Add scheduled jobs
     await _services['scheduler'].add_stop_loss_job(interval_minutes=5)
     await _services['scheduler'].add_portfolio_snapshot_job(interval_hours=6)
