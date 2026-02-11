@@ -330,7 +330,7 @@ const FloatingCommandHub = () => {
                         value={cmdInput}
                         onChange={(e) => setCmdInput(e.target.value)}
                         placeholder="Type a command..."
-                        className="flex-1 h-9 bg-slate-800/50 border-slate-700/50 text-sm"
+                        className="flex-1 h-9 bg-slate-800/50 border-slate-700/50 text-sm text-white placeholder:text-slate-400"
                         disabled={cmdLoading}
                       />
                       <Button type="submit" size="sm" disabled={cmdLoading} className="h-9 w-9 p-0 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400">
