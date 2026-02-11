@@ -474,6 +474,8 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
                       }`}>
                         {model.status === 'active' ? (
                           <CheckCircle className="w-6 h-6 text-green-400" />
+                        ) : trainingModel === model.modelKey ? (
+                          <RefreshCw className="w-6 h-6 text-yellow-400 animate-spin" />
                         ) : (
                           <XCircle className="w-6 h-6 text-gray-500" />
                         )}
@@ -482,7 +484,35 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
                       <p className="text-gray-400 text-xs mt-1">
                         {model.accuracy > 0 ? `${model.accuracy}%` : 'Not trained'}
                       </p>
-                      <StatusBadge status={model.status} />
+                      <StatusBadge status={trainingModel === model.modelKey ? 'training' : model.status} />
+                      {model.trainedAt && (
+                        <p className="text-gray-500 text-[10px] mt-1">
+                          {new Date(model.trainedAt).toLocaleDateString()}
+                        </p>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className={`mt-2 w-full text-xs ${
+                          model.status === 'active' 
+                            ? 'text-cyan-400 hover:bg-cyan-500/10' 
+                            : 'text-gray-400 hover:bg-gray-700'
+                        }`}
+                        onClick={() => handleTrainIndividualModel(model.modelKey)}
+                        disabled={trainingModel === model.modelKey || training}
+                      >
+                        {trainingModel === model.modelKey ? (
+                          <>
+                            <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                            Training...
+                          </>
+                        ) : (
+                          <>
+                            <Play className="w-3 h-3 mr-1" />
+                            {model.status === 'active' ? 'Retrain' : 'Train Now'}
+                          </>
+                        )}
+                      </Button>
                     </div>
                   ))}
                 </div>
