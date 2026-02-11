@@ -132,20 +132,18 @@ const EnhancedMTFPredictions = ({ embedded = false }) => {
   const [isPredicting, setIsPredicting] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Fetch all data
+  // Fetch all data in parallel
   const fetchData = useCallback(async () => {
     try {
-      // Fetch training status
-      const statusRes = await api.get('/enhanced-mtf-training/status');
-      setTrainingStatus(statusRes.data);
+      const [statusRes, modelRes, fgRes] = await Promise.allSettled([
+        api.get('/enhanced-mtf-training/status'),
+        api.get('/enhanced-mtf-training/model-info'),
+        api.get('/enhanced-mtf-training/fear-greed')
+      ]);
 
-      // Fetch model info
-      const modelRes = await api.get('/enhanced-mtf-training/model-info');
-      setModelInfo(modelRes.data);
-
-      // Fetch fear & greed
-      const fgRes = await api.get('/enhanced-mtf-training/fear-greed');
-      setFearGreed(fgRes.data);
+      if (statusRes.status === 'fulfilled') setTrainingStatus(statusRes.value.data);
+      if (modelRes.status === 'fulfilled') setModelInfo(modelRes.value.data);
+      if (fgRes.status === 'fulfilled') setFearGreed(fgRes.value.data);
 
     } catch (err) {
       console.error('Failed to fetch data:', err);
