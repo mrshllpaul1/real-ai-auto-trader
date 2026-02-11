@@ -331,84 +331,129 @@ async def train_all_systems(
         enhanced_trainer = EnhancedHistoricalTrainer(db)
         weekly_trainer = AIWeeklyTrainer(db)
         
-        # Get all coins from dynamic universe
+        # Get ALL coins from dynamic universe (no artificial limit)
         try:
             all_coins = await get_training_coins()
         except Exception:
             all_coins = ['bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot', 
-                        'avalanche', 'chainlink', 'polygon', 'dogecoin', 'shiba-inu']
+                        'avalanche', 'chainlink', 'polygon', 'dogecoin', 'shiba-inu',
+                        'ripple', 'litecoin', 'binancecoin', 'tron', 'uniswap',
+                        'cosmos', 'stellar', 'monero', 'near', 'aptos']
         
-        # Limit for initial training
-        training_coins = all_coins[:20]
+        # Use ALL coins - no limit!
+        training_coins = all_coins
+        total_coins = len(training_coins)
         
-        # Create progress task
+        # Create progress task with total items = coins * 3 phases
         progress_manager.create_task(
             task_id=task_id,
             task_type="train-all",
-            total_items=len(training_coins),
-            total_steps=4  # 4 training systems
+            total_items=total_coins * 3,  # 3 coin-based training phases
+            total_steps=4  # 4 major steps
         )
         
         async def train_with_progress():
-            """Background task with progress tracking"""
+            """Background task with granular per-coin progress tracking"""
             try:
-                progress_manager.start_task(task_id, "Starting comprehensive AI training...")
+                await progress_manager.start_task(task_id, f"Starting training on {total_coins} coins...")
                 
-                # Step 1: Historical Training
-                progress_manager.update_progress(
+                items_done = 0
+                
+                # Step 1: Historical Training (per-coin progress)
+                await progress_manager.update_progress(
                     task_id, 
-                    progress=10, 
-                    message="Training Historical Patterns...",
+                    progress=0, 
+                    message="Phase 1/4: Historical Pattern Training",
                     steps_completed=0
                 )
-                await historical_trainer.train_on_historical_data(training_coins, 2020, True)
                 
-                # Step 2: Enhanced Historical Training
-                progress_manager.update_progress(
+                for i, coin in enumerate(training_coins):
+                    await progress_manager.update_progress(
+                        task_id,
+                        current_item=f"Historical: {coin}",
+                        items_processed=items_done + i + 1,
+                        message=f"Phase 1/4: Training {coin} ({i+1}/{total_coins})"
+                    )
+                    try:
+                        await historical_trainer.train_on_historical_data([coin], 2020, True)
+                    except Exception as e:
+                        logger.warning(f"Historical training failed for {coin}: {e}")
+                
+                items_done += total_coins
+                
+                # Step 2: Enhanced Historical Training (per-coin progress)
+                await progress_manager.update_progress(
                     task_id, 
-                    progress=35, 
-                    message="Training Technical Indicators...",
+                    progress=33, 
+                    message="Phase 2/4: Technical Indicator Training",
                     steps_completed=1
                 )
-                await enhanced_trainer.train_with_real_data(training_coins)
                 
-                # Step 3: Profitable Gems Training
-                progress_manager.update_progress(
+                for i, coin in enumerate(training_coins):
+                    await progress_manager.update_progress(
+                        task_id,
+                        current_item=f"Technical: {coin}",
+                        items_processed=items_done + i + 1,
+                        message=f"Phase 2/4: Training {coin} ({i+1}/{total_coins})"
+                    )
+                    try:
+                        await enhanced_trainer.train_with_real_data([coin])
+                    except Exception as e:
+                        logger.warning(f"Enhanced training failed for {coin}: {e}")
+                
+                items_done += total_coins
+                
+                # Step 3: Profitable Gems Training (per-coin progress)
+                await progress_manager.update_progress(
                     task_id, 
-                    progress=60, 
-                    message="Training Gem Patterns...",
+                    progress=66, 
+                    message="Phase 3/4: Gem Pattern Training",
                     steps_completed=2
                 )
-                await historical_trainer.train_profitable_gems(training_coins, 2.0, 2020)
+                
+                for i, coin in enumerate(training_coins):
+                    await progress_manager.update_progress(
+                        task_id,
+                        current_item=f"Gems: {coin}",
+                        items_processed=items_done + i + 1,
+                        message=f"Phase 3/4: Training {coin} ({i+1}/{total_coins})"
+                    )
+                    try:
+                        await historical_trainer.train_profitable_gems([coin], 2.0, 2020)
+                    except Exception as e:
+                        logger.warning(f"Gems training failed for {coin}: {e}")
+                
+                items_done += total_coins
                 
                 # Step 4: Save Weights
-                progress_manager.update_progress(
+                await progress_manager.update_progress(
                     task_id, 
-                    progress=85, 
-                    message="Saving AI Weights...",
-                    steps_completed=3
+                    progress=95, 
+                    message="Phase 4/4: Saving AI Weights...",
+                    steps_completed=3,
+                    current_item="Saving weights"
                 )
                 await weekly_trainer.save_weights()
                 
                 # Complete
-                progress_manager.complete_task(
+                await progress_manager.complete_task(
                     task_id,
                     result={
-                        "coins_trained": len(training_coins),
+                        "coins_trained": total_coins,
                         "systems": ["historical", "enhanced", "gems", "weights"]
                     },
-                    message=f"Completed training on {len(training_coins)} coins"
+                    message=f"Completed training on {total_coins} coins"
                 )
                 
             except Exception as e:
-                progress_manager.fail_task(task_id, str(e))
+                await progress_manager.fail_task(task_id, str(e))
         
         # Queue the background task
         background_tasks.add_task(train_with_progress)
         
         return {
             "task_id": task_id,
-            "message": "ALL AI training systems started with REAL DATA + SENTIMENT",
+            "message": f"ALL AI training started on {total_coins} coins",
             "systems": [
                 "Historical Trainer (patterns + hidden gems)",
                 "Enhanced Historical Trainer (technical indicators)",
