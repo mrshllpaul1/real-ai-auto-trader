@@ -12,9 +12,10 @@ import {
   Tooltip, ResponsiveContainer, BarChart, Bar, RadarChart, 
   PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend
 } from 'recharts';
-import api from '../services/api';
+import api, { clearAllCacheAndRefresh } from '../services/api';
 import TrainingProgress from '../components/TrainingProgress';
 import ModelBenchmarkDashboard from '../components/ModelBenchmarkDashboard';
+import { toast } from 'sonner';
 
 // Performance optimization: Detect low-power devices
 const isLowPowerDevice = () => {
