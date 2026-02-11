@@ -288,128 +288,138 @@ const FloatingCommandHub = () => {
                   </TabsList>
 
                   {/* Command Center Tab */}
-                  <TabsContent value="command" className="flex-1 flex flex-col overflow-hidden m-0 p-2 mt-0">
-                    {/* Quick Actions */}
-                    <div className="flex gap-1.5 mb-2 flex-shrink-0">
-                      {quickCommands.map((cmd, i) => (
-                        <button
-                          key={i}
-                          onClick={cmd.action}
-                          className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700/50 text-[10px] text-slate-300 hover:text-white transition-all flex flex-col items-center gap-0.5"
-                        >
-                          <span>{cmd.icon}</span>
-                          <span>{cmd.label}</span>
-                        </button>
-                      ))}
+                  <TabsContent value="command" className="flex-1 flex flex-col m-0 p-0 mt-0 data-[state=inactive]:hidden" style={{ minHeight: 0 }}>
+                    <div className="flex flex-col h-full p-2">
+                      {/* Quick Actions - fixed at top */}
+                      <div className="flex gap-1.5 mb-2 flex-shrink-0">
+                        {quickCommands.map((cmd, i) => (
+                          <button
+                            key={i}
+                            onClick={cmd.action}
+                            className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700/50 text-[10px] text-slate-300 hover:text-white transition-all flex flex-col items-center gap-0.5"
+                          >
+                            <span>{cmd.icon}</span>
+                            <span>{cmd.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                      
+                      {/* Messages - scrollable middle section */}
+                      <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-0">
+                        {cmdMessages.length === 0 && !cmdLoading && (
+                          <div className="flex justify-start">
+                            <div className="max-w-[85%] rounded-xl px-3 py-2 bg-slate-800/80 text-slate-200">
+                              <p className="text-xs leading-relaxed mb-1"><strong className="text-cyan-400">Command Center</strong></p>
+                              <ul className="space-y-0.5">
+                                <li className="ml-3 text-xs leading-relaxed">• "Find hidden gems"</li>
+                                <li className="ml-3 text-xs leading-relaxed">• "Add BTC to watchlist"</li>
+                                <li className="ml-3 text-xs leading-relaxed">• "Go to analytics"</li>
+                                <li className="ml-3 text-xs leading-relaxed">• "Predict ETH price"</li>
+                              </ul>
+                            </div>
+                          </div>
+                        )}
+                        {cmdMessages.map((msg, i) => (
+                          <div key={i} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[85%] rounded-xl px-3 py-2 ${
+                              msg.type === 'user' 
+                                ? 'bg-cyan-500/20 text-cyan-100' 
+                                : 'bg-slate-800/80 text-slate-200'
+                            }`}>
+                              {formatMessage(msg.content)}
+                            </div>
+                          </div>
+                        ))}
+                        {cmdLoading && (
+                          <div className="flex justify-start">
+                            <div className="bg-slate-800/80 rounded-xl px-3 py-2">
+                              <Loader2 size={14} className="animate-spin text-cyan-400" />
+                            </div>
+                          </div>
+                        )}
+                        <div ref={messagesEndRef} />
+                      </div>
+                      
+                      {/* Input - FIXED at bottom */}
+                      <form onSubmit={(e) => { e.preventDefault(); executeCommand(cmdInput); }} className="flex gap-2 pt-3 mt-2 flex-shrink-0 border-t border-slate-700/30">
+                        <Input
+                          value={cmdInput}
+                          onChange={(e) => setCmdInput(e.target.value)}
+                          placeholder="Type a command..."
+                          className="flex-1 h-10 bg-slate-800/50 border-slate-700/50 text-sm text-white placeholder:text-slate-400"
+                          disabled={cmdLoading}
+                        />
+                        <Button type="submit" size="sm" disabled={cmdLoading} className="h-10 w-10 p-0 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400">
+                          <Send size={16} />
+                        </Button>
+                      </form>
                     </div>
-                    
-                    {/* Messages - takes remaining space */}
-                    <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-                      {cmdMessages.length === 0 && !cmdLoading && (
-                        <div className="flex justify-start">
-                          <div className="max-w-[85%] rounded-xl px-3 py-2 bg-slate-800/80 text-slate-200">
-                            <p className="text-xs leading-relaxed mb-1"><strong className="text-cyan-400">Command Center</strong></p>
-                            <ul className="space-y-0.5">
-                              <li className="ml-3 text-xs leading-relaxed">• "Find hidden gems"</li>
-                              <li className="ml-3 text-xs leading-relaxed">• "Add BTC to watchlist"</li>
-                              <li className="ml-3 text-xs leading-relaxed">• "Go to analytics"</li>
-                              <li className="ml-3 text-xs leading-relaxed">• "Predict ETH price"</li>
-                            </ul>
-                          </div>
-                        </div>
-                      )}
-                      {cmdMessages.map((msg, i) => (
-                        <div key={i} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`max-w-[85%] rounded-xl px-3 py-2 ${
-                            msg.type === 'user' 
-                              ? 'bg-cyan-500/20 text-cyan-100' 
-                              : 'bg-slate-800/80 text-slate-200'
-                          }`}>
-                            {formatMessage(msg.content)}
-                          </div>
-                        </div>
-                      ))}
-                      {cmdLoading && (
-                        <div className="flex justify-start">
-                          <div className="bg-slate-800/80 rounded-xl px-3 py-2">
-                            <Loader2 size={14} className="animate-spin text-cyan-400" />
-                          </div>
-                        </div>
-                      )}
-                      <div ref={messagesEndRef} />
-                    </div>
-                    
-                    {/* Input - fixed at bottom */}
-                    <form onSubmit={(e) => { e.preventDefault(); executeCommand(cmdInput); }} className="flex gap-2 mt-auto pt-2 flex-shrink-0 border-t border-slate-700/30">
-                      <Input
-                        value={cmdInput}
-                        onChange={(e) => setCmdInput(e.target.value)}
-                        placeholder="Type a command..."
-                        className="flex-1 h-9 bg-slate-800/50 border-slate-700/50 text-sm text-white placeholder:text-slate-400"
-                        disabled={cmdLoading}
-                      />
-                      <Button type="submit" size="sm" disabled={cmdLoading} className="h-9 w-9 p-0 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400">
-                        <Send size={14} />
-                      </Button>
-                    </form>
                   </TabsContent>
 
                   {/* AI Chat Tab */}
-                  <TabsContent value="chat" className="flex-1 flex flex-col overflow-hidden m-0 p-2 mt-0">
-                    <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-                      {chatMessages.length === 0 && !chatLoading && (
-                        <div className="flex justify-start">
-                          <div className="max-w-[85%] rounded-xl px-3 py-2 bg-slate-800/80 text-slate-200">
-                            <p className="text-xs leading-relaxed mb-1"><strong className="text-purple-400">AI Assistant</strong></p>
-                            <p className="text-xs leading-relaxed mb-1">Ask me about:</p>
-                            <ul className="space-y-0.5">
-                              <li className="ml-3 text-xs leading-relaxed">• Coin analysis</li>
-                              <li className="ml-3 text-xs leading-relaxed">• Market conditions</li>
-                              <li className="ml-3 text-xs leading-relaxed">• Trading advice</li>
-                              <li className="ml-3 text-xs leading-relaxed">• News & sentiment</li>
-                            </ul>
+                  <TabsContent value="chat" className="flex-1 flex flex-col m-0 p-0 mt-0 data-[state=inactive]:hidden" style={{ minHeight: 0 }}>
+                    <div className="flex flex-col h-full p-2">
+                      {/* Messages - scrollable */}
+                      <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-0">
+                        {chatMessages.length === 0 && !chatLoading && (
+                          <div className="flex justify-start">
+                            <div className="max-w-[85%] rounded-xl px-3 py-2 bg-slate-800/80 text-slate-200">
+                              <p className="text-xs leading-relaxed mb-1"><strong className="text-purple-400">AI Assistant</strong></p>
+                              <p className="text-xs leading-relaxed mb-1">Ask me about:</p>
+                              <ul className="space-y-0.5">
+                                <li className="ml-3 text-xs leading-relaxed">• Coin analysis</li>
+                                <li className="ml-3 text-xs leading-relaxed">• Market conditions</li>
+                                <li className="ml-3 text-xs leading-relaxed">• Trading advice</li>
+                                <li className="ml-3 text-xs leading-relaxed">• News & sentiment</li>
+                              </ul>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      {chatMessages.map((msg, i) => (
-                        <div key={i} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`max-w-[85%] rounded-xl px-3 py-2 ${
-                            msg.type === 'user' 
-                              ? 'bg-purple-500/20 text-purple-100' 
-                              : 'bg-slate-800/80 text-slate-200'
-                          }`}>
-                            {formatMessage(msg.content)}
-                            {msg.coins && msg.coins.length > 0 && (
-                              <div className="flex gap-1 mt-1 flex-wrap">
-                                {msg.coins.map((coin, j) => (
-                                  <Badge key={j} variant="outline" className="text-[10px] border-purple-500/50 text-purple-300">
-                                    {coin}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
+                        )}
+                        {chatMessages.map((msg, i) => (
+                          <div key={i} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[85%] rounded-xl px-3 py-2 ${
+                              msg.type === 'user' 
+                                ? 'bg-purple-500/20 text-purple-100' 
+                                : 'bg-slate-800/80 text-slate-200'
+                            }`}>
+                              {formatMessage(msg.content)}
+                              {msg.coins && msg.coins.length > 0 && (
+                                <div className="flex gap-1 mt-1 flex-wrap">
+                                  {msg.coins.map((coin, j) => (
+                                    <Badge key={j} variant="outline" className="text-[10px] border-purple-500/50 text-purple-300">
+                                      {coin}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                      {chatLoading && (
-                        <div className="flex justify-start">
-                          <div className="bg-slate-800/80 rounded-xl px-3 py-2">
-                            <Loader2 size={14} className="animate-spin text-purple-400" />
+                        ))}
+                        {chatLoading && (
+                          <div className="flex justify-start">
+                            <div className="bg-slate-800/80 rounded-xl px-3 py-2">
+                              <Loader2 size={14} className="animate-spin text-purple-400" />
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      <div ref={messagesEndRef} />
+                        )}
+                        <div ref={messagesEndRef} />
+                      </div>
+                      
+                      {/* Input - FIXED at bottom */}
+                      <form onSubmit={(e) => { e.preventDefault(); sendChatMessage(chatInput); }} className="flex gap-2 pt-3 mt-2 flex-shrink-0 border-t border-slate-700/30">
+                        <Input
+                          value={chatInput}
+                          onChange={(e) => setChatInput(e.target.value)}
+                          placeholder="Ask about crypto..."
+                          className="flex-1 h-10 bg-slate-800/50 border-slate-700/50 text-sm text-white placeholder:text-slate-400"
+                          disabled={chatLoading}
+                        />
+                        <Button type="submit" size="sm" disabled={chatLoading} className="h-10 w-10 p-0 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400">
+                          <Send size={16} />
+                        </Button>
+                      </form>
                     </div>
-                    
-                    <form onSubmit={(e) => { e.preventDefault(); sendChatMessage(chatInput); }} className="flex gap-2 mt-auto pt-2 flex-shrink-0 border-t border-slate-700/30">
-                      <Input
-                        value={chatInput}
-                        onChange={(e) => setChatInput(e.target.value)}
-                        placeholder="Ask about crypto..."
-                        className="flex-1 h-9 bg-slate-800/50 border-slate-700/50 text-sm text-white placeholder:text-slate-400"
-                        disabled={chatLoading}
-                      />
-                      <Button type="submit" size="sm" disabled={chatLoading} className="h-9 w-9 p-0 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400">
+                  </TabsContent>
                         <Send size={14} />
                       </Button>
                     </form>
