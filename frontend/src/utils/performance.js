@@ -12,7 +12,7 @@
  * - Memory Leaks: Eliminated
  */
 
-import { useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 
 /**
  * Debounce function to prevent excessive function calls
@@ -315,9 +315,6 @@ export const measureAsyncPerformance = async (name, fn) => {
   
   return result;
 };
-
-// Import useState for hooks
-import { useState } from 'react';
 
 export default {
   debounce,
