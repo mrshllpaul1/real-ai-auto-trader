@@ -1,44 +1,185 @@
 import axios from 'axios';
 
 // Use environment variable for backend URL (required for deployment)
-// Priority: Vite env > window.location.origin (runtime config may be stale)
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || window.location.origin;
 const API = `${BACKEND_URL}/api`;
 
 console.log('[API Service] Using backend URL:', BACKEND_URL);
 
+// ============================================
+// CACHING SYSTEM FOR IMPROVED PERFORMANCE
+// ============================================
+const cache = new Map();
+const pendingRequests = new Map();
+const CACHE_DURATION = {
+  SHORT: 10000,    // 10 seconds - for rapidly changing data
+  MEDIUM: 30000,   // 30 seconds - for moderately changing data
+  LONG: 120000,    // 2 minutes - for slowly changing data
+  STATIC: 300000,  // 5 minutes - for mostly static data
+};
+
+// Cache configuration for different endpoints
+const CACHE_CONFIG = {
+  '/market/prices': CACHE_DURATION.SHORT,
+  '/market/trending': CACHE_DURATION.MEDIUM,
+  '/tethys/status': CACHE_DURATION.SHORT,
+  '/ensemble/status': CACHE_DURATION.MEDIUM,
+  '/training/status': CACHE_DURATION.SHORT,
+  '/training-progress/active': CACHE_DURATION.SHORT,
+  '/universe/coins': CACHE_DURATION.LONG,
+  '/kraken-universe/coins': CACHE_DURATION.LONG,
+  '/coindesk/news': CACHE_DURATION.MEDIUM,
+  '/coindesk/sentiment': CACHE_DURATION.MEDIUM,
+  '/settings': CACHE_DURATION.STATIC,
+  '/gems/top': CACHE_DURATION.MEDIUM,
+};
+
+const getCacheKey = (config) => {
+  const params = config.params ? JSON.stringify(config.params) : '';
+  return `${config.method}:${config.url}:${params}`;
+};
+
+const getCacheDuration = (url) => {
+  for (const [pattern, duration] of Object.entries(CACHE_CONFIG)) {
+    if (url.includes(pattern)) return duration;
+  }
+  return null; // No caching
+};
+
+const getFromCache = (key) => {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < cached.duration) {
+    return cached.data;
+  }
+  cache.delete(key);
+  return null;
+};
+
+const setCache = (key, data, duration) => {
+  cache.set(key, { data, timestamp: Date.now(), duration });
+  
+  // Cleanup old entries if cache gets too large
+  if (cache.size > 100) {
+    const now = Date.now();
+    for (const [k, v] of cache.entries()) {
+      if (now - v.timestamp > v.duration) cache.delete(k);
+    }
+  }
+};
+
+// Request deduplication - prevent duplicate concurrent requests
+const deduplicateRequest = async (key, requestFn) => {
+  if (pendingRequests.has(key)) {
+    return pendingRequests.get(key);
+  }
+  
+  const promise = requestFn().finally(() => {
+    pendingRequests.delete(key);
+  });
+  
+  pendingRequests.set(key, promise);
+  return promise;
+};
+
+// ============================================
+// AXIOS INSTANCE WITH OPTIMIZATIONS
+// ============================================
 const api = axios.create({
   baseURL: API,
-  timeout: 60000,  // Increased timeout to 60s for Kraken API calls
+  timeout: 60000,
 });
 
-// Request interceptor
+// Request interceptor with caching
 api.interceptors.request.use(
   (config) => {
-    // Add user_id to requests (in production, use proper auth)
     config.params = {
       ...config.params,
       user_id: localStorage.getItem('user_id') || 'demo_user'
     };
+    
+    // Check cache for GET requests
+    if (config.method === 'get') {
+      const cacheKey = getCacheKey(config);
+      const cached = getFromCache(cacheKey);
+      if (cached) {
+        config._cached = true;
+        config._cachedData = cached;
+      }
+    }
+    
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Response interceptor
+// Response interceptor with caching
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Cache GET responses
+    if (response.config.method === 'get') {
+      const duration = getCacheDuration(response.config.url);
+      if (duration) {
+        const cacheKey = getCacheKey(response.config);
+        setCache(cacheKey, response, duration);
+      }
+    }
+    return response;
+  },
   (error) => {
     console.error('API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }
 );
 
+// Wrapper for cached GET requests
+const cachedGet = async (url, config = {}) => {
+  const fullConfig = { ...config, url, method: 'get' };
+  const cacheKey = getCacheKey(fullConfig);
+  const duration = getCacheDuration(url);
+  
+  // Return cached if available
+  if (duration) {
+    const cached = getFromCache(cacheKey);
+    if (cached) return cached;
+  }
+  
+  // Deduplicate concurrent requests
+  return deduplicateRequest(cacheKey, () => api.get(url, config));
+};
+
+// Clear cache utility
+export const clearCache = (pattern = null) => {
+  if (pattern) {
+    for (const key of cache.keys()) {
+      if (key.includes(pattern)) cache.delete(key);
+    }
+  } else {
+    cache.clear();
+  }
+};
+
+// Preload critical data
+export const preloadCriticalData = async () => {
+  const criticalEndpoints = [
+    '/tethys/status',
+    '/universe/coins',
+    '/training-progress/active',
+  ];
+  
+  await Promise.allSettled(
+    criticalEndpoints.map(endpoint => cachedGet(endpoint))
+  );
+};
+
+// ============================================
+// API EXPORTS
+// ============================================
+
 // Auth APIs
 export const authAPI = {
   storeCredentials: (api_key, api_secret) =>
     api.post('/auth/store-credentials', { api_key, api_secret }),
-  checkCredentials: () => api.get('/auth/check-credentials'),
+  checkCredentials: () => cachedGet('/auth/check-credentials'),
 };
 
 // Trading APIs
@@ -49,7 +190,7 @@ export const tradingAPI = {
       params: { mode, limit }
     }),
   getPortfolio: () => api.get(`/trading/portfolio/${localStorage.getItem('user_id') || 'demo_user'}`),
-  getKrakenPortfolio: () => api.get('/trading/kraken/portfolio'),
+  getKrakenPortfolio: () => cachedGet('/trading/kraken/portfolio'),
   getKrakenTrades: (limit = 50) => api.get('/trading/kraken/trades', { params: { limit } }),
   getKrakenOrders: (limit = 50) => api.get('/trading/kraken/orders', { params: { limit } }),
 };
@@ -60,7 +201,7 @@ export const strategyAPI = {
     api.post('/strategies/generate', {
       user_id: localStorage.getItem('user_id') || 'demo_user',
       coin_pairs
-    }, { timeout: 90000 }),  // 90 second timeout for AI strategy generation
+    }, { timeout: 90000 }),
   getStrategies: (status = 'active', limit = 10) =>
     api.get(`/strategies/list/${localStorage.getItem('user_id') || 'demo_user'}`, {
       params: { status, limit }
@@ -78,26 +219,26 @@ export const strategyAPI = {
 
 // Market Data APIs
 export const marketAPI = {
-  getPrices: (coin_ids) => api.get('/market/prices', { params: { coin_ids } }),
+  getPrices: (coin_ids) => cachedGet('/market/prices', { params: { coin_ids } }),
   getHistoricalData: (coin_id, days = 30) =>
-    api.get(`/market/historical/${coin_id}`, { params: { days } }),
-  getTrendingCoins: () => api.get('/market/trending'),
-  getCryptoNews: () => api.get('/market/news'),
+    cachedGet(`/market/historical/${coin_id}`, { params: { days } }),
+  getTrendingCoins: () => cachedGet('/market/trending'),
+  getCryptoNews: () => cachedGet('/market/news'),
 };
 
 // CoinDesk News APIs
 export const coindeskAPI = {
-  getNews: (limit = 20, lang = 'EN') => api.get('/coindesk/news', { params: { limit, lang } }),
-  getCoinNews: (symbol, limit = 10) => api.get(`/coindesk/news/coin/${symbol}`, { params: { limit } }),
-  getSentiment: () => api.get('/coindesk/sentiment'),
-  getNewsBySentiment: (sentiment, limit = 10) => api.get(`/coindesk/news/sentiment/${sentiment}`, { params: { limit } }),
-  getStatus: () => api.get('/coindesk/status'),
-  getCategories: () => api.get('/coindesk/categories'),
+  getNews: (limit = 20, lang = 'EN') => cachedGet('/coindesk/news', { params: { limit, lang } }),
+  getCoinNews: (symbol, limit = 10) => cachedGet(`/coindesk/news/coin/${symbol}`, { params: { limit } }),
+  getSentiment: () => cachedGet('/coindesk/sentiment'),
+  getNewsBySentiment: (sentiment, limit = 10) => cachedGet(`/coindesk/news/sentiment/${sentiment}`, { params: { limit } }),
+  getStatus: () => cachedGet('/coindesk/status'),
+  getCategories: () => cachedGet('/coindesk/categories'),
 };
 
 // Risk Management APIs
 export const riskAPI = {
-  getSettings: () => api.get(`/risk/settings/${localStorage.getItem('user_id') || 'demo_user'}`),
+  getSettings: () => cachedGet(`/risk/settings/${localStorage.getItem('user_id') || 'demo_user'}`),
   updateSettings: (settings) =>
     api.put(`/risk/settings/${localStorage.getItem('user_id') || 'demo_user'}`, settings),
 };
