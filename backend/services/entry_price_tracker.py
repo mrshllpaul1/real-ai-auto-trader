@@ -457,7 +457,8 @@ class EntryPriceTracker:
                 "current_value": current_value,
                 "unrealized_pnl": unrealized_pnl,
                 "unrealized_pnl_percent": pnl_percent,
-                "realized_pnl": entry.get("realized_pnl", 0)
+                "realized_pnl": entry.get("realized_pnl", 0),
+                "is_manual": entry.get("is_manual", False)
             })
         
         total_pnl_percent = ((total_current_value - total_cost) / total_cost * 100) if total_cost > 0 else 0
@@ -475,3 +476,170 @@ class EntryPriceTracker:
             },
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
+    
+    async def set_manual_entry_price(
+        self,
+        symbol: str,
+        entry_price: float,
+        quantity: float = None,
+        notes: str = None
+    ) -> Dict[str, Any]:
+        """
+        Manually set or override entry price for a position.
+        
+        Useful when:
+        - Entry price data is missing or incorrect
+        - User wants to track cost basis for tax purposes
+        - Positions were transferred from another exchange
+        
+        Args:
+            symbol: Asset symbol (e.g., "BTC", "ETH")
+            entry_price: Manual entry price per unit
+            quantity: Optional quantity override (if different from Kraken)
+            notes: Optional notes about the correction
+        
+        Returns:
+            Updated position entry data
+        """
+        if self.collection is None:
+            logger.warning("Database not available for entry tracking")
+            return {"error": "Database not available"}
+        
+        now = datetime.now(timezone.utc)
+        
+        # Get existing position if any
+        existing = await self.collection.find_one({"symbol": symbol})
+        
+        if existing:
+            # Store previous values for audit
+            previous_entry = existing.get("entry_price", 0)
+            previous_qty = existing.get("quantity", 0)
+            
+            update_qty = quantity if quantity is not None else previous_qty
+            
+            update_data = {
+                "$set": {
+                    "entry_price": entry_price,
+                    "quantity": update_qty,
+                    "total_cost": update_qty * entry_price,
+                    "updated_at": now,
+                    "is_manual": True,
+                    "manual_notes": notes,
+                    "manual_updated_at": now
+                },
+                "$push": {
+                    "manual_corrections": {
+                        "previous_entry_price": previous_entry,
+                        "new_entry_price": entry_price,
+                        "previous_quantity": previous_qty,
+                        "new_quantity": update_qty,
+                        "notes": notes,
+                        "timestamp": now
+                    }
+                }
+            }
+            
+            await self.collection.update_one({"symbol": symbol}, update_data)
+            
+            logger.info(f"✏️ Manual entry correction for {symbol}: {previous_entry:.4f} -> {entry_price:.4f}")
+            
+            return {
+                "symbol": symbol,
+                "entry_price": entry_price,
+                "quantity": update_qty,
+                "previous_entry_price": previous_entry,
+                "previous_quantity": previous_qty,
+                "is_manual": True,
+                "notes": notes,
+                "action": "corrected"
+            }
+        else:
+            # Create new manual entry
+            if quantity is None or quantity <= 0:
+                return {"error": f"Quantity required for new position {symbol}"}
+            
+            entry_doc = {
+                "symbol": symbol,
+                "entry_price": entry_price,
+                "quantity": quantity,
+                "total_cost": quantity * entry_price,
+                "created_at": now,
+                "updated_at": now,
+                "is_manual": True,
+                "manual_notes": notes,
+                "manual_updated_at": now,
+                "first_buy_price": entry_price,
+                "last_buy_price": entry_price,
+                "total_buys": 0,
+                "total_sells": 0,
+                "total_bought_quantity": 0,
+                "total_bought_value": 0,
+                "total_sold_quantity": 0,
+                "total_sold_value": 0,
+                "realized_pnl": 0,
+                "trade_history": [],
+                "manual_corrections": [{
+                    "previous_entry_price": 0,
+                    "new_entry_price": entry_price,
+                    "previous_quantity": 0,
+                    "new_quantity": quantity,
+                    "notes": notes,
+                    "timestamp": now
+                }]
+            }
+            
+            await self.collection.insert_one(entry_doc)
+            
+            logger.info(f"✏️ Manual entry created for {symbol}: {entry_price:.4f} x {quantity}")
+            
+            return {
+                "symbol": symbol,
+                "entry_price": entry_price,
+                "quantity": quantity,
+                "is_manual": True,
+                "notes": notes,
+                "action": "created"
+            }
+    
+    async def delete_entry(self, symbol: str) -> Dict[str, Any]:
+        """
+        Delete an entry price record.
+        
+        Args:
+            symbol: Asset symbol to delete
+            
+        Returns:
+            Deletion result
+        """
+        if self.collection is None:
+            return {"error": "Database not available"}
+        
+        result = await self.collection.delete_one({"symbol": symbol})
+        
+        if result.deleted_count > 0:
+            logger.info(f"🗑️ Deleted entry for {symbol}")
+            return {"symbol": symbol, "action": "deleted"}
+        else:
+            return {"symbol": symbol, "action": "not_found"}
+    
+    async def get_correction_history(self, symbol: str) -> List[Dict[str, Any]]:
+        """
+        Get manual correction history for a symbol.
+        
+        Args:
+            symbol: Asset symbol
+            
+        Returns:
+            List of manual corrections
+        """
+        if self.collection is None:
+            return []
+        
+        entry = await self.collection.find_one(
+            {"symbol": symbol},
+            {"manual_corrections": 1, "_id": 0}
+        )
+        
+        if entry:
+            return entry.get("manual_corrections", [])
+        return []
