@@ -408,7 +408,7 @@ const CommandCenter = () => {
           <h1 className="text-2xl font-bold text-white">Command Center</h1>
           <p className="text-gray-400">Unified trading control panel</p>
         </div>
-        <Button onClick={fetchData} variant="outline" className="border-gray-700">
+        <Button onClick={() => fetchData(true)} variant="outline" className="border-gray-700">
           <RefreshCw className="w-4 h-4 mr-2" /> Refresh
         </Button>
       </div>
