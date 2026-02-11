@@ -257,6 +257,110 @@ const PerformanceDashboard = ({ embedded = false }) => {
         </motion.div>
       </div>
 
+      {/* P&L Chart */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+        className="p-4 bg-slate-800/50 border border-slate-700 rounded-xl"
+        data-testid="pnl-chart-container"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-medium text-white flex items-center gap-2">
+            <LineChartIcon className="w-4 h-4 text-cyan-400" />
+            P&L Performance (30 Days)
+          </h3>
+          {isSampleData && (
+            <Badge className="bg-amber-500/20 text-amber-400 text-xs">
+              Sample Data - Sync trades for real P&L
+            </Badge>
+          )}
+        </div>
+        
+        {chartLoading ? (
+          <div className="h-64 flex items-center justify-center">
+            <RefreshCw className="w-6 h-6 animate-spin text-cyan-400" />
+          </div>
+        ) : pnlChartData.length > 0 ? (
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={pnlChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="pnlGradientPos" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="pnlGradientNeg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#EF4444" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis 
+                  dataKey="date" 
+                  tick={{ fill: '#9CA3AF', fontSize: 10 }}
+                  tickFormatter={(value) => value.slice(5)} // Show only MM-DD
+                  axisLine={{ stroke: '#374151' }}
+                />
+                <YAxis 
+                  tick={{ fill: '#9CA3AF', fontSize: 10 }}
+                  tickFormatter={(value) => `$${value}`}
+                  axisLine={{ stroke: '#374151' }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1F2937',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    color: '#F9FAFB'
+                  }}
+                  formatter={(value, name) => [
+                    `$${value.toFixed(2)}`,
+                    name === 'cumulative_pnl' ? 'Cumulative P&L' : 'Daily P&L'
+                  ]}
+                  labelFormatter={(label) => `Date: ${label}`}
+                />
+                <ReferenceLine y={0} stroke="#6B7280" strokeDasharray="3 3" />
+                <Area
+                  type="monotone"
+                  dataKey="cumulative_pnl"
+                  stroke="#06B6D4"
+                  strokeWidth={2}
+                  fill="url(#pnlGradientPos)"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="pnl"
+                  stroke="#A78BFA"
+                  strokeWidth={1.5}
+                  dot={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="h-64 flex flex-col items-center justify-center text-slate-500">
+            <LineChartIcon className="w-12 h-12 mb-3 opacity-50" />
+            <p>No P&L data available</p>
+            <p className="text-sm">Sync trade history to see your performance chart</p>
+          </div>
+        )}
+        
+        {/* Chart Legend */}
+        {pnlChartData.length > 0 && (
+          <div className="flex items-center justify-center gap-6 mt-4 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-cyan-400"></div>
+              <span className="text-slate-400">Cumulative P&L</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-purple-400"></div>
+              <span className="text-slate-400">Daily P&L</span>
+            </div>
+          </div>
+        )}
+      </motion.div>
+
       {/* P&L Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Unrealized vs Realized */}
