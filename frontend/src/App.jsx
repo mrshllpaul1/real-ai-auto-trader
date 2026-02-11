@@ -188,6 +188,12 @@ function App() {
             <FloatingCommandHub />
             <TrainingProgress />
             
+            {/* Keyboard Shortcuts Modal */}
+            <KeyboardShortcutsModal 
+              isOpen={showShortcuts} 
+              onClose={() => setShowShortcuts(false)} 
+            />
+            
             {/* Toast notifications - fixed position with highest z-index */}
             <div className="fixed top-0 right-0 z-[99999] pointer-events-none" style={{ zIndex: 99999 }}>
               <div className="pointer-events-auto">
