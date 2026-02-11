@@ -39,8 +39,10 @@ const GemMLDLComparison = ({ embedded = false }) => {
       setComparison(compRes.data);
       setModelInfo(infoRes.data);
       setTrainingStatus(statusRes.data);
+      if (forceRefresh) toast.success('Data refreshed!');
     } catch (error) {
       console.error('Error loading data:', error);
+      if (forceRefresh) toast.error('Failed to refresh');
     } finally {
       setLoading(false);
     }
