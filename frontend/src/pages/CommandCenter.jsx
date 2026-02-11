@@ -384,11 +384,7 @@ const CommandCenter = () => {
   ];
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <RefreshCw className="w-8 h-8 animate-spin text-cyan-400" />
-      </div>
-    );
+    return <CommandCenterSkeleton />;
   }
 
   return (
