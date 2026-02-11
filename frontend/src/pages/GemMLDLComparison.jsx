@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api, { clearAllCacheAndRefresh } from '../services/api';
 import { toast } from 'sonner';
 import TrainingProgress from '../components/TrainingProgress';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const GemMLDLComparison = ({ embedded = false }) => {
   const [comparison, setComparison] = useState(null);
@@ -111,14 +112,7 @@ const GemMLDLComparison = ({ embedded = false }) => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-[#050505]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-[#9D00FF] mx-auto mb-4" />
-          <p className="text-[#A1A1AA]">Loading ML/DL Comparison...</p>
-        </div>
-      </div>
-    );
+    return <PageLoadingSkeleton />;
   }
 
   const isTrained = trainingStatus?.is_trained;
