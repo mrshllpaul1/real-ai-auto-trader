@@ -336,7 +336,7 @@ class ModelBenchmarkingService:
         self._last_benchmark_time = datetime.now(timezone.utc)
         
         # Store in database if available
-        if self.db:
+        if self.db is not None:
             await self._store_benchmark(results)
         
         return results
