@@ -286,7 +286,7 @@ const FloatingCommandHub = () => {
                   </TabsList>
 
                   {/* Command Center Tab */}
-                  <TabsContent value="command" className="flex-1 flex flex-col overflow-hidden m-0 p-2">
+                  <TabsContent value="command" className="flex-1 flex flex-col overflow-hidden m-0 p-2 mt-0">
                     {/* Quick Actions */}
                     <div className="flex gap-1.5 mb-2 flex-shrink-0">
                       {quickCommands.map((cmd, i) => (
@@ -301,8 +301,8 @@ const FloatingCommandHub = () => {
                       ))}
                     </div>
                     
-                    {/* Messages */}
-                    <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[200px]">
+                    {/* Messages - takes remaining space */}
+                    <div className="flex-1 overflow-y-auto space-y-2 pr-1">
                       {cmdMessages.length === 0 && !cmdLoading && (
                         <div className="flex justify-start">
                           <div className="max-w-[85%] rounded-xl px-3 py-2 bg-slate-800/80 text-slate-200">
@@ -337,8 +337,8 @@ const FloatingCommandHub = () => {
                       <div ref={messagesEndRef} />
                     </div>
                     
-                    {/* Input */}
-                    <form onSubmit={(e) => { e.preventDefault(); executeCommand(cmdInput); }} className="flex gap-2 mt-2 flex-shrink-0">
+                    {/* Input - fixed at bottom */}
+                    <form onSubmit={(e) => { e.preventDefault(); executeCommand(cmdInput); }} className="flex gap-2 mt-auto pt-2 flex-shrink-0 border-t border-slate-700/30">
                       <Input
                         value={cmdInput}
                         onChange={(e) => setCmdInput(e.target.value)}
