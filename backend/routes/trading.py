@@ -368,6 +368,7 @@ async def get_kraken_portfolio():
         
         # Fetch prices from Kraken directly
         kraken_prices = {}
+        kraken_ticker_data = {}  # Store full ticker data for 24h change
         if kraken_pairs:
             try:
                 ticker_data = await kraken_service.get_tickers_batch(list(set(kraken_pairs)))
@@ -376,6 +377,7 @@ async def get_kraken_portfolio():
                         if isinstance(data, dict) and 'c' in data:
                             price = float(data['c'][0]) if data['c'] else 0
                             kraken_prices[pair] = price
+                            kraken_ticker_data[pair] = data  # Store full data
                 logger.info(f"Fetched {len(kraken_prices)} Kraken prices")
             except Exception as e:
                 logger.error(f"Error fetching Kraken prices: {e}")
@@ -383,6 +385,7 @@ async def get_kraken_portfolio():
         # Build portfolio
         holdings = []
         total_value_usd = 0.0
+        total_value_24h_ago = 0.0  # For calculating portfolio 24h change
         
         for asset, amount in balances.items():
             try:
@@ -398,20 +401,24 @@ async def get_kraken_portfolio():
                     usd_value = amount_float
                     price_usd = 1.0
                     price_change = 0
+                    value_24h_ago = amount_float
                 elif clean_asset in ['USDT', 'USDC']:
                     usd_value = amount_float
                     price_usd = 1.0
                     price_change = 0
+                    value_24h_ago = amount_float
                 else:
                     # Get price from Kraken ticker
                     pair = asset_to_pair.get(clean_asset)
                     price_usd = 0
                     price_change = 0
+                    ticker_info = None
                     
                     # Try different pair formats
                     for possible_pair in [pair, f"{clean_asset}USD", f"X{clean_asset}ZUSD", f"{clean_asset}ZUSD"]:
                         if possible_pair and possible_pair in kraken_prices:
                             price_usd = kraken_prices[possible_pair]
+                            ticker_info = kraken_ticker_data.get(possible_pair)
                             break
                     
                     # Also try without X prefix
@@ -419,9 +426,23 @@ async def get_kraken_portfolio():
                         for p, v in kraken_prices.items():
                             if clean_asset.replace('X', '') in p or clean_asset in p:
                                 price_usd = v
+                                ticker_info = kraken_ticker_data.get(p)
                                 break
                     
+                    # Calculate 24h change from ticker data
+                    if ticker_info and price_usd > 0:
+                        open_24h = float(ticker_info.get('o', price_usd)) if ticker_info.get('o') else price_usd
+                        if open_24h > 0:
+                            price_change = ((price_usd - open_24h) / open_24h) * 100
+                    
                     usd_value = amount_float * price_usd
+                    # Calculate value 24h ago
+                    if price_change != 0:
+                        value_24h_ago = usd_value / (1 + price_change / 100)
+                    else:
+                        value_24h_ago = usd_value
+                
+                total_value_24h_ago += value_24h_ago
                 
                 # Include holding
                 symbol = clean_asset.replace('XX', '').replace('X', '')
@@ -434,12 +455,17 @@ async def get_kraken_portfolio():
                     "amount": amount_float,
                     "price_usd": price_usd,
                     "value_usd": round(usd_value, 2),
-                    "price_change_24h": price_change
+                    "change_24h": round(price_change, 2)
                 })
                 total_value_usd += usd_value
             except Exception as e:
                 logger.error(f"Error processing asset {asset}: {e}")
                 continue
+        
+        # Calculate portfolio 24h change percentage
+        portfolio_change_24h = 0
+        if total_value_24h_ago > 0:
+            portfolio_change_24h = ((total_value_usd - total_value_24h_ago) / total_value_24h_ago) * 100
         
         # Sort by USD value (highest first)
         holdings.sort(key=lambda x: x['value_usd'], reverse=True)
