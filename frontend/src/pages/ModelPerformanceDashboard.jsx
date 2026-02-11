@@ -40,6 +40,8 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
   const [trainingStatus, setTrainingStatus] = useState(null);
   const [gemMlDlStatus, setGemMlDlStatus] = useState(null);
   const [mtfStatus, setMtfStatus] = useState(null);
+  const [modelsStatus, setModelsStatus] = useState({});
+  const [trainingModel, setTrainingModel] = useState(null);
 
   // Fetch with timeout to prevent infinite loading
   const fetchWithTimeout = async (url, timeout = 10000) => {
