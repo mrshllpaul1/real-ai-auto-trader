@@ -26,91 +26,16 @@ const TethysDashboard = () => {
   const [expandedCard, setExpandedCard] = useState(null);
   const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef(null);
-  const reconnectAttemptsRef = useRef(0);
-  const wsInitializedRef = useRef(false);
-  const maxReconnectAttempts = 3;
+  const pollingInitializedRef = useRef(false);
 
-  // WebSocket connection for real-time training updates - with graceful fallback
+  // WebSocket disabled - using HTTP polling for reliable updates in deployment
+  // Kubernetes ingress doesn't support WebSocket protocol upgrade
   useEffect(() => {
-    const connectWebSocket = () => {
-      if (!WS_URL) {
-        if (!wsInitializedRef.current) {
-          console.info('[TethysDashboard] No WebSocket URL, using polling mode');
-          wsInitializedRef.current = true;
-        }
-        return;
-      }
-      
-      // Skip if already at max attempts
-      if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
-        return;
-      }
-      
-      try {
-        const ws = new WebSocket(`${WS_URL}/api/tethys-train/ws/progress`);
-        
-        ws.onopen = () => {
-          setWsConnected(true);
-          reconnectAttemptsRef.current = 0;
-          console.info('[TethysDashboard] WebSocket connected');
-        };
-        
-        ws.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            if (data.type === 'episode' || data.type === 'status') {
-              setTrainingData(prev => ({
-                ...prev,
-                training: {
-                  ...prev?.training,
-                  ...data.data,
-                  recent_history: data.type === 'episode' 
-                    ? [...(prev?.training?.recent_history || []).slice(-19), data.data]
-                    : prev?.training?.recent_history
-                }
-              }));
-            }
-          } catch (e) {
-            // Silent parse error
-          }
-        };
-        
-        ws.onclose = (event) => {
-          setWsConnected(false);
-          if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
-            reconnectAttemptsRef.current++;
-            const delay = Math.min(5000 * reconnectAttemptsRef.current, 15000);
-            setTimeout(connectWebSocket, delay);
-          } else if (reconnectAttemptsRef.current >= maxReconnectAttempts && !wsInitializedRef.current) {
-            console.info('[TethysDashboard] WebSocket unavailable, using polling mode');
-            wsInitializedRef.current = true;
-          }
-        };
-        
-        ws.onerror = () => {
-          if (!wsInitializedRef.current && reconnectAttemptsRef.current === 0) {
-            console.info('[TethysDashboard] WebSocket unavailable, falling back to polling');
-            wsInitializedRef.current = true;
-          }
-          setWsConnected(false);
-        };
-        
-        wsRef.current = ws;
-      } catch (e) {
-        if (!wsInitializedRef.current) {
-          console.info('[TethysDashboard] WebSocket not available, using polling');
-          wsInitializedRef.current = true;
-        }
-      }
-    };
-    
-    connectWebSocket();
-    
-    return () => {
-      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.close(1000, 'Component unmounting');
-      }
-    };
+    if (!pollingInitializedRef.current) {
+      console.info('[TethysDashboard] Using HTTP polling mode for updates');
+      pollingInitializedRef.current = true;
+    }
+    setWsConnected(false);
   }, []);
 
   const fetchData = useCallback(async () => {
