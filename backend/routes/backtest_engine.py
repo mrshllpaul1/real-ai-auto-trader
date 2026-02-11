@@ -694,6 +694,11 @@ async def run_backtest(backtest_id: str, config: BacktestConfig, db):
                     current_price *= (1 + daily_return)
                     prices.append(current_price)
             
+            else:
+                # Real data was successfully fetched
+                results["data_sources"][symbol] = f"kraken_ohlc ({len(prices)} candles)"
+                logger.info(f"Using REAL Kraken data for {symbol}")
+            
             # Generate signals based on strategy
             if config.strategy_type == "momentum":
                 lookback = config.strategy_params.get("lookback", 14)
