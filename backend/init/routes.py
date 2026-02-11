@@ -266,6 +266,16 @@ def register_routes(api_router: APIRouter, db=None):
     api_router.include_router(email_digest_routes.router, tags=["Email Digest"])
     email_digest_routes.set_db(db)
     
+    # Web3 Wallet (MetaMask Integration)
+    from routes import web3_wallet as web3_wallet_routes
+    api_router.include_router(web3_wallet_routes.router, tags=["Web3 Wallet"])
+    web3_wallet_routes.set_db(db)
+    
+    # AI Explainability
+    from routes import ai_explainability as ai_explain_routes
+    api_router.include_router(ai_explain_routes.router, tags=["AI Explainability"])
+    ai_explain_routes.set_db(db)
+    
     logger.info("✅ All routes registered (including new enhancements)")
     
     return api_router
