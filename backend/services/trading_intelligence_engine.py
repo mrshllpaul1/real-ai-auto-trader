@@ -1234,12 +1234,20 @@ class TradingIntelligenceEngine:
         
         # 3. Train FinRL Agent
         logger.info("Training FinRL Agent...")
-        prices = df['close'].values
-        self.environment.prices = prices
-        self.environment.features = features
-        
-        finrl_result = await self.finrl_agent.train(self.environment, episodes=min(epochs, 50))
-        results['finrl_agent'] = finrl_result
+        try:
+            prices = df['close'].values
+            self.environment.prices = prices
+            self.environment.features = features
+            logger.info(f"FinRL environment setup - prices: {len(prices)}, features: {len(features)}")
+            
+            finrl_result = await self.finrl_agent.train(self.environment, episodes=min(epochs, 50))
+            results['finrl_agent'] = finrl_result
+            logger.info(f"FinRL training result: {finrl_result}")
+        except Exception as e:
+            logger.error(f"FinRL training failed: {e}")
+            import traceback
+            traceback.print_exc()
+            results['finrl_agent'] = {"error": str(e)}
         
         self.training_results = results
         
