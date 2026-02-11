@@ -1238,15 +1238,25 @@ class TradingIntelligenceEngine:
             prices = df['close'].values
             self.environment.prices = prices
             
-            # Convert features DataFrame to numpy array with correct shape
-            # The environment expects shape (n_samples, 30) for market features
-            feature_cols = features.select_dtypes(include=[np.number]).columns[:30]
-            features_array = features[feature_cols].fillna(0).values
+            # Convert features to numpy array with correct shape (n_samples, 30)
+            # features might be DataFrame or numpy array
+            if hasattr(features, 'values'):
+                # It's a DataFrame
+                feature_cols = features.select_dtypes(include=[np.number]).columns[:30]
+                features_array = features[feature_cols].fillna(0).values
+            else:
+                # It's already a numpy array
+                features_array = np.array(features)
             
-            # Ensure we have at least 30 features, pad with zeros if needed
+            # Ensure we have shape (n_samples, 30) for market features
+            if len(features_array.shape) == 1:
+                features_array = features_array.reshape(-1, 1)
+            
             if features_array.shape[1] < 30:
                 padding = np.zeros((features_array.shape[0], 30 - features_array.shape[1]))
                 features_array = np.hstack([features_array, padding])
+            elif features_array.shape[1] > 30:
+                features_array = features_array[:, :30]
             
             self.environment.features = features_array
             logger.info(f"FinRL environment setup - prices: {len(prices)}, features shape: {features_array.shape}")
