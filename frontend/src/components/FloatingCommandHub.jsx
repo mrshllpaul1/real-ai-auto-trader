@@ -420,14 +420,10 @@ const FloatingCommandHub = () => {
                       </form>
                     </div>
                   </TabsContent>
-                        <Send size={14} />
-                      </Button>
-                    </form>
-                  </TabsContent>
 
                   {/* Strategy Builder Tab */}
-                  <TabsContent value="strategy" className="flex-1 flex flex-col overflow-hidden m-0 p-2">
-                    <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+                  <TabsContent value="strategy" className="flex-1 flex flex-col m-0 p-0 mt-0 data-[state=inactive]:hidden" style={{ minHeight: 0 }}>
+                    <div className="flex flex-col h-full p-2">
                       <div className="space-y-2">
                         <label className="text-xs text-slate-400">Describe your strategy:</label>
                         <Textarea
