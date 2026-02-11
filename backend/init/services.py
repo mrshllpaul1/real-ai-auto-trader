@@ -512,7 +512,7 @@ async def _init_phase6_scheduling(db):
     
     # Weekly Selection Scheduler
     from services.weekly_selection_scheduler import initialize_weekly_scheduler
-    weekly_scheduler = await initialize_weekly_scheduler(db, _services['coin_selector'])
+    weekly_scheduler = await initialize_weekly_scheduler(db, _services['coin_selector'], _services.get('auto_trader'))
     _services['weekly_scheduler'] = weekly_scheduler
     logger.info("✅ Weekly Selection Scheduler initialized")
     
