@@ -80,8 +80,8 @@ class Web3AIExplainabilityTester:
         print("\n🔗 WEB3 WALLET API TESTING")
         print("=" * 50)
         
-        # Test sample wallet address for testing
-        test_address = "0x742d35Cc6634C0532925a3b844Bc9e7595f3e6E"
+        # Test sample wallet address for testing (proper 42-character Ethereum address)
+        test_address = "0x742d35Cc6634C0532925a3b844Bc9e7595f3e6E6"
         
         # 1. GET /api/web3-wallet/chains - Get supported blockchain networks
         print("1. Testing supported chains...")
