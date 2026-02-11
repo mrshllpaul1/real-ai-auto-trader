@@ -158,6 +158,18 @@ const PerformanceDashboard = ({ embedded = false }) => {
         </div>
       )}
 
+      {/* Entry Price Manager Section */}
+      {showEntryManager && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="border border-green-500/30 rounded-xl overflow-hidden"
+        >
+          <EntryPriceManager embedded={true} />
+        </motion.div>
+      )}
+
       {/* No Entry Data Warning */}
       {!data?.has_entry_data && (
         <motion.div 
@@ -170,7 +182,7 @@ const PerformanceDashboard = ({ embedded = false }) => {
             <div>
               <h3 className="font-medium text-amber-400">No Entry Price Data</h3>
               <p className="text-sm text-slate-400 mt-1">
-                Click "Sync Trades" to import your trade history from Kraken and see accurate P&L calculations.
+                Click "Sync Trades" to import your trade history from Kraken, or use "Edit Entry Prices" to manually set your cost basis.
               </p>
             </div>
           </div>
