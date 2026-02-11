@@ -372,7 +372,8 @@ class EnhancedMTFTrainingService:
         self,
         symbols: List[str] = None,
         epochs: int = 100,
-        batch_size: int = 50
+        batch_size: int = 50,
+        progress_callback: callable = None
     ) -> Dict[str, Any]:
         """
         Fast training using only sentiment features (no OHLCV download required).
@@ -381,6 +382,12 @@ class EnhancedMTFTrainingService:
         - Fear & Greed Index
         - Social sentiment signals
         - FOMO/Fear indicators
+        
+        Args:
+            symbols: List of symbols to train on (or ["all"] for all Kraken coins)
+            epochs: Number of training epochs
+            batch_size: Batch size for processing
+            progress_callback: Optional callback(progress, message) for progress updates
         """
         training_id = str(uuid.uuid4())
         started_at = datetime.now(timezone.utc)
@@ -392,6 +399,14 @@ class EnhancedMTFTrainingService:
             "progress": 0,
             "current_phase": "fast_sentiment_training"
         }
+        
+        def update_progress(progress: int, message: str):
+            self._training_status["progress"] = progress
+            if progress_callback:
+                try:
+                    progress_callback(progress, message)
+                except Exception:
+                    pass
         
         try:
             # Get all Kraken coins if not specified
