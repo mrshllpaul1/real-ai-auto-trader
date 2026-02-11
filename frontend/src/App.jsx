@@ -75,6 +75,25 @@ function App() {
     };
     document.addEventListener('click', unlockAudio);
   }, []);
+  
+  // Handle keyboard shortcut actions
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+        e.preventDefault();
+        setShowShortcuts(true);
+      }
+      if (e.key === '?' && !e.target.closest('input, textarea')) {
+        e.preventDefault();
+        setShowShortcuts(true);
+      }
+      if (e.key === 'Escape') {
+        setShowShortcuts(false);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <TradingModeProvider>
