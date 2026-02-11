@@ -179,6 +179,16 @@ const GemMLDLComparison = ({ embedded = false }) => {
             </Button>
           </div>
         </div>
+        
+        {/* Training Progress */}
+        {trainingTaskId && (
+          <TrainingProgress 
+            taskId={trainingTaskId} 
+            embedded={true}
+            onComplete={handleTrainingComplete}
+          />
+        )}
+        </div>
       </motion.div>
 
       {/* Training Status Banner */}
