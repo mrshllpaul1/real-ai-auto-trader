@@ -83,14 +83,14 @@ function App() {
                 >
                   <Routes>
                     {/* Main Hub Routes */}
-                    <Route path="/" element={<PageErrorBoundary><CommandCenter /></PageErrorBoundary>} />
-                    <Route path="/trading" element={<PageErrorBoundary><TradingHub /></PageErrorBoundary>} />
-                    <Route path="/ai" element={<PageErrorBoundary><AIHub /></PageErrorBoundary>} />
-                    <Route path="/backtest" element={<PageErrorBoundary><BacktestHub /></PageErrorBoundary>} />
-                    <Route path="/news" element={<PageErrorBoundary><NewsHub /></PageErrorBoundary>} />
-                    <Route path="/scanner" element={<PageErrorBoundary><ScannerHub /></PageErrorBoundary>} />
-                    <Route path="/defi" element={<PageErrorBoundary><DeFiHub /></PageErrorBoundary>} />
-                    <Route path="/settings" element={<PageErrorBoundary><SettingsHub /></PageErrorBoundary>} />
+                    <Route path="/" element={<PageErrorBoundary><SuspenseWrapper><CommandCenter /></SuspenseWrapper></PageErrorBoundary>} />
+                    <Route path="/trading" element={<PageErrorBoundary><SuspenseWrapper><TradingHub /></SuspenseWrapper></PageErrorBoundary>} />
+                    <Route path="/ai" element={<PageErrorBoundary><SuspenseWrapper><AIHub /></SuspenseWrapper></PageErrorBoundary>} />
+                    <Route path="/backtest" element={<PageErrorBoundary><SuspenseWrapper><BacktestHub /></SuspenseWrapper></PageErrorBoundary>} />
+                    <Route path="/news" element={<PageErrorBoundary><SuspenseWrapper><NewsHub /></SuspenseWrapper></PageErrorBoundary>} />
+                    <Route path="/scanner" element={<PageErrorBoundary><SuspenseWrapper><ScannerHub /></SuspenseWrapper></PageErrorBoundary>} />
+                    <Route path="/defi" element={<PageErrorBoundary><SuspenseWrapper><DeFiHub /></SuspenseWrapper></PageErrorBoundary>} />
+                    <Route path="/settings" element={<PageErrorBoundary><SuspenseWrapper><SettingsHub /></SuspenseWrapper></PageErrorBoundary>} />
                     
                     {/* Legacy routes - redirect to hubs */}
                     <Route path="/spot-trading" element={<Navigate to="/trading" replace />} />
