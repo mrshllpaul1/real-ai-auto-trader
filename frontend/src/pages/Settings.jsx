@@ -843,6 +843,373 @@ const Settings = ({ embedded = false }) => {
           </div>
         </TabsContent>
 
+        {/* Blockchain API Tab (DeFi) */}
+        <TabsContent value="blockchain">
+          <div className="space-y-6">
+            <Card className="bg-[#0A0A0A] border-[#1F1F1F] border-l-4 border-l-[#627EEA]" data-testid="blockchain-api-card">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-[#627EEA]/20 flex items-center justify-center">
+                    <Blocks size={24} className="text-[#627EEA]" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-2xl font-heading">Blockchain API Integration</CardTitle>
+                    <CardDescription>
+                      Connect blockchain APIs for real DeFi data, wallet tracking, and NFT support
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="bg-[#627EEA]/10 border border-[#627EEA]/30 rounded-lg p-4">
+                  <p className="text-sm text-[#A1A1AA]">
+                    <strong className="text-[#627EEA]">Why add a Blockchain API?</strong><br />
+                    The DeFi Hub currently shows placeholder data. Connect one of these providers 
+                    to enable <strong>real</strong> wallet balances, DeFi positions, NFTs, and transaction history.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Alchemy */}
+                  <div className="bg-[#121212] rounded-lg p-4 border border-[#1F1F1F]">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded bg-[#0052FF] flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">A</span>
+                        </div>
+                        <span className="font-medium text-white">Alchemy</span>
+                      </div>
+                      <Badge className={`${blockchainStatus.alchemy ? 'bg-[#00FF94]/20 text-[#00FF94]' : 'bg-[#1F1F1F] text-[#666]'} border-transparent`}>
+                        {blockchainStatus.alchemy ? 'Connected' : 'Not Connected'}
+                      </Badge>
+                    </div>
+                    <Input
+                      type="password"
+                      value={blockchainKeys.alchemy_api_key}
+                      onChange={(e) => setBlockchainKeys({
+                        ...blockchainKeys,
+                        alchemy_api_key: e.target.value
+                      })}
+                      placeholder="Enter Alchemy API key"
+                      className="bg-[#0A0A0A] border-[#1F1F1F] font-data"
+                    />
+                    <p className="text-xs text-[#666] mt-2">
+                      Get free key at <a href="https://www.alchemy.com/" target="_blank" rel="noopener noreferrer" className="text-[#0052FF] hover:underline">alchemy.com</a>
+                    </p>
+                  </div>
+
+                  {/* Moralis */}
+                  <div className="bg-[#121212] rounded-lg p-4 border border-[#1F1F1F]">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded bg-[#00C2FF] flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">M</span>
+                        </div>
+                        <span className="font-medium text-white">Moralis</span>
+                      </div>
+                      <Badge className={`${blockchainStatus.moralis ? 'bg-[#00FF94]/20 text-[#00FF94]' : 'bg-[#1F1F1F] text-[#666]'} border-transparent`}>
+                        {blockchainStatus.moralis ? 'Connected' : 'Not Connected'}
+                      </Badge>
+                    </div>
+                    <Input
+                      type="password"
+                      value={blockchainKeys.moralis_api_key}
+                      onChange={(e) => setBlockchainKeys({
+                        ...blockchainKeys,
+                        moralis_api_key: e.target.value
+                      })}
+                      placeholder="Enter Moralis API key"
+                      className="bg-[#0A0A0A] border-[#1F1F1F] font-data"
+                    />
+                    <p className="text-xs text-[#666] mt-2">
+                      Get free key at <a href="https://moralis.io/" target="_blank" rel="noopener noreferrer" className="text-[#00C2FF] hover:underline">moralis.io</a>
+                    </p>
+                  </div>
+
+                  {/* Infura */}
+                  <div className="bg-[#121212] rounded-lg p-4 border border-[#1F1F1F]">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded bg-[#FF6B4A] flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">I</span>
+                        </div>
+                        <span className="font-medium text-white">Infura</span>
+                      </div>
+                      <Badge className={`${blockchainStatus.infura ? 'bg-[#00FF94]/20 text-[#00FF94]' : 'bg-[#1F1F1F] text-[#666]'} border-transparent`}>
+                        {blockchainStatus.infura ? 'Connected' : 'Not Connected'}
+                      </Badge>
+                    </div>
+                    <Input
+                      type="password"
+                      value={blockchainKeys.infura_api_key}
+                      onChange={(e) => setBlockchainKeys({
+                        ...blockchainKeys,
+                        infura_api_key: e.target.value
+                      })}
+                      placeholder="Enter Infura Project ID"
+                      className="bg-[#0A0A0A] border-[#1F1F1F] font-data"
+                    />
+                    <p className="text-xs text-[#666] mt-2">
+                      Get free key at <a href="https://infura.io/" target="_blank" rel="noopener noreferrer" className="text-[#FF6B4A] hover:underline">infura.io</a>
+                    </p>
+                  </div>
+
+                  {/* QuickNode */}
+                  <div className="bg-[#121212] rounded-lg p-4 border border-[#1F1F1F]">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded bg-[#0052FF] flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">Q</span>
+                        </div>
+                        <span className="font-medium text-white">QuickNode</span>
+                      </div>
+                      <Badge className={`${blockchainStatus.quicknode ? 'bg-[#00FF94]/20 text-[#00FF94]' : 'bg-[#1F1F1F] text-[#666]'} border-transparent`}>
+                        {blockchainStatus.quicknode ? 'Connected' : 'Not Connected'}
+                      </Badge>
+                    </div>
+                    <Input
+                      type="password"
+                      value={blockchainKeys.quicknode_api_key}
+                      onChange={(e) => setBlockchainKeys({
+                        ...blockchainKeys,
+                        quicknode_api_key: e.target.value
+                      })}
+                      placeholder="Enter QuickNode endpoint URL"
+                      className="bg-[#0A0A0A] border-[#1F1F1F] font-data"
+                    />
+                    <p className="text-xs text-[#666] mt-2">
+                      Get free endpoint at <a href="https://www.quicknode.com/" target="_blank" rel="noopener noreferrer" className="text-[#0052FF] hover:underline">quicknode.com</a>
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={async () => {
+                    const loadingToast = toast.loading('Saving blockchain API keys...');
+                    try {
+                      setLoading(true);
+                      await api.post('/integrations/blockchain/save', blockchainKeys);
+                      toast.dismiss(loadingToast);
+                      toast.success('Blockchain API keys saved!', {
+                        description: 'DeFi Hub will now show real wallet data',
+                      });
+                    } catch (error) {
+                      toast.dismiss(loadingToast);
+                      toast.error('Failed to save keys', {
+                        description: 'Please check your API keys and try again',
+                      });
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  className="w-full bg-[#627EEA] hover:bg-[#627EEA]/80 text-white font-bold rounded-full"
+                  disabled={loading}
+                >
+                  {loading ? 'Saving...' : 'Save Blockchain API Keys'}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Copy Trading / Social Platform Tab */}
+        <TabsContent value="social">
+          <div className="space-y-6">
+            <Card className="bg-[#0A0A0A] border-[#1F1F1F] border-l-4 border-l-[#00FF94]" data-testid="social-trading-card">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-[#00FF94]/20 flex items-center justify-center">
+                    <Users size={24} className="text-[#00FF94]" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-2xl font-heading">Copy Trading Platform</CardTitle>
+                    <CardDescription>
+                      Connect a social trading platform to enable copy trading features
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="bg-[#00FF94]/10 border border-[#00FF94]/30 rounded-lg p-4">
+                  <p className="text-sm text-[#A1A1AA]">
+                    <strong className="text-[#00FF94]">Why connect a social platform?</strong><br />
+                    Copy trading allows you to automatically replicate trades from successful traders.
+                    Connect your preferred platform to see real trader profiles and copy their strategies.
+                  </p>
+                </div>
+
+                {/* Platform Selection */}
+                <div>
+                  <Label className="text-[#A1A1AA] mb-2 block">Select Platform</Label>
+                  <Select 
+                    value={socialPlatform.platform_type} 
+                    onValueChange={(value) => setSocialPlatform({...socialPlatform, platform_type: value})}
+                  >
+                    <SelectTrigger className="bg-[#121212] border-[#1F1F1F]">
+                      <SelectValue placeholder="Choose a copy trading platform" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#121212] border-[#1F1F1F]">
+                      <SelectItem value="etoro">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#69C53E] font-bold">e</span>
+                          eToro - Popular Social Trading
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="zulutrade">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#FFB800] font-bold">Z</span>
+                          ZuluTrade - Professional Copy Trading
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="naga">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#FF5733] font-bold">N</span>
+                          NAGA - Social Investing
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="3commas">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#00B8D9] font-bold">3</span>
+                          3Commas - Crypto Copy Trading
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="shrimpy">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#FF6B6B] font-bold">S</span>
+                          Shrimpy - Portfolio Automation
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="custom">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#9D00FF] font-bold">+</span>
+                          Custom API Integration
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {socialPlatform.platform_type && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-4"
+                  >
+                    {/* Platform-specific instructions */}
+                    <div className="bg-[#121212] rounded-lg p-4 border border-[#1F1F1F]">
+                      <h4 className="font-medium text-white mb-2">
+                        {socialPlatform.platform_type === 'etoro' && '🟢 eToro API Setup'}
+                        {socialPlatform.platform_type === 'zulutrade' && '🟡 ZuluTrade API Setup'}
+                        {socialPlatform.platform_type === 'naga' && '🔴 NAGA API Setup'}
+                        {socialPlatform.platform_type === '3commas' && '🔵 3Commas API Setup'}
+                        {socialPlatform.platform_type === 'shrimpy' && '🦐 Shrimpy API Setup'}
+                        {socialPlatform.platform_type === 'custom' && '🟣 Custom API Setup'}
+                      </h4>
+                      <p className="text-xs text-[#666]">
+                        {socialPlatform.platform_type === 'etoro' && 'Log into eToro → Settings → API Access → Generate API Key'}
+                        {socialPlatform.platform_type === 'zulutrade' && 'Log into ZuluTrade → My Account → API Settings → Create New Key'}
+                        {socialPlatform.platform_type === 'naga' && 'Log into NAGA → Profile → API Management → Generate Key'}
+                        {socialPlatform.platform_type === '3commas' && 'Log into 3Commas → Settings → API → Create New API Key'}
+                        {socialPlatform.platform_type === 'shrimpy' && 'Log into Shrimpy → Settings → API Keys → Create Key'}
+                        {socialPlatform.platform_type === 'custom' && 'Enter your custom API endpoint and credentials below'}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-[#A1A1AA]">API Key</Label>
+                        <Input
+                          type="password"
+                          value={socialPlatform.api_key}
+                          onChange={(e) => setSocialPlatform({
+                            ...socialPlatform,
+                            api_key: e.target.value
+                          })}
+                          placeholder="Enter API key"
+                          className="bg-[#121212] border-[#1F1F1F] font-data mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-[#A1A1AA]">API Secret</Label>
+                        <Input
+                          type="password"
+                          value={socialPlatform.api_secret}
+                          onChange={(e) => setSocialPlatform({
+                            ...socialPlatform,
+                            api_secret: e.target.value
+                          })}
+                          placeholder="Enter API secret"
+                          className="bg-[#121212] border-[#1F1F1F] font-data mt-1"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-[#A1A1AA]">Username / Account ID (Optional)</Label>
+                      <Input
+                        value={socialPlatform.username}
+                        onChange={(e) => setSocialPlatform({
+                          ...socialPlatform,
+                          username: e.target.value
+                        })}
+                        placeholder="Enter your username or account ID"
+                        className="bg-[#121212] border-[#1F1F1F] font-data mt-1"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+
+                <Button
+                  onClick={async () => {
+                    if (!socialPlatform.platform_type || !socialPlatform.api_key) {
+                      toast.error('Missing information', {
+                        description: 'Please select a platform and enter your API key',
+                      });
+                      return;
+                    }
+                    const loadingToast = toast.loading('Connecting social trading platform...');
+                    try {
+                      setLoading(true);
+                      await api.post('/integrations/social-trading/connect', socialPlatform);
+                      toast.dismiss(loadingToast);
+                      toast.success('Social trading platform connected!', {
+                        description: 'Copy trading features are now enabled',
+                      });
+                      setSocialPlatformConnected(true);
+                    } catch (error) {
+                      toast.dismiss(loadingToast);
+                      toast.error('Failed to connect platform', {
+                        description: error.response?.data?.detail || 'Please check your credentials',
+                      });
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  className="w-full bg-[#00FF94] hover:bg-[#00FF94]/80 text-black font-bold rounded-full"
+                  disabled={loading || !socialPlatform.platform_type}
+                >
+                  {loading ? 'Connecting...' : socialPlatformConnected ? 'Update Connection' : 'Connect Platform'}
+                </Button>
+
+                {/* Status */}
+                <div className="flex items-center justify-center gap-2 text-sm">
+                  {socialPlatformConnected ? (
+                    <>
+                      <CheckCircle size={16} className="text-[#00FF94]" />
+                      <span className="text-[#00FF94]">Platform connected - Copy trading enabled</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle size={16} className="text-[#666]" />
+                      <span className="text-[#666]">No platform connected - Using sample data</span>
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
         {/* Risk Management Tab */}
         <TabsContent value="risk">
           <Card className="bg-[#0A0A0A] border-[#1F1F1F]" data-testid="risk-settings-card">
