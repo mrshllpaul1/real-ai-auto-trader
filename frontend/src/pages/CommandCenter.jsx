@@ -12,6 +12,37 @@ import { motion } from 'framer-motion';
 import api, { tradingAPI, marketAPI } from '../services/api';
 import { toast } from 'sonner';
 import MarketOverview from '../components/MarketOverview';
+import { CardSkeleton, TableSkeleton } from '../components/LoadingSkeleton';
+
+// Loading Skeleton for Command Center
+const CommandCenterSkeleton = () => (
+  <div className="p-6 space-y-6">
+    <div className="flex items-center justify-between">
+      <div className="space-y-2">
+        <div className="w-48 h-8 rounded bg-gray-800 animate-pulse" />
+        <div className="w-64 h-4 rounded bg-gray-800 animate-pulse" />
+      </div>
+      <div className="w-24 h-10 rounded bg-gray-800 animate-pulse" />
+    </div>
+    
+    <div className="flex gap-2 border-b border-gray-800 pb-2">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="w-32 h-10 rounded bg-gray-800 animate-pulse" />
+      ))}
+    </div>
+    
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <CardSkeleton />
+      <CardSkeleton />
+      <CardSkeleton />
+    </div>
+    
+    <div className="p-6 rounded-xl bg-gray-900/50 border border-gray-800">
+      <div className="w-40 h-5 rounded bg-gray-800 mb-4 animate-pulse" />
+      <TableSkeleton rows={4} />
+    </div>
+  </div>
+);
 
 // Tab components
 const DashboardTab = ({ portfolio, krakenPortfolio, prices }) => (
