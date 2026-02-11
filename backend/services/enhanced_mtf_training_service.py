@@ -714,7 +714,8 @@ class EnhancedMTFTrainingService:
         timeframes: List[str] = None,
         epochs: int = 100,
         learning_rate: float = 0.001,
-        download_data: bool = True
+        download_data: bool = True,
+        progress_callback: callable = None
     ) -> Dict[str, Any]:
         """
         Train the enhanced MTF model with technical + sentiment features.
@@ -725,6 +726,9 @@ class EnhancedMTFTrainingService:
         3. Extract combined feature vectors
         4. Train ensemble classifier
         5. Store model and evaluate
+        
+        Args:
+            progress_callback: Optional callback(progress, message) for progress updates
         """
         training_id = str(uuid.uuid4())
         started_at = datetime.now(timezone.utc)
@@ -736,6 +740,15 @@ class EnhancedMTFTrainingService:
             "progress": 0,
             "current_phase": "initializing"
         }
+        
+        def update_progress(progress: int, message: str):
+            self._training_status["progress"] = progress
+            self._training_status["current_phase"] = message
+            if progress_callback:
+                try:
+                    progress_callback(progress, message)
+                except Exception:
+                    pass
         
         try:
             if ML_LIGHTWEIGHT_MODE:
