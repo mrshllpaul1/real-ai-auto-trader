@@ -7,6 +7,46 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ## Session Update - Feb 11, 2026 (Current Session)
 
+### ✅ NEW: Training Progress Monitoring System (Feb 11, 2026)
+
+**Features Added:**
+1. **Backend Progress Manager** (`/app/backend/services/training_progress_manager.py`)
+   - Centralized tracking of all training tasks
+   - Real-time progress updates via `/api/training-progress/*` endpoints
+   - Task status: pending → running → completed/failed
+   - Auto-cleanup of old completed tasks
+
+2. **API Endpoints:**
+   - `GET /api/training-progress/active` - Get all running tasks
+   - `GET /api/training-progress/all` - Get all recent tasks
+   - `GET /api/training-progress/task/{task_id}` - Get specific task status
+
+3. **Frontend Progress Component** (`TrainingProgress.jsx`)
+   - Floating notification in bottom-right corner
+   - Shows active training tasks with progress bars
+   - Auto-polls for updates every 2 seconds
+   - Collapsible UI for minimal distraction
+
+4. **Integration Points:**
+   - `/api/training/train-all` now returns `task_id` for progress tracking
+   - Model Performance Dashboard shows embedded progress when training
+   - MTF Training shows progress indicator during training
+
+**Files Created:**
+- `backend/services/training_progress_manager.py`
+- `backend/routes/training_progress.py`
+- `frontend/src/components/TrainingProgress.jsx`
+
+**Files Modified:**
+- `backend/routes/training.py` - Added progress tracking to train-all
+- `backend/routes/enhanced_mtf_training.py` - Added progress tracking
+- `backend/init/routes.py` - Registered new route
+- `frontend/src/App.jsx` - Added global TrainingProgress component
+- `frontend/src/pages/ModelPerformanceDashboard.jsx` - Added embedded progress
+- `frontend/src/pages/EnhancedMTFPredictions.jsx` - Added progress indicator
+
+---
+
 ### ✅ VERIFIED: All Train & Test Buttons Working (Feb 11, 2026)
 
 | Location | Button | Status | Backend Endpoint |
