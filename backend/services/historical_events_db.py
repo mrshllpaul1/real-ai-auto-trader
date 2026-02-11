@@ -820,8 +820,12 @@ class HistoricalEventsDatabase:
                     ]
                 })
         
-        # US CPI releases (approx mid-month)
-        cpi_2026 = ["2026-02-13", "2026-03-13", "2026-04-10", "2026-05-15", "2026-06-12", "2026-07-14"]
+        # US CPI releases (approx second Friday of month)
+        cpi_2026 = [
+            "2026-02-13", "2026-03-13", "2026-04-10", "2026-05-15",
+            "2026-06-12", "2026-07-10", "2026-08-14", "2026-09-11",
+            "2026-10-09", "2026-11-13", "2026-12-11"
+        ]
         for cpi_date in cpi_2026:
             cpi_dt = datetime.strptime(cpi_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
             if cpi_dt > now:
@@ -842,7 +846,11 @@ class HistoricalEventsDatabase:
                 })
         
         # US Non-Farm Payrolls (first Friday)
-        nfp_2026 = ["2026-02-06", "2026-03-06", "2026-04-03", "2026-05-08", "2026-06-05", "2026-07-03"]
+        nfp_2026 = [
+            "2026-02-06", "2026-03-06", "2026-04-03", "2026-05-01",
+            "2026-06-05", "2026-07-03", "2026-08-07", "2026-09-04",
+            "2026-10-02", "2026-11-06", "2026-12-04"
+        ]
         for nfp_date in nfp_2026:
             nfp_dt = datetime.strptime(nfp_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
             if nfp_dt > now:
