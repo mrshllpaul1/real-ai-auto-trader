@@ -207,6 +207,65 @@ def register_routes(api_router: APIRouter, db=None):
     api_router.include_router(entry_prices_routes.router, tags=["Entry Price Management"])
     entry_prices_routes.init_router(db)
     
-    logger.info("✅ All routes registered")
+    # ============================================
+    # NEW ENHANCEMENT ROUTES (P0, P1, Quick Wins)
+    # ============================================
+    
+    # Export (CSV, PDF reports)
+    from routes import export as export_routes
+    api_router.include_router(export_routes.router, tags=["Export"])
+    export_routes.set_db(db)
+    
+    # Achievement Badges
+    from routes import achievements as achievements_routes
+    api_router.include_router(achievements_routes.router, tags=["Achievements"])
+    achievements_routes.set_db(db)
+    
+    # Event Countdown
+    from routes import event_countdown as event_countdown_routes
+    api_router.include_router(event_countdown_routes.router, tags=["Event Countdown"])
+    event_countdown_routes.set_db(db)
+    
+    # Sound Settings
+    from routes import sound_settings as sound_settings_routes
+    api_router.include_router(sound_settings_routes.router, tags=["Sound Settings"])
+    sound_settings_routes.set_db(db)
+    
+    # Portfolio Sharing
+    from routes import portfolio_share as portfolio_share_routes
+    api_router.include_router(portfolio_share_routes.router, tags=["Portfolio Sharing"])
+    portfolio_share_routes.set_db(db)
+    
+    # Push Notifications
+    from routes import push_notifications as push_notifications_routes
+    api_router.include_router(push_notifications_routes.router, tags=["Push Notifications"])
+    push_notifications_routes.set_db(db)
+    
+    # Paper Trading Leaderboard
+    from routes import paper_leaderboard as paper_leaderboard_routes
+    api_router.include_router(paper_leaderboard_routes.router, tags=["Paper Trading Leaderboard"])
+    paper_leaderboard_routes.set_db(db)
+    
+    # Strategy Marketplace
+    from routes import strategy_marketplace as marketplace_routes
+    api_router.include_router(marketplace_routes.router, tags=["Strategy Marketplace"])
+    marketplace_routes.set_db(db)
+    
+    # Social Trading (Enhanced)
+    from routes import social_trading as social_trading_routes
+    api_router.include_router(social_trading_routes.router, tags=["Social Trading Enhanced"])
+    social_trading_routes.set_db(db)
+    
+    # Tax Reporting
+    from routes import tax_reporting as tax_routes
+    api_router.include_router(tax_routes.router, tags=["Tax Reporting"])
+    tax_routes.set_db(db)
+    
+    # Email Digest
+    from routes import email_digest as email_digest_routes
+    api_router.include_router(email_digest_routes.router, tags=["Email Digest"])
+    email_digest_routes.set_db(db)
+    
+    logger.info("✅ All routes registered (including new enhancements)")
     
     return api_router
