@@ -52,6 +52,9 @@ try:
     TF_AVAILABLE = True
 except ImportError:
     TF_AVAILABLE = False
+    # Define placeholder types for type hints when TF not available
+    Model = type(None)
+    Sequential = type(None)
     logger.warning("TensorFlow not available")
 
 try:
