@@ -78,12 +78,10 @@ const TrainingProgress = ({
 
     // HTTP polling for updates
     const interval = setInterval(() => {
-      if (!wsConnected) {
-        if (taskId) {
-          fetchTaskStatus();
-        } else {
-          fetchActiveTasks();
-        }
+      if (taskId) {
+        fetchTaskStatus();
+      } else {
+        fetchActiveTasks();
       }
     }, pollInterval);
 
