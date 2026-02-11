@@ -206,19 +206,24 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
       modelKey: 'xgboost',
       accuracy: ensembleTrained ? (modelsStatus?.xgboost?.accuracy || 78) : 0,
       status: ensembleTrained ? 'active' : 'inactive',
-      description: 'Gradient boosting ensemble'
+      description: 'Gradient boosting ensemble',
+      trainedAt: modelsStatus?.xgboost?.trained_at
     },
     { 
       name: 'LSTM/GRU', 
-      accuracy: timeSeriesTrained ? 72 : 0,
+      modelKey: 'lstm_gru',
+      accuracy: timeSeriesTrained ? (modelsStatus?.lstm_gru?.accuracy || 72) : 0,
       status: timeSeriesTrained ? 'active' : 'inactive',
-      description: 'Deep learning time series'
+      description: 'Deep learning time series',
+      trainedAt: modelsStatus?.lstm_gru?.trained_at
     },
     { 
       name: 'FinRL Agent', 
-      accuracy: finrlTrained ? 68 : 0,
+      modelKey: 'finrl',
+      accuracy: finrlTrained ? (modelsStatus?.finrl?.accuracy || 68) : 0,
       status: finrlTrained ? 'active' : 'inactive',
-      description: 'Reinforcement learning trader'
+      description: 'Reinforcement learning trader',
+      trainedAt: modelsStatus?.finrl?.trained_at
     }
   ];
 
