@@ -841,11 +841,16 @@ class GemPredictionEngine:
             logger.debug(f"Cache hit for gem prediction: {symbol}")
             return cached_prediction
         
-        # Get recent OHLCV data
+        # Get recent OHLCV data from database first
         ohlcv_data = await self.db.historical_ohlcv.find(
             {'symbol': symbol},
             {'_id': 0}
         ).sort('timestamp', -1).limit(60).to_list(60)
+        
+        # If DB is empty, fetch from Kraken
+        if len(ohlcv_data) < 40:
+            logger.info(f"DB empty for {symbol} prediction, fetching from Kraken...")
+            ohlcv_data = await self._fetch_kraken_ohlc(symbol, 60)
         
         if len(ohlcv_data) < 40:
             return {'error': f'Insufficient data for {symbol}'}
