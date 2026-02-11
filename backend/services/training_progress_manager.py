@@ -159,16 +159,6 @@ class TrainingProgressManager:
         except Exception as e:
             logger.debug(f"WebSocket broadcast failed (no clients?): {e}")
     
-    def fail_task(self, task_id: str, error: str):
-        """Mark a task as failed"""
-        if task_id in self._tasks:
-            task = self._tasks[task_id]
-            task.status = "failed"
-            task.completed_at = datetime.now(timezone.utc)
-            task.error = error
-            task.message = f"Failed: {error}"
-            logger.error(f"Failed task: {task_id} - {error}")
-    
     def get_task(self, task_id: str) -> Optional[Dict]:
         """Get task status"""
         if task_id not in self._tasks:
