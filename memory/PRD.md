@@ -7,6 +7,43 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ## Session Update - Feb 11, 2026 (Latest - Part 3)
 
+### ✅ NEW FEATURE: Auto-Execute Trades from Weekly Selection
+
+#### Connected Scheduler to Auto-Trading Execution
+**Implementation:**
+- Updated `WeeklySelectionScheduler` to accept `auto_trader` instance
+- Added `_execute_trades()` method that:
+  - Stores selection in format expected by auto_trader
+  - Calls `auto_trader.execute_weekly_rebalance(paper_trade)`
+  - Creates execution alerts on success
+  - Updates selection record with execution results
+- New config options: `auto_execute`, `paper_trade`, `position_size_pct`, `use_isolated_budget`
+
+**New API Endpoints:**
+- `POST /api/weekly-scheduler/execute` - Manually execute trades for latest selection
+- `GET /api/weekly-scheduler/last-execution` - Get last execution result
+
+**Frontend Updates:**
+- Added **Auto-Execute Trades** toggle switch
+- Added **Paper Trading / REAL TRADING** toggle with warning
+- Added **Execute** button (appears when selection not yet executed)
+- Shows **EXECUTED** badge and execution results (trades count, invested amount, mode)
+- Warning displayed when real trading is enabled
+
+**Safety Features:**
+- Requires isolated budget to be set before execution
+- Real trading disabled by default
+- Paper trade mode enabled by default
+- Visual warning (red text) when real trading enabled
+
+**Files Modified:**
+- `backend/services/weekly_selection_scheduler.py` - Added execution logic
+- `backend/routes/weekly_scheduler.py` - Added execute endpoint
+- `backend/init/services.py` - Connected auto_trader to scheduler
+- `frontend/src/pages/AutoTrading.jsx` - Enhanced WeeklySchedulerSection
+
+---
+
 ### ✅ NEW FEATURE: Dynamic Kraken Pair Loading & Weekly Scheduler
 
 #### 1. Dynamic Kraken Pair Loading
