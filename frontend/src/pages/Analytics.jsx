@@ -7,6 +7,7 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContai
 import { motion } from 'framer-motion';
 import api, { tradingAPI } from '../services/api';
 import { TrendingUp, TrendingDown, DollarSign, Activity, PieChart as PieIcon, BarChart3, Target, Zap, Wallet, TestTube, RefreshCw } from 'lucide-react';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const Analytics = ({ embedded = false }) => {
   const [portfolio, setPortfolio] = useState(null);
@@ -163,11 +164,7 @@ const Analytics = ({ embedded = false }) => {
   const COLORS = ['#F7931A', '#627EEA', '#00FFA3', '#9D00FF', '#007AFF'];
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#00FF94]" />
-      </div>
-    );
+    return <PageLoadingSkeleton />;
   }
 
   const totalValue = portfolio?.total_value || realPortfolio?.total_value || 10000;
