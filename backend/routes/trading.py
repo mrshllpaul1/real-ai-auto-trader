@@ -473,6 +473,7 @@ async def get_kraken_portfolio():
         result = {
             "holdings": holdings,
             "total_value_usd": round(total_value_usd, 2),
+            "change_24h": round(portfolio_change_24h, 2),
             "holdings_count": len(holdings),
             "last_updated": datetime.utcnow().isoformat()
         }
