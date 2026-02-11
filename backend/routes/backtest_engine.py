@@ -53,16 +53,19 @@ async def _fetch_real_ohlc_data(symbol: str, days: int) -> List[float]:
     Returns list of closing prices for the requested days.
     
     Args:
-        symbol: Asset symbol (e.g., 'BTC', 'ETH')
+        symbol: Asset symbol (e.g., 'BTC/USD', 'BTC', 'ETH/USD')
         days: Number of days of historical data needed
         
     Returns:
         List of closing prices, or empty list if unavailable
     """
-    pair = KRAKEN_OHLC_PAIRS.get(symbol.upper())
+    # Normalize symbol - extract base currency (e.g., 'BTC/USD' -> 'BTC')
+    base_symbol = symbol.upper().replace('/USD', '').replace('USD', '').strip()
+    
+    pair = KRAKEN_OHLC_PAIRS.get(base_symbol)
     if not pair:
         # Try constructing the pair
-        pair = f"{symbol.upper()}USD"
+        pair = f"{base_symbol}USD"
     
     # Calculate interval - Kraken supports: 1, 5, 15, 30, 60, 240, 1440 (daily), 10080 (weekly)
     interval = 1440  # Daily candles
