@@ -185,6 +185,9 @@ async def analyze_slow_queries():
     Analyze database for slow queries
     Returns recommendations for additional indexes
     """
+    # Maximum length for command output in recommendations
+    MAX_COMMAND_LENGTH = 200
+    
     recommendations = []
     
     try:
@@ -206,7 +209,7 @@ async def analyze_slow_queries():
                 'collection': query.get('ns', '').split('.')[-1],
                 'operation': query.get('op'),
                 'duration_ms': query.get('millis'),
-                'command': str(query.get('command', {}))[:200]  # Truncate for readability
+                'command': str(query.get('command', {}))[:MAX_COMMAND_LENGTH]  # Truncate for readability
             })
             
         logger.info(f"Found {len(slow_queries)} slow queries for analysis")

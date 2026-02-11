@@ -34,7 +34,7 @@ class ResponseCache:
         self._lock = asyncio.Lock()
     
     def _generate_key(self, request: Request, **kwargs) -> str:
-        """Generate cache key from request"""
+        """Generate cache key from request using SHA-256 for better collision resistance"""
         # Include path, query params, and any additional kwargs
         key_parts = [
             request.url.path,
@@ -42,7 +42,8 @@ class ResponseCache:
             str(sorted(kwargs.items()))
         ]
         key_string = "|".join(key_parts)
-        return hashlib.md5(key_string.encode()).hexdigest()
+        # Use SHA-256 instead of MD5 for better collision resistance
+        return hashlib.sha256(key_string.encode()).hexdigest()
     
     async def get(self, key: str) -> Optional[dict]:
         """Get cached response if not expired"""
@@ -86,17 +87,21 @@ class ResponseCache:
                 logger.info(f"Cache cleared: {len(keys_to_remove)} entries matching '{pattern}' removed")
     
     async def get_stats(self) -> dict:
-        """Get cache statistics"""
+        """Get cache statistics (optimized to avoid expensive serialization)"""
         async with self._lock:
             total = len(self.cache)
             expired = sum(1 for e in self.cache.values() if datetime.now() >= e['expires_at'])
             active = total - expired
             
+            # Estimate cache size without expensive json.dumps
+            import sys
+            cache_size_bytes = sum(sys.getsizeof(v) for v in self.cache.values())
+            
             return {
                 'total_entries': total,
                 'active_entries': active,
                 'expired_entries': expired,
-                'cache_size_bytes': len(json.dumps(self.cache))
+                'cache_size_bytes': cache_size_bytes
             }
     
     async def cleanup_expired(self):
@@ -214,9 +219,10 @@ def etag_response(func: Callable) -> Callable:
         if not isinstance(result, dict):
             return result
         
-        # Generate ETag from response content
+        # Generate ETag from response content using SHA-256
         content_str = json.dumps(result, sort_keys=True)
-        etag = hashlib.md5(content_str.encode()).hexdigest()
+        # Use SHA-256 instead of MD5 for better collision resistance
+        etag = hashlib.sha256(content_str.encode()).hexdigest()[:32]  # Truncate for readability
         
         # Check If-None-Match header
         if request and request.headers.get("If-None-Match") == etag:
