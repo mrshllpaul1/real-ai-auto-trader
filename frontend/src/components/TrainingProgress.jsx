@@ -320,11 +320,23 @@ const TrainingProgress = ({
                   <WifiOff className="w-3 h-3 text-orange-400" title="Using polling" />
                 )}
               </div>
-              {expanded ? (
-                <ChevronDown className="w-4 h-4 text-gray-400" />
-              ) : (
-                <ChevronUp className="w-4 h-4 text-gray-400" />
-              )}
+              <div className="flex items-center gap-1">
+                {activeTasks.length > 0 && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleStopAllTasks(); }}
+                    className="px-2 py-1 rounded text-xs bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
+                    title="Stop all training"
+                  >
+                    <StopCircle className="w-3 h-3" />
+                    Stop All
+                  </button>
+                )}
+                {expanded ? (
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                ) : (
+                  <ChevronUp className="w-4 h-4 text-gray-400" />
+                )}
+              </div>
             </div>
             
             {expanded && (
