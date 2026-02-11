@@ -20,22 +20,44 @@ class AdaptiveCoinSelector:
     """
     AI-powered coin selection that adapts to market conditions.
     Finds the best opportunities even in bear markets.
+    Now supports ALL Kraken tradeable pairs.
     """
     
     def __init__(self, db, market_service=None, news_service=None):
         self.db = db
         self.market_service = market_service
         self.news_service = news_service
+        self._kraken_pairs_loaded = False
         
-        # All coins available for selection
+        # All Kraken tradeable coins (634 pairs available)
+        # This will be dynamically loaded from Kraken API
         self.coin_universe = [
+            # Core large caps
             'bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot',
             'avalanche', 'chainlink', 'polygon', 'uniswap', 'litecoin',
             'dogecoin', 'ripple', 'tron', 'cosmos', 'near',
-            'aptos', 'sui', 'arbitrum', 'optimism'
+            'aptos', 'sui', 'arbitrum', 'optimism',
+            # Additional Kraken coins
+            'stellar', 'algorand', 'vechain', 'filecoin', 'aave',
+            'maker', 'compound', 'synthetix', 'yearnfinance', 'curve',
+            'sushi', 'pancakeswap', 'inch', 'balancer', 'loopring',
+            'enjin', 'gala', 'sandbox', 'decentraland', 'axie',
+            'injective', 'render', 'fetch', 'ocean', 'singularity',
+            'theta', 'arweave', 'helium', 'livepeer', 'audius',
+            'shiba', 'pepe', 'floki', 'bonk', 'wif',
+            'sei', 'celestia', 'starknet', 'zksync', 'manta',
+            'jupiter', 'pyth', 'jito', 'wormhole', 'blur',
+            # Layer 2s
+            'base', 'mantle', 'scroll', 'linea', 'mode',
+            # DeFi
+            'gmx', 'dydx', 'raydium', 'orca', 'marinade',
+            # AI coins
+            'worldcoin', 'arkham', 'vectorspace', 'numeraire',
+            # Gaming
+            'immutable', 'beam', 'pixels', 'portal', 'prime',
         ]
         
-        # Coin symbols for display
+        # Coin symbols for display (expanded)
         self.coin_symbols = {
             'bitcoin': 'BTC', 'ethereum': 'ETH', 'solana': 'SOL',
             'cardano': 'ADA', 'polkadot': 'DOT', 'avalanche': 'AVAX',
@@ -43,7 +65,24 @@ class AdaptiveCoinSelector:
             'litecoin': 'LTC', 'dogecoin': 'DOGE', 'ripple': 'XRP',
             'tron': 'TRX', 'cosmos': 'ATOM', 'near': 'NEAR',
             'aptos': 'APT', 'sui': 'SUI', 'arbitrum': 'ARB',
-            'optimism': 'OP'
+            'optimism': 'OP', 'stellar': 'XLM', 'algorand': 'ALGO',
+            'vechain': 'VET', 'filecoin': 'FIL', 'aave': 'AAVE',
+            'maker': 'MKR', 'compound': 'COMP', 'synthetix': 'SNX',
+            'yearnfinance': 'YFI', 'curve': 'CRV', 'sushi': 'SUSHI',
+            'loopring': 'LRC', 'enjin': 'ENJ', 'gala': 'GALA',
+            'sandbox': 'SAND', 'decentraland': 'MANA', 'axie': 'AXS',
+            'injective': 'INJ', 'render': 'RNDR', 'fetch': 'FET',
+            'ocean': 'OCEAN', 'singularity': 'AGIX', 'theta': 'THETA',
+            'arweave': 'AR', 'helium': 'HNT', 'livepeer': 'LPT',
+            'audius': 'AUDIO', 'shiba': 'SHIB', 'pepe': 'PEPE',
+            'floki': 'FLOKI', 'bonk': 'BONK', 'wif': 'WIF',
+            'sei': 'SEI', 'celestia': 'TIA', 'starknet': 'STRK',
+            'zksync': 'ZK', 'manta': 'MANTA', 'jupiter': 'JUP',
+            'pyth': 'PYTH', 'jito': 'JTO', 'wormhole': 'W',
+            'blur': 'BLUR', 'gmx': 'GMX', 'dydx': 'DYDX',
+            'raydium': 'RAY', 'orca': 'ORCA', 'worldcoin': 'WLD',
+            'arkham': 'ARKM', 'immutable': 'IMX', 'beam': 'BEAM',
+            'pixels': 'PIXEL', 'portal': 'PORTAL', 'prime': 'PRIME',
         }
         
         # Selection criteria weights (learned over time)
@@ -55,6 +94,61 @@ class AdaptiveCoinSelector:
             'sentiment_score': 0.10,     # News sentiment
             'historical_score': 0.10,    # Historical weekly performance
         }
+    
+    async def load_kraken_pairs(self):
+        """Dynamically load all tradeable pairs from Kraken"""
+        if self._kraken_pairs_loaded:
+            return
+            
+        try:
+            if self.market_service:
+                # Get all tradeable pairs from Kraken
+                pairs = await self.market_service.get_all_tradeable_pairs()
+                if pairs:
+                    # Extract coin IDs from pairs
+                    for pair in pairs:
+                        coin_id = pair.get('base', '').lower()
+                        symbol = pair.get('altname', '')[:4]
+                        if coin_id and coin_id not in self.coin_universe:
+                            self.coin_universe.append(coin_id)
+                            if symbol:
+                                self.coin_symbols[coin_id] = symbol
+                    self._kraken_pairs_loaded = True
+                    print(f"Loaded {len(self.coin_universe)} coins from Kraken")
+        except Exception as e:
+            print(f"Error loading Kraken pairs: {e}")
+    
+    async def get_selection_status(self) -> Dict[str, Any]:
+        """Get current status of the selection engine"""
+        await self.load_kraken_pairs()
+        
+        # Get latest weights from DB if available
+        weights = await self.db.ai_training_weights.find_one({}, {'_id': 0})
+        if weights:
+            self.criteria_weights = weights.get('weights', self.criteria_weights)
+        
+        # Count historical data
+        total_weeks = await self.db.ai_training_results.count_documents({})
+        
+        return {
+            'total_weeks_analyzed': total_weeks,
+            'avg_recent_return': await self._get_recent_performance(),
+            'current_weights': self.criteria_weights,
+            'coin_universe_size': len(self.coin_universe)
+        }
+    
+    async def _get_recent_performance(self) -> float:
+        """Get average return from recent weeks"""
+        try:
+            recent = await self.db.ai_training_results.find(
+                {}, {'return_pct': 1}
+            ).sort([('week_start', -1)]).limit(10).to_list(10)
+            
+            if recent:
+                return round(np.mean([r.get('return_pct', 0) for r in recent]), 2)
+        except:
+            pass
+        return 0
     
     async def select_best_coins(
         self,
