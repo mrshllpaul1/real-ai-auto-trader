@@ -99,7 +99,90 @@ const FloatingCommandHub = () => {
         }
       }
       
-      // Training commands
+      // RECOMMENDATION / ANALYSIS COMMANDS - AI analyzes entire app state
+      if (msgLower.includes('recommend') || msgLower.includes('suggest') || msgLower.includes('what should') || 
+          msgLower.includes('next step') || msgLower.includes('advice') || msgLower.includes('analyze')) {
+        setCmdMessages(prev => [...prev, { type: 'ai', content: '🔍 Analyzing app state and gathering insights...' }]);
+        
+        // Gather comprehensive app state
+        const [tethysRes, trainingRes, ensembleRes, portfolioRes, gemsRes, marketRes, adaptiveRes] = await Promise.allSettled([
+          api.get('/tethys/status'),
+          api.get('/training-progress/active'),
+          api.get('/ensemble/status'),
+          api.get(`/trading/portfolio/${localStorage.getItem('user_id') || 'demo_user'}`),
+          api.get('/gems/top?limit=5'),
+          api.get('/market/prices?coin_ids=bitcoin,ethereum,solana'),
+          api.get('/adaptive-strategy/status')
+        ]);
+        
+        const tethys = tethysRes.status === 'fulfilled' ? tethysRes.value.data : {};
+        const training = trainingRes.status === 'fulfilled' ? trainingRes.value.data : { active_count: 0 };
+        const ensemble = ensembleRes.status === 'fulfilled' ? ensembleRes.value.data : {};
+        const portfolio = portfolioRes.status === 'fulfilled' ? portfolioRes.value.data : {};
+        const gems = gemsRes.status === 'fulfilled' ? gemsRes.value.data : [];
+        const market = marketRes.status === 'fulfilled' ? marketRes.value.data : {};
+        const adaptive = adaptiveRes.status === 'fulfilled' ? adaptiveRes.value.data : {};
+        
+        // Build intelligent recommendations
+        let recommendations = [];
+        
+        // Training recommendations
+        if (!ensemble.ensemble_initialized) {
+          recommendations.push('🧠 **Train AI Models**: Your ensemble AI is not initialized. Say "train all models" to get started.');
+        }
+        if (training.active_count === 0 && ensemble.ensemble_initialized) {
+          recommendations.push('📈 **Retrain Models**: Consider retraining to capture recent market patterns. Say "train fast" for quick update.');
+        }
+        
+        // Tethys recommendations
+        if (!tethys.active && tethys.trained) {
+          recommendations.push('🤖 **Activate Tethys**: Your autonomous trader is trained but inactive. Go to AI Hub to activate.');
+        }
+        if (!tethys.trained) {
+          recommendations.push('🎯 **Train Tethys**: The Tethys autonomous agent needs training. Say "train tethys".');
+        }
+        
+        // Portfolio recommendations
+        const portfolioValue = portfolio.total_value || portfolio.portfolio_value || 0;
+        if (portfolioValue === 0) {
+          recommendations.push('💰 **Set Up Portfolio**: No portfolio detected. Go to Trading Hub to start trading.');
+        }
+        
+        // Market analysis
+        const btcPrice = market.bitcoin?.price_usd || market.bitcoin?.current_price;
+        const btcChange = market.bitcoin?.price_change_24h || 0;
+        if (btcChange < -5) {
+          recommendations.push(`📉 **Market Dip**: BTC is down ${Math.abs(btcChange).toFixed(1)}%. Good time to look for entry points.`);
+        } else if (btcChange > 5) {
+          recommendations.push(`📈 **Market Rally**: BTC is up ${btcChange.toFixed(1)}%. Consider taking partial profits.`);
+        }
+        
+        // Gem hunting
+        if (gems.length > 0) {
+          const topGem = gems[0];
+          recommendations.push(`💎 **Hidden Gem Alert**: ${topGem.symbol || topGem.coin_id} showing strong signals. Say "find gems" for more.`);
+        } else {
+          recommendations.push('🔍 **Scan for Gems**: Say "find gems" to discover high-potential coins.');
+        }
+        
+        // Adaptive strategy
+        if (adaptive.current_regime) {
+          recommendations.push(`📊 **Market Regime**: Currently in ${adaptive.current_regime} mode. Strategies auto-adjusted.`);
+        }
+        
+        // Default if no specific recommendations
+        if (recommendations.length === 0) {
+          recommendations.push('✅ **All Systems Healthy**: Your setup looks good! Consider exploring new strategies or backtesting.');
+        }
+        
+        setCmdMessages(prev => [...prev, { 
+          type: 'ai', 
+          content: `🎯 **AI Recommendations:**\n\n${recommendations.slice(0, 5).join('\n\n')}\n\n_Say "help" for all available commands._`
+        }]);
+        return;
+      }
+      
+      // Training commands - ENHANCED with individual model training
       if (msgLower.includes('train')) {
         // Train all models
         if (msgLower.includes('all') || msgLower.includes('everything')) {
@@ -113,7 +196,7 @@ const FloatingCommandHub = () => {
         }
         
         // Fast training
-        if (msgLower.includes('fast') || msgLower.includes('quick')) {
+        if (msgLower.includes('fast') || msgLower.includes('quick') || msgLower.includes('parallel')) {
           setCmdMessages(prev => [...prev, { type: 'ai', content: '⚡ Starting fast parallel training...' }]);
           const res = await api.post('/training/train-fast', { batch_size: 10, phases: ["historical", "technical", "gems"] });
           setCmdMessages(prev => [...prev, { 
@@ -123,26 +206,122 @@ const FloatingCommandHub = () => {
           return;
         }
         
-        // Train specific model
-        if (msgLower.includes('ml') || msgLower.includes('dl') || msgLower.includes('gem')) {
-          setCmdMessages(prev => [...prev, { type: 'ai', content: '🔬 Starting ML/DL gem model training...' }]);
-          const res = await api.post('/gems/ml-dl/train', {});
+        // Train INDIVIDUAL model types
+        if (msgLower.includes('historical') && !msgLower.includes('all')) {
+          setCmdMessages(prev => [...prev, { type: 'ai', content: '📜 Training Historical Pattern model only...' }]);
+          const res = await api.post('/training/train-fast', { batch_size: 10, phases: ["historical"] });
           setCmdMessages(prev => [...prev, { 
             type: 'ai', 
-            content: `✅ **ML/DL Training Started!**\n• Task: ${res.data.task_id || 'gem-training'}\n• Models: RandomForest, GradientBoosting, LSTM, GRU, etc.`
+            content: `✅ **Historical Model Training Started!**\n• Task: ${res.data.task_id}\n• Training pattern recognition on historical data.`
           }]);
           return;
         }
         
+        if (msgLower.includes('technical') && !msgLower.includes('all')) {
+          setCmdMessages(prev => [...prev, { type: 'ai', content: '📊 Training Technical Indicator model only...' }]);
+          const res = await api.post('/training/train-fast', { batch_size: 10, phases: ["technical"] });
+          setCmdMessages(prev => [...prev, { 
+            type: 'ai', 
+            content: `✅ **Technical Model Training Started!**\n• Task: ${res.data.task_id}\n• Training RSI, MACD, Bollinger patterns.`
+          }]);
+          return;
+        }
+        
+        if ((msgLower.includes('gem') && msgLower.includes('pattern')) || 
+            (msgLower.includes('gems') && !msgLower.includes('ml') && !msgLower.includes('dl'))) {
+          setCmdMessages(prev => [...prev, { type: 'ai', content: '💎 Training Gem Pattern model only...' }]);
+          const res = await api.post('/training/train-fast', { batch_size: 10, phases: ["gems"] });
+          setCmdMessages(prev => [...prev, { 
+            type: 'ai', 
+            content: `✅ **Gem Pattern Training Started!**\n• Task: ${res.data.task_id}\n• Learning profitable gem patterns.`
+          }]);
+          return;
+        }
+        
+        // Train ML/DL models
+        if (msgLower.includes('ml') || msgLower.includes('machine learning')) {
+          setCmdMessages(prev => [...prev, { type: 'ai', content: '🤖 Training ML models (RandomForest, GradientBoosting, SVM)...' }]);
+          const res = await api.post('/gems/ml-dl/train', {});
+          setCmdMessages(prev => [...prev, { 
+            type: 'ai', 
+            content: `✅ **ML Training Started!**\n• Models: RandomForest, GradientBoosting, SVM\n• Task: ${res.data.task_id || 'ml-training'}`
+          }]);
+          return;
+        }
+        
+        if (msgLower.includes('dl') || msgLower.includes('deep learning') || msgLower.includes('neural')) {
+          setCmdMessages(prev => [...prev, { type: 'ai', content: '🧬 Training Deep Learning models (LSTM, GRU, CNN)...' }]);
+          const res = await api.post('/gems/ml-dl/train', {});
+          setCmdMessages(prev => [...prev, { 
+            type: 'ai', 
+            content: `✅ **DL Training Started!**\n• Models: LSTM, GRU, BiLSTM, CNN-LSTM, Attention\n• Task: ${res.data.task_id || 'dl-training'}`
+          }]);
+          return;
+        }
+        
+        // Train Tethys
+        if (msgLower.includes('tethys')) {
+          setCmdMessages(prev => [...prev, { type: 'ai', content: '🤖 Training Tethys autonomous agent...' }]);
+          try {
+            const res = await api.post('/tethys-train/start');
+            setCmdMessages(prev => [...prev, { 
+              type: 'ai', 
+              content: `✅ **Tethys Training Started!**\n• The autonomous trading agent is learning.\n• This may take a few minutes.`
+            }]);
+          } catch (e) {
+            setCmdMessages(prev => [...prev, { type: 'ai', content: '⚠️ Tethys training requires initial setup. Go to AI Hub first.' }]);
+          }
+          return;
+        }
+        
+        // Train Ensemble
+        if (msgLower.includes('ensemble')) {
+          setCmdMessages(prev => [...prev, { type: 'ai', content: '🎭 Training Ensemble AI (combines multiple models)...' }]);
+          try {
+            const res = await api.post('/ensemble/train');
+            setCmdMessages(prev => [...prev, { 
+              type: 'ai', 
+              content: `✅ **Ensemble Training Started!**\n• Combining predictions from multiple AI models.`
+            }]);
+          } catch (e) {
+            setCmdMessages(prev => [...prev, { type: 'ai', content: '⚠️ Train base models first with "train all models".' }]);
+          }
+          return;
+        }
+        
+        // Train DRL (Deep Reinforcement Learning)
+        if (msgLower.includes('drl') || msgLower.includes('reinforcement')) {
+          setCmdMessages(prev => [...prev, { type: 'ai', content: '🎮 Training DRL (Deep Reinforcement Learning) agent...' }]);
+          try {
+            const res = await api.post('/drl/train');
+            setCmdMessages(prev => [...prev, { 
+              type: 'ai', 
+              content: `✅ **DRL Training Started!**\n• Training RL agent to optimize trading decisions.`
+            }]);
+          } catch (e) {
+            setCmdMessages(prev => [...prev, { type: 'ai', content: '⚠️ DRL training requires historical data. Try "train all" first.' }]);
+          }
+          return;
+        }
+        
         // Train single coin
-        const coinMatch = msgLower.match(/train\s+(bitcoin|ethereum|solana|cardano|polkadot|avalanche|chainlink)/);
+        const coinMatch = msgLower.match(/train\s+(bitcoin|ethereum|solana|cardano|polkadot|avalanche|chainlink|dogecoin|ripple|litecoin)/);
         if (coinMatch) {
           const coin = coinMatch[1];
-          setCmdMessages(prev => [...prev, { type: 'ai', content: `🎯 Training models for ${coin}...` }]);
+          setCmdMessages(prev => [...prev, { type: 'ai', content: `🎯 Training all models for ${coin}...` }]);
           const res = await api.post('/training/train-single', { coin, model_type: 'all' });
           setCmdMessages(prev => [...prev, { 
             type: 'ai', 
-            content: `✅ **Single Coin Training Started!**\n• Coin: ${coin}\n• Task: ${res.data.task_id}`
+            content: `✅ **Single Coin Training Started!**\n• Coin: ${coin}\n• Models: Historical, Technical, Gems\n• Task: ${res.data.task_id}`
+          }]);
+          return;
+        }
+        
+        // List available training options
+        if (msgLower === 'train' || msgLower === 'train models') {
+          setCmdMessages(prev => [...prev, { 
+            type: 'ai', 
+            content: `🎓 **Training Options:**\n\n**Full Training:**\n• "Train all models" - All 77 coins, all phases\n• "Train fast" - Parallel 3-5x faster\n\n**Individual Models:**\n• "Train historical" - Pattern recognition\n• "Train technical" - RSI, MACD, etc.\n• "Train gem patterns" - Gem detection\n• "Train ML" - Machine Learning models\n• "Train DL" - Deep Learning models\n• "Train ensemble" - Combined AI\n• "Train tethys" - Autonomous agent\n• "Train DRL" - Reinforcement Learning\n\n**Single Coin:**\n• "Train bitcoin" - One coin only`
           }]);
           return;
         }
