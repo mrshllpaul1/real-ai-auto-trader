@@ -179,25 +179,32 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
   const modelAccuracyData = [
     { 
       name: 'Historical AI', 
-      accuracy: historicalTrained ? (trainingStatus?.training_accuracy || 76) : 0,
+      modelKey: 'historical',
+      accuracy: historicalTrained ? (modelsStatus?.historical?.accuracy || trainingStatus?.training_accuracy || 76) : 0,
       status: historicalTrained ? 'active' : 'inactive',
-      description: 'Pattern recognition on historical data'
+      description: 'Pattern recognition on historical data',
+      trainedAt: modelsStatus?.historical?.trained_at
     },
     { 
       name: 'Gem ML/DL', 
-      accuracy: gemMlDlTrained ? 76 : 0,
+      modelKey: 'gem_ml_dl',
+      accuracy: gemMlDlTrained ? (modelsStatus?.gem_ml_dl?.accuracy || 76) : 0,
       status: gemMlDlTrained ? 'active' : 'inactive',
-      description: 'Hidden gem prediction (RF, SVM, GB)'
+      description: 'Hidden gem prediction (RF, SVM, GB)',
+      trainedAt: modelsStatus?.gem_ml_dl?.trained_at
     },
     { 
       name: 'MTF Predictor', 
-      accuracy: mtfTrained ? (mtfStatus?.accuracy || 70) : 0,
+      modelKey: 'mtf',
+      accuracy: mtfTrained ? (modelsStatus?.mtf?.accuracy || mtfStatus?.accuracy || 70) : 0,
       status: mtfTrained ? 'active' : 'inactive',
-      description: 'Multi-timeframe sentiment analysis'
+      description: 'Multi-timeframe sentiment analysis',
+      trainedAt: modelsStatus?.mtf?.trained_at
     },
     { 
       name: 'XGBoost/LightGBM', 
-      accuracy: ensembleTrained ? 78 : 0,
+      modelKey: 'xgboost',
+      accuracy: ensembleTrained ? (modelsStatus?.xgboost?.accuracy || 78) : 0,
       status: ensembleTrained ? 'active' : 'inactive',
       description: 'Gradient boosting ensemble'
     },
