@@ -176,7 +176,7 @@ const GemMLDLComparison = ({ embedded = false }) => {
               Scan Gems
             </Button>
             <Button
-              onClick={loadData}
+              onClick={() => loadData(true)}
               variant="outline"
               className="border-[#1F1F1F]"
               data-testid="refresh-btn"
