@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Progress } from './ui/progress';
 import { 
   Brain, CheckCircle, XCircle, Clock, Loader2,
-  ChevronDown, ChevronUp
+  ChevronDown, ChevronUp, Wifi, WifiOff
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -11,20 +11,106 @@ import api from '../services/api';
  * Training Progress Monitor Component
  * 
  * Shows real-time progress of long-running training tasks.
+ * Uses WebSocket for real-time updates with polling fallback.
  * Can be used as a floating notification or embedded component.
  */
 const TrainingProgress = ({ 
   taskId = null, 
   embedded = false,
   onComplete = null,
-  pollInterval = 2000 
+  pollInterval = 5000  // Increased since WebSocket handles real-time
 }) => {
   const [task, setTask] = useState(null);
   const [activeTasks, setActiveTasks] = useState([]);
   const [expanded, setExpanded] = useState(true);
-  const [error, setError] = useState(null);
+  const [wsConnected, setWsConnected] = useState(false);
+  const wsRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
 
-  // Fetch specific task status
+  // WebSocket connection
+  useEffect(() => {
+    const connectWebSocket = () => {
+      // Get WebSocket URL from current location
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/api/training-progress/ws`;
+      
+      try {
+        const ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
+        
+        ws.onopen = () => {
+          console.log('[TrainingProgress] WebSocket connected');
+          setWsConnected(true);
+        };
+        
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'progress_update' || data.type === 'initial_state') {
+              // Update specific task if we're tracking one
+              if (taskId && data.task_id === taskId) {
+                setTask(data);
+                if (data.status === 'completed' && onComplete) {
+                  onComplete(data);
+                }
+              }
+              
+              // Update active tasks list
+              setActiveTasks(prev => {
+                const updated = prev.filter(t => t.task_id !== data.task_id);
+                if (data.status === 'running') {
+                  updated.push(data);
+                }
+                return updated;
+              });
+            }
+          } catch (e) {
+            console.error('[TrainingProgress] Error parsing WebSocket message:', e);
+          }
+        };
+        
+        ws.onclose = () => {
+          console.log('[TrainingProgress] WebSocket disconnected');
+          setWsConnected(false);
+          // Reconnect after 3 seconds
+          reconnectTimeoutRef.current = setTimeout(connectWebSocket, 3000);
+        };
+        
+        ws.onerror = (error) => {
+          console.error('[TrainingProgress] WebSocket error:', error);
+          setWsConnected(false);
+        };
+        
+      } catch (e) {
+        console.error('[TrainingProgress] Failed to create WebSocket:', e);
+        setWsConnected(false);
+      }
+    };
+    
+    connectWebSocket();
+    
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+    };
+  }, [taskId, onComplete]);
+
+  // Fallback polling (less frequent since WebSocket handles most updates)
+  const fetchActiveTasks = useCallback(async () => {
+    try {
+      const response = await api.get('/training-progress/active');
+      setActiveTasks(response.data.tasks || []);
+    } catch (err) {
+      // Silently fail for active tasks fetch
+    }
+  }, []);
+
+  // Fetch specific task status (fallback)
   const fetchTaskStatus = useCallback(async () => {
     if (!taskId) return;
     try {
@@ -41,16 +127,6 @@ const TrainingProgress = ({
     }
   }, [taskId, onComplete]);
 
-  // Fetch all active tasks
-  const fetchActiveTasks = useCallback(async () => {
-    try {
-      const response = await api.get('/training-progress/active');
-      setActiveTasks(response.data.tasks || []);
-    } catch (err) {
-      // Silently fail for active tasks fetch
-    }
-  }, []);
-
   useEffect(() => {
     // Initial fetch
     if (taskId) {
@@ -59,12 +135,14 @@ const TrainingProgress = ({
       fetchActiveTasks();
     }
 
-    // Poll for updates
+    // Fallback polling (only if WebSocket isn't connected)
     const interval = setInterval(() => {
-      if (taskId) {
-        fetchTaskStatus();
-      } else {
-        fetchActiveTasks();
+      if (!wsConnected) {
+        if (taskId) {
+          fetchTaskStatus();
+        } else {
+          fetchActiveTasks();
+        }
       }
     }, pollInterval);
 
