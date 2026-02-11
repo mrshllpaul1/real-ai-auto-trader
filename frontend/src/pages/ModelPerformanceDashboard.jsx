@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import { Progress } from '../components/ui/progress';
 import { 
   Brain, TrendingUp, Activity, Cpu, BarChart3, 
   RefreshCw, Play, CheckCircle, XCircle, Clock,
@@ -12,6 +13,7 @@ import {
   PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend
 } from 'recharts';
 import api from '../services/api';
+import TrainingProgress from '../components/TrainingProgress';
 
 // Performance optimization: Detect low-power devices
 const isLowPowerDevice = () => {
