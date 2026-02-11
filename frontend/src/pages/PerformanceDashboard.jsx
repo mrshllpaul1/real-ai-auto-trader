@@ -108,6 +108,14 @@ const PerformanceDashboard = ({ embedded = false }) => {
           <div className="flex gap-2">
             <Button 
               variant="outline" 
+              onClick={() => setShowEntryManager(!showEntryManager)}
+              className={showEntryManager ? 'bg-green-500/20 text-green-400 border-green-500/50' : ''}
+            >
+              <Edit3 className="w-4 h-4 mr-2" />
+              {showEntryManager ? 'Hide' : 'Edit'} Entry Prices
+            </Button>
+            <Button 
+              variant="outline" 
               onClick={loadDashboard}
               disabled={loading}
             >
