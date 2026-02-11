@@ -31,14 +31,30 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
   const [loading, setLoading] = useState(true);
   const [training, setTraining] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Fetch with timeout to prevent infinite loading
+  const fetchWithTimeout = async (url, timeout = 10000) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    try {
+      const response = await api.get(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.warn(`Request to ${url} timed out or failed`);
+      return { data: null };
+    }
+  };
 
   const fetchAllData = useCallback(async () => {
     try {
       const [drl, intelligence, backtest, sb3] = await Promise.all([
-        api.get('/drl-engine/status').catch(() => ({ data: null })),
-        api.get('/trading-intelligence/status').catch(() => ({ data: null })),
-        api.get('/drl-engine/backtest/status').catch(() => ({ data: null })),
-        api.get('/sb3-agents/status').catch(() => ({ data: null }))
+        fetchWithTimeout('/drl-engine/status'),
+        fetchWithTimeout('/trading-intelligence/status'),
+        fetchWithTimeout('/drl-engine/backtest/status'),
+        fetchWithTimeout('/sb3-agents/status')
       ]);
       
       setDrlStatus(drl.data);
@@ -49,6 +65,7 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
@@ -57,6 +74,11 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
     const interval = setInterval(fetchAllData, 30000);
     return () => clearInterval(interval);
   }, [fetchAllData]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchAllData();
+  };
 
   const handleTrain = async (engine) => {
     setTraining(true);
