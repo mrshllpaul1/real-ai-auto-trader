@@ -464,7 +464,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Tethys Training and Model Training API Testing" # CURRENT - Testing AI model training and Tethys functionality
+    - "Enhancement APIs Testing" # CURRENT - Testing newly implemented enhancement APIs
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
