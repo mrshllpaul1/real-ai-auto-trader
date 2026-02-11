@@ -92,9 +92,12 @@ const AIBrainTab = ({ enhancedStatus, onTrainModel }) => (
           ))}
         </div>
 
-        <div className="mt-4 flex gap-3">
+        <div className="mt-4 flex gap-3 flex-wrap">
           <Button onClick={() => onTrainModel('all')} className="bg-purple-600 hover:bg-purple-700">
             <Play className="w-4 h-4 mr-2" /> Train All Models
+          </Button>
+          <Button onClick={() => onTrainModel('fast')} className="bg-cyan-600 hover:bg-cyan-700">
+            <Zap className="w-4 h-4 mr-2" /> Fast Train (3-5x)
           </Button>
           <Button onClick={() => window.location.href = '/model-performance'} variant="outline" className="border-gray-600">
             <BarChart3 className="w-4 h-4 mr-2" /> View Performance
