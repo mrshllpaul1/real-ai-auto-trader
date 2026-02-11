@@ -679,12 +679,21 @@ async def _init_phase7_wire_dependencies(db):
     ml_monitoring_routes.set_db(db)
     logger.info("✅ ML Monitoring wired")
     
+    # Wire Weekly Scheduler routes
+    from routes import weekly_scheduler as weekly_scheduler_routes
+    weekly_scheduler_routes.set_dependencies(_services['weekly_scheduler'], db)
+    logger.info("✅ Weekly Scheduler routes wired")
+    
     # Start schedulers
     await _services['training_scheduler'].start()
     logger.info("✅ Training Scheduler started")
     
     await _services['scheduler'].start()
     logger.info("✅ Scheduler Service started")
+    
+    # Start Weekly Selection Scheduler
+    await _services['weekly_scheduler'].start()
+    logger.info("✅ Weekly Selection Scheduler started")
     
     # Add scheduled jobs
     await _services['scheduler'].add_stop_loss_job(interval_minutes=5)
