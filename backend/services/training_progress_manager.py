@@ -65,8 +65,8 @@ class TrainingProgressManager:
         logger.info(f"Created training task: {task_id} ({task_type})")
         return task
     
-    def start_task(self, task_id: str, message: str = "Starting..."):
-        """Mark a task as started"""
+    async def start_task(self, task_id: str, message: str = "Starting..."):
+        """Mark a task as started and broadcast via WebSocket"""
         if task_id in self._tasks:
             task = self._tasks[task_id]
             task.status = "running"
@@ -74,8 +74,11 @@ class TrainingProgressManager:
             task.message = message
             task.progress = 0
             logger.info(f"Started task: {task_id}")
+            
+            # Broadcast via WebSocket
+            await self._broadcast_update(task)
     
-    def update_progress(
+    async def update_progress(
         self, 
         task_id: str, 
         progress: int = None, 
@@ -84,7 +87,7 @@ class TrainingProgressManager:
         items_processed: int = None,
         steps_completed: int = None
     ):
-        """Update task progress"""
+        """Update task progress and broadcast via WebSocket"""
         if task_id not in self._tasks:
             return
         
@@ -106,9 +109,12 @@ class TrainingProgressManager:
             # Auto-calculate progress based on steps
             if task.total_steps > 0:
                 task.progress = int((steps_completed / task.total_steps) * 100)
+        
+        # Broadcast via WebSocket
+        await self._broadcast_update(task)
     
-    def complete_task(self, task_id: str, result: Dict = None, message: str = "Completed"):
-        """Mark a task as completed"""
+    async def complete_task(self, task_id: str, result: Dict = None, message: str = "Completed"):
+        """Mark a task as completed and broadcast via WebSocket"""
         if task_id in self._tasks:
             task = self._tasks[task_id]
             task.status = "completed"
@@ -117,6 +123,41 @@ class TrainingProgressManager:
             task.message = message
             task.result = result
             logger.info(f"Completed task: {task_id}")
+            
+            # Broadcast via WebSocket
+            await self._broadcast_update(task)
+    
+    async def fail_task(self, task_id: str, error: str):
+        """Mark a task as failed and broadcast via WebSocket"""
+        if task_id in self._tasks:
+            task = self._tasks[task_id]
+            task.status = "failed"
+            task.completed_at = datetime.now(timezone.utc)
+            task.error = error
+            task.message = f"Failed: {error}"
+            logger.error(f"Failed task: {task_id} - {error}")
+            
+            # Broadcast via WebSocket
+            await self._broadcast_update(task)
+    
+    async def _broadcast_update(self, task: TrainingTask):
+        """Broadcast task update via WebSocket"""
+        try:
+            from services.websocket_manager import get_ws_manager
+            ws_manager = get_ws_manager()
+            await ws_manager.send_progress_update(
+                task_id=task.task_id,
+                task_type=task.task_type,
+                progress=task.progress,
+                message=task.message,
+                current_item=task.current_item,
+                items_processed=task.items_processed,
+                total_items=task.total_items,
+                status=task.status,
+                result=task.result
+            )
+        except Exception as e:
+            logger.debug(f"WebSocket broadcast failed (no clients?): {e}")
     
     def fail_task(self, task_id: str, error: str):
         """Mark a task as failed"""
