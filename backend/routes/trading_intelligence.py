@@ -35,6 +35,12 @@ def get_engine():
     return _engine
 
 
+def get_engine_if_exists():
+    """Get engine only if already initialized (for status checks)"""
+    global _engine
+    return _engine
+
+
 class TrainRequest(BaseModel):
     epochs: int = 50
     include_ensemble: bool = True
@@ -49,9 +55,10 @@ class PredictRequest(BaseModel):
 
 @router.get("/status")
 async def get_engine_status():
-    """Get Trading Intelligence Engine status"""
+    """Get Trading Intelligence Engine status (instant - no initialization)"""
     try:
-        engine = get_engine()
+        # Don't initialize on status call - just check if already initialized
+        engine = get_engine_if_exists()
         if engine is None:
             return {
                 "initialized": False, 
