@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const regimeColors = {
   bull: '#00FF94',
@@ -172,14 +173,7 @@ const AdaptiveStrategy = ({ embedded = false }) => {
   }, [loadData]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-[#9D00FF] mx-auto mb-4" />
-          <p className="text-[#A1A1AA]">Loading Adaptive Strategy...</p>
-        </div>
-      </div>
-    );
+    return <PageLoadingSkeleton />;
   }
 
   const regime = currentRegime?.regime || optimalStrategy?.current_regime?.regime || 'unknown';
