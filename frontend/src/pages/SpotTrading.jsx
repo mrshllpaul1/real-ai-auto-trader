@@ -311,7 +311,7 @@ const AISignalCard = ({ signal }) => {
         </div>
         <div className="text-right">
           <div className="text-xs text-[#888]">Confidence</div>
-          <div className="text-lg font-bold text-white">{(signal.confidence * 100 || 0).toFixed(0)}%</div>
+          <div className="text-lg font-bold text-white">{(signal.confidence || 0).toFixed(0)}%</div>
         </div>
       </div>
       
@@ -319,7 +319,7 @@ const AISignalCard = ({ signal }) => {
         <div 
           className="h-full rounded-full transition-all"
           style={{ 
-            width: `${(signal.score + 1) * 50}%`, 
+            width: `${Math.min(100, Math.max(0, signal.score || 50))}%`, 
             backgroundColor: signalColor 
           }}
         />
