@@ -7,6 +7,23 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ## Session Update - Feb 11, 2026 (Current Session)
 
+### ✅ VERIFIED: All Train & Test Buttons Working (Feb 11, 2026)
+
+| Location | Button | Status | Backend Endpoint |
+|----------|--------|--------|------------------|
+| AI Strategy → Models | Train All Models | ✅ WORKS | `/api/training/train-all` |
+| AI Strategy → Models | Refresh | ✅ WORKS | Reloads status APIs |
+| AI Strategy → MTF | Train All Kraken (634) | ✅ WORKS | `/api/enhanced-mtf-training/train-all-kraken` |
+| AI Strategy → MTF | Predict All (634) | ✅ WORKS | `/api/enhanced-mtf-training/predict-all` |
+| AI Strategy → Learning | Train AI Now | ✅ WORKS | `/api/learning/train` |
+| Scanner → ML vs DL | Train Models | ✅ WORKS | `/api/gems/ml-dl/train` |
+| AI Strategy → Adaptive | Start Monitoring | ✅ WORKS | Starts regime monitoring |
+
+**Performance Fix Applied:**
+- Status endpoints (`/api/drl-engine/status`, `/api/trading-intelligence/status`, `/api/sb3-agents/status`) now return instantly with default values when engines aren't initialized, preventing the Models tab from hanging.
+
+---
+
 ### ✅ FIX: ML vs DL Gem Prediction Training Now Works
 
 **Issue:** ML/DL Gem prediction training was failing with "Insufficient training data: 0 samples" because the historical_ohlcv database collection was empty.
