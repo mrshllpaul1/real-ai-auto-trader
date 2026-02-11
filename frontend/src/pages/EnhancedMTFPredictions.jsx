@@ -254,6 +254,17 @@ const EnhancedMTFPredictions = ({ embedded = false }) => {
           </div>
         </div>
 
+        {/* Training Progress Indicator */}
+        {trainingTaskId && (
+          <div className="mb-6">
+            <TrainingProgress 
+              taskId={trainingTaskId} 
+              embedded={true}
+              onComplete={handleTrainingComplete}
+            />
+          </div>
+        )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
