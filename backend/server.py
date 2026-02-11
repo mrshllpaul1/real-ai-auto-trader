@@ -250,6 +250,21 @@ async def delayed_init():
     """Initialize services after startup completes"""
     await asyncio.sleep(5)  # Give health checks more time to pass
     
+    # Initialize database indexes first for optimal query performance
+    try:
+        from init.database_indexes import ensure_database_indexes
+        index_stats = await ensure_database_indexes()
+        logger.info(f"✅ Database indexes initialized: {index_stats}")
+    except Exception as e:
+        logger.warning(f"Failed to initialize database indexes: {e}")
+    
+    # Start response cache cleanup task
+    try:
+        from middleware.response_cache import start_cache_cleanup_task
+        await start_cache_cleanup_task()
+    except Exception as e:
+        logger.warning(f"Failed to start cache cleanup task: {e}")
+    
     from init.services import initialize_all_services
     await initialize_all_services(db)
 

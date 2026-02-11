@@ -120,7 +120,7 @@ class HistoricalDataSeeder:
         return count
     
     async def seed_all_coins(self, days: int = 365):
-        """Seed historical data for all coins"""
+        """Seed historical data for all coins (optimized with concurrency)"""
         print(f"\n{'='*60}")
         print("📊 SEEDING HISTORICAL PRICE DATA")
         print(f"{'='*60}")
@@ -130,14 +130,15 @@ class HistoricalDataSeeder:
         print(f"Fallback: CoinGecko")
         print(f"{'='*60}\n")
         
-        total_records = 0
+        # Use asyncio.gather for concurrent fetching
+        # This is safe because CoinCodex has no rate limits
+        tasks = [self.seed_coin(coin_id, days) for coin_id in self.coins]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
         
-        for coin_id in self.coins:
-            count = await self.seed_coin(coin_id, days)
-            total_records += count
-            await asyncio.sleep(0.5)  # Small delay between coins
+        # Calculate total records (handle exceptions)
+        total_records = sum(r for r in results if isinstance(r, int))
         
-        # Create indexes
+        # Create indexes after seeding
         await self.db.historical_prices.create_index([('coin_id', 1), ('timestamp', 1)])
         await self.db.historical_prices.create_index([('timestamp', 1)])
         
