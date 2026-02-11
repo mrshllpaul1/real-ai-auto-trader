@@ -11,6 +11,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
+import TrainingProgress from '../components/TrainingProgress';
 
 const GemMLDLComparison = ({ embedded = false }) => {
   const [comparison, setComparison] = useState(null);
@@ -20,6 +21,7 @@ const GemMLDLComparison = ({ embedded = false }) => {
   const [loading, setLoading] = useState(true);
   const [training, setTraining] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [trainingTaskId, setTrainingTaskId] = useState(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -44,6 +46,13 @@ const GemMLDLComparison = ({ embedded = false }) => {
     loadData();
     const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
+  }, [loadData]);
+
+  const handleTrainingComplete = useCallback((result) => {
+    setTraining(false);
+    setTrainingTaskId(null);
+    loadData();
+    toast.success('ML/DL training complete!');
   }, [loadData]);
 
   const handleTrain = async () => {
