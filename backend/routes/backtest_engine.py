@@ -657,10 +657,13 @@ async def run_backtest(backtest_id: str, config: BacktestConfig, db):
             
             # Try to fetch REAL historical data from Kraken
             prices = await _fetch_real_ohlc_data(symbol, days)
-            used_real_data = bool(prices and len(prices) >= min(days, 720))  # Kraken max ~720 daily candles
             
-            # If no real data available, generate synthetic (with warning)
-            if not prices or len(prices) < days:
+            # Use real data if we have at least 100 data points (enough for most strategies)
+            # Kraken provides max ~720 daily candles
+            min_required = min(100, days)  # Need at least 100 or the requested days if smaller
+            
+            # If we have sufficient real data, use it; otherwise fall back to synthetic
+            if prices and len(prices) >= min_required:
                 logger.warning(f"Using synthetic data for {symbol} - real OHLC not available")
                 results["data_sources"][symbol] = "synthetic"
                 prices = []
