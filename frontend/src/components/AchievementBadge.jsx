@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Trophy, Star, TrendingUp, Target, Award, Lock } from 'lucide-react';
 import { soundManager } from '../utils/soundManager';
 
-const BACKEND_URL = import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '';
 
 const AchievementBadge = ({ achievement, earned = false, size = 'md', showDetails = false }) => {
   const sizeClasses = {
