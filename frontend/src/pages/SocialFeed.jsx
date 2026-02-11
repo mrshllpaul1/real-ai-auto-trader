@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MessageSquare, Heart, Share2, UserPlus, TrendingUp, TrendingDown, Users, Trophy, Clock, Send } from 'lucide-react';
 
-const BACKEND_URL = import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '';
 
 const SocialFeed = () => {
   const [feed, setFeed] = useState([]);
