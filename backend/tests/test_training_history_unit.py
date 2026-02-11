@@ -53,11 +53,43 @@ class FakeCollection:
         self.docs.append(doc)
         return _FakeResult(doc["_id"])
 
-    async def find_one(self, query: Dict[str, Any], **kwargs):
-        for doc in self.docs:
-            if all(doc.get(k) == v for k, v in query.items()):
-                return doc
-        return None
+    async def find_one(self, query: Dict[str, Any], sort=None, **kwargs):
+        MISSING = object()
+
+        def get_nested(doc: Dict[str, Any], path: str, default=MISSING):
+            """Retrieve nested dict value using dot notation, returning default when missing."""
+            value: Any = doc
+            for part in path.split("."):
+                if not isinstance(value, dict):
+                    return default
+                value = value.get(part, MISSING)
+                if value is MISSING:
+                    return default
+            return value
+
+        def matches(doc: Dict[str, Any], key: str, expected: Any) -> bool:
+            """Check if document matches expected value, supporting $exists semantics."""
+            if isinstance(expected, dict) and "$exists" in expected:
+                exists = expected["$exists"]
+                return (get_nested(doc, key, MISSING) is not MISSING) == exists
+            return get_nested(doc, key, MISSING) == expected
+
+        filtered = [doc for doc in self.docs if all(matches(doc, k, v) for k, v in query.items())]
+        if sort and filtered:
+            def make_sort_key(field_name: str):
+                """Create sort key treating missing values as greater (Mongo-like ordering)."""
+                def sort_key(doc: Dict[str, Any]):
+                    value = get_nested(doc, field_name, MISSING)
+                    if value is MISSING:
+                        return (1, None)
+                    return (0, value)
+                return sort_key
+
+            for field, direction in reversed(sort):
+                reverse = direction == -1
+                sort_key = make_sort_key(field)
+                filtered.sort(key=sort_key, reverse=reverse)
+        return filtered[0] if filtered else None
 
     async def update_one(self, query: Dict[str, Any], update: Dict[str, Any]):
         for doc in self.docs:
@@ -131,3 +163,44 @@ async def test_training_history_complete_flow():
     assert stats["completed"] == 1
     assert stats["total_sessions"] == 1
     assert stats["avg_duration_seconds"] is not None
+    assert stats["success_rate"] == 100.0
+
+
+@pytest.mark.asyncio
+async def test_training_history_best_result_and_stats():
+    db = FakeDB()
+    service = TrainingHistoryService(db)
+
+    now = datetime.now(timezone.utc)
+    db.training_history.docs.extend([
+        {
+            "_id": ObjectId(),
+            "model_type": "rl_agent",
+            "status": "completed",
+            "duration_seconds": 5,
+            "result": {"val_accuracy": 0.7},
+            "completed_at": now
+        },
+        {
+            "_id": ObjectId(),
+            "model_type": "rl_agent",
+            "status": "completed",
+            "duration_seconds": 7,
+            "result": {"val_accuracy": 0.9},
+            "completed_at": now + timedelta(seconds=1)
+        },
+        {
+            "_id": ObjectId(),
+            "model_type": "rl_agent",
+            "status": "failed",
+            "duration_seconds": 3,
+            "completed_at": now
+        }
+    ])
+
+    stats = await service.get_model_stats("rl_agent")
+    assert stats["best_result"]["val_accuracy"] == 0.9
+    assert stats["completed"] == 2
+    assert stats["failed"] == 1
+    assert stats["total_sessions"] == 3
+    assert stats["success_rate"] == pytest.approx(66.7, rel=1e-2)
