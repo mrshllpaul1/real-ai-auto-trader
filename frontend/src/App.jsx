@@ -1,17 +1,18 @@
-import React, { useEffect } from "react";
+import React, { useEffect, lazy, Suspense } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ErrorBoundary, { PageErrorBoundary } from "./components/ErrorBoundary";
+import { PageLoadingSkeleton } from "./components/LoadingSkeleton";
 
-// Hub Pages (consolidated)
-import CommandCenter from "./pages/CommandCenter";
-import TradingHub from "./pages/TradingHub";
-import AIHub from "./pages/AIHub";
-import BacktestHub from "./pages/BacktestHub";
-import NewsHub from "./pages/NewsHub";
-import ScannerHub from "./pages/ScannerHub";
-import DeFiHub from "./pages/DeFiHub";
-import SettingsHub from "./pages/SettingsHub";
+// Hub Pages (lazy loaded for better performance)
+const CommandCenter = lazy(() => import("./pages/CommandCenter"));
+const TradingHub = lazy(() => import("./pages/TradingHub"));
+const AIHub = lazy(() => import("./pages/AIHub"));
+const BacktestHub = lazy(() => import("./pages/BacktestHub"));
+const NewsHub = lazy(() => import("./pages/NewsHub"));
+const ScannerHub = lazy(() => import("./pages/ScannerHub"));
+const DeFiHub = lazy(() => import("./pages/DeFiHub"));
+const SettingsHub = lazy(() => import("./pages/SettingsHub"));
 
 // Keep individual pages for direct access (backwards compatibility)
 import SpotTrading from "./pages/SpotTrading";
@@ -26,6 +27,13 @@ import TrainingProgress from "./components/TrainingProgress";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "framer-motion";
 import { TradingModeProvider } from "./context/TradingModeContext";
+
+// Suspense wrapper with loading skeleton
+const SuspenseWrapper = ({ children }) => (
+  <Suspense fallback={<PageLoadingSkeleton />}>
+    {children}
+  </Suspense>
+);
 
 function App() {
   useEffect(() => {
