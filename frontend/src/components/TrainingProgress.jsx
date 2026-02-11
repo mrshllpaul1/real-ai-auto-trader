@@ -28,115 +28,18 @@ const TrainingProgress = ({
   const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
-  const reconnectAttemptsRef = useRef(0);
-  const wsInitializedRef = useRef(false);
+  const wsEnabledRef = useRef(false); // WebSocket disabled - using polling only
 
-  // WebSocket connection - with graceful fallback to polling
+  // WebSocket is disabled in deployment - infrastructure doesn't support WS through ingress
+  // Using HTTP polling instead for reliable real-time updates
   useEffect(() => {
-    const maxReconnectAttempts = 3;
-    
-    const connectWebSocket = () => {
-      // Get backend URL from environment and convert to WebSocket URL
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_BACKEND_URL || '';
-      
-      if (!backendUrl) {
-        if (!wsInitializedRef.current) {
-          console.info('[TrainingProgress] No backend URL, using polling mode');
-          wsInitializedRef.current = true;
-        }
-        setWsConnected(false);
-        return;
-      }
-      
-      // Skip WebSocket if already at max attempts
-      if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
-        return;
-      }
-      
-      // Convert HTTP(S) URL to WS(S) URL
-      const wsUrl = backendUrl
-        .replace(/^https:/, 'wss:')
-        .replace(/^http:/, 'ws:')
-        + '/api/training-progress/ws';
-      
-      try {
-        const ws = new WebSocket(wsUrl);
-        wsRef.current = ws;
-        
-        ws.onopen = () => {
-          console.info('[TrainingProgress] WebSocket connected');
-          setWsConnected(true);
-          reconnectAttemptsRef.current = 0;
-        };
-        
-        ws.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            
-            if (data.type === 'progress_update' || data.type === 'initial_state') {
-              if (taskId && data.task_id === taskId) {
-                setTask(data);
-                if (data.status === 'completed' && onComplete) {
-                  onComplete(data);
-                }
-              }
-              
-              setActiveTasks(prev => {
-                const updated = prev.filter(t => t.task_id !== data.task_id);
-                if (data.status === 'running') {
-                  updated.push(data);
-                }
-                return updated;
-              });
-            }
-          } catch (e) {
-            // Silent parse error - non-critical
-          }
-        };
-        
-        ws.onclose = (event) => {
-          setWsConnected(false);
-          
-          // Only reconnect on abnormal closure and under max attempts
-          if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
-            reconnectAttemptsRef.current++;
-            const delay = Math.min(5000 * reconnectAttemptsRef.current, 15000);
-            reconnectTimeoutRef.current = setTimeout(connectWebSocket, delay);
-          } else if (reconnectAttemptsRef.current >= maxReconnectAttempts && !wsInitializedRef.current) {
-            console.info('[TrainingProgress] WebSocket unavailable, using polling mode');
-            wsInitializedRef.current = true;
-          }
-        };
-        
-        ws.onerror = () => {
-          // Log only once on first failure
-          if (!wsInitializedRef.current && reconnectAttemptsRef.current === 0) {
-            console.info('[TrainingProgress] WebSocket unavailable, falling back to polling');
-            wsInitializedRef.current = true;
-          }
-          setWsConnected(false);
-        };
-        
-      } catch (e) {
-        if (!wsInitializedRef.current) {
-          console.info('[TrainingProgress] WebSocket not supported, using polling');
-          wsInitializedRef.current = true;
-        }
-        setWsConnected(false);
-      }
-    };
-    
-    connectWebSocket();
-    
-    return () => {
-      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.close(1000, 'Component unmounting');
-      }
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
-    };
-  }, [taskId, onComplete]);
+    // Log once that we're using polling mode
+    if (!wsEnabledRef.current) {
+      console.info('[TrainingProgress] Using HTTP polling mode for updates');
+      wsEnabledRef.current = true;
+    }
+    setWsConnected(false);
+  }, []);
 
   // Fallback polling (less frequent since WebSocket handles most updates)
   const fetchActiveTasks = useCallback(async () => {
