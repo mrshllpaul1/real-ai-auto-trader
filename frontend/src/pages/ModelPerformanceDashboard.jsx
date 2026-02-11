@@ -186,16 +186,19 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
           <div className="flex gap-3">
             <Button 
               variant="outline" 
-              onClick={fetchAllData}
+              onClick={handleRefresh}
+              disabled={refreshing}
               className="border-gray-700 text-gray-300"
+              data-testid="refresh-models-btn"
             >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Refresh
+              <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
             </Button>
             <Button 
               onClick={() => handleTrain('all')}
               disabled={training}
               className="bg-gradient-to-r from-cyan-500 to-blue-500"
+              data-testid="train-all-models-btn"
             >
               {training ? (
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
