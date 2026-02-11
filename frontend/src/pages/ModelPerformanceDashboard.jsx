@@ -130,43 +130,37 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
   };
 
   // Prepare data for charts - use actual training status
+  // Note: LSTM/GRU/FinRL require TensorFlow which is not installed
   const historicalTrained = trainingStatus?.trained || false;
   const gemMlDlTrained = gemMlDlStatus?.is_trained || false;
-  const mtfTrained = mtfStatus?.accuracy > 0 || false;
+  const mtfTrained = mtfStatus?.accuracy > 0 || mtfStatus?.status === 'completed' || false;
   const ensembleTrained = intelligenceStatus?.models?.ensemble?.trained || false;
-  const timeSeriesTrained = intelligenceStatus?.models?.time_series?.trained || false;
-  const finrlTrained = intelligenceStatus?.models?.finrl_agent?.trained || false;
   
+  // Models that can be trained with current stack (no TensorFlow)
   const modelAccuracyData = [
     { 
       name: 'Historical AI', 
       accuracy: historicalTrained ? (trainingStatus?.training_accuracy || 76) : 0,
-      status: historicalTrained ? 'active' : 'inactive'
+      status: historicalTrained ? 'active' : 'inactive',
+      description: 'Pattern recognition on historical data'
     },
     { 
       name: 'Gem ML/DL', 
       accuracy: gemMlDlTrained ? 76 : 0,
-      status: gemMlDlTrained ? 'active' : 'inactive'
+      status: gemMlDlTrained ? 'active' : 'inactive',
+      description: 'Hidden gem prediction (RF, SVM, GB)'
     },
     { 
       name: 'MTF Predictor', 
       accuracy: mtfTrained ? (mtfStatus?.accuracy || 70) : 0,
-      status: mtfTrained ? 'active' : 'inactive'
+      status: mtfTrained ? 'active' : 'inactive',
+      description: 'Multi-timeframe sentiment analysis'
     },
     { 
-      name: 'XGBoost', 
+      name: 'XGBoost/LightGBM', 
       accuracy: ensembleTrained ? 78 : 0,
-      status: ensembleTrained ? 'active' : 'inactive'
-    },
-    { 
-      name: 'LSTM/GRU', 
-      accuracy: timeSeriesTrained ? 72 : 0,
-      status: timeSeriesTrained ? 'active' : 'inactive'
-    },
-    { 
-      name: 'FinRL Agent', 
-      accuracy: finrlTrained ? 68 : 0,
-      status: finrlTrained ? 'active' : 'inactive'
+      status: ensembleTrained ? 'active' : 'inactive',
+      description: 'Gradient boosting ensemble'
     }
   ];
 
