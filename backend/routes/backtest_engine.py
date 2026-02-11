@@ -664,8 +664,14 @@ async def run_backtest(backtest_id: str, config: BacktestConfig, db):
             
             # If we have sufficient real data, use it; otherwise fall back to synthetic
             if prices and len(prices) >= min_required:
-                logger.warning(f"Using synthetic data for {symbol} - real OHLC not available")
-                results["data_sources"][symbol] = "synthetic"
+                # Real data was successfully fetched
+                results["data_sources"][symbol] = f"kraken_ohlc ({len(prices)} candles)"
+                logger.info(f"Using REAL Kraken data for {symbol}")
+                days = len(prices)  # Adjust days to match available data
+            else:
+                # No real data available, generate synthetic (with warning)
+                logger.warning(f"Using synthetic data for {symbol} - real OHLC not available or insufficient ({len(prices) if prices else 0} records)")
+                results["data_sources"][symbol] = "synthetic (fallback)"
                 prices = []
                 current_price = base_price
                 
@@ -697,17 +703,8 @@ async def run_backtest(backtest_id: str, config: BacktestConfig, db):
                     current_price *= (1 + daily_return)
                     prices.append(current_price)
             
-                # Real data was successfully fetched
-                results["data_sources"][symbol] = f"kraken_ohlc ({len(prices)} candles)"
-                logger.info(f"Using REAL Kraken data for {symbol}")
-                days = len(prices)  # Adjust days to match available data
-            
-            else:
-                # No real data available, generate synthetic (with warning)
-                logger.warning(f"Using synthetic data for {symbol} - real OHLC not available or insufficient")
-                results["data_sources"][symbol] = "synthetic (fallback)"
-                prices = []
-                current_price = base_price
+            # Generate signals based on strategy
+            if config.strategy_type == "momentum":
                 lookback = config.strategy_params.get("lookback", 14)
                 signals = generate_momentum_signals(prices, lookback)
             elif config.strategy_type == "mean_reversion":
