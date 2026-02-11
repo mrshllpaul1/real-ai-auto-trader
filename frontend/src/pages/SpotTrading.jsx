@@ -482,16 +482,17 @@ const SpotTrading = ({ embedded = false }) => {
     const loadData = async () => {
       setLoading(true);
       
-      // Fetch data with staggered timing to avoid rate limiting
-      // Status first (no Kraken API)
-      const statusData = await safeFetchJSON(`${API_URL}/api/spot/status`);
+      // Fetch non-Kraken data in parallel first (fast)
+      const [statusData, recsData] = await Promise.all([
+        safeFetchJSON(`${API_URL}/api/spot/status`),
+        safeFetchJSON(`${API_URL}/api/spot/ai-recommendations`)
+      ]);
+      
       if (!isMounted) return;
       if (statusData) setTradingStatus(statusData);
+      if (recsData?.recommendations) setRecommendations(recsData.recommendations);
       
-      // Small delay before next call
-      await new Promise(r => setTimeout(r, 100));
-      
-      // Pairs (Kraken API)
+      // Then fetch Kraken data sequentially to avoid rate limits
       const pairsData = await safeFetchJSON(`${API_URL}/api/spot/pairs`);
       if (!isMounted) return;
       if (pairsData?.pairs) {
@@ -499,25 +500,14 @@ const SpotTrading = ({ embedded = false }) => {
         console.log('[SpotTrading] Pairs loaded:', pairsData.pairs.length);
       }
       
-      // Small delay before next call
-      await new Promise(r => setTimeout(r, 100));
+      // Small delay before balance
+      await new Promise(r => setTimeout(r, 50));
       
-      // Balance (Kraken API)
       const balanceData = await safeFetchJSON(`${API_URL}/api/spot/balance`);
       if (!isMounted) return;
       if (balanceData) {
         setBalance(balanceData);
         console.log('[SpotTrading] Balance loaded:', balanceData.holdings?.length, 'holdings');
-      }
-      
-      // Small delay before recommendations
-      await new Promise(r => setTimeout(r, 100));
-      
-      // AI recommendations (no Kraken API, uses cached data)
-      const recsData = await safeFetchJSON(`${API_URL}/api/spot/ai-recommendations`);
-      if (!isMounted) return;
-      if (recsData?.recommendations) {
-        setRecommendations(recsData.recommendations);
       }
       
       setLoading(false);
