@@ -27,15 +27,13 @@ const TrainingProgress = ({
   const [expanded, setExpanded] = useState(true);
   const pollingInitializedRef = useRef(false);
 
-  // WebSocket is disabled in deployment - infrastructure doesn't support WS through ingress
-  // Using HTTP polling instead for reliable real-time updates
+  // HTTP polling is used for reliable real-time updates in deployment
+  // Kubernetes ingress doesn't support WebSocket protocol upgrade
   useEffect(() => {
-    // Log once that we're using polling mode
-    if (!wsEnabledRef.current) {
+    if (!pollingInitializedRef.current) {
       console.info('[TrainingProgress] Using HTTP polling mode for updates');
-      wsEnabledRef.current = true;
+      pollingInitializedRef.current = true;
     }
-    setWsConnected(false);
   }, []);
 
   // HTTP polling for reliable real-time updates
