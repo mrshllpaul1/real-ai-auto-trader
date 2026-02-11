@@ -377,7 +377,7 @@ const FloatingCommandHub = () => {
                         value={chatInput}
                         onChange={(e) => setChatInput(e.target.value)}
                         placeholder="Ask about crypto..."
-                        className="flex-1 h-9 bg-slate-800/50 border-slate-700/50 text-sm"
+                        className="flex-1 h-9 bg-slate-800/50 border-slate-700/50 text-sm text-white placeholder:text-slate-400"
                         disabled={chatLoading}
                       />
                       <Button type="submit" size="sm" disabled={chatLoading} className="h-9 w-9 p-0 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400">
