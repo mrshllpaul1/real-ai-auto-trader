@@ -1,11 +1,16 @@
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query
 from pydantic import BaseModel
 from typing import List, Optional
 import logging
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+# Thread pool for parallel training operations
+_training_executor = ThreadPoolExecutor(max_workers=4)
 
 class TrainingRequest(BaseModel):
     coins: List[str] = ['bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot', 'avalanche', 'chainlink']
@@ -19,6 +24,13 @@ class ProfitableGemsRequest(BaseModel):
 
 class EnhancedTrainingRequest(BaseModel):
     coins: List[str] = ['bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot']
+
+class FastTrainingRequest(BaseModel):
+    """Request for fast parallel training"""
+    batch_size: int = 10  # Number of coins to train in parallel
+    phases: List[str] = ["historical", "technical", "gems"]  # Which phases to run
+    priority_coins: List[str] = []  # Train these first
+
 
 async def get_database():
     from server import db
