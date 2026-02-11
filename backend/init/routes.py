@@ -189,6 +189,9 @@ def register_routes(api_router: APIRouter, db=None):
     api_router.include_router(integrations_routes.router, tags=["Integrations"])
     integrations_routes.set_db(db)
     
+    # Training Progress Monitoring
+    api_router.include_router(training_progress_routes.router, tags=["Training Progress"])
+    
     logger.info("✅ All routes registered")
     
     return api_router
