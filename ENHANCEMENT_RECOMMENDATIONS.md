@@ -66,6 +66,16 @@ The Tethys platform has evolved into a comprehensive AI-powered trading system w
 
 ## 🟡 MEDIUM PRIORITY (P1) - Feature Expansion
 
+### Command Hub & Chat AI Upgrades (Targeted Recommendations)
+- **Unified action bar**: One-click commands for “rebalance portfolio”, “raise stop-loss 2% on all BTC positions”, “export P&L CSV”, and “run 30d backtest” with toast confirmations and surfaced errors.
+- **Context stitching**: Persist last 5 intents (page, selected asset, trading mode, timeframe) and show a clear “context pill” the user can tap to clear—reduces re-prompting.
+- **Tool routing**: Map verbs to tools (analyze → intelligence endpoints; trade → execution; backtest → DRL backtest; rebalance → portfolio manager; alert → triggers) for deterministic actions.
+- **Safety rails**: 2-step confirmation for real trades above risk thresholds (e.g., >$500 or leverage >2x); LLM prompt guardrails to refuse withdrawals/high leverage unless confirmed.
+- **Latency trims**: Cache static command metadata and model status; debounce chat keystrokes; prefetch model-performance and portfolio summaries on hub load.
+- **Response quality**: Standardize replies to include “What I’ll do”, “Why”, and “Next action” buttons (execute, schedule, open page).
+- **Autofill & templates**: Quick chips for “Set stop-loss to 5%”, “Rebalance to targets”, “Generate weekly strategy”, “Create alert at ±3%”.
+- **Observability**: Log intent → tool resolution → latency → success/failure; surface a mini health badge (API/LLM latency, error rate) in the hub header.
+
 ### 5. **MetaMask & DeFi Wallet Integration**
 **Impact:** Complete portfolio visibility
 - Connect MetaMask, Trust Wallet, Coinbase Wallet
