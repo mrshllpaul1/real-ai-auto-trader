@@ -179,6 +179,10 @@ def register_routes(api_router: APIRouter, db=None):
     api_router.include_router(ai_teaching_routes.router, tags=["AI Teaching"])
     ai_teaching_routes.set_dependencies(db)
     
+    # Weekly Selection Scheduler
+    from routes import weekly_scheduler as weekly_scheduler_routes
+    api_router.include_router(weekly_scheduler_routes.router, tags=["Weekly Scheduler"])
+    
     logger.info("✅ All routes registered")
     
     return api_router
