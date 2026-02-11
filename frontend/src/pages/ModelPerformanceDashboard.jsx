@@ -111,6 +111,7 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
         if (response.data.task_id) {
           setTrainingTaskId(response.data.task_id);
         }
+        toast.success('Training all models started');
       } else if (engine === 'intelligence') {
         await api.post('/trading-intelligence/train', { epochs: 50 });
       } else if (engine === 'drl') {
@@ -119,7 +120,34 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
       setTimeout(fetchAllData, 5000);
     } catch (error) {
       console.error('Training error:', error);
+      toast.error('Failed to start training');
       setTraining(false);
+    }
+  };
+
+  // Train individual model with progress tracking
+  const handleTrainIndividualModel = async (modelName) => {
+    setTrainingModel(modelName);
+    try {
+      const response = await api.post('/training/train-model', {
+        model_name: modelName,
+        coins: ['bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot']
+      });
+      
+      if (response.data.task_id) {
+        setTrainingTaskId(response.data.task_id);
+        toast.success(`Training ${modelName} started`, {
+          description: `Task ID: ${response.data.task_id}`
+        });
+      }
+      
+      // Poll for completion
+      setTimeout(fetchAllData, 5000);
+    } catch (error) {
+      console.error(`Training ${modelName} error:`, error);
+      toast.error(`Failed to train ${modelName}`);
+    } finally {
+      setTrainingModel(null);
     }
   };
 
