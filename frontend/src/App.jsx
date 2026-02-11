@@ -27,6 +27,7 @@ import TrainingProgress from "./components/TrainingProgress";
 import { Toaster } from "./components/ui/sonner";
 import { motion } from "framer-motion";
 import { TradingModeProvider } from "./context/TradingModeContext";
+import { LoadingProvider } from "./context/LoadingContext";
 
 // Suspense wrapper with loading skeleton
 const SuspenseWrapper = ({ children }) => (
