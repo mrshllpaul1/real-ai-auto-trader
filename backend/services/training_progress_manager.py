@@ -96,6 +96,9 @@ class TrainingProgressManager:
         
         task = self._tasks[task_id]
         
+        # Update last progress time
+        task.last_progress_time = datetime.now(timezone.utc)
+        
         if progress is not None:
             task.progress = min(100, max(0, progress))
         if message is not None:
@@ -115,6 +118,52 @@ class TrainingProgressManager:
         
         # Broadcast via WebSocket
         await self._broadcast_update(task)
+    
+    async def request_cancel(self, task_id: str) -> bool:
+        """Request cancellation of a task"""
+        if task_id not in self._tasks:
+            return False
+        
+        task = self._tasks[task_id]
+        if task.status != "running":
+            return False
+        
+        task.cancel_requested = True
+        task.message = "Cancellation requested..."
+        logger.info(f"Cancel requested for task: {task_id}")
+        await self._broadcast_update(task)
+        return True
+    
+    def is_cancel_requested(self, task_id: str) -> bool:
+        """Check if cancellation was requested for a task"""
+        if task_id not in self._tasks:
+            return False
+        return self._tasks[task_id].cancel_requested
+    
+    def is_task_stuck(self, task_id: str) -> bool:
+        """Check if a task is stuck (no progress for threshold time)"""
+        if task_id not in self._tasks:
+            return False
+        
+        task = self._tasks[task_id]
+        if task.status != "running" or task.last_progress_time is None:
+            return False
+        
+        elapsed = (datetime.now(timezone.utc) - task.last_progress_time).total_seconds()
+        return elapsed > task.stuck_threshold_seconds
+    
+    async def stop_task(self, task_id: str, reason: str = "Stopped by user"):
+        """Stop a task gracefully"""
+        if task_id in self._tasks:
+            task = self._tasks[task_id]
+            task.status = "stopped"
+            task.completed_at = datetime.now(timezone.utc)
+            task.message = reason
+            task.cancel_requested = True
+            logger.info(f"Stopped task: {task_id} - {reason}")
+            
+            # Broadcast via WebSocket
+            await self._broadcast_update(task)
     
     async def complete_task(self, task_id: str, result: Dict = None, message: str = "Completed"):
         """Mark a task as completed and broadcast via WebSocket"""
