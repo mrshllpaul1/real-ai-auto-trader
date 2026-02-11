@@ -101,22 +101,63 @@ class AdaptiveCoinSelector:
             return
             
         try:
-            if self.market_service:
-                # Get all tradeable pairs from Kraken
-                pairs = await self.market_service.get_all_tradeable_pairs()
-                if pairs:
-                    # Extract coin IDs from pairs
-                    for pair in pairs:
-                        coin_id = pair.get('base', '').lower()
-                        symbol = pair.get('altname', '')[:4]
+            # First try to load from database (KrakenUniverseManager)
+            db_pairs = await self.db.kraken_universe.find(
+                {"quote_currency": {"$in": ["USD", "USDT", "USDC"]}},
+                {"base_currency": 1, "altname": 1, "_id": 0}
+            ).to_list(1000)
+            
+            if db_pairs and len(db_pairs) > 50:
+                for pair in db_pairs:
+                    coin_id = pair.get('base_currency', '').lower()
+                    symbol = pair.get('altname', '')[:6].upper()
+                    if coin_id and coin_id not in self.coin_universe:
+                        self.coin_universe.append(coin_id)
+                        if symbol:
+                            self.coin_symbols[coin_id] = symbol
+                self._kraken_pairs_loaded = True
+                print(f"✅ Loaded {len(self.coin_universe)} coins from database")
+                return
+            
+            # Fallback: Fetch directly from Kraken API
+            from httpx import AsyncClient
+            async with AsyncClient(timeout=30) as client:
+                response = await client.get(
+                    "https://api.kraken.com/0/public/AssetPairs",
+                    headers={"User-Agent": "CryptoTradingBot/1.0"}
+                )
+                data = response.json()
+                
+                if data.get("result"):
+                    for pair_name, pair_info in data["result"].items():
+                        # Skip darkpool pairs
+                        if ".d" in pair_name:
+                            continue
+                        
+                        quote = pair_info.get("quote", "")
+                        # Only USD pairs
+                        if quote not in ["ZUSD", "USD", "USDT", "USDC"]:
+                            continue
+                        
+                        base = pair_info.get("base", "")
+                        # Normalize base currency
+                        if base.startswith("X") and len(base) > 1:
+                            coin_id = base[1:].lower()
+                        else:
+                            coin_id = base.lower()
+                        
+                        altname = pair_info.get("altname", "")
+                        symbol = altname.replace("USD", "").replace("USDT", "").replace("USDC", "")[:6].upper()
+                        
                         if coin_id and coin_id not in self.coin_universe:
                             self.coin_universe.append(coin_id)
                             if symbol:
                                 self.coin_symbols[coin_id] = symbol
+                    
                     self._kraken_pairs_loaded = True
-                    print(f"Loaded {len(self.coin_universe)} coins from Kraken")
+                    print(f"✅ Loaded {len(self.coin_universe)} coins from Kraken API")
         except Exception as e:
-            print(f"Error loading Kraken pairs: {e}")
+            print(f"⚠️ Error loading Kraken pairs: {e}")
     
     async def get_selection_status(self) -> Dict[str, Any]:
         """Get current status of the selection engine"""
