@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { 
   MessageCircle, Send, X, Loader2, Sparkles, Minimize2, Maximize2,
   Search, Plus, Save, TrendingUp, Zap, Settings, BarChart3, Wallet,
-  Target, RefreshCw, ArrowRight, Wand2, Bot, Brain, Command
+  Target, RefreshCw, ArrowRight, Wand2, Bot, Brain, Command, Move, History, HelpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
 
@@ -27,19 +27,33 @@ const FloatingCommandHub = () => {
   const [cmdInput, setCmdInput] = useState('');
   const [cmdLoading, setCmdLoading] = useState(false);
   const [cmdSessionId] = useState(() => `cmd_${Date.now()}`);
+  const [cmdHistory, setCmdHistory] = useState([]);
+  const [cmdHistoryIndex, setCmdHistoryIndex] = useState(-1);
   
   // AI Chat state
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const [chatSessionId] = useState(() => `chat_${Date.now()}`);
+  const [chatHistory, setChatHistory] = useState([]);
+  const [chatHistoryIndex, setChatHistoryIndex] = useState(-1);
   
   // Strategy Builder state
   const [strategyInput, setStrategyInput] = useState('');
   const [strategyLoading, setStrategyLoading] = useState(false);
   const [generatedStrategy, setGeneratedStrategy] = useState(null);
   
+  // Enhanced UI state
+  const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState(() => {
+    const saved = localStorage.getItem('commandHubPosition');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const dragControls = useDragControls();
+  
   const messagesEndRef = useRef(null);
+  const cmdInputRef = useRef(null);
+  const chatInputRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -48,6 +62,93 @@ const FloatingCommandHub = () => {
   useEffect(() => {
     scrollToBottom();
   }, [cmdMessages, chatMessages]);
+
+  // Keyboard shortcuts: Ctrl/Cmd + K to toggle
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Cmd/Ctrl + K to toggle
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsOpen(prev => !prev);
+        // Focus input when opening
+        if (!isOpen) {
+          setTimeout(() => {
+            if (activeTab === 'command') {
+              cmdInputRef.current?.focus();
+            } else if (activeTab === 'chat') {
+              chatInputRef.current?.focus();
+            }
+          }, 100);
+        }
+      }
+      // Escape to close
+      if (e.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, activeTab]);
+
+  // Command history navigation with arrow keys
+  const handleCmdKeyDown = (e) => {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (cmdHistory.length > 0) {
+        const newIndex = cmdHistoryIndex === -1 
+          ? cmdHistory.length - 1 
+          : Math.max(0, cmdHistoryIndex - 1);
+        setCmdHistoryIndex(newIndex);
+        setCmdInput(cmdHistory[newIndex]);
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (cmdHistoryIndex > -1) {
+        const newIndex = cmdHistoryIndex + 1;
+        if (newIndex >= cmdHistory.length) {
+          setCmdHistoryIndex(-1);
+          setCmdInput('');
+        } else {
+          setCmdHistoryIndex(newIndex);
+          setCmdInput(cmdHistory[newIndex]);
+        }
+      }
+    }
+  };
+
+  const handleChatKeyDown = (e) => {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (chatHistory.length > 0) {
+        const newIndex = chatHistoryIndex === -1 
+          ? chatHistory.length - 1 
+          : Math.max(0, chatHistoryIndex - 1);
+        setChatHistoryIndex(newIndex);
+        setChatInput(chatHistory[newIndex]);
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (chatHistoryIndex > -1) {
+        const newIndex = chatHistoryIndex + 1;
+        if (newIndex >= chatHistory.length) {
+          setChatHistoryIndex(-1);
+          setChatInput('');
+        } else {
+          setChatHistoryIndex(newIndex);
+          setChatInput(chatHistory[newIndex]);
+        }
+      }
+    }
+  };
+
+  // Save position to localStorage
+  const handleDragEnd = (event, info) => {
+    const newPosition = { x: info.point.x, y: info.point.y };
+    setPosition(newPosition);
+    localStorage.setItem('commandHubPosition', JSON.stringify(newPosition));
+    setIsDragging(false);
+  };
 
   // Initialize welcome messages
   useEffect(() => {
@@ -70,6 +171,14 @@ const FloatingCommandHub = () => {
   // Command Center - Execute actions
   const executeCommand = async (message) => {
     if (!message.trim()) return;
+    
+    // Add to command history
+    setCmdHistory(prev => {
+      const newHistory = [...prev, message];
+      // Keep last 50 commands
+      return newHistory.slice(-50);
+    });
+    setCmdHistoryIndex(-1);
     
     setCmdMessages(prev => [...prev, { type: 'user', content: message }]);
     setCmdInput('');
@@ -424,6 +533,14 @@ const FloatingCommandHub = () => {
   const sendChatMessage = async (message) => {
     if (!message.trim()) return;
     
+    // Add to chat history
+    setChatHistory(prev => {
+      const newHistory = [...prev, message];
+      // Keep last 50 messages
+      return newHistory.slice(-50);
+    });
+    setChatHistoryIndex(-1);
+    
     setChatMessages(prev => [...prev, { type: 'user', content: message }]);
     setChatInput('');
     setChatLoading(true);
@@ -514,9 +631,14 @@ const FloatingCommandHub = () => {
             onClick={() => setIsOpen(true)}
             className="fixed bottom-20 right-4 z-[60] w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all flex items-center justify-center group"
             data-testid="command-hub-btn"
+            aria-label="Open Command Hub (Ctrl+K)"
+            title="Open Command Hub (Ctrl+K)"
           >
             <Command size={24} className="text-white group-hover:scale-110 transition-transform" />
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-400 rounded-full flex items-center justify-center animate-pulse">
+            <span 
+              className="absolute -top-1 -right-1 w-5 h-5 bg-green-400 rounded-full flex items-center justify-center animate-pulse"
+              aria-hidden="true"
+            >
               <Zap size={12} className="text-black" />
             </span>
           </motion.button>
@@ -530,38 +652,77 @@ const FloatingCommandHub = () => {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            drag={!isMinimized && !isDragging}
+            dragControls={dragControls}
+            dragMomentum={false}
+            dragElastic={0}
+            onDragStart={() => setIsDragging(true)}
+            onDragEnd={handleDragEnd}
+            style={position ? { left: position.x, top: position.y, bottom: 'auto', right: 'auto' } : {}}
             className={`fixed z-[60] bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden flex flex-col ${
               isMinimized 
                 ? 'bottom-20 right-4 w-72 h-12' 
                 : 'bottom-4 right-4 w-[92vw] sm:w-[400px] md:w-[440px] lg:w-[480px] h-[60vh] sm:h-[500px] md:h-[550px] lg:h-[600px] max-h-[calc(100vh-100px)]'
             }`}
             data-testid="command-hub-window"
+            role="dialog"
+            aria-label="Command Hub"
+            aria-modal="true"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-3 py-2 border-b border-slate-700/50 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 flex-shrink-0">
+            <div 
+              className="flex items-center justify-between px-3 py-2 border-b border-slate-700/50 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 flex-shrink-0 cursor-move"
+              onPointerDown={(e) => !isMinimized && dragControls.start(e)}
+            >
               <div className="flex items-center gap-2">
+                {!isMinimized && (
+                  <Move size={14} className="text-slate-500 flex-shrink-0" aria-hidden="true" />
+                )}
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center">
                   <Command size={16} className="text-white" />
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-white">Command Hub</h3>
-                  <p className="text-[10px] text-slate-400">AI • Strategy • Commands</p>
+                  <p className="text-[10px] text-slate-400">
+                    {isMinimized ? 'Minimized' : 'AI • Strategy • Commands'}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
+                {!isMinimized && cmdHistory.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      toast.info('Use ↑↓ arrow keys to navigate command history', {
+                        description: 'Press ↑ for previous commands, ↓ for next',
+                        duration: 3000
+                      });
+                    }}
+                    className="h-7 w-7 p-0 text-slate-400 hover:text-white"
+                    aria-label="Show history help"
+                    title="Command history (↑↓)"
+                  >
+                    <History size={14} />
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() => setIsMinimized(!isMinimized)}
                   className="h-7 w-7 p-0 text-slate-400 hover:text-white"
+                  aria-label={isMinimized ? "Maximize" : "Minimize"}
+                  title={isMinimized ? "Maximize" : "Minimize"}
                 >
-                  <Minimize2 size={14} />
+                  {isMinimized ? <Maximize2 size={14} /> : <Minimize2 size={14} />}
                 </Button>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() => setIsOpen(false)}
                   className="h-7 w-7 p-0 text-slate-400 hover:text-red-400"
+                  aria-label="Close (Esc)"
+                  title="Close (Esc)"
                 >
                   <X size={14} />
                 </Button>
@@ -606,13 +767,18 @@ const FloatingCommandHub = () => {
                         {cmdMessages.length === 0 && !cmdLoading && (
                           <div className="flex justify-start">
                             <div className="max-w-[85%] rounded-xl px-3 py-2 bg-slate-800/80 text-slate-200">
-                              <p className="text-xs leading-relaxed mb-1"><strong className="text-cyan-400">Command Center</strong></p>
+                              <p className="text-xs leading-relaxed mb-1"><strong className="text-cyan-400">⚡ Command Center</strong></p>
                               <ul className="space-y-0.5">
                                 <li className="ml-3 text-xs leading-relaxed">• "Find hidden gems"</li>
                                 <li className="ml-3 text-xs leading-relaxed">• "Add BTC to watchlist"</li>
                                 <li className="ml-3 text-xs leading-relaxed">• "Go to analytics"</li>
                                 <li className="ml-3 text-xs leading-relaxed">• "Predict ETH price"</li>
                               </ul>
+                              <div className="mt-2 pt-2 border-t border-slate-700/50">
+                                <p className="text-[10px] text-slate-500 italic">
+                                  💡 Tip: Use Ctrl+K to toggle • ↑↓ for history
+                                </p>
+                              </div>
                             </div>
                           </div>
                         )}
@@ -640,13 +806,22 @@ const FloatingCommandHub = () => {
                       {/* Input - FIXED at bottom */}
                       <form onSubmit={(e) => { e.preventDefault(); executeCommand(cmdInput); }} className="flex gap-2 pt-3 mt-2 flex-shrink-0 border-t border-slate-700/30">
                         <Input
+                          ref={cmdInputRef}
                           value={cmdInput}
                           onChange={(e) => setCmdInput(e.target.value)}
-                          placeholder="Type a command..."
+                          onKeyDown={handleCmdKeyDown}
+                          placeholder="Type a command... (↑↓ for history)"
                           className="flex-1 h-10 bg-slate-800/50 border-slate-700/50 text-sm text-white placeholder:text-slate-400"
                           disabled={cmdLoading}
+                          aria-label="Command input"
                         />
-                        <Button type="submit" size="sm" disabled={cmdLoading} className="h-10 w-10 p-0 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400">
+                        <Button 
+                          type="submit" 
+                          size="sm" 
+                          disabled={cmdLoading} 
+                          className="h-10 w-10 p-0 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400"
+                          aria-label="Send command"
+                        >
                           <Send size={16} />
                         </Button>
                       </form>
@@ -705,13 +880,22 @@ const FloatingCommandHub = () => {
                       {/* Input - FIXED at bottom */}
                       <form onSubmit={(e) => { e.preventDefault(); sendChatMessage(chatInput); }} className="flex gap-2 pt-3 mt-2 flex-shrink-0 border-t border-slate-700/30">
                         <Input
+                          ref={chatInputRef}
                           value={chatInput}
                           onChange={(e) => setChatInput(e.target.value)}
-                          placeholder="Ask about crypto..."
+                          onKeyDown={handleChatKeyDown}
+                          placeholder="Ask about crypto... (↑↓ for history)"
                           className="flex-1 h-10 bg-slate-800/50 border-slate-700/50 text-sm text-white placeholder:text-slate-400"
                           disabled={chatLoading}
+                          aria-label="Chat input"
                         />
-                        <Button type="submit" size="sm" disabled={chatLoading} className="h-10 w-10 p-0 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400">
+                        <Button 
+                          type="submit" 
+                          size="sm" 
+                          disabled={chatLoading} 
+                          className="h-10 w-10 p-0 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400"
+                          aria-label="Send message"
+                        >
                           <Send size={16} />
                         </Button>
                       </form>
