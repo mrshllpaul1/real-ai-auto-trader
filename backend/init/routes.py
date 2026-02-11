@@ -202,6 +202,11 @@ def register_routes(api_router: APIRouter, db=None):
     api_router.include_router(model_benchmark_routes.router, tags=["Model Benchmarking"])
     model_benchmark_routes.init_router(db)
     
+    # Entry Price Management
+    from routes import entry_prices as entry_prices_routes
+    api_router.include_router(entry_prices_routes.router, tags=["Entry Price Management"])
+    entry_prices_routes.init_router(db)
+    
     logger.info("✅ All routes registered")
     
     return api_router
