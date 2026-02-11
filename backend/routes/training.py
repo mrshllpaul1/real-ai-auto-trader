@@ -1,6 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel
 from typing import List, Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
