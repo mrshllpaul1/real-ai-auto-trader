@@ -443,6 +443,11 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
           </div>
         )}
 
+        {/* Benchmark Tab */}
+        {activeTab === 'benchmark' && (
+          <ModelBenchmarkDashboard />
+        )}
+
         {/* Ensemble Tab */}
         {activeTab === 'ensemble' && (
           <div className="space-y-6">
