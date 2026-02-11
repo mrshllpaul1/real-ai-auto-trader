@@ -1,8 +1,9 @@
-import React, { useEffect, lazy, Suspense } from "react";
+import React, { useEffect, lazy, Suspense, useState, useCallback } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ErrorBoundary, { PageErrorBoundary } from "./components/ErrorBoundary";
 import { PageLoadingSkeleton } from "./components/LoadingSkeleton";
+import KeyboardShortcutsModal from "./components/KeyboardShortcutsModal";
 
 // Hub Pages (lazy loaded for better performance)
 const CommandCenter = lazy(() => import("./pages/CommandCenter"));
