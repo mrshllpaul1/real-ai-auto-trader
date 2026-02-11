@@ -6,6 +6,16 @@ The Tethys platform has evolved into a comprehensive AI-powered trading system w
 
 ---
 
+## ⚡ Performance & Reliability Hardening (P0)
+- **API latency**: Enable HTTP response caching for read-most endpoints (portfolio summary, universe lists, model status); turn on gzip/br compression at the gateway.
+- **Database speed**: Add indexes on `ai_predictions.prediction_type`, `ai_predictions.coin_symbol`, `price_history.timestamp`, and `option_orders.symbol` to reduce p99 query latency.
+- **Background workloads**: Move heavy jobs (backtests, SB3 training, data refresh) to queues with concurrency controls; enforce per-job timeouts and circuit breakers.
+- **Connection reuse**: Pool HTTP clients (market/news APIs) and database connections; set sensible keepalive to cut handshake overhead.
+- **Front-end payload**: Ship lazy-loaded routes for heavy pages (AI Center, Model Performance, Options Trading) and prefetch critical CSS to trim initial paint time.
+- **Observability**: Add RED/USE dashboards (latency, error rate, saturation) with 95/99th percentiles and alerting on rate-limit/timeout spikes.
+
+---
+
 ## 🔴 HIGH PRIORITY (P0) - Revenue & Retention Impact
 
 ### 1. **Real-Time Alerts & Push Notifications**
