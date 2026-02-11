@@ -110,6 +110,40 @@ async def update_config(config: SchedulerConfigUpdate):
     return result
 
 
+@router.post("/execute")
+async def execute_selection(request: ExecuteRequest = None):
+    """
+    Execute trades for an existing coin selection.
+    If no selection_id provided, executes the latest selection.
+    """
+    if _scheduler is None:
+        raise HTTPException(status_code=500, detail="Scheduler not initialized")
+    
+    selection_id = request.selection_id if request else None
+    paper_trade = request.paper_trade if request else None
+    
+    result = await _scheduler.execute_selection(selection_id, paper_trade)
+    
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error", "Execution failed"))
+    
+    return result
+
+
+@router.get("/last-execution")
+async def get_last_execution():
+    """Get the result of the last trade execution"""
+    if _scheduler is None:
+        raise HTTPException(status_code=500, detail="Scheduler not initialized")
+    
+    execution = await _scheduler.get_last_execution()
+    
+    if execution is None:
+        return {"message": "No execution yet"}
+    
+    return execution
+
+
 @router.get("/latest-selection")
 async def get_latest_selection():
     """Get the most recent weekly coin selection"""
