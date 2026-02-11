@@ -415,22 +415,40 @@ class AchievementService:
                 if achievement_id in earned_ids:
                     continue
                 
-                # Calculate progress based on achievement type
+                # Calculate progress based on achievement type using a lookup table
                 current = 0
                 target = 0
                 
+                # Achievement target lookup table for accuracy
+                achievement_targets = {
+                    "trader_10": 10,
+                    "trader_100": 100,
+                    "trader_1000": 1000,
+                    "profit_100": 100,
+                    "profit_1k": 1000,
+                    "profit_10k": 10000,
+                    "profit_100k": 100000,
+                    "consistent_50": 50,
+                    "consistent_70": 70,
+                    "consistent_90": 90,
+                    "portfolio_1k": 1000,
+                    "portfolio_10k": 10000,
+                    "portfolio_100k": 100000,
+                    "portfolio_1m": 1000000,
+                }
+                
                 if "trader_" in achievement_id:
                     current = stats.get("total_trades", 0)
-                    target = int(achievement_id.split("_")[1])
+                    target = achievement_targets.get(achievement_id, 0)
                 elif "profit_" in achievement_id:
                     current = stats.get("total_profit", 0)
-                    target = int(achievement_id.split("_")[1].replace("k", "000"))
+                    target = achievement_targets.get(achievement_id, 0)
                 elif "consistent_" in achievement_id:
                     current = stats.get("win_rate", 0)
-                    target = int(achievement_id.split("_")[1])
+                    target = achievement_targets.get(achievement_id, 0)
                 elif "portfolio_" in achievement_id:
                     current = stats.get("portfolio_value", 0)
-                    target = int(achievement_id.split("_")[1].replace("k", "000").replace("m", "000000"))
+                    target = achievement_targets.get(achievement_id, 0)
                 
                 progress_pct = min(100, (current / target * 100)) if target > 0 else 0
                 
