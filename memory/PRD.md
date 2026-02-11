@@ -7,6 +7,40 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ## Session Update - Feb 11, 2026 (Current Session)
 
+### ✅ NEW: Model Performance Benchmarking (Feb 11, 2026)
+
+**Feature Added:**
+- Compare FinRL vs Ensemble vs Time-Series vs Combined models across market conditions
+- 5 market scenarios tested: Bull, Bear, Sideways, High Volatility, Regime Change
+- Performance metrics: Return, Sharpe Ratio, Win Rate, Max Drawdown, Calmar Ratio
+- Model Rankings with overall scores
+- AI-generated recommendations based on benchmark results
+- Interactive charts: Bar chart comparison, Radar risk analysis, Scenario breakdown
+
+**API Endpoints:**
+- `POST /api/model-benchmark/run` - Run comprehensive benchmark
+- `GET /api/model-benchmark/results` - Get full benchmark results
+- `GET /api/model-benchmark/rankings` - Get model rankings
+- `GET /api/model-benchmark/chart-data` - Get chart-ready data
+- `GET /api/model-benchmark/recommendations` - Get AI recommendations
+
+**Latest Benchmark Results:**
+1. **#1 LSTM/GRU/Transformer**: +3.8% return, 0.09 Sharpe, Score: 1.21
+2. **#2 XGBoost/LightGBM Ensemble**: +1.7% return, -0.24 Sharpe, Score: 0.55
+3. **#3 Combined Strategy**: +1.0% return, -0.04 Sharpe, Score: 0.43
+4. **#4 FinRL DRL Agent**: -3.3% return, -0.17 Sharpe, Score: -0.76
+
+**Files Created:**
+- `backend/services/model_benchmarking.py` - Benchmarking service with signal simulation
+- `backend/routes/model_benchmarking.py` - API endpoints
+- `frontend/src/components/ModelBenchmarkDashboard.jsx` - UI component
+
+**Files Modified:**
+- `backend/init/routes.py` - Registered benchmark routes
+- `frontend/src/pages/ModelPerformanceDashboard.jsx` - Added Benchmark tab
+
+---
+
 ### ✅ OPTIMIZED: FinRL Training Speed (Feb 11, 2026) - 3.3x FASTER
 
 **Problem:** FinRL training took ~20 minutes for 50 episodes, making retraining impractical.
