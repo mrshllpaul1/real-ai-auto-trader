@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List
+from middleware.response_cache import cached_response
 
 router = APIRouter()
 
@@ -16,7 +17,9 @@ async def get_database():
     return db
 
 @router.get("/prices")
+@cached_response(ttl=30, key_prefix="market_prices")  # Cache for 30 seconds
 async def get_crypto_prices(
+    request: Request,
     coin_ids: str = "bitcoin,ethereum,solana,binancecoin,ripple",
     enhanced: bool = True,
     market_service = Depends(get_market_service),
@@ -48,7 +51,9 @@ async def get_crypto_prices(
         return {coin: {"price": 0, "error": str(e)} for coin in coin_ids.split(',')}
 
 @router.get("/global")
+@cached_response(ttl=60, key_prefix="market_global")  # Cache for 1 minute
 async def get_global_metrics(
+    request: Request,
     enhanced_service = Depends(get_enhanced_market_service)
 ):
     """Get global cryptocurrency market metrics"""
@@ -96,7 +101,8 @@ async def get_historical_data(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/trending")
-async def get_trending_coins(market_service = Depends(get_market_service)):
+@cached_response(ttl=300, key_prefix="market_trending")  # Cache for 5 minutes
+async def get_trending_coins(request: Request, market_service = Depends(get_market_service)):
     """Get trending cryptocurrencies"""
     try:
         trending = await market_service.get_trending_coins()
@@ -105,7 +111,8 @@ async def get_trending_coins(market_service = Depends(get_market_service)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/news")
-async def get_crypto_news(market_service = Depends(get_market_service)):
+@cached_response(ttl=180, key_prefix="market_news")  # Cache for 3 minutes
+async def get_crypto_news(request: Request, market_service = Depends(get_market_service)):
     """Get latest crypto news and events"""
     try:
         news = await market_service.get_crypto_news()

@@ -1,4 +1,5 @@
-const CACHE_NAME = 'crypto-trade-v3';
+const CACHE_NAME = 'crypto-trade-v4';  // Bump version for performance improvements
+const RUNTIME_CACHE = 'runtime-cache-v1';
 const API_BASE = '/api';
 
 const urlsToCache = [
@@ -7,6 +8,23 @@ const urlsToCache = [
   '/static/js/main.js',
   '/manifest.json'
 ];
+
+// Cache strategies with TTL
+const CACHE_STRATEGIES = {
+  // Market data - short TTL
+  '/api/market/prices': { strategy: 'network-first', maxAge: 30000 }, // 30s
+  '/api/market/global': { strategy: 'network-first', maxAge: 60000 }, // 1min
+  '/api/market/trending': { strategy: 'cache-first', maxAge: 300000 }, // 5min
+  '/api/market/news': { strategy: 'cache-first', maxAge: 180000 }, // 3min
+  
+  // Portfolio data - medium TTL
+  '/api/portfolio': { strategy: 'network-first', maxAge: 10000 }, // 10s
+  '/api/positions': { strategy: 'network-first', maxAge: 10000 }, // 10s
+  
+  // Static data - long TTL
+  '/api/strategies': { strategy: 'cache-first', maxAge: 600000 }, // 10min
+  '/api/triggers/templates': { strategy: 'cache-first', maxAge: 600000 }, // 10min
+};
 
 // Install service worker and cache assets
 self.addEventListener('install', (event) => {
@@ -25,23 +43,46 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME)
+          .filter((name) => name !== CACHE_NAME && name !== RUNTIME_CACHE)
           .map((name) => caches.delete(name))
       );
     }).then(() => self.clients.claim())
   );
 });
 
-// Network first for API, cache first for static
+// Smart caching with TTL and strategies
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
-  // API requests - network first
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+  
+  // Find matching strategy
+  let cacheConfig = null;
+  for (const [path, config] of Object.entries(CACHE_STRATEGIES)) {
+    if (url.pathname.startsWith(path)) {
+      cacheConfig = config;
+      break;
+    }
+  }
+  
+  // API requests with smart caching
   if (url.pathname.startsWith('/api')) {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => caches.match(event.request))
-    );
+    if (cacheConfig) {
+      if (cacheConfig.strategy === 'cache-first') {
+        event.respondWith(cacheFirst(event.request, cacheConfig.maxAge));
+      } else {
+        event.respondWith(networkFirst(event.request, cacheConfig.maxAge));
+      }
+    } else {
+      // Default: network first without caching
+      event.respondWith(
+        fetch(event.request)
+          .catch(() => caches.match(event.request))
+      );
+    }
     return;
   }
   
@@ -51,6 +92,87 @@ self.addEventListener('fetch', (event) => {
       .then((response) => response || fetch(event.request))
   );
 });
+
+// Cache First strategy with TTL
+async function cacheFirst(request, maxAge) {
+  const cached = await caches.match(request);
+  
+  if (cached) {
+    const cacheTime = parseInt(cached.headers.get('sw-cache-time') || '0');
+    const now = Date.now();
+    
+    // Return cached if still valid
+    if (now - cacheTime < maxAge) {
+      return cached;
+    }
+  }
+  
+  try {
+    const response = await fetch(request);
+    
+    if (response.ok) {
+      const cache = await caches.open(RUNTIME_CACHE);
+      const clonedResponse = response.clone();
+      
+      // Add cache timestamp
+      const responseBlob = await clonedResponse.blob();
+      const headers = new Headers(clonedResponse.headers);
+      headers.set('sw-cache-time', Date.now().toString());
+      
+      const cacheResponse = new Response(responseBlob, {
+        status: clonedResponse.status,
+        statusText: clonedResponse.statusText,
+        headers: headers
+      });
+      
+      await cache.put(request, cacheResponse);
+    }
+    
+    return response;
+  } catch (error) {
+    // Network failed, return stale cache if available
+    if (cached) {
+      return cached;
+    }
+    throw error;
+  }
+}
+
+// Network First strategy with TTL
+async function networkFirst(request, maxAge) {
+  try {
+    const response = await fetch(request);
+    
+    if (response.ok) {
+      const cache = await caches.open(RUNTIME_CACHE);
+      const clonedResponse = response.clone();
+      
+      // Add cache timestamp
+      const responseBlob = await clonedResponse.blob();
+      const headers = new Headers(clonedResponse.headers);
+      headers.set('sw-cache-time', Date.now().toString());
+      
+      const cacheResponse = new Response(responseBlob, {
+        status: clonedResponse.status,
+        statusText: clonedResponse.statusText,
+        headers: headers
+      });
+      
+      await cache.put(request, cacheResponse);
+    }
+    
+    return response;
+  } catch (error) {
+    // Network failed, try cache
+    const cached = await caches.match(request);
+    
+    if (cached) {
+      return cached;
+    }
+    
+    throw error;
+  }
+}
 
 // Background sync for trades
 self.addEventListener('sync', (event) => {
