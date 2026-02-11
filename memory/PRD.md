@@ -7,6 +7,39 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ## Session Update - Feb 11, 2026 (Current Session)
 
+### ✅ NEW: Weekly Model Retrain Scheduler (Feb 11, 2026)
+
+**Feature Added:**
+- Automatic model retraining every **Sunday at 3:00 AM UTC**
+- Retrains: Historical patterns, Gem ML/DL, MTF predictor
+- Uses all coins from dynamic universe (77+ coins)
+- Progress tracking via WebSocket and training-progress API
+
+**API Endpoints:**
+- `GET /api/model-retrain-scheduler/status` - Get scheduler status and next run
+- `POST /api/model-retrain-scheduler/run-now` - Trigger immediate retrain
+- `PUT /api/model-retrain-scheduler/config` - Update schedule configuration
+- `GET /api/model-retrain-scheduler/history` - Get retrain history
+
+**Files Created:**
+- `backend/services/model_retrain_scheduler.py`
+- `backend/routes/model_retrain_scheduler.py`
+
+### ✅ FIX: Models Trained Count Accuracy (Feb 11, 2026)
+
+**Issue:** Dashboard showed "2/6 models trained" based on library availability instead of actual training status.
+
+**Fix:** Now fetches real training status from:
+- `/api/training/status` - Historical AI training
+- `/api/gems/ml-dl/status` - Gem ML/DL training  
+- `/api/enhanced-mtf-training/status` - MTF predictor training
+- `/api/trading-intelligence/status` - Ensemble/LSTM/FinRL training
+
+**Files Modified:**
+- `frontend/src/pages/ModelPerformanceDashboard.jsx` - Added comprehensive status fetching
+
+---
+
 ### ✅ ENHANCED: Training Progress System with WebSocket & All Coins (Feb 11, 2026)
 
 **Improvements Made:**
