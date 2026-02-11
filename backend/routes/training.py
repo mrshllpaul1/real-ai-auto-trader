@@ -470,13 +470,14 @@ async def train_all_systems(
                 "category_weight": 0.08,
                 "total": "100%"
             },
-            "coins": training_coins,
-            "coin_count": len(training_coins),
+            "coins": training_coins[:20],  # Show first 20 in response
+            "coin_count": total_coins,
             "data_source": "REAL_MARKET_DATA_ONLY (Twelve Data API)",
             "sentiment_source": "AI News Analysis (CryptoPanic + LLM)",
             "status": "processing",
             "progress_endpoint": f"/api/training-progress/task/{task_id}",
-            "note": "Training may take 5-10 minutes. Check progress endpoint for real-time updates."
+            "websocket_endpoint": "/api/training-progress/ws",
+            "note": f"Training {total_coins} coins. Use WebSocket for real-time updates."
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
