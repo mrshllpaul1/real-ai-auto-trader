@@ -285,7 +285,7 @@ async def get_error_alerts(
     Get error alerts.
     """
     try:
-        if not db:
+        if db is None:
             return {"alerts": [], "message": "Database not available"}
         
         query = {'type': 'error_alert'}
