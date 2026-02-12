@@ -84,79 +84,9 @@ async def get_social_feed(
         "feed": trades,
         "count": len(trades),
         "offset": offset,
-        "has_more": len(trades) == limit
+        "has_more": len(trades) == limit,
+        "message": "No shared trades yet. Share your first trade to appear in the feed." if not trades else None
     }
-
-
-def _get_sample_feed() -> List[Dict]:
-    """Generate sample social feed"""
-    import random
-    now = datetime.now(timezone.utc)
-    
-    sample_trades = [
-        {
-            "trade_id": "trade_001",
-            "user": {"display_name": "CryptoKing", "avatar_emoji": "👑", "verified": True},
-            "symbol": "BTC/USD",
-            "side": "BUY",
-            "entry_price": 67500,
-            "current_price": 69800,
-            "pnl_percent": 3.4,
-            "strategy": "Momentum breakout",
-            "comment": "BTC breaking out of consolidation. Target $72K 🚀",
-            "shared_at": (now - timedelta(hours=2)).isoformat(),
-            "is_public": True,
-            "likes_count": 45,
-            "comments_count": 12
-        },
-        {
-            "trade_id": "trade_002",
-            "user": {"display_name": "ETHMaxi", "avatar_emoji": "⬨", "verified": False},
-            "symbol": "ETH/USD",
-            "side": "BUY",
-            "entry_price": 1980,
-            "current_price": 2050,
-            "pnl_percent": 3.5,
-            "strategy": "Support bounce",
-            "comment": "ETH holding $2K support beautifully. Accumulating more.",
-            "shared_at": (now - timedelta(hours=5)).isoformat(),
-            "is_public": True,
-            "likes_count": 32,
-            "comments_count": 8
-        },
-        {
-            "trade_id": "trade_003",
-            "user": {"display_name": "DeFiDegen", "avatar_emoji": "🤠", "verified": True},
-            "symbol": "SOL/USD",
-            "side": "SELL",
-            "entry_price": 95,
-            "exit_price": 85,
-            "pnl_percent": -10.5,
-            "strategy": "Stop loss hit",
-            "comment": "Taking the L on this one. SOL couldn't hold $90. Reset and move on.",
-            "shared_at": (now - timedelta(hours=8)).isoformat(),
-            "is_public": True,
-            "likes_count": 18,
-            "comments_count": 23
-        },
-        {
-            "trade_id": "trade_004",
-            "user": {"display_name": "AITrader", "avatar_emoji": "🤖", "verified": True},
-            "symbol": "AVAX/USD",
-            "side": "BUY",
-            "entry_price": 28.5,
-            "current_price": 31.2,
-            "pnl_percent": 9.5,
-            "strategy": "AI Signal",
-            "comment": "Tethys AI flagged AVAX for breakout. Working perfectly 🎯",
-            "shared_at": (now - timedelta(hours=12)).isoformat(),
-            "is_public": True,
-            "likes_count": 67,
-            "comments_count": 15
-        }
-    ]
-    
-    return sample_trades
 
 
 @router.post("/profile")
