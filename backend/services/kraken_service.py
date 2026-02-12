@@ -7,11 +7,25 @@ from httpx import AsyncClient
 from typing import Dict, Any, Optional
 import json
 
+# Import circuit breaker for API protection
+try:
+    from utils.circuit_breaker import get_circuit_breaker, CircuitBreakerOpenError
+    CIRCUIT_BREAKER_AVAILABLE = True
+except ImportError:
+    CIRCUIT_BREAKER_AVAILABLE = False
+
 class KrakenAuthenticator:
     def __init__(self, api_key: str, api_secret: str):
         self.api_key = api_key
         self.api_secret = api_secret
         self.api_url = "https://api.kraken.com"
+        # Initialize circuit breaker for Kraken API protection
+        if CIRCUIT_BREAKER_AVAILABLE:
+            self._circuit_breaker = get_circuit_breaker(
+                "kraken_auth",
+                failure_threshold=3,
+                recovery_timeout=30
+            )
         
     def _get_nonce(self) -> str:
         return str(int(time.time() * 1000))
@@ -30,16 +44,12 @@ class KrakenAuthenticator:
         sigdigest = base64.b64encode(mac.digest())
         return sigdigest.decode()
     
-    async def request(
+    async def _make_request(
         self,
         endpoint: str,
-        method: str = "POST",
-        params: Optional[Dict[str, Any]] = None
+        params: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Make authenticated request to Kraken API"""
-        if params is None:
-            params = {}
-        
+        """Internal method to make the actual API request"""
         nonce = self._get_nonce()
         params['nonce'] = nonce
         urlpath = f"/0/private/{endpoint}"
@@ -58,7 +68,34 @@ class KrakenAuthenticator:
                 data=params,
                 headers=headers
             )
-            return response.json()
+            result = response.json()
+            if result.get("error") and len(result["error"]) > 0:
+                raise Exception(f"Kraken API error: {result['error']}")
+            return result
+    
+    async def request(
+        self,
+        endpoint: str,
+        method: str = "POST",
+        params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Make authenticated request to Kraken API with circuit breaker protection"""
+        if params is None:
+            params = {}
+        
+        # Use circuit breaker if available
+        if CIRCUIT_BREAKER_AVAILABLE:
+            try:
+                return await self._circuit_breaker.call(
+                    self._make_request,
+                    endpoint,
+                    params
+                )
+            except CircuitBreakerOpenError as e:
+                # Return error response when circuit is open
+                return {"error": [f"Service temporarily unavailable: {e}"]}
+        else:
+            return await self._make_request(endpoint, params)
 
 class KrakenTradeService:
     def __init__(self, authenticator: KrakenAuthenticator):
