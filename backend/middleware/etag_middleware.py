@@ -26,13 +26,20 @@ class ETagMiddleware(BaseHTTPMiddleware):
     Reduces bandwidth for unchanged API responses.
     """
     
-    # Paths to skip ETag processing (real-time data)
+    # Paths to skip ETag processing (real-time data and heavy endpoints)
     SKIP_PATHS: Set[str] = {
         '/api/health',
         '/api/training-progress',
-        '/api/tethys-train/status',
+        '/api/tethys-train',
+        '/api/training',
+        '/api/errors',
+        '/api/system-state',
+        '/api/performance',
+        '/api/monitoring',
         '/ws/',
-        '/api/monitoring/errors',
+        '/api/market/prices',
+        '/api/sentiment',
+        '/api/adaptive-strategy',
     }
     
     # Only apply to these methods
