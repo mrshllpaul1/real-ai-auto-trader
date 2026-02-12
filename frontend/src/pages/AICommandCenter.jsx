@@ -13,8 +13,11 @@ import toast from '../utils/toast';
 import VisualTrainingProgress from '../components/VisualTrainingProgress';
 
 // AI Brain Tab - Enhanced AI Dashboard
-const AIBrainTab = ({ enhancedStatus, onTrainModel }) => (
+const AIBrainTab = ({ enhancedStatus, onTrainModel, isTraining }) => (
   <div className="space-y-6">
+    {/* Visual Training Progress - Shows when training is active */}
+    <VisualTrainingProgress embedded={false} pollInterval={3000} showControls={true} />
+    
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
         <CardContent className="pt-4 text-center">
