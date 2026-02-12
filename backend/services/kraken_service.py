@@ -102,6 +102,13 @@ class KrakenTradeService:
         self.auth = authenticator
         self.api_url = "https://api.kraken.com"
         self._api_timeout = 10.0  # 10 second timeout for all API calls
+        # Circuit breaker for public API calls
+        if CIRCUIT_BREAKER_AVAILABLE:
+            self._public_circuit_breaker = get_circuit_breaker(
+                "kraken_public",
+                failure_threshold=5,
+                recovery_timeout=20
+            )
     
     async def get_balance(self) -> Dict[str, float]:
         """Retrieve all account balances"""
@@ -114,22 +121,34 @@ class KrakenTradeService:
         """Alias for get_balance"""
         return await self.get_balance()
     
+    async def _fetch_ticker(self, symbol: str) -> Dict[str, Any]:
+        """Internal method to fetch ticker data"""
+        async with AsyncClient(timeout=self._api_timeout) as client:
+            response = await client.get(
+                f"{self.api_url}/0/public/Ticker",
+                params={"pair": symbol}
+            )
+            data = response.json()
+            if data.get("error") and len(data["error"]) > 0:
+                raise Exception(f"Kraken API error: {data['error']}")
+            result = data.get("result", {})
+            for key, ticker in result.items():
+                return ticker
+            return None
+    
     async def get_ticker(self, symbol: str) -> Dict[str, Any]:
-        """Get ticker for a single trading pair (public endpoint)"""
+        """Get ticker for a single trading pair (public endpoint) with circuit breaker"""
         try:
-            async with AsyncClient(timeout=self._api_timeout) as client:
-                response = await client.get(
-                    f"{self.api_url}/0/public/Ticker",
-                    params={"pair": symbol}
+            if CIRCUIT_BREAKER_AVAILABLE:
+                return await self._public_circuit_breaker.call(
+                    self._fetch_ticker,
+                    symbol
                 )
-                data = response.json()
-                if data.get("error"):
-                    return None
-                result = data.get("result", {})
-                # Return the first (and only) ticker
-                for key, ticker in result.items():
-                    return ticker
-                return None
+            else:
+                return await self._fetch_ticker(symbol)
+        except CircuitBreakerOpenError:
+            print(f"Kraken public API circuit breaker open for {symbol}")
+            return None
         except Exception as e:
             print(f"Kraken ticker error for {symbol}: {e}")
             return None
