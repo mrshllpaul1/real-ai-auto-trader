@@ -66,9 +66,17 @@ const EnsembleAI = ({ embedded = false }) => {
   const [comparison, setComparison] = useState(null);
   const [hiddenGems, setHiddenGems] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [rebuilding, setRebuilding] = useState(false);
   const [targetSize, setTargetSize] = useState(50);
   const [analyzeCount, setAnalyzeCount] = useState(500);
+
+  // Use persisted state for rebuild status
+  const { 
+    isRunning: rebuilding, 
+    setRunning: setRebuilding,
+    loading: rebuildStateLoading 
+  } = useComponentState(ComponentType.UNIVERSE_REBUILD, {
+    pollInterval: 3000, // Poll every 3 seconds when running
+  });
 
   // Fetch optimal universe
   const fetchUniverse = async () => {
@@ -106,8 +114,10 @@ const EnsembleAI = ({ embedded = false }) => {
       const { data } = await api.get('/ensemble/build-status');
       setBuildStatus(data);
       
-      // Stop polling if complete
-      if (!data.running && data.progress >= 100) {
+      // Update rebuilding state from build status
+      if (data.running) {
+        setRebuilding(true);
+      } else if (data.progress >= 100) {
         setRebuilding(false);
         toast.success('Universe rebuild complete!');
         // Refresh data
@@ -121,7 +131,7 @@ const EnsembleAI = ({ embedded = false }) => {
       console.error('Error fetching build status:', err);
       return false;
     }
-  }, []);
+  }, [setRebuilding]);
 
   // Fetch ensemble status
   const fetchStatus = useCallback(async () => {
