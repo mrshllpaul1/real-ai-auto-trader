@@ -68,6 +68,9 @@ function App() {
       localStorage.setItem('user_id', uid);
     }
 
+    // Prefetch common routes during idle time
+    prefetchRoutes();
+
     // Register service worker for background execution
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/service-worker.js')
