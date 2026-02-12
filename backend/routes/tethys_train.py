@@ -103,32 +103,44 @@ async def start_training(
     
     config = config or TrainConfig()
     
-    # Define the training task
-    async def train_task():
+    # Use threading to truly run in background without blocking event loop
+    import threading
+    
+    def train_task_sync():
         try:
-            from services.tethys_training import get_trainer
-            trainer = get_trainer(_db)
+            # Run the async training in a new event loop
+            import asyncio
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
             
-            if trainer.is_training:
-                logger.info("Training already in progress")
-                return
+            async def run_training():
+                from services.tethys_training import get_trainer
+                trainer = get_trainer(_db)
+                
+                if trainer.is_training:
+                    logger.info("Training already in progress")
+                    return
+                
+                await trainer.train(
+                    episodes=config.episodes,
+                    symbol=config.symbol,
+                    save_every=config.save_every,
+                    early_stopping_patience=config.early_stopping_patience
+                )
             
-            await trainer.train(
-                episodes=config.episodes,
-                symbol=config.symbol,
-                save_every=config.save_every,
-                early_stopping_patience=config.early_stopping_patience
-            )
+            loop.run_until_complete(run_training())
+            loop.close()
         except Exception as e:
             logger.error(f"Training error: {e}")
     
-    # Start training in a truly non-blocking way using asyncio.create_task
-    asyncio.create_task(train_task())
+    # Start training in a separate thread
+    thread = threading.Thread(target=train_task_sync, daemon=True)
+    thread.start()
     
     return {
         "status": "training_started",
         "config": config.dict(),
-        "message": "Training initialization started in background"
+        "message": "Training initialization started in background thread"
     }
 
 
