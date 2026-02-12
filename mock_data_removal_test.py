@@ -194,7 +194,8 @@ class MockDataRemovalTester:
                             
         elif expected_behavior == "not_configured":
             status = data.get('status', 'unknown')
-            details.append(f"Status: {status}")
+            cluster_status = data.get('cluster_status', 'unknown')
+            details.append(f"Status: {status}, Cluster Status: {cluster_status}")
             
         elif expected_behavior == "empty_with_message":
             has_message = any(key in data for key in ['message', 'info', 'note', 'description'])
