@@ -447,46 +447,15 @@ async def create_ab_test(
 async def list_ab_tests(db = Depends(get_database)):
     """List all A/B tests"""
     
-    # Simulated tests
-    tests = [
-        {
-            "test_id": "test-001",
-            "name": "XGBoost v3 vs v2",
-            "model_a_id": "xgb-signal-v2",
-            "model_b_id": "xgb-signal-v3",
-            "status": "completed",
-            "winner": "model_b",
-            "confidence": 0.97,
-            "improvement": "+12.5%",
-            "started_at": (datetime.now(timezone.utc) - timedelta(days=14)).isoformat(),
-            "completed_at": (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
-        },
-        {
-            "test_id": "test-002",
-            "name": "LSTM vs Transformer",
-            "model_a_id": "lstm-price-v2",
-            "model_b_id": "transformer-price-v1",
-            "status": "running",
-            "samples_a": 1245,
-            "samples_b": 1198,
-            "current_metric_a": 1.28,
-            "current_metric_b": 1.35,
-            "started_at": (datetime.now(timezone.utc) - timedelta(days=3)).isoformat(),
-            "estimated_completion": (datetime.now(timezone.utc) + timedelta(days=4)).isoformat()
-        },
-        {
-            "test_id": "test-003",
-            "name": "Bayesian vs Ensemble",
-            "model_a_id": "bnn-ensemble-v1",
-            "model_b_id": "deep-ensemble-v2",
-            "status": "running",
-            "samples_a": 456,
-            "samples_b": 478,
-            "current_metric_a": 1.62,
-            "current_metric_b": 1.58,
-            "started_at": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+    # Get real tests from database
+    tests = await db.ab_tests.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    
+    if not tests:
+        return {
+            "tests": [],
+            "total": 0,
+            "message": "No A/B tests created yet. Use POST /ab-test/create to start a model comparison test."
         }
-    ]
     
     return {"tests": tests, "total": len(tests)}
 
