@@ -63,13 +63,21 @@ const AdaptiveStrategy = ({ embedded = false }) => {
   const [predictedEvents, setPredictedEvents] = useState([]);
   const [optimalStrategy, setOptimalStrategy] = useState(null);
   const [onChainData, setOnChainData] = useState(null);
-  const [isMonitoring, setIsMonitoring] = useState(false);
   const [loading, setLoading] = useState(true);
   const [autoAdjusting, setAutoAdjusting] = useState(false);
   const [coverageStats, setCoverageStats] = useState(null);
   const [eventFilter, setEventFilter] = useState('all');
   const [probabilityFilter, setProbabilityFilter] = useState(0);
   const [eventCalendar, setEventCalendar] = useState(null);
+
+  // Use persisted state for monitoring
+  const { 
+    isRunning: isMonitoring, 
+    setRunning: setMonitoringState,
+    loading: monitoringLoading 
+  } = useComponentState(ComponentType.ADAPTIVE_MONITORING, {
+    pollInterval: 30000, // Check every 30 seconds
+  });
 
   const loadData = useCallback(async () => {
     try {
