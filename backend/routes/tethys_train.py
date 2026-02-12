@@ -103,7 +103,7 @@ async def start_training(
     
     config = config or TrainConfig()
     
-    # Mark training as starting immediately
+    # Define the training task
     async def train_task():
         try:
             from services.tethys_training import get_trainer
@@ -122,8 +122,8 @@ async def start_training(
         except Exception as e:
             logger.error(f"Training error: {e}")
     
-    # Start training in background immediately without waiting
-    background_tasks.add_task(train_task)
+    # Start training in a truly non-blocking way using asyncio.create_task
+    asyncio.create_task(train_task())
     
     return {
         "status": "training_started",
