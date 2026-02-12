@@ -103,25 +103,32 @@ async def start_training(
     
     config = config or TrainConfig()
     
-    from services.tethys_training import get_trainer
-    trainer = get_trainer(_db)
-    
-    if trainer.is_training:
-        return {"status": "already_training", "progress": trainer.get_training_status()}
-    
+    # Mark training as starting immediately
     async def train_task():
-        await trainer.train(
-            episodes=config.episodes,
-            symbol=config.symbol,
-            save_every=config.save_every,
-            early_stopping_patience=config.early_stopping_patience
-        )
+        try:
+            from services.tethys_training import get_trainer
+            trainer = get_trainer(_db)
+            
+            if trainer.is_training:
+                logger.info("Training already in progress")
+                return
+            
+            await trainer.train(
+                episodes=config.episodes,
+                symbol=config.symbol,
+                save_every=config.save_every,
+                early_stopping_patience=config.early_stopping_patience
+            )
+        except Exception as e:
+            logger.error(f"Training error: {e}")
     
+    # Start training in background immediately without waiting
     background_tasks.add_task(train_task)
     
     return {
         "status": "training_started",
-        "config": config.dict()
+        "config": config.dict(),
+        "message": "Training initialization started in background"
     }
 
 
