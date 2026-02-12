@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import api, { clearAllCacheAndRefresh } from '../services/api';
 import toast from '../utils/toast';
+import VisualTrainingProgress from '../components/VisualTrainingProgress';
 
 // AI Brain Tab - Enhanced AI Dashboard
 const AIBrainTab = ({ enhancedStatus, onTrainModel }) => (
