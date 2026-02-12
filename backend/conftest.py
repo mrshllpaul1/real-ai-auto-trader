@@ -121,9 +121,11 @@ def should_skip_backend_tests(module) -> bool:
     base_url = getattr(module, "BASE_URL", None)
     if base_url is None:
         return False
-    return not base_url or not base_url.startswith(("http://", "https://"))
+    if not base_url:
+        return True
+    return not base_url.startswith(("http://", "https://"))
 
 
 def pytest_runtest_setup(item):
     if should_skip_backend_tests(item.module):
-        pytest.skip("REACT_APP_BACKEND_URL not set or invalid; skipping backend integration tests")
+        pytest.skip("BASE_URL (from REACT_APP_BACKEND_URL) not set or invalid; skipping backend integration tests")
