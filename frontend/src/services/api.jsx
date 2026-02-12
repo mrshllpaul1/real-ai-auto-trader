@@ -92,30 +92,37 @@ const deduplicateRequest = async (key, requestFn) => {
 // ============================================
 const api = axios.create({
   baseURL: API,
-  timeout: 60000,
+  timeout: 30000, // Reduced to 30 seconds for faster failure detection
 });
 
-// Request interceptor
+// Request interceptor with performance tracking
 api.interceptors.request.use(
   (config) => {
     config.params = {
       ...config.params,
       user_id: localStorage.getItem('user_id') || 'demo_user'
     };
+    config._startTime = Date.now();
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Response interceptor with caching
+// Response interceptor with caching and performance logging
 api.interceptors.response.use(
   (response) => {
+    // Log slow requests for debugging
+    const duration = Date.now() - (response.config._startTime || Date.now());
+    if (duration > 2000) {
+      console.warn(`[API Slow] ${response.config.url} took ${duration}ms`);
+    }
+    
     // Cache GET responses (only if not a forced refresh)
     if (response.config.method === 'get' && !response.config._skipCache) {
-      const duration = getCacheDuration(response.config.url);
-      if (duration) {
+      const cacheDuration = getCacheDuration(response.config.url);
+      if (cacheDuration) {
         const cacheKey = getCacheKey(response.config);
-        setCache(cacheKey, response, duration);
+        setCache(cacheKey, response, cacheDuration);
       }
     }
     return response;
