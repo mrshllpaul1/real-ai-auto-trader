@@ -9,7 +9,7 @@ Testing specific endpoints requested in the review:
 3. Model Status Persistence
 4. Other important endpoints
 
-Backend URL: https://speed-optimizer-12.preview.emergentagent.com/api
+Backend URL: https://crypto-ai-fixes.preview.emergentagent.com/api
 """
 
 import requests
@@ -19,7 +19,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Any
 
 # Backend URL configuration
-BASE_URL = "https://speed-optimizer-12.preview.emergentagent.com/api"
+BASE_URL = "https://crypto-ai-fixes.preview.emergentagent.com/api"
 
 class TethysModelTrainingTester:
     def __init__(self):

@@ -10,7 +10,7 @@ import json
 from typing import Dict, List
 
 # Backend URL from environment
-BACKEND_URL = "https://speed-optimizer-12.preview.emergentagent.com/api"
+BACKEND_URL = "https://crypto-ai-fixes.preview.emergentagent.com/api"
 
 class FocusedPerformanceTester:
     def __init__(self):

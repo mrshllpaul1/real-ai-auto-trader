@@ -20,7 +20,7 @@ from datetime import datetime
 from typing import Dict, List, Any
 
 # Backend URL from environment
-BACKEND_URL = "https://speed-optimizer-12.preview.emergentagent.com/api"
+BACKEND_URL = "https://crypto-ai-fixes.preview.emergentagent.com/api"
 
 class EnhancementAPITester:
     def __init__(self):

@@ -9,7 +9,7 @@ import json
 import time
 from datetime import datetime
 
-BASE_URL = "https://speed-optimizer-12.preview.emergentagent.com/api"
+BASE_URL = "https://crypto-ai-fixes.preview.emergentagent.com/api"
 
 def test_complete_tethys_cycle():
     """Test complete Tethys toggle cycle starting from clean state"""
