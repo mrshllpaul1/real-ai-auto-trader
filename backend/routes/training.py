@@ -1262,14 +1262,16 @@ async def train_individual_model(
             logger.error(f"Model training error: {e}")
             await progress_manager.fail_task(task_id, str(e))
     
-    background_tasks.add_task(train_model_with_progress)
+    # Use asyncio.create_task for truly non-blocking background execution
+    asyncio.create_task(train_model_with_progress())
     
     return {
         "status": "training_started",
         "task_id": task_id,
         "model_name": model_name,
         "coins": request.coins,
-        "message": f"Training {model_name} model in background. Check /training-progress/status/{task_id} for updates."
+        "message": f"Training {model_name} model in background. Check /training-progress/task/{task_id} for updates.",
+        "progress_endpoint": f"/api/training-progress/task/{task_id}"
     }
 
 
