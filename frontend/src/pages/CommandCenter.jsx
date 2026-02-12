@@ -319,6 +319,24 @@ const CommandCenter = () => {
   const [orchestratorStatus, setOrchestratorStatus] = useState(null);
   const [upgradesStatus, setUpgradesStatus] = useState(null);
 
+  // Use persisted state for orchestrator
+  const { 
+    isRunning: orchestratorPersisted, 
+    setRunning: setOrchestratorState,
+    refresh: refreshOrchestratorState 
+  } = useComponentState(ComponentType.MASTER_ORCHESTRATOR, {
+    pollInterval: 15000,
+  });
+
+  // Use persisted state for autopilot
+  const { 
+    isRunning: autopilotPersisted, 
+    setRunning: setAutopilotState,
+    refresh: refreshAutopilotState 
+  } = useComponentState(ComponentType.TETHYS_AUTOPILOT, {
+    pollInterval: 15000,
+  });
+
   const fetchData = useCallback(async (forceRefresh = false) => {
     try {
       // Clear cache if forcing refresh
