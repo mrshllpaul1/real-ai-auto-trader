@@ -72,7 +72,7 @@ All trading endpoints are prefixed with `/api`. See below for full documentation
     },
     servers=[
         {
-            "url": "https://speed-optimizer-12.preview.emergentagent.com",
+            "url": os.environ.get('API_SERVER_URL', 'http://localhost:8001'),
             "description": "Production server"
         },
         {
