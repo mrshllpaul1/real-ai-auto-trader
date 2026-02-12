@@ -272,47 +272,28 @@ async def get_transaction_history(
     limit: int = 20,
     db = Depends(get_database)
 ):
-    """Get recent transactions (simulated)"""
+    """Get recent transactions - requires blockchain API"""
+    # Check for cached transactions from real API
+    cached = await db.wallet_transactions.find_one({
+        "wallet_address": wallet_address.lower()
+    }, {"_id": 0})
     
-    transactions = [
-        {
-            "tx_hash": "0x1234...abcd",
-            "type": "swap",
-            "protocol": "Uniswap",
-            "from_token": "ETH",
-            "to_token": "USDC",
-            "from_amount": 1.0,
-            "to_amount": 2500,
-            "gas_used_usd": 15,
-            "timestamp": "2026-02-09T10:30:00Z",
-            "status": "confirmed"
-        },
-        {
-            "tx_hash": "0x5678...efgh",
-            "type": "deposit",
-            "protocol": "Aave",
-            "token": "USDC",
-            "amount": 1000,
-            "gas_used_usd": 8,
-            "timestamp": "2026-02-08T14:20:00Z",
-            "status": "confirmed"
-        },
-        {
-            "tx_hash": "0x9abc...ijkl",
-            "type": "stake",
-            "protocol": "Lido",
-            "token": "ETH",
-            "amount": 2.0,
-            "gas_used_usd": 12,
-            "timestamp": "2026-02-07T09:15:00Z",
-            "status": "confirmed"
+    if cached:
+        transactions = cached.get("transactions", [])[:limit]
+        return {
+            "wallet_address": wallet_address,
+            "transactions": transactions,
+            "total": len(cached.get("transactions", [])),
+            "data_source": "cached"
         }
-    ]
     
+    # No real data
     return {
         "wallet_address": wallet_address,
-        "transactions": transactions[:limit],
-        "total": len(transactions)
+        "transactions": [],
+        "total": 0,
+        "message": "Connect blockchain API (Alchemy, Moralis) in Settings to fetch real transaction history",
+        "requires_api_key": True
     }
 
 
