@@ -440,7 +440,7 @@ const PortfolioDashboard = ({ embedded = false }) => {
                     <div className="space-y-3">
                       {topPerformers.map((pos, idx) => (
                         <div 
-                          key={pos.coin_id} 
+                          key={pos?.coin_id || idx} 
                           className="flex items-center justify-between p-3 rounded-lg bg-[#111] border border-[#1F1F1F]"
                         >
                           <div className="flex items-center gap-3">
@@ -450,16 +450,16 @@ const PortfolioDashboard = ({ embedded = false }) => {
                               #{idx + 1}
                             </div>
                             <div>
-                              <p className="text-white font-medium">{pos.coin_id}</p>
-                              <p className="text-xs text-[#A1A1AA]">${pos.current_value?.toFixed(2)}</p>
+                              <p className="text-white font-medium">{pos?.coin_id || 'Unknown'}</p>
+                              <p className="text-xs text-[#A1A1AA]">${(pos?.current_value ?? 0).toFixed(2)}</p>
                             </div>
                           </div>
                           <div className="text-right">
                             <div className="flex items-center gap-1 text-[#00FF94]">
                               <ArrowUpRight size={14} />
-                              <span className="font-data font-bold">+{pos.pnl_pct?.toFixed(2)}%</span>
+                              <span className="font-data font-bold">+{(pos?.pnl_pct ?? 0).toFixed(2)}%</span>
                             </div>
-                            <p className="text-xs text-[#00FF94]">+${pos.pnl_usd?.toFixed(2)}</p>
+                            <p className="text-xs text-[#00FF94]">+${(pos?.pnl_usd ?? 0).toFixed(2)}</p>
                           </div>
                         </div>
                       ))}
