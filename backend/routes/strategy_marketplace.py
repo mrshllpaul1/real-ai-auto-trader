@@ -77,10 +77,6 @@ async def list_strategies(
         {"_id": 0}
     ).sort(sort_field[0], sort_field[1]).limit(limit).to_list(limit)
     
-    # If no strategies, return sample data
-    if not strategies:
-        strategies = _get_sample_strategies()
-    
     return {
         "strategies": strategies,
         "total": len(strategies),
@@ -88,7 +84,8 @@ async def list_strategies(
             "category": category,
             "sort_by": sort_by,
             "price_filter": price_filter
-        }
+        },
+        "message": "No strategies published yet. Be the first to publish a strategy!" if not strategies else None
     }
 
 
