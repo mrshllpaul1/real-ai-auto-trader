@@ -286,18 +286,18 @@ const PortfolioDashboard = ({ embedded = false }) => {
                     <div className="h-[300px] flex items-center justify-center text-[#A1A1AA]">
                       No positions to display
                     </div>
-                  )}}
+                  )}
                   
                   {/* Legend */}
                   <div className="flex flex-wrap gap-3 mt-4 justify-center">
                     {composition?.composition?.slice(0, 6).map((item, idx) => (
-                      <div key={item.name} className="flex items-center gap-2">
+                      <div key={item?.name || idx} className="flex items-center gap-2">
                         <div 
                           className="w-3 h-3 rounded-full" 
                           style={{ backgroundColor: COLORS[idx % COLORS.length] }}
                         />
-                        <span className="text-sm text-[#A1A1AA]">{item.name}</span>
-                        <span className="text-sm text-white">{item.percentage?.toFixed(1)}%</span>
+                        <span className="text-sm text-[#A1A1AA]">{item?.name || 'Unknown'}</span>
+                        <span className="text-sm text-white">{(item?.percentage ?? 0).toFixed(1)}%</span>
                       </div>
                     ))}
                   </div>
