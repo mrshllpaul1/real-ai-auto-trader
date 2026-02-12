@@ -63,6 +63,15 @@ async def start_trading_loop(
     
     background_tasks.add_task(run_loop)
     
+    # Persist state
+    try:
+        from services.state_persistence import get_state_persistence
+        persistence = get_state_persistence(_db)
+        if persistence:
+            await persistence.set_state("tethys_trading", True, metadata={"interval": interval})
+    except Exception as e:
+        pass
+    
     return {
         "status": "started",
         "interval": interval,
@@ -73,25 +82,47 @@ async def start_trading_loop(
 @router.post("/stop")
 async def stop_trading_loop():
     """Stop trading loop"""
-    global _trading_loop
+    global _trading_loop, _db
     
     if not _trading_loop:
         return {"status": "not_running"}
     
     _trading_loop.stop()
+    
+    # Persist state
+    try:
+        from services.state_persistence import get_state_persistence
+        persistence = get_state_persistence(_db)
+        if persistence:
+            await persistence.set_state("tethys_trading", False)
+    except Exception as e:
+        pass
+    
     return {"status": "stopped"}
 
 
 @router.get("/status")
 async def get_trading_status():
     """Get trading loop status"""
-    global _trading_loop
+    global _trading_loop, _db
     
     if not _trading_loop:
         from services.tethys_trading import get_trading_loop
         _trading_loop = get_trading_loop(_db)
     
-    return _trading_loop.get_status()
+    status = _trading_loop.get_status()
+    
+    # Check persisted state
+    try:
+        from services.state_persistence import get_state_persistence
+        persistence = get_state_persistence(_db)
+        if persistence:
+            state = await persistence.get_state("tethys_trading")
+            status["persisted_running"] = state.get("is_running", False) if state else False
+    except Exception as e:
+        status["persisted_running"] = None
+    
+    return status
 
 
 @router.post("/tick")
