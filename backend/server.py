@@ -305,6 +305,16 @@ async def delayed_init():
         await initialize_state_persistence(db)
         logger.info("✅ System state persistence initialized")
         
+        # Initialize error recovery manager
+        from services.error_recovery import get_error_recovery_manager
+        error_manager = get_error_recovery_manager(db)
+        logger.info("✅ Error recovery manager initialized")
+        
+        # Create error_history index
+        await db.error_history.create_index([("timestamp", -1), ("category", 1)])
+        await db.error_history.create_index([("fingerprint", 1)])
+        logger.info("✅ Error history indexes created")
+        
     except Exception as e:
         logger.warning(f"⚠️ Performance enhancement initialization warning: {e}")
 
