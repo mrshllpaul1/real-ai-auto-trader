@@ -1162,13 +1162,19 @@ async def sync_trade_history(
     errors = 0
     symbols_updated = set()
     
+    # Also save to trade_history collection for P&L chart
+    trade_history_collection = _entry_tracker.db["trade_history"] if hasattr(_entry_tracker, 'db') else None
+    
     for trade in all_trades:
         try:
             pair = trade.get("pair", "")
             trade_type = trade.get("type", "").lower()
             volume = float(trade.get("vol", 0))
             price = float(trade.get("price", 0))
+            cost = float(trade.get("cost", 0))
+            fee = float(trade.get("fee", 0))
             order_id = trade.get("ordertxid", "")
+            trade_time = trade.get("time", 0)
             
             # Find symbol from pair
             symbol = pair_to_symbol.get(pair)
@@ -1204,6 +1210,26 @@ async def sync_trade_history(
                 symbols_updated.add(symbol)
             
             processed += 1
+            
+            # Save to trade_history for P&L chart
+            if trade_history_collection is not None:
+                trade_doc = {
+                    "trade_id": order_id,
+                    "symbol": symbol,
+                    "pair": pair,
+                    "type": trade_type,
+                    "volume": volume,
+                    "price": price,
+                    "cost": cost,
+                    "fee": fee,
+                    "timestamp": datetime.fromtimestamp(trade_time, tz=timezone.utc),
+                    "source": "kraken_sync"
+                }
+                await trade_history_collection.update_one(
+                    {"trade_id": order_id},
+                    {"$set": trade_doc},
+                    upsert=True
+                )
             
         except Exception as e:
             logger.warning(f"Error processing trade: {e}")
