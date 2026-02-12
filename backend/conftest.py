@@ -117,7 +117,7 @@ def pytest_configure(config):
 
 
 def should_skip_backend_tests(module) -> bool:
-    """Determine if tests requiring a live backend should be skipped."""
+    """Return True when BASE_URL is present but invalid; False when missing or valid."""
     base_url = getattr(module, "BASE_URL", None)
     if base_url is None:
         return False
