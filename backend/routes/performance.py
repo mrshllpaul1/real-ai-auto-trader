@@ -297,6 +297,7 @@ async def compare_ml_vs_dl():
     if best_ml and best_dl:
         winner = 'ML' if best_ml['accuracy'] > best_dl['accuracy'] else 'DL'
     
+    best_accuracy = model_accuracy.get(regime_predictor.best_model) or 0
     return {
         'ml_models': ml_models,
         'dl_models': dl_models,
@@ -310,7 +311,7 @@ async def compare_ml_vs_dl():
             'ml_avg_accuracy': round(sum(m['accuracy'] for m in ml_models) / len(ml_models), 2) if ml_models else 0,
             'dl_avg_accuracy': round(sum(m['accuracy'] for m in dl_models) / len(dl_models), 2) if dl_models else 0
         },
-        'recommendation': f"Use {regime_predictor.best_model} ({winner}) for regime prediction - highest accuracy at {model_accuracy.get(regime_predictor.best_model, 0) * 100:.1f}%",
+        'recommendation': f"Use {regime_predictor.best_model} ({winner}) for regime prediction - highest accuracy at {best_accuracy:.1f}%",
         'trained': regime_predictor.is_trained,
         'timestamp': datetime.utcnow().isoformat()
     }
