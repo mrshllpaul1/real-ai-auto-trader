@@ -62,11 +62,24 @@ async def get_market_sentiment():
     """
     Get overall crypto market sentiment based on top coins.
     Provides weighted average sentiment across BTC, ETH, BNB, SOL, XRP.
+    Cached for 2 minutes (120 seconds).
     """
     if not _sentiment_service:
         raise HTTPException(status_code=503, detail="Sentiment service not initialized")
     
+    # Use cache for expensive sentiment analysis
+    from services.cache_manager import get_cache_manager
+    cache = get_cache_manager()
+    cache_key = "sentiment:market"
+    
+    hit, cached_data = await cache.get(cache_key)
+    if hit:
+        return cached_data
+    
     market = await _sentiment_service.get_market_sentiment()
+    
+    # Cache for 2 minutes
+    await cache.set(cache_key, market, ttl=120)
     return market
 
 
