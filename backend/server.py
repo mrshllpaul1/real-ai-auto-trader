@@ -192,6 +192,14 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import error monitoring routes: {e}")
 
+# Import and include performance metrics routes
+try:
+    from routes.performance_metrics import router as performance_router
+    app.include_router(performance_router, prefix="/api")
+    logger.info("✅ Performance metrics routes registered")
+except ImportError as e:
+    logger.warning(f"Could not import performance metrics routes: {e}")
+
 # Add middleware in correct order (last added = first executed)
 # 1. Security Headers (outermost - first to execute)
 try:
