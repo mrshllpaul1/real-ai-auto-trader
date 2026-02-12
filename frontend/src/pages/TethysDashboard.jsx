@@ -128,7 +128,8 @@ const TethysDashboard = () => {
   }
 
   const riskState = dashboardData?.risk?.state || {};
-  const isTrading = tradingData?.trading_loop?.is_running;
+  // Use persisted state as source of truth for trading status
+  const isTrading = tethysTradingPersisted || tradingData?.trading_loop?.is_running;
   const isTraining = trainingData?.training?.is_training;
 
   return (
