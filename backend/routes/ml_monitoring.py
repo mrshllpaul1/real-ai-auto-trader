@@ -464,54 +464,43 @@ async def list_ab_tests(db = Depends(get_database)):
 async def get_ab_test_results(test_id: str, db = Depends(get_database)):
     """Get detailed A/B test results"""
     
-    # Generate detailed results
+    # Try to find the test in the database
+    test = await db.ab_tests.find_one({"test_id": test_id}, {"_id": 0})
+    
+    if not test:
+        raise HTTPException(status_code=404, detail=f"A/B test '{test_id}' not found")
+    
+    # Get test metrics if available
+    metrics_a = await db.ab_test_metrics.find(
+        {"test_id": test_id, "model": "a"}
+    ).sort("timestamp", -1).to_list(100)
+    
+    metrics_b = await db.ab_test_metrics.find(
+        {"test_id": test_id, "model": "b"}
+    ).sort("timestamp", -1).to_list(100)
+    
     return {
         "test_id": test_id,
-        "name": "LSTM vs Transformer",
-        "status": "running",
+        "name": test.get("name", "Unnamed Test"),
+        "status": test.get("status", "created"),
         "model_a": {
-            "id": "lstm-price-v2",
-            "name": "LSTM Price Predictor v2",
-            "samples": 1245,
-            "metrics": {
-                "sharpe_ratio": 1.28,
-                "accuracy": 0.58,
-                "profit_factor": 1.32,
-                "max_drawdown": -0.12
-            }
+            "id": test.get("model_a_id"),
+            "name": test.get("model_a_name", test.get("model_a_id")),
+            "samples": len(metrics_a),
+            "metrics": test.get("metrics_a", {})
         },
         "model_b": {
-            "id": "transformer-price-v1",
-            "name": "Transformer Price v1",
-            "samples": 1198,
-            "metrics": {
-                "sharpe_ratio": 1.35,
-                "accuracy": 0.61,
-                "profit_factor": 1.41,
-                "max_drawdown": -0.10
-            }
+            "id": test.get("model_b_id"),
+            "name": test.get("model_b_name", test.get("model_b_id")),
+            "samples": len(metrics_b),
+            "metrics": test.get("metrics_b", {})
         },
-        "statistical_analysis": {
-            "metric": "sharpe_ratio",
-            "difference": 0.07,
-            "relative_improvement": "+5.5%",
-            "t_statistic": 1.82,
-            "p_value": 0.068,
-            "confidence_interval": [-0.01, 0.15],
-            "effect_size": 0.12,
-            "power": 0.72
-        },
-        "recommendation": {
-            "conclusion": "no_significant_difference_yet",
-            "message": "Need more samples to reach statistical significance. Current p-value: 0.068",
-            "samples_needed_for_significance": 850
-        },
-        "daily_metrics": [
-            {"date": (datetime.now(timezone.utc) - timedelta(days=2)).strftime("%Y-%m-%d"), "model_a": 1.25, "model_b": 1.30},
-            {"date": (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d"), "model_a": 1.30, "model_b": 1.38},
-            {"date": datetime.now(timezone.utc).strftime("%Y-%m-%d"), "model_a": 1.28, "model_b": 1.35}
-        ]
+        "statistical_analysis": test.get("analysis", {}),
+        "recommendation": test.get("recommendation", {}),
+        "created_at": test.get("created_at"),
+        "updated_at": test.get("updated_at")
     }
+
 
 
 @router.post("/ab-test/{test_id}/stop")
