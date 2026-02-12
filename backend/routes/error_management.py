@@ -58,11 +58,14 @@ async def get_error_statistics(db = Depends(get_database)):
         
         # Get recent errors from database
         recent_count = 0
-        if db:
-            cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
-            recent_count = await db.error_history.count_documents({
-                'timestamp': {'$gte': cutoff.isoformat()}
-            })
+        if db is not None:
+            try:
+                cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+                recent_count = await db.error_history.count_documents({
+                    'timestamp': {'$gte': cutoff.isoformat()}
+                })
+            except Exception:
+                pass
         
         return {
             "status": "ok",
