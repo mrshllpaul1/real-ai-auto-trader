@@ -161,10 +161,11 @@ class PerformanceEnhancementTester:
                 data = response.json()
                 indexes = data.get('indexes', {})
                 
-                total_indexes = indexes.get('total_indexes', 0)
-                collections_count = indexes.get('collections_count', 0)
+                # Count total indexes and collections
+                collections_count = len(indexes)
+                total_indexes = sum(collection_data.get('count', 0) for collection_data in indexes.values())
                 
-                if total_indexes > 0:
+                if total_indexes > 0 and collections_count > 0:
                     self.log_result(
                         "Database Indexes API",
                         True,
@@ -175,7 +176,7 @@ class PerformanceEnhancementTester:
                     self.log_result(
                         "Database Indexes API",
                         False,
-                        f"No indexes found or invalid response: {indexes}",
+                        f"No indexes found: {total_indexes} indexes, {collections_count} collections",
                         response_time
                     )
             else:
