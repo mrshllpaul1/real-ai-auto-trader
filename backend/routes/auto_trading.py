@@ -110,15 +110,7 @@ async def stop_auto_trading(db = Depends(get_database)):
     try:
         global scheduler
         
-        if not scheduler or not scheduler.is_running:
-            return {
-                'message': 'Auto-trading is not running',
-                'status': 'stopped'
-            }
-        
-        await scheduler.stop()
-        
-        # Persist state
+        # Always persist state as stopped
         try:
             from services.state_persistence import get_state_persistence
             persistence = get_state_persistence(db)
@@ -126,6 +118,14 @@ async def stop_auto_trading(db = Depends(get_database)):
                 await persistence.set_state("auto_trading", False)
         except Exception as e:
             pass
+        
+        if not scheduler or not scheduler.is_running:
+            return {
+                'message': 'Auto-trading is not running',
+                'status': 'stopped'
+            }
+        
+        await scheduler.stop()
         
         return {
             'message': 'Auto-trading stopped successfully',
