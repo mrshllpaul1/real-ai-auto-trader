@@ -2178,6 +2178,15 @@ class AdaptiveStrategyService:
         self.is_monitoring = True
         self._adaptation_task = asyncio.create_task(self._adaptation_loop())
         
+        # Persist state to database
+        try:
+            from services.state_persistence import get_state_persistence
+            persistence = get_state_persistence(self.db)
+            if persistence:
+                await persistence.set_state("adaptive_monitoring", True, metadata={"started_via": "api"})
+        except Exception as e:
+            logger.warning(f"Could not persist adaptive monitoring state: {e}")
+        
         logger.info("🔄 Adaptive strategy monitoring started")
         return {"status": "started"}
     
@@ -2186,6 +2195,15 @@ class AdaptiveStrategyService:
         self.is_monitoring = False
         if self._adaptation_task:
             self._adaptation_task.cancel()
+        
+        # Persist state to database
+        try:
+            from services.state_persistence import get_state_persistence
+            persistence = get_state_persistence(self.db)
+            if persistence:
+                await persistence.set_state("adaptive_monitoring", False)
+        except Exception as e:
+            logger.warning(f"Could not persist adaptive monitoring state: {e}")
         
         return {"status": "stopped"}
     
