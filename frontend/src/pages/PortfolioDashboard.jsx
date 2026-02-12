@@ -575,7 +575,7 @@ const PortfolioDashboard = ({ embedded = false }) => {
                   </div>
                   <div className="text-center">
                     <p className="text-xs text-[#A1A1AA]">Avg Position Size</p>
-                    <p className="text-lg font-data font-bold text-white">${summary?.avg_position_size?.toFixed(2) || 0}</p>
+                    <p className="text-lg font-data font-bold text-white">${(summary?.avg_position_size ?? 0).toFixed(2)}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-xs text-[#A1A1AA]">Real Trading</p>
