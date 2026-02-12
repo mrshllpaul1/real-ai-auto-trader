@@ -1162,9 +1162,11 @@ async def sync_trade_history(
     errors = 0
     symbols_updated = set()
     
-    # Get database from dependency
-    database = await get_database()
-    trade_history_collection = database["trade_history"]
+    # Use the module-level database reference
+    trade_history_collection = _db["trade_history"] if _db is not None else None
+    
+    if trade_history_collection is None:
+        logger.warning("Database not initialized - trades will sync but P&L chart won't update")
     
     for trade in all_trades:
         try:
