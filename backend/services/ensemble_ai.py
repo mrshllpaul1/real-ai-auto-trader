@@ -878,6 +878,23 @@ async def run_universe_rebuild_background(optimizer: UniverseOptimizer, target_s
     _universe_rebuild_status["error"] = None
     _universe_rebuild_status["result"] = None
     
+    # Persist running state to database
+    try:
+        from services.state_persistence import get_state_persistence
+        persistence = get_state_persistence(optimizer.db)
+        if persistence:
+            await persistence.set_state(
+                "universe_rebuild", 
+                True, 
+                metadata={
+                    "started_at": _universe_rebuild_status["started_at"],
+                    "target_size": target_size,
+                    "analyze_count": analyze_count
+                }
+            )
+    except Exception as e:
+        print(f"Could not persist universe rebuild state: {e}")
+    
     try:
         result = await optimizer.build_optimal_universe(
             target_size=target_size,
@@ -889,3 +906,20 @@ async def run_universe_rebuild_background(optimizer: UniverseOptimizer, target_s
         _universe_rebuild_status["progress_message"] = f"Error: {str(e)}"
     finally:
         _universe_rebuild_status["running"] = False
+        
+        # Persist completed/stopped state
+        try:
+            from services.state_persistence import get_state_persistence
+            persistence = get_state_persistence(optimizer.db)
+            if persistence:
+                await persistence.set_state(
+                    "universe_rebuild", 
+                    False,
+                    metadata={
+                        "completed_at": datetime.now(timezone.utc).isoformat(),
+                        "error": _universe_rebuild_status.get("error"),
+                        "progress": _universe_rebuild_status.get("progress", 100)
+                    }
+                )
+        except Exception as e:
+            print(f"Could not persist universe rebuild completion: {e}")
