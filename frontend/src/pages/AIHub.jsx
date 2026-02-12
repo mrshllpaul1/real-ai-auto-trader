@@ -1,4 +1,4 @@
-import React, { lazy, memo } from 'react';
+import React, { lazy, memo, Suspense } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
@@ -13,6 +13,9 @@ import {
   MobileTabsList,
   LazyTabContent 
 } from '@/components/HubNavigation';
+
+// Import visual training progress component directly for quick loading
+import VisualTrainingProgress from '@/components/VisualTrainingProgress';
 
 // Lazy load page components
 const AICommandCenter = lazy(() => import('./AICommandCenter'));
