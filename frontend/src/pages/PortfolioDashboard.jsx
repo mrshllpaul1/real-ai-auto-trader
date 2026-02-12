@@ -195,10 +195,10 @@ const PortfolioDashboard = ({ embedded = false }) => {
                   <span className="text-sm text-[#A1A1AA]">Total P&L</span>
                 </div>
                 <div className={`text-3xl font-data font-bold ${pnlPositive ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
-                  {pnlPositive ? '+' : ''}${summary?.total_pnl?.toFixed(2) || 0}
+                  {pnlPositive ? '+' : ''}${(summary?.total_pnl ?? 0).toFixed(2)}
                 </div>
                 <p className={`text-sm ${pnlPositive ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
-                  {pnlPositive ? '+' : ''}{summary?.total_pnl_pct?.toFixed(2) || 0}%
+                  {pnlPositive ? '+' : ''}{(summary?.total_pnl_pct ?? 0).toFixed(2)}%
                 </p>
               </CardContent>
             </Card>
