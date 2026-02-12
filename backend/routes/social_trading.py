@@ -71,10 +71,6 @@ async def get_social_feed(
         {"_id": 0}
     ).sort("shared_at", -1).skip(offset).limit(limit).to_list(limit)
     
-    # If no trades, return sample data
-    if not trades:
-        trades = _get_sample_feed()
-    
     # Enrich with user data and interactions
     for trade in trades:
         trade["likes_count"] = await db.trade_likes.count_documents({"trade_id": trade.get("trade_id")})
