@@ -371,24 +371,13 @@ async def compress_model(
 async def get_compression_status(job_id: str, db = Depends(get_database)):
     """Get compression job status"""
     
-    return {
-        "job_id": job_id,
-        "status": "completed",
-        "progress": 100,
-        "results": {
-            "original_size_mb": 125,
-            "compressed_size_mb": 31,
-            "compression_ratio": 4.03,
-            "original_accuracy": 0.62,
-            "compressed_accuracy": 0.618,
-            "accuracy_loss": 0.002,
-            "original_latency_ms": 45,
-            "compressed_latency_ms": 36,
-            "latency_improvement": "+20%"
-        },
-        "deployment_ready": True,
-        "compressed_model_path": f"/models/compressed/{job_id}"
-    }
+    # Look up real job in database
+    job = await db.compression_jobs.find_one({"job_id": job_id}, {"_id": 0})
+    
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Compression job '{job_id}' not found")
+    
+    return job
 
 
 # =============================================================================
@@ -399,29 +388,13 @@ async def get_compression_status(job_id: str, db = Depends(get_database)):
 async def get_edge_deployments(db = Depends(get_database)):
     """Get edge deployment status"""
     
+    # Get real deployments from database
+    deployments = await db.edge_deployments.find({}, {"_id": 0}).to_list(100)
+    
     return {
-        "deployments": [
-            {
-                "deployment_id": "edge-001",
-                "model_id": "xgb-signal-v3-quantized",
-                "target": "raspberry_pi_4",
-                "status": "active",
-                "latency_ms": 85,
-                "predictions_per_second": 12,
-                "memory_mb": 128,
-                "last_sync": datetime.now(timezone.utc).isoformat()
-            },
-            {
-                "deployment_id": "edge-002",
-                "model_id": "lstm-price-v2-pruned",
-                "target": "jetson_nano",
-                "status": "active",
-                "latency_ms": 35,
-                "predictions_per_second": 45,
-                "memory_mb": 256,
-                "last_sync": datetime.now(timezone.utc).isoformat()
-            }
-        ],
+        "deployments": deployments,
+        "total": len(deployments),
+        "message": "No edge deployments configured." if not deployments else None,
         "supported_targets": [
             {"name": "raspberry_pi_4", "compute": "cpu", "memory_gb": 4},
             {"name": "jetson_nano", "compute": "gpu", "memory_gb": 4},
