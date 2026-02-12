@@ -129,81 +129,53 @@ async def configure_cache(
 async def get_distributed_status(db = Depends(get_database)):
     """Get distributed learning cluster status"""
     
-    return {
-        "cluster_status": "healthy",
-        "coordination": "kubernetes",
-        "total_workers": 4,
-        "active_workers": 4,
-        "workers": [
-            {
-                "worker_id": "worker-0",
-                "status": "active",
-                "gpu": "NVIDIA T4",
-                "memory_gb": 16,
-                "current_task": "online_learning",
-                "samples_processed": 125000,
-                "last_heartbeat": datetime.now(timezone.utc).isoformat()
-            },
-            {
-                "worker_id": "worker-1",
-                "status": "active",
-                "gpu": "NVIDIA T4",
-                "memory_gb": 16,
-                "current_task": "online_learning",
-                "samples_processed": 118500,
-                "last_heartbeat": datetime.now(timezone.utc).isoformat()
-            },
-            {
-                "worker_id": "worker-2",
-                "status": "active",
-                "gpu": "NVIDIA T4",
-                "memory_gb": 16,
-                "current_task": "inference",
-                "samples_processed": 0,
-                "last_heartbeat": datetime.now(timezone.utc).isoformat()
-            },
-            {
-                "worker_id": "worker-3",
-                "status": "active",
-                "gpu": "NVIDIA T4",
-                "memory_gb": 16,
-                "current_task": "idle",
-                "samples_processed": 0,
-                "last_heartbeat": datetime.now(timezone.utc).isoformat()
-            }
-        ],
-        "aggregation_strategy": "federated_averaging",
-        "sync_interval_seconds": 60,
-        "gradient_compression": True,
-        "compression_ratio": 0.1
-    }
+    # Check if a real cluster is configured
+    cluster = await db.ml_clusters.find_one({"status": "active"}, {"_id": 0})
+    
+    if not cluster:
+        return {
+            "cluster_status": "not_configured",
+            "coordination": None,
+            "total_workers": 0,
+            "active_workers": 0,
+            "workers": [],
+            "message": "Distributed ML cluster not configured. Running in single-node mode.",
+            "aggregation_strategy": None,
+            "sync_interval_seconds": 0,
+            "gradient_compression": False,
+            "compression_ratio": 0
+        }
+    
+    return cluster
 
 
 @router.get("/distributed/learning-progress")
 async def get_learning_progress(db = Depends(get_database)):
     """Get online learning progress"""
     
-    # Generate progress data
-    progress_history = []
-    base_loss = 0.5
+    # Get real training progress from database
+    progress = await db.ml_training_progress.find(
+        {"status": "training"}
+    ).sort("timestamp", -1).limit(100).to_list(100)
     
-    for i in range(100):
-        progress_history.append({
-            "step": i * 100,
-            "loss": round(base_loss * (0.98 ** i) + random.gauss(0, 0.01), 4),
-            "accuracy": round(0.5 + 0.15 * (1 - 0.98 ** i) + random.gauss(0, 0.01), 4),
-            "samples_seen": i * 1000,
-            "timestamp": (datetime.now(timezone.utc) - timedelta(minutes=100-i)).isoformat()
-        })
+    if not progress:
+        return {
+            "model_id": None,
+            "status": "idle",
+            "progress": [],
+            "current_metrics": None,
+            "total_samples_processed": 0,
+            "throughput_samples_per_second": 0,
+            "message": "No active training. Start a training job to see progress."
+        }
     
     return {
-        "model_id": "online-xgb-v1",
-        "status": "training",
-        "progress": progress_history,
-        "current_metrics": progress_history[-1],
-        "total_samples_processed": 485000,
-        "throughput_samples_per_second": 850,
-        "estimated_convergence": "2 hours"
+        "model_id": progress[0].get("model_id"),
+        "status": progress[0].get("status"),
+        "progress": progress,
+        "current_metrics": progress[0] if progress else None,
+        "total_samples_processed": sum(p.get("samples_processed", 0) for p in progress),
+        "throughput_samples_per_second": progress[0].get("throughput", 0) if progress else 0
     }
 
 
