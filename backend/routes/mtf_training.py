@@ -28,7 +28,7 @@ def set_dependencies(db, mtf_service=None):
 
 def get_service():
     """Get MTF training service with lazy initialization"""
-    global _mtf_service, _db
+    global _mtf_service
     if _mtf_service is None and _db is not None:
         from services.mtf_training_service import get_mtf_training_service
         _mtf_service = get_mtf_training_service(_db)

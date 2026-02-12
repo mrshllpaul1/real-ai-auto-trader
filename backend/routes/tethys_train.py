@@ -99,8 +99,6 @@ async def start_training(
     background_tasks: BackgroundTasks = None
 ):
     """Start Rainbow DQN training"""
-    global _db
-    
     config = config or TrainConfig()
     
     # Use threading to truly run in background without blocking event loop

@@ -572,7 +572,7 @@ async def activate_live_trading(config: LiveTradingConfig):
 @router.post("/live-trading/deactivate")
 async def deactivate_live_trading():
     """Deactivate live adaptive trading"""
-    global _live_trading_active, _live_trading_config
+    global _live_trading_active
     
     _live_trading_active = False
     
@@ -592,8 +592,6 @@ async def deactivate_live_trading():
 @router.get("/live-trading/status")
 async def get_live_trading_status():
     """Get current live trading status and regime"""
-    global _live_trading_active, _live_trading_config
-    
     from services.yearly_adaptive_backtest import (
         MARKET_EVENTS_2025, MARKET_EVENTS_2026, REGIME_PARAMS
     )
@@ -827,8 +825,6 @@ async def execute_all_signals():
     Only executes BUY/SELL signals, not HOLD.
     Requires live trading to be active.
     """
-    global _live_trading_active, _live_trading_config
-    
     if not _live_trading_active:
         raise HTTPException(status_code=400, detail="Live trading is not active")
     

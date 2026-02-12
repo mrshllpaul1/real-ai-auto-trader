@@ -181,8 +181,6 @@ async def generate_strategies(
 
 async def _generate_strategies_background(user_id: str, coin_pairs: List[str]):
     """Background task for strategy generation"""
-    global _strategy_generation_status
-    
     _strategy_generation_status["running"] = True
     _strategy_generation_status["started_at"] = datetime.now().isoformat()
     _strategy_generation_status["progress"] = 0
@@ -277,8 +275,6 @@ async def generate_strategies_async(request: AsyncStrategyRequest, background_ta
     Starts strategy generation in background - check /generation-status for progress.
     Use this for production to avoid request timeouts.
     """
-    global _strategy_generation_status
-    
     if _strategy_generation_status["running"]:
         return {
             "status": "already_running",

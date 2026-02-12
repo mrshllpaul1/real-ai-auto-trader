@@ -77,8 +77,6 @@ async def start_orderbook_stream(config: OrderBookConfig = None):
 @router.post("/orderbook/stop")
 async def stop_orderbook_stream():
     """Stop order book WebSocket stream"""
-    global _order_book_ws
-    
     if _order_book_ws:
         await _order_book_ws.stop()
         return {"status": "stopped"}
@@ -89,8 +87,6 @@ async def stop_orderbook_stream():
 @router.get("/orderbook/status")
 async def get_orderbook_status():
     """Get order book WebSocket status"""
-    global _order_book_ws
-    
     if _order_book_ws:
         return _order_book_ws.get_status()
     
@@ -104,8 +100,6 @@ async def get_orderbook_status():
 @router.get("/orderbook/{symbol}")
 async def get_orderbook(symbol: str, levels: int = 10):
     """Get current order book for symbol"""
-    global _order_book_ws
-    
     if not _order_book_ws or not _order_book_ws.connected:
         raise HTTPException(
             status_code=503,
@@ -147,8 +141,6 @@ async def get_orderbook(symbol: str, levels: int = 10):
 @router.get("/orderbook/{symbol}/features")
 async def get_orderbook_features(symbol: str, levels: int = 10):
     """Get order book features for RL"""
-    global _order_book_ws
-    
     if not _order_book_ws:
         raise HTTPException(status_code=503, detail="Service not running")
     
@@ -168,8 +160,6 @@ async def get_orderbook_features(symbol: str, levels: int = 10):
 @router.get("/status")
 async def get_rainbow_status():
     """Get Rainbow DQN agent status"""
-    global _rainbow_agent
-    
     if _rainbow_agent:
         return _rainbow_agent.get_status()
     
@@ -214,8 +204,6 @@ async def initialize_rainbow(
 @router.post("/action")
 async def get_action(request: ActionRequest):
     """Get trading action from Rainbow DQN"""
-    global _rainbow_agent, _feature_extractor
-    
     if not _rainbow_agent:
         raise HTTPException(
             status_code=503,
@@ -255,8 +243,6 @@ async def start_training(
     background_tasks: BackgroundTasks = None
 ):
     """Start Rainbow DQN training in background"""
-    global _rainbow_agent, _feature_extractor
-    
     if not _rainbow_agent:
         raise HTTPException(status_code=503, detail="Rainbow DQN not initialized")
     
@@ -339,8 +325,6 @@ async def start_training(
 @router.post("/save")
 async def save_model():
     """Save Rainbow DQN model"""
-    global _rainbow_agent
-    
     if not _rainbow_agent:
         raise HTTPException(status_code=503, detail="Agent not initialized")
     

@@ -652,7 +652,7 @@ def _convert_to_serializable(obj):
 
 async def run_simulation_task(db, market_service):
     """Background task to run the simulation"""
-    global _simulator, _simulation_status
+    global _simulator
     
     _simulation_status["running"] = True
     _simulation_status["started_at"] = datetime.now(timezone.utc).isoformat()

@@ -350,7 +350,6 @@ _universe_manager = None
 
 def get_universe_manager() -> DynamicCoinUniverseManager:
     """Get the singleton universe manager"""
-    global _universe_manager
     return _universe_manager
 
 def set_universe_manager(manager: DynamicCoinUniverseManager):

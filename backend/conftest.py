@@ -114,3 +114,16 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "api: API endpoint tests")
     config.addinivalue_line("markers", "slow: Slow tests")
     config.addinivalue_line("markers", "critical: Critical path tests")
+
+
+def should_skip_backend_tests(module) -> bool:
+    """Determine if tests requiring a live backend should be skipped."""
+    base_url = getattr(module, "BASE_URL", None)
+    if base_url is None:
+        return False
+    return not base_url or not base_url.startswith(("http://", "https://"))
+
+
+def pytest_runtest_setup(item):
+    if should_skip_backend_tests(item.module):
+        pytest.skip("REACT_APP_BACKEND_URL not set or invalid; skipping backend integration tests")

@@ -37,7 +37,6 @@ def get_engine():
 
 def get_engine_if_exists():
     """Get engine only if already initialized (for status checks)"""
-    global _engine
     return _engine
 
 

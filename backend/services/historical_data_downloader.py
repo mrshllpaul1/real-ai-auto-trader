@@ -174,8 +174,6 @@ class HistoricalDataDownloader:
         Returns:
             Dict with overall result
         """
-        global _download_status
-        
         coins = coins or self.TOP_COINS
         total_coins = len(coins)
         

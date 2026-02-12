@@ -629,8 +629,6 @@ def _calc_ema(prices: List[float], period: int) -> float:
 
 async def run_backtest(backtest_id: str, config: BacktestConfig, db):
     """Execute backtest simulation"""
-    global _running_backtests
-    
     try:
         _running_backtests[backtest_id] = {"status": "running", "progress": 0}
         

@@ -129,8 +129,6 @@ async def get_portfolio_performance(
     trading_engine = Depends(get_trading_engine)
 ):
     """Get portfolio performance metrics (cached for 30s)"""
-    global _portfolio_cache
-    
     # Check cache
     current_time = time.time()
     if (user_id in _portfolio_cache["data"] and 
@@ -316,8 +314,6 @@ async def get_kraken_portfolio():
     Returns all holdings with current prices and total portfolio value.
     Cached for 60 seconds to avoid rate limits.
     """
-    global _kraken_portfolio_cache
-    
     # Check cache
     if (_kraken_portfolio_cache["data"] is not None and 
         _kraken_portfolio_cache["timestamp"] is not None and

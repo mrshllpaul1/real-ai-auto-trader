@@ -48,8 +48,6 @@ def _set_cache(key: str, data: Any):
 
 def _track_credits(credits_used: int = 1):
     """Track API credit usage"""
-    global _credit_tracker
-    
     # Reset counter monthly
     now = datetime.now(timezone.utc)
     if _credit_tracker["reset_date"] is None or now.month != _credit_tracker["reset_date"].month:

@@ -34,7 +34,6 @@ class SimulationRequest(BaseModel):
 
 async def _run_simulation_background(request: SimulationRequest):
     """Background task for running simulation"""
-    global _simulation_status
     _simulation_status["running"] = True
     _simulation_status["progress"] = 0
     _simulation_status["message"] = "Starting simulation..."

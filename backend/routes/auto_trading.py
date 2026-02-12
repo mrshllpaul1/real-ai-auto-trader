@@ -108,8 +108,6 @@ async def start_auto_trading(
 async def stop_auto_trading(db = Depends(get_database)):
     """Stop the auto-trading scheduler"""
     try:
-        global scheduler
-        
         # Always persist state as stopped
         try:
             from services.state_persistence import get_state_persistence
@@ -138,8 +136,6 @@ async def stop_auto_trading(db = Depends(get_database)):
 async def get_auto_trading_status(db = Depends(get_database)):
     """Get current auto-trading status"""
     try:
-        global scheduler
-        
         # Check persisted state
         is_persisted_running = False
         try:

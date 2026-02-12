@@ -92,7 +92,6 @@ async def get_top_gems():
 
 async def run_training_task():
     """Background task to train the gem predictor"""
-    global _training_status
     _training_status["running"] = True
     _training_status["started_at"] = datetime.utcnow().isoformat()
     
@@ -317,8 +316,6 @@ def get_backtest_status() -> Dict[str, Any]:
 
 async def run_backtest_task(target_accuracy: float, max_iterations: int):
     """Background task for backtesting"""
-    global _backtest_status
-    
     _backtest_status["running"] = True
     _backtest_status["started_at"] = datetime.utcnow().isoformat()
     _backtest_status["target_accuracy"] = target_accuracy

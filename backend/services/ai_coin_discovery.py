@@ -620,7 +620,6 @@ class AICoinDiscoveryService:
 _discovery_service = None
 
 def get_discovery_service():
-    global _discovery_service
     return _discovery_service
 
 def set_discovery_service(service):

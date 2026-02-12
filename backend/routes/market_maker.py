@@ -169,7 +169,7 @@ class MarketMakerEngine:
 
 # Global engine instance
 def get_mm_engine():
-    global _mm_engine, _db
+    global _mm_engine
     if _mm_engine is None:
         _mm_engine = MarketMakerEngine(_db)
     return _mm_engine
@@ -186,7 +186,7 @@ async def start_market_maker(
     db = Depends(get_database)
 ):
     """Start market maker with specified configuration"""
-    global _mm_engine, _db
+    global _db
     _db = db
     
     engine = get_mm_engine()

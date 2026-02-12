@@ -23,7 +23,7 @@ def set_dependencies(db, gem_engine):
 
 def get_gem_engine():
     """Get or lazy-load the gem prediction engine"""
-    global _gem_engine, _db
+    global _gem_engine
     if _gem_engine is None and _db is not None:
         try:
             from services.gem_ml_dl_predictor import get_gem_prediction_engine
@@ -71,7 +71,6 @@ _training_status = {
 
 async def _run_training(symbols: List[str] = None):
     """Background training task"""
-    global _training_status
     _training_status["running"] = True
     _training_status["message"] = "Training ML and DL models..."
     
@@ -136,7 +135,6 @@ async def train_models(request: TrainRequest, background_tasks: BackgroundTasks)
     
     async def _run_training_with_progress(symbols: List[str] = None):
         """Background training task with progress tracking"""
-        global _training_status
         try:
             await progress_manager.start_task(task_id, "Training ML/DL models...")
             
