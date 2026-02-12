@@ -186,9 +186,6 @@ async def start_market_maker(
     db = Depends(get_database)
 ):
     """Start market maker with specified configuration"""
-    global _db
-    _db = db
-    
     engine = get_mm_engine()
     engine.db = db
     
