@@ -1214,23 +1214,31 @@ async def sync_trade_history(
             
             # Save to trade_history for P&L chart
             if trade_history_collection is not None:
-                trade_doc = {
-                    "trade_id": order_id,
-                    "symbol": symbol,
-                    "pair": pair,
-                    "type": trade_type,
-                    "volume": volume,
-                    "price": price,
-                    "cost": cost,
-                    "fee": fee,
-                    "timestamp": datetime.fromtimestamp(trade_time, tz=timezone.utc),
-                    "source": "kraken_sync"
-                }
-                await trade_history_collection.update_one(
-                    {"trade_id": order_id},
-                    {"$set": trade_doc},
-                    upsert=True
-                )
+                try:
+                    trade_doc = {
+                        "trade_id": order_id,
+                        "symbol": symbol,
+                        "pair": pair,
+                        "type": trade_type,
+                        "volume": volume,
+                        "price": price,
+                        "cost": cost,
+                        "fee": fee,
+                        "timestamp": datetime.fromtimestamp(trade_time, tz=timezone.utc),
+                        "source": "kraken_sync"
+                    }
+                    result = await trade_history_collection.update_one(
+                        {"trade_id": order_id},
+                        {"$set": trade_doc},
+                        upsert=True
+                    )
+                    if processed <= 3:  # Log first few for debugging
+                        logger.info(f"Saved trade {order_id} to trade_history: modified={result.modified_count}, upserted={result.upserted_id is not None}")
+                except Exception as te:
+                    logger.error(f"Failed to save trade to trade_history: {te}")
+            else:
+                if processed <= 1:
+                    logger.warning("trade_history_collection is None - cannot save trades for P&L")
             
         except Exception as e:
             logger.warning(f"Error processing trade: {e}")
