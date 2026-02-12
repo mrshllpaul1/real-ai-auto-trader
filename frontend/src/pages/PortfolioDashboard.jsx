@@ -538,8 +538,8 @@ const PortfolioDashboard = ({ embedded = false }) => {
                     <div className="flex justify-between mb-2">
                       <span className="text-[#A1A1AA]">Invested</span>
                       <span className="text-white font-data">
-                        ${(summary?.current_value - summary?.cash_available)?.toFixed(2) || 0} 
-                        <span className="text-[#A1A1AA] ml-1">({composition?.invested_pct?.toFixed(1) || 0}%)</span>
+                        ${((summary?.current_value ?? 0) - (summary?.cash_available ?? 0)).toFixed(2)} 
+                        <span className="text-[#A1A1AA] ml-1">({(composition?.invested_pct ?? 0).toFixed(1)}%)</span>
                       </span>
                     </div>
                     <div className="h-4 bg-[#1F1F1F] rounded-full overflow-hidden">
@@ -554,8 +554,8 @@ const PortfolioDashboard = ({ embedded = false }) => {
                     <div className="flex justify-between mb-2">
                       <span className="text-[#A1A1AA]">Cash Available</span>
                       <span className="text-white font-data">
-                        ${summary?.cash_available?.toFixed(2) || 0}
-                        <span className="text-[#A1A1AA] ml-1">({composition?.cash_pct?.toFixed(1) || 0}%)</span>
+                        ${(summary?.cash_available ?? 0).toFixed(2)}
+                        <span className="text-[#A1A1AA] ml-1">({(composition?.cash_pct ?? 0).toFixed(1)}%)</span>
                       </span>
                     </div>
                     <div className="h-4 bg-[#1F1F1F] rounded-full overflow-hidden">
