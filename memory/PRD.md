@@ -5,7 +5,58 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ---
 
-## Session Update - Feb 11, 2026 (Current Session)
+## Session Update - Feb 12, 2026 (Current Session)
+
+### ✅ FIX: Optimal Strategy Tab Now Shows Real Data (Feb 12, 2026)
+
+**Issue Fixed:**
+- Optimal Strategy tab in Adaptive AI page was showing "Loading optimal strategy..." with no data
+
+**Root Cause:**
+- Regime variants were not being loaded from database on service initialization
+- Variants needed to be initialized first via API before they could be used
+
+**Solution:**
+- Added `_load_variants_from_db()` method to load existing variants from MongoDB on startup
+- Added auto-initialization: if no variants exist, they are automatically created when `get_optimal_strategy()` is called
+- 14 regime variants now available for different market conditions (bull, bear, sideways, high/low volatility, recovery, distribution)
+
+**Files Modified:**
+- `backend/services/adaptive_strategy_service.py` - Added `_load_variants_from_db()` method and auto-initialization logic
+
+---
+
+### ✅ FIX: Rebuild Universe State Persistence (Feb 12, 2026)
+
+**Issue Fixed:**
+- "Rebuild Universe" process would stop and reset if user navigated away from the page
+
+**Root Cause:**
+- Rebuild status was stored only in memory (global variable) and not persisted
+- Frontend `rebuilding` state was local and reset on component mount
+
+**Solution:**
+- Added state persistence to `run_universe_rebuild_background()` using `SystemStatePersistence` service
+- Updated `EnsembleAI.jsx` to use `useComponentState` hook for UNIVERSE_REBUILD component
+- Rebuild status now persists to MongoDB and survives page navigation
+- Frontend automatically resumes polling when component mounts if rebuild is in progress
+
+**Files Modified:**
+- `backend/services/ensemble_ai.py` - Added state persistence to background task
+- `frontend/src/pages/EnsembleAI.jsx` - Added useComponentState hook for rebuild state
+
+---
+
+### ✅ VERIFIED: Training Does Not Interfere with Trading (Feb 12, 2026)
+
+**Verification:**
+- Confirmed that starting model training does not affect auto_trading or other trading states
+- States are completely independent via the SystemStatePersistence service
+- Each component has its own isolated state in MongoDB
+
+---
+
+## Previous Session Update - Feb 11, 2026
 
 ### ✅ NEW: Manual Entry Price Correction (Feb 11, 2026)
 
