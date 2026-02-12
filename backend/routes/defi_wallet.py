@@ -144,65 +144,32 @@ async def get_token_balances(
     chain: str = "ethereum",
     db = Depends(get_database)
 ):
-    """Get token balances for a wallet (simulated data)"""
-    # In production, this would call blockchain APIs (Alchemy, Moralis, etc.)
+    """Get token balances for a wallet - requires blockchain API integration"""
+    # Check if we have cached balances from a real blockchain API
+    cached = await db.wallet_balances.find_one({
+        "wallet_address": wallet_address.lower(),
+        "chain": chain
+    }, {"_id": 0})
     
-    # Simulated balances
-    balances = [
-        {
-            "token_address": "0x0000000000000000000000000000000000000000",
-            "symbol": "ETH",
-            "name": "Ethereum",
-            "balance": 2.5,
-            "decimals": 18,
-            "price_usd": 2500,
-            "value_usd": 6250,
+    if cached:
+        return {
+            "wallet_address": wallet_address,
             "chain": chain,
-            "logo": "https://cryptologos.cc/logos/ethereum-eth-logo.png"
-        },
-        {
-            "token_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-            "symbol": "USDC",
-            "name": "USD Coin",
-            "balance": 5000,
-            "decimals": 6,
-            "price_usd": 1,
-            "value_usd": 5000,
-            "chain": chain,
-            "logo": "https://cryptologos.cc/logos/usd-coin-usdc-logo.png"
-        },
-        {
-            "token_address": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
-            "symbol": "UNI",
-            "name": "Uniswap",
-            "balance": 150,
-            "decimals": 18,
-            "price_usd": 8.5,
-            "value_usd": 1275,
-            "chain": chain,
-            "logo": "https://cryptologos.cc/logos/uniswap-uni-logo.png"
-        },
-        {
-            "token_address": "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
-            "symbol": "AAVE",
-            "name": "Aave",
-            "balance": 10,
-            "decimals": 18,
-            "price_usd": 95,
-            "value_usd": 950,
-            "chain": chain,
-            "logo": "https://cryptologos.cc/logos/aave-aave-logo.png"
+            "balances": cached.get("balances", []),
+            "total_value_usd": cached.get("total_value_usd", 0),
+            "last_updated": cached.get("last_updated"),
+            "data_source": "cached"
         }
-    ]
     
-    total_value = sum(b["value_usd"] for b in balances)
-    
+    # No real data - return empty with instructions
     return {
         "wallet_address": wallet_address,
         "chain": chain,
-        "balances": balances,
-        "total_value_usd": round(total_value, 2),
-        "last_updated": datetime.now(timezone.utc).isoformat()
+        "balances": [],
+        "total_value_usd": 0,
+        "last_updated": datetime.now(timezone.utc).isoformat(),
+        "message": "Connect blockchain API (Alchemy, Moralis) in Settings to fetch real wallet balances",
+        "requires_api_key": True
     }
 
 
