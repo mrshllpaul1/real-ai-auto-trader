@@ -2131,10 +2131,40 @@ class AdaptiveStrategyService:
             "generated_at": now.isoformat()
         }
     
+    async def _load_variants_from_db(self):
+        """Load regime variants from database if not already loaded"""
+        if self.regime_variants:
+            return  # Already loaded
+        
+        try:
+            cursor = self.db.regime_variants.find({}, {"_id": 0})
+            async for doc in cursor:
+                variant = RegimeVariant(
+                    variant_id=doc.get('variant_id'),
+                    name=doc.get('name'),
+                    target_regime=doc.get('target_regime'),
+                    parameters=doc.get('parameters', {}),
+                    performance_in_regime=doc.get('performance_in_regime', 0.0)
+                )
+                self.regime_variants[variant.variant_id] = variant
+            
+            if self.regime_variants:
+                logger.info(f"📥 Loaded {len(self.regime_variants)} regime variants from database")
+        except Exception as e:
+            logger.warning(f"Could not load regime variants from DB: {e}")
+    
     async def get_optimal_strategy(self) -> Dict[str, Any]:
         """Get the optimal strategy for current market conditions"""
         if not self.current_regime:
             await self.detect_market_regime()
+        
+        # Load variants from DB if not already loaded
+        await self._load_variants_from_db()
+        
+        # Auto-initialize variants if still empty
+        if not self.regime_variants:
+            logger.info("🔄 Auto-initializing regime variants...")
+            await self.initialize_regime_variants()
         
         # Find variants for current regime
         regime = self.current_regime.regime
