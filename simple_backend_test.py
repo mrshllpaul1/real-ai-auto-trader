@@ -103,7 +103,8 @@ def main():
                 print(f"     Tethys Status: {tethys_status}")
                 
         else:
-            print(f"❌ {result.get('error', f'HTTP {result.get(\"status_code\", \"Unknown\")}')} ")
+            error_msg = result.get('error', f'HTTP {result.get("status_code", "Unknown")}')
+            print(f"❌ {error_msg}")
     
     # Summary
     print("\n" + "=" * 70)
