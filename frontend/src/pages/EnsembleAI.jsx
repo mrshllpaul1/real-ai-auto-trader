@@ -193,6 +193,20 @@ const EnsembleAI = ({ embedded = false }) => {
     loadData();
   }, [fetchStatus, fetchBuildStatus]);
 
+  // Resume polling if rebuilding was already in progress when component mounts
+  useEffect(() => {
+    if (rebuilding && !rebuildStateLoading) {
+      // Resume polling for an in-progress rebuild
+      const pollStatus = async () => {
+        const completed = await fetchBuildStatus();
+        if (!completed && rebuilding) {
+          setTimeout(pollStatus, 2000);
+        }
+      };
+      pollStatus();
+    }
+  }, [rebuilding, rebuildStateLoading, fetchBuildStatus]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
