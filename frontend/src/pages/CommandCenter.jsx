@@ -13,6 +13,7 @@ import api, { tradingAPI, marketAPI, clearAllCacheAndRefresh } from '../services
 import { toast } from 'sonner';
 import MarketOverview from '../components/MarketOverview';
 import { CardSkeleton, TableSkeleton } from '../components/LoadingSkeleton';
+import { useComponentState, ComponentType, setComponentState } from '../hooks/useSystemState';
 
 // Loading Skeleton for Command Center
 const CommandCenterSkeleton = () => (
