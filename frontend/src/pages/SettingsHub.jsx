@@ -157,6 +157,24 @@ const SettingsHub = () => {
               <DashboardCustomization embedded={true} />
             </LazyTabContent>
           </TabsContent>
+
+          <TabsContent value="sounds" className="mt-0">
+            <LazyTabContent isActive={activeTab === 'sounds'}>
+              <SoundSettings embedded={true} />
+            </LazyTabContent>
+          </TabsContent>
+
+          <TabsContent value="email" className="mt-0">
+            <LazyTabContent isActive={activeTab === 'email'}>
+              <EmailDigest embedded={true} />
+            </LazyTabContent>
+          </TabsContent>
+
+          <TabsContent value="share" className="mt-0">
+            <LazyTabContent isActive={activeTab === 'share'}>
+              <PortfolioShare embedded={true} />
+            </LazyTabContent>
+          </TabsContent>
         </Tabs>
       </motion.div>
     </div>
