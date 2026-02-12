@@ -75,10 +75,6 @@ async def get_top_traders(
         {"_id": 0}
     ).sort("pnl_percent", -1).limit(limit).to_list(limit)
     
-    # If no entries, create sample data
-    if not entries:
-        entries = await _generate_sample_leaderboard(db, limit)
-    
     # Add rank
     for i, entry in enumerate(entries):
         entry["rank"] = i + 1
@@ -88,49 +84,9 @@ async def get_top_traders(
         "period": period,
         "leaderboard": entries,
         "total": len(entries),
-        "updated_at": datetime.now(timezone.utc).isoformat()
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "message": "No paper trading results yet. Start paper trading to appear on the leaderboard!" if not entries else None
     }
-
-
-async def _generate_sample_leaderboard(db, limit: int) -> List[Dict]:
-    """Generate sample leaderboard data"""
-    import random
-    
-    sample_names = [
-        ("CryptoKing", "👑"), ("MoonShot", "🌙"), ("DiamondHands", "💎"),
-        ("WhaleWatcher", "🐳"), ("AlgoTrader", "🤖"), ("BTCMaxi", "₿"),
-        ("DeFiDegen", "🤠"), ("SmartMoney", "🧠"), ("Hodler4Life", "💪"),
-        ("TrendRider", "🏄"), ("PatientPanda", "🐼"), ("BullRunner", "🐂"),
-        ("BearSlayer", "🐻"), ("ScalpMaster", "⚔️"), ("SwingKing", "🎢"),
-        ("AITrader", "🤖"), ("DataDriven", "📊"), ("RiskManager", "🛡️"),
-        ("Consistent", "🎯"), ("Newcomer", "🌟")
-    ]
-    
-    entries = []
-    for i, (name, emoji) in enumerate(sample_names[:limit]):
-        initial = 100000
-        pnl_pct = random.uniform(-20, 150) if i > 2 else random.uniform(80, 200)  # Top 3 always positive
-        current = initial * (1 + pnl_pct / 100)
-        
-        entry = {
-            "user_id": f"user_{i+1}",
-            "display_name": name,
-            "avatar_emoji": emoji,
-            "initial_balance": initial,
-            "current_balance": round(current, 2),
-            "total_pnl": round(current - initial, 2),
-            "pnl_percent": round(pnl_pct, 2),
-            "total_trades": random.randint(50, 500),
-            "win_rate": round(random.uniform(45, 75), 1),
-            "sharpe_ratio": round(random.uniform(0.5, 3.0), 2),
-            "max_drawdown": round(random.uniform(-5, -25), 1)
-        }
-        entries.append(entry)
-    
-    # Sort by PnL percent
-    entries.sort(key=lambda x: x["pnl_percent"], reverse=True)
-    
-    return entries
 
 
 def _get_rank_badge(rank: int) -> str:
