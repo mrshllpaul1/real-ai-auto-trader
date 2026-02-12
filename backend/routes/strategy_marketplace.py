@@ -222,11 +222,7 @@ async def get_strategy_details(
     )
     
     if not strategy:
-        # Return sample
-        samples = _get_sample_strategies()
-        strategy = next((s for s in samples if s["strategy_id"] == strategy_id), None)
-        if not strategy:
-            raise HTTPException(status_code=404, detail="Strategy not found")
+        raise HTTPException(status_code=404, detail="Strategy not found")
     
     # Get reviews
     reviews = await db.strategy_reviews.find(
