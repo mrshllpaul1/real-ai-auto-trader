@@ -469,9 +469,11 @@ const AutoTrading = ({ embedded = false }) => {
     try {
       toast.loading('Starting auto-trading...');
       await api.post('/auto-trading/start');
+      await setPersistedRunning(true, { started_at: new Date().toISOString() });
       toast.dismiss();
       toast.success('Auto-trading started! Running in background.');
       await loadStatus();
+      await refreshState();
     } catch (error) {
       toast.dismiss();
       toast.error('Failed to start auto-trading');
@@ -481,14 +483,17 @@ const AutoTrading = ({ embedded = false }) => {
   const stopAutoTrading = async () => {
     try {
       await api.post('/auto-trading/stop');
+      await setPersistedRunning(false);
       toast.success('Auto-trading stopped');
       await loadStatus();
+      await refreshState();
     } catch (error) {
       toast.error('Failed to stop auto-trading');
     }
   };
 
-  const isRunning = status?.running || false;
+  // Use persisted state as source of truth, fallback to API status
+  const isRunning = persistedRunning || status?.running || false;
 
   if (loading) {
     return (
