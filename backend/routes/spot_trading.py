@@ -810,7 +810,7 @@ async def get_kraken_trade_history(limit: int = Query(50, ge=1, le=500)):
         raise HTTPException(status_code=503, detail="Kraken service not initialized")
     
     try:
-        history = await _kraken_service.get_trades_history()
+        history = await _kraken_service.get_trade_history()
         trades = history.get("trades", {})
         
         formatted_trades = []
