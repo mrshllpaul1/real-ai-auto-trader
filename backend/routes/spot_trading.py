@@ -1162,8 +1162,9 @@ async def sync_trade_history(
     errors = 0
     symbols_updated = set()
     
-    # Also save to trade_history collection for P&L chart
-    trade_history_collection = _entry_tracker.db["trade_history"] if hasattr(_entry_tracker, 'db') else None
+    # Get database connection for trade_history collection
+    from server import db as server_db
+    trade_history_collection = server_db["trade_history"] if server_db else None
     
     for trade in all_trades:
         try:
