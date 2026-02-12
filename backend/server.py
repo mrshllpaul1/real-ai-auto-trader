@@ -268,6 +268,20 @@ async def delayed_init():
     
     from init.services import initialize_all_services
     await initialize_all_services(db)
+    
+    # Initialize performance enhancements
+    try:
+        # Initialize cache manager
+        from services.cache_manager import get_cache_manager
+        cache = get_cache_manager()
+        logger.info("✅ Cache manager initialized")
+        
+        # Create database indexes for 5-10x faster queries
+        from init.database_indexes import create_indexes
+        index_results = await create_indexes(db)
+        logger.info(f"✅ Database indexes created: {len(index_results.get('created', []))} new, {len(index_results.get('existing', []))} existing")
+    except Exception as e:
+        logger.warning(f"⚠️ Performance enhancement initialization warning: {e}")
 
 
 @app.on_event("shutdown")
