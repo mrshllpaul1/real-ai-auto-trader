@@ -137,7 +137,8 @@ def main():
         
         # Show additional info for failed or slow requests
         if not result["success"]:
-            print(f"   ❌ Error: {result.get('error', f'HTTP {result[\"status_code\"]}')} ")
+            error_msg = result.get('error', f'HTTP {result["status_code"]}')
+            print(f"   ❌ Error: {error_msg}")
         elif not result["meets_performance"]:
             print(f"   🐌 Slow response: {result['response_time_ms']}ms (target: <100ms)")
     
