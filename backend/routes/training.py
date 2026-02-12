@@ -1085,195 +1085,177 @@ async def train_individual_model(
         total_steps=total_steps
     )
     
-    async def train_model_with_progress():
-        """Background task with progress tracking"""
-        try:
-            await progress_manager.start_task(task_id, f"Starting {model_name} training...")
-            
-            # Import trainers
-            from services.historical_trainer import HistoricalTrainer
-            from services.enhanced_historical_trainer import EnhancedHistoricalTrainer
-            
-            historical_trainer = HistoricalTrainer(db)
-            enhanced_trainer = EnhancedHistoricalTrainer(db)
-            
-            training_result = {
-                "model": model_name,
-                "status": "completed",
-                "trained_at": None,
-                "accuracy": 0,
-                "coins_trained": []
-            }
-            
-            # Check for cancellation helper
-            def should_stop():
-                return progress_manager.is_cancel_requested(task_id)
-            
-            if model_name in ["historical", "all"]:
-                await progress_manager.update_progress(
-                    task_id, 
-                    message="Training Historical AI patterns...",
-                    steps_completed=1 if model_name != "all" else 0
-                )
-                try:
-                    await historical_trainer.train_on_historical_data(request.coins, 2020, True)
-                    training_result["accuracy"] = 76
-                    training_result["coins_trained"].extend(request.coins)
-                except Exception as e:
-                    logger.warning(f"Historical training error: {e}")
+    def train_model_sync():
+        """Background task with progress tracking - runs in thread"""
+        import asyncio as async_io
+        
+        # Create new event loop for this thread
+        loop = async_io.new_event_loop()
+        async_io.set_event_loop(loop)
+        
+        async def do_training():
+            try:
+                await progress_manager.start_task(task_id, f"Starting {model_name} training...")
                 
-                if should_stop():
-                    await progress_manager.stop_task(task_id, "Cancelled")
-                    return
-            
-            if model_name in ["gem_ml_dl", "all"]:
-                await progress_manager.update_progress(
-                    task_id, 
-                    message="Training Gem ML/DL prediction models...",
-                    steps_completed=2 if model_name == "all" else 1
-                )
-                try:
-                    # Train gem prediction models
-                    await enhanced_trainer.train_with_real_data(request.coins)
-                    training_result["accuracy"] = max(training_result["accuracy"], 76)
-                except Exception as e:
-                    logger.warning(f"Gem ML/DL training error: {e}")
+                # Import trainers
+                from services.historical_trainer import HistoricalTrainer
+                from services.enhanced_historical_trainer import EnhancedHistoricalTrainer
                 
-                if should_stop():
-                    await progress_manager.stop_task(task_id, "Cancelled")
-                    return
-            
-            if model_name in ["mtf", "all"]:
-                await progress_manager.update_progress(
-                    task_id, 
-                    message="Training MTF Predictor...",
-                    steps_completed=3 if model_name == "all" else 1
-                )
-                try:
-                    # MTF training - use enhanced trainer
-                    await enhanced_trainer.train_with_real_data(request.coins[:5])
-                    training_result["accuracy"] = max(training_result["accuracy"], 70)
-                except Exception as e:
-                    logger.warning(f"MTF training error: {e}")
+                historical_trainer = HistoricalTrainer(db)
+                enhanced_trainer = EnhancedHistoricalTrainer(db)
                 
-                if should_stop():
-                    await progress_manager.stop_task(task_id, "Cancelled")
-                    return
-            
-            if model_name in ["xgboost", "all"]:
-                await progress_manager.update_progress(
-                    task_id, 
-                    message="Training XGBoost/LightGBM ensemble...",
-                    steps_completed=4 if model_name == "all" else 1
-                )
-                try:
-                    # Train ensemble models using historical trainer
-                    await historical_trainer.train_profitable_gems(request.coins[:10], 2.0, 2020)
-                    training_result["accuracy"] = max(training_result["accuracy"], 78)
-                except Exception as e:
-                    logger.warning(f"XGBoost training error: {e}")
+                training_result = {
+                    "model": model_name,
+                    "status": "completed",
+                    "trained_at": None,
+                    "accuracy": 0,
+                    "coins_trained": []
+                }
                 
-                if should_stop():
-                    await progress_manager.stop_task(task_id, "Cancelled")
-                    return
-            
-            if model_name in ["lstm_gru", "all"]:
-                await progress_manager.update_progress(
-                    task_id, 
-                    message="Training LSTM/GRU time series models...",
-                    steps_completed=5 if model_name == "all" else 1
-                )
-                try:
-                    # Train time series models
-                    await enhanced_trainer.train_with_real_data(request.coins[:5])
-                    training_result["accuracy"] = max(training_result["accuracy"], 72)
-                except Exception as e:
-                    logger.warning(f"LSTM/GRU training error: {e}")
+                # Check for cancellation helper
+                def should_stop():
+                    return progress_manager.is_cancel_requested(task_id)
                 
-                if should_stop():
-                    await progress_manager.stop_task(task_id, "Cancelled")
-                    return
-            
-            if model_name in ["finrl", "all"]:
-                await progress_manager.update_progress(
-                    task_id, 
-                    message="Training FinRL Agent...",
-                    steps_completed=6 if model_name == "all" else 1
-                )
-                try:
-                    # FinRL training - run in separate thread to avoid blocking
-                    import threading
-                    import asyncio as async_io
+                if model_name in ["historical", "all"]:
+                    await progress_manager.update_progress(
+                        task_id, 
+                        message="Training Historical AI patterns...",
+                        steps_completed=1 if model_name != "all" else 0
+                    )
+                    try:
+                        await historical_trainer.train_on_historical_data(request.coins, 2020, True)
+                        training_result["accuracy"] = 76
+                        training_result["coins_trained"].extend(request.coins)
+                    except Exception as e:
+                        logger.warning(f"Historical training error: {e}")
                     
-                    finrl_success = False
-                    finrl_error = None
+                    if should_stop():
+                        await progress_manager.stop_task(task_id, "Cancelled")
+                        return
+                
+                if model_name in ["gem_ml_dl", "all"]:
+                    await progress_manager.update_progress(
+                        task_id, 
+                        message="Training Gem ML/DL prediction models...",
+                        steps_completed=2 if model_name == "all" else 1
+                    )
+                    try:
+                        # Train gem prediction models
+                        await enhanced_trainer.train_with_real_data(request.coins)
+                        training_result["accuracy"] = max(training_result["accuracy"], 76)
+                    except Exception as e:
+                        logger.warning(f"Gem ML/DL training error: {e}")
                     
-                    def run_finrl_training():
-                        nonlocal finrl_success, finrl_error
-                        try:
-                            loop = async_io.new_event_loop()
-                            async_io.set_event_loop(loop)
-                            
-                            async def do_train():
-                                from services.tethys_training import get_trainer
-                                tethys_trainer = get_trainer(db)
-                                tethys_trainer.total_episodes = 10
-                                await tethys_trainer.train(episodes=10, symbol="BTC/USD")
-                            
-                            loop.run_until_complete(do_train())
-                            loop.close()
-                            finrl_success = True
-                        except Exception as e:
-                            finrl_error = str(e)
+                    if should_stop():
+                        await progress_manager.stop_task(task_id, "Cancelled")
+                        return
+                
+                if model_name in ["mtf", "all"]:
+                    await progress_manager.update_progress(
+                        task_id, 
+                        message="Training MTF Predictor...",
+                        steps_completed=3 if model_name == "all" else 1
+                    )
+                    try:
+                        # MTF training - use enhanced trainer
+                        await enhanced_trainer.train_with_real_data(request.coins[:5])
+                        training_result["accuracy"] = max(training_result["accuracy"], 70)
+                    except Exception as e:
+                        logger.warning(f"MTF training error: {e}")
                     
-                    # Run with timeout
-                    thread = threading.Thread(target=run_finrl_training, daemon=True)
-                    thread.start()
-                    thread.join(timeout=30)  # 30 second timeout
+                    if should_stop():
+                        await progress_manager.stop_task(task_id, "Cancelled")
+                        return
+                
+                if model_name in ["xgboost", "all"]:
+                    await progress_manager.update_progress(
+                        task_id, 
+                        message="Training XGBoost/LightGBM ensemble...",
+                        steps_completed=4 if model_name == "all" else 1
+                    )
+                    try:
+                        # Train ensemble models using historical trainer
+                        await historical_trainer.train_profitable_gems(request.coins[:10], 2.0, 2020)
+                        training_result["accuracy"] = max(training_result["accuracy"], 78)
+                    except Exception as e:
+                        logger.warning(f"XGBoost training error: {e}")
                     
-                    if finrl_success:
+                    if should_stop():
+                        await progress_manager.stop_task(task_id, "Cancelled")
+                        return
+                
+                if model_name in ["lstm_gru", "all"]:
+                    await progress_manager.update_progress(
+                        task_id, 
+                        message="Training LSTM/GRU time series models...",
+                        steps_completed=5 if model_name == "all" else 1
+                    )
+                    try:
+                        # Train time series models
+                        await enhanced_trainer.train_with_real_data(request.coins[:5])
+                        training_result["accuracy"] = max(training_result["accuracy"], 72)
+                    except Exception as e:
+                        logger.warning(f"LSTM/GRU training error: {e}")
+                    
+                    if should_stop():
+                        await progress_manager.stop_task(task_id, "Cancelled")
+                        return
+                
+                if model_name in ["finrl", "all"]:
+                    await progress_manager.update_progress(
+                        task_id, 
+                        message="Training FinRL Agent...",
+                        steps_completed=6 if model_name == "all" else 1
+                    )
+                    try:
+                        from services.tethys_training import get_trainer
+                        tethys_trainer = get_trainer(db)
+                        tethys_trainer.total_episodes = 10
+                        await tethys_trainer.train(episodes=10, symbol="BTC/USD")
                         training_result["accuracy"] = max(training_result["accuracy"], 68)
-                    elif finrl_error:
-                        logger.warning(f"FinRL training error: {finrl_error}")
-                    else:
-                        logger.warning("FinRL training timed out after 30s")
-                        
-                except Exception as e:
-                    logger.warning(f"FinRL training error: {e}")
-            
-            # Save training result to database
-            from datetime import datetime, timezone
-            training_result["trained_at"] = datetime.now(timezone.utc).isoformat()
-            
-            await db.model_training_status.update_one(
-                {"model_name": model_name},
-                {"$set": {
-                    "model_name": model_name,
-                    "is_trained": True,
-                    "status": "active",
-                    "accuracy": training_result["accuracy"],
-                    "trained_at": training_result["trained_at"],
-                    "coins_trained": training_result["coins_trained"] or request.coins,
-                    "last_updated": datetime.now(timezone.utc)
-                }},
-                upsert=True
-            )
-            
-            await progress_manager.complete_task(
-                task_id, 
-                f"{model_name.upper()} training completed with {training_result['accuracy']}% accuracy"
-            )
-            
-        except Exception as e:
-            logger.error(f"Model training error: {e}")
-            await progress_manager.fail_task(task_id, str(e))
+                    except Exception as e:
+                        logger.warning(f"FinRL training error: {e}")
+                
+                # Save training result to database
+                from datetime import datetime, timezone
+                training_result["trained_at"] = datetime.now(timezone.utc).isoformat()
+                
+                await db.model_training_status.update_one(
+                    {"model_name": model_name},
+                    {"$set": {
+                        "model_name": model_name,
+                        "is_trained": True,
+                        "status": "active",
+                        "accuracy": training_result["accuracy"],
+                        "trained_at": training_result["trained_at"],
+                        "coins_trained": training_result["coins_trained"] or request.coins,
+                        "last_updated": datetime.now(timezone.utc)
+                    }},
+                    upsert=True
+                )
+                
+                await progress_manager.complete_task(
+                    task_id, 
+                    f"{model_name.upper()} training completed with {training_result['accuracy']}% accuracy"
+                )
+                
+            except Exception as e:
+                logger.error(f"Model training error: {e}")
+                await progress_manager.fail_task(task_id, str(e))
+        
+        try:
+            loop.run_until_complete(do_training())
+        finally:
+            loop.close()
     
-    # Use asyncio.create_task for truly non-blocking background execution
-    logger.info(f"[train-model] Creating background task for {task_id}")
-    asyncio.create_task(train_model_with_progress())
-    logger.info(f"[train-model] Background task created, returning response")
+    # Start training in a separate thread for non-blocking execution
+    import threading
+    logger.info(f"[train-model] Starting background thread for {task_id}")
+    thread = threading.Thread(target=train_model_sync, daemon=True)
+    thread.start()
+    logger.info(f"[train-model] Thread started, returning response")
     
-    response_data = {
+    return {
         "status": "training_started",
         "task_id": task_id,
         "model_name": model_name,
@@ -1281,8 +1263,6 @@ async def train_individual_model(
         "message": f"Training {model_name} model in background. Check /training-progress/task/{task_id} for updates.",
         "progress_endpoint": f"/api/training-progress/task/{task_id}"
     }
-    logger.info(f"[train-model] Returning: {response_data}")
-    return response_data
 
 
 @router.get("/model-status/{model_name}")
