@@ -95,3 +95,46 @@ async def close_db():
     """Close database connection"""
     client.close()
     logger.info("✅ MongoDB connection closed")
+
+
+async def reconnect_database():
+    """Reconnect to database if connection is lost"""
+    global client, db
+    
+    try:
+        # Test current connection
+        await client.admin.command('ping')
+        logger.info("Database connection is healthy, no reconnection needed")
+        return True
+    except Exception as e:
+        logger.warning(f"Database connection test failed: {e}, attempting reconnection...")
+    
+    try:
+        # Close existing connection
+        client.close()
+        
+        # Create new connection
+        from motor.motor_asyncio import AsyncIOMotorClient
+        
+        new_client = AsyncIOMotorClient(
+            MONGO_URL,
+            maxPoolSize=100,
+            minPoolSize=10,
+            maxIdleTimeMS=30000,
+            connectTimeoutMS=5000,
+            serverSelectionTimeoutMS=5000
+        )
+        
+        # Test new connection
+        await new_client.admin.command('ping')
+        
+        # Update global references
+        client = new_client
+        db = new_client[DATABASE_NAME]
+        
+        logger.info("✅ Database reconnection successful")
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Database reconnection failed: {e}")
+        return False
