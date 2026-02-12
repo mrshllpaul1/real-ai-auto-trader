@@ -331,6 +331,16 @@ const AutoTrading = ({ embedded = false }) => {
   // Use global trading mode context
   const { isRealMode, isPaperMode, setMode } = useTradingMode();
   
+  // Use persisted state for auto trading
+  const { 
+    isRunning: persistedRunning, 
+    setRunning: setPersistedRunning,
+    loading: stateLoading,
+    refresh: refreshState 
+  } = useComponentState(ComponentType.AUTO_TRADING, {
+    pollInterval: 15000, // Check every 15 seconds
+  });
+  
   const [config, setConfig] = useState({
     enabled: false,
     paper_trading_enabled: true,
