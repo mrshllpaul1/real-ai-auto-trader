@@ -347,11 +347,11 @@ async def get_pnl_chart_data(days: int = Query(30, ge=1, le=365)):
         ).sort("timestamp", 1).to_list(length=5000)
         
         if not trades:
-            # Return sample/simulated data for visualization
+            # Return empty data - no simulated data
             return {
-                "data": _generate_sample_pnl_data(days),
-                "is_sample": True,
-                "message": "No trade history. Showing sample data. Sync trades to see real P&L.",
+                "data": [],
+                "is_sample": False,
+                "message": "No trade history. Sync trades from Kraken to see real P&L data.",
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }
         
@@ -423,9 +423,10 @@ async def get_pnl_chart_data(days: int = Query(30, ge=1, le=365)):
     except Exception as e:
         logger.error(f"P&L chart error: {e}")
         return {
-            "data": _generate_sample_pnl_data(days),
-            "is_sample": True,
+            "data": [],
+            "is_sample": False,
             "error": str(e),
+            "message": "Error fetching P&L data. Please try again.",
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
