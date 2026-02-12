@@ -7,6 +7,7 @@ import {
   ArrowRight, ArrowUp, ArrowDown, Loader2, Play, Pause, Layers
 } from 'lucide-react';
 import api from '../services/api';
+import { useComponentState, ComponentType } from '../hooks/useSystemState';
 
 // Progress bar component
 const ProgressBar = ({ progress, message }) => (
