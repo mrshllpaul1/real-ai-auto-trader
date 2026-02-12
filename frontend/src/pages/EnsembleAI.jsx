@@ -139,14 +139,19 @@ const EnsembleAI = ({ embedded = false }) => {
       const { data } = await api.get('/ensemble/status');
       setStatus(data);
       setBuildStatus(data.universe_rebuild_status);
+      
+      // Sync local rebuild state with backend status
+      if (data.universe_rebuild_status?.running && !rebuilding) {
+        setRebuilding(true);
+      }
     } catch (err) {
       console.error('Error fetching status:', err);
     }
-  }, []);
+  }, [rebuilding, setRebuilding]);
 
   // Start universe rebuild with polling
   const startRebuild = async () => {
-    setRebuilding(true);
+    await setRebuilding(true);
     try {
       const { data } = await api.post('/ensemble/rebuild-universe', {
         target_size: targetSize,
@@ -158,18 +163,18 @@ const EnsembleAI = ({ embedded = false }) => {
         // Start polling with async interval
         const pollStatus = async () => {
           const completed = await fetchBuildStatus();
-          if (!completed) {
+          if (!completed && rebuilding) {
             setTimeout(pollStatus, 2000);
           }
         };
         pollStatus();
       } else if (data.status === 'already_running') {
         toast.warning('Rebuild already in progress');
-        setRebuilding(false);
+        // Don't reset - it's already running
       }
     } catch (err) {
       toast.error('Failed to start rebuild');
-      setRebuilding(false);
+      await setRebuilding(false);
     }
   };
 
