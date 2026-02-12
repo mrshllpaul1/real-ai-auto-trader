@@ -237,8 +237,8 @@ const PortfolioDashboard = ({ embedded = false }) => {
                 </CardHeader>
                 <CardContent>
                   {composition?.composition?.length > 0 ? (
-                    <div className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
+                    <div className="h-[300px] min-h-[300px] w-full">
+                      <ResponsiveContainer width="100%" height={300} minWidth={200}>
                         <PieChart>
                           <Pie
                             data={composition.composition}
@@ -286,7 +286,7 @@ const PortfolioDashboard = ({ embedded = false }) => {
                     <div className="h-[300px] flex items-center justify-center text-[#A1A1AA]">
                       No positions to display
                     </div>
-                  )}
+                  )}}
                   
                   {/* Legend */}
                   <div className="flex flex-wrap gap-3 mt-4 justify-center">
