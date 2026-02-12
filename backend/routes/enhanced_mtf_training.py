@@ -424,7 +424,8 @@ async def train_all_kraken(
             await progress_manager.fail_task(task_id, str(e))
     
     if background_tasks:
-        background_tasks.add_task(train_with_progress)
+        # Use asyncio.create_task for truly non-blocking execution
+        asyncio.create_task(train_with_progress())
         return {
             "task_id": task_id,
             "status": "started",
