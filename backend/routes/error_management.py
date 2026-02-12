@@ -134,7 +134,7 @@ async def get_error_patterns(hours: int = 24, db = Depends(get_database)):
     Analyze error patterns to identify recurring issues.
     """
     try:
-        if not db:
+        if db is None:
             return {"patterns": [], "message": "Database not available"}
         
         cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
@@ -155,16 +155,19 @@ async def get_error_patterns(hours: int = 24, db = Depends(get_database)):
         ]
         
         patterns = []
-        async for doc in db.error_history.aggregate(pipeline):
-            patterns.append({
-                'fingerprint': doc['_id'],
-                'occurrences': doc['count'],
-                'category': doc['category'],
-                'message': doc['message'][:200],
-                'first_seen': doc['first_seen'],
-                'last_seen': doc['last_seen'],
-                'is_recurring': doc['count'] > 3
-            })
+        try:
+            async for doc in db.error_history.aggregate(pipeline):
+                patterns.append({
+                    'fingerprint': doc['_id'],
+                    'occurrences': doc['count'],
+                    'category': doc['category'],
+                    'message': doc['message'][:200] if doc.get('message') else '',
+                    'first_seen': doc['first_seen'],
+                    'last_seen': doc['last_seen'],
+                    'is_recurring': doc['count'] > 3
+                })
+        except Exception as e:
+            logger.warning(f"Error aggregating patterns: {e}")
         
         return {
             "patterns": patterns,
