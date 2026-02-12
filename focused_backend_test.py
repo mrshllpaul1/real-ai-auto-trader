@@ -9,7 +9,7 @@ import requests
 import json
 from typing import Dict, List
 
-BACKEND_URL = "https://filecheck-4.preview.emergentagent.com/api"
+BACKEND_URL = "https://speed-optimizer-12.preview.emergentagent.com/api"
 
 def test_key_systems():
     """Test key backend systems and provide summary"""

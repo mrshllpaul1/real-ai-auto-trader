@@ -372,8 +372,8 @@ nginx-code-proxy RUNNING   pid 45
 - All environment variables set ✅
 
 **URL:**
-- Deployment: https://filecheck-4.preview.emergentagent.com ✅
-- Backend API: https://filecheck-4.preview.emergentagent.com/api ✅
+- Deployment: https://speed-optimizer-12.preview.emergentagent.com ✅
+- Backend API: https://speed-optimizer-12.preview.emergentagent.com/api ✅
 
 ---
 
