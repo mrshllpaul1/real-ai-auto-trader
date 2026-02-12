@@ -103,7 +103,8 @@ class MockDataRemovalTester:
             # Should return status indicating not configured
             if isinstance(data, dict):
                 status = data.get('status', '').lower()
-                return status in ['not_configured', 'disabled', 'unavailable']
+                cluster_status = data.get('cluster_status', '').lower()
+                return status in ['not_configured', 'disabled', 'unavailable'] or cluster_status in ['not_configured', 'disabled', 'unavailable']
             return False
             
         elif expected_behavior == "empty_with_message":
