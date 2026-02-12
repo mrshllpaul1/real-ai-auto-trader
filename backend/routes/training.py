@@ -1054,8 +1054,9 @@ async def train_individual_model(
     
     All training results are persisted to database.
     """
-    from services.training_progress_manager import get_progress_manager
     import uuid
+    
+    logger.info(f"[train-model] Received request for model: {request.model_name}")
     
     model_name = request.model_name.lower()
     valid_models = ["historical", "gem_ml_dl", "mtf", "xgboost", "lstm_gru", "finrl", "all"]
@@ -1067,7 +1068,12 @@ async def train_individual_model(
         )
     
     task_id = f"train-{model_name}-{uuid.uuid4().hex[:8]}"
+    logger.info(f"[train-model] Created task_id: {task_id}")
+    
+    # Get progress manager
+    from services.training_progress_manager import get_progress_manager
     progress_manager = get_progress_manager()
+    logger.info(f"[train-model] Got progress manager")
     
     # Calculate total steps based on model
     total_steps = 7 if model_name == "all" else 2
