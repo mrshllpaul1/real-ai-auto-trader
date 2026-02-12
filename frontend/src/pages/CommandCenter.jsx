@@ -382,13 +382,17 @@ const CommandCenter = () => {
 
   const toggleAutopilot = async () => {
     try {
-      if (growthStatus?.autopilot_active) {
+      const isCurrentlyActive = autopilotPersisted || growthStatus?.autopilot_active;
+      if (isCurrentlyActive) {
         await api.post('/growth/stop');
+        await setAutopilotState(false);
       } else {
         await api.post('/growth/start');
+        await setAutopilotState(true);
       }
       fetchData();
-      toast.success(growthStatus?.autopilot_active ? 'Autopilot stopped' : 'Autopilot started');
+      refreshAutopilotState();
+      toast.success(isCurrentlyActive ? 'Autopilot stopped' : 'Autopilot started');
     } catch (error) {
       toast.error('Failed to toggle autopilot');
     }
@@ -396,13 +400,17 @@ const CommandCenter = () => {
 
   const toggleOrchestrator = async () => {
     try {
-      if (orchestratorStatus?.is_active) {
+      const isCurrentlyActive = orchestratorPersisted || orchestratorStatus?.is_active;
+      if (isCurrentlyActive) {
         await api.post('/master/stop');
+        await setOrchestratorState(false);
       } else {
         await api.post('/master/start');
+        await setOrchestratorState(true);
       }
       fetchData();
-      toast.success(orchestratorStatus?.is_active ? 'Orchestrator stopped' : 'Orchestrator started');
+      refreshOrchestratorState();
+      toast.success(isCurrentlyActive ? 'Orchestrator stopped' : 'Orchestrator started');
     } catch (error) {
       toast.error('Failed to toggle orchestrator');
     }
