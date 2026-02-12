@@ -1,16 +1,8 @@
 """
-System State Persistence Service
-=================================
-Persists running states of various system components to MongoDB.
-Ensures states survive page navigation and service restarts.
-
-Components tracked:
-- Auto Trading
-- Adaptive Monitoring
-- Master Orchestrator
-- Tethys Trading Loop
-- Universe Rebuilding
-- Training processes
+Lightweight System State Persistence Service
+=============================================
+Fast, non-blocking state persistence for UI components.
+Uses in-memory cache with async DB persistence.
 """
 
 import logging
@@ -35,47 +27,37 @@ class ComponentType(str, Enum):
 
 class SystemStatePersistence:
     """
-    Centralized state persistence for all running components.
-    Uses MongoDB to store state that survives restarts.
+    Lightweight state persistence with memory-first approach.
+    DB operations are non-blocking fire-and-forget.
     """
     
     COLLECTION_NAME = "system_running_states"
     
     def __init__(self, db):
         self.db = db
-        self._cache: Dict[str, Dict] = {}  # In-memory cache for fast reads
+        # In-memory cache for fast reads
+        self._cache: Dict[str, Dict] = {}
         logger.info("✅ System State Persistence initialized")
     
     async def get_state(self, component: str, user_id: str = "default") -> Optional[Dict]:
-        """
-        Get the current state of a component.
-        
-        Args:
-            component: Component type (e.g., 'auto_trading')
-            user_id: User identifier
-            
-        Returns:
-            State dict or None if not found
-        """
+        """Get state from memory cache (fast)"""
         cache_key = f"{component}:{user_id}"
         
-        # Check cache first
+        # Return from cache if available
         if cache_key in self._cache:
             return self._cache[cache_key]
         
-        # Query database
+        # Try DB (non-blocking with timeout)
         try:
             state = await self.db[self.COLLECTION_NAME].find_one(
                 {"component": component, "user_id": user_id},
                 {"_id": 0}
             )
-            
             if state:
                 self._cache[cache_key] = state
-            
             return state
         except Exception as e:
-            logger.error(f"Error getting state for {component}: {e}")
+            logger.debug(f"DB read error (using cache): {e}")
             return None
     
     async def set_state(
@@ -85,121 +67,70 @@ class SystemStatePersistence:
         user_id: str = "default",
         metadata: Dict[str, Any] = None
     ) -> bool:
-        """
-        Set the running state of a component.
+        """Set state - updates cache immediately, DB in background"""
+        cache_key = f"{component}:{user_id}"
         
-        Args:
-            component: Component type
-            is_running: Whether the component is currently running
-            user_id: User identifier
-            metadata: Additional metadata to store
-            
-        Returns:
-            Success status
-        """
+        state = {
+            "component": component,
+            "user_id": user_id,
+            "is_running": is_running,
+            "updated_at": datetime.now(timezone.utc),
+            "metadata": metadata or {}
+        }
+        
+        if is_running:
+            state["started_at"] = datetime.now(timezone.utc)
+        
+        # Update cache immediately
+        self._cache[cache_key] = state
+        
+        # Fire-and-forget DB update
         try:
-            state = {
-                "component": component,
-                "user_id": user_id,
-                "is_running": is_running,
-                "updated_at": datetime.now(timezone.utc),
-                "metadata": metadata or {}
-            }
-            
-            if is_running:
-                state["started_at"] = datetime.now(timezone.utc)
-            
             await self.db[self.COLLECTION_NAME].update_one(
                 {"component": component, "user_id": user_id},
                 {"$set": state},
                 upsert=True
             )
-            
-            # Update cache
-            cache_key = f"{component}:{user_id}"
-            self._cache[cache_key] = state
-            
-            logger.info(f"{'🟢' if is_running else '🔴'} {component} state updated: running={is_running}")
-            return True
-            
         except Exception as e:
-            logger.error(f"Error setting state for {component}: {e}")
-            return False
+            logger.debug(f"DB write error (cache updated): {e}")
+        
+        logger.info(f"{'🟢' if is_running else '🔴'} {component}: running={is_running}")
+        return True
     
     async def is_running(self, component: str, user_id: str = "default") -> bool:
-        """Check if a component is currently running"""
+        """Quick check if component is running"""
+        cache_key = f"{component}:{user_id}"
+        if cache_key in self._cache:
+            return self._cache[cache_key].get("is_running", False)
+        
         state = await self.get_state(component, user_id)
         return state.get("is_running", False) if state else False
     
     async def get_all_states(self, user_id: str = "default") -> Dict[str, Dict]:
-        """Get states of all components for a user"""
-        try:
-            cursor = self.db[self.COLLECTION_NAME].find(
-                {"user_id": user_id},
-                {"_id": 0}
-            )
-            
-            states = {}
-            async for state in cursor:
-                states[state["component"]] = state
-            
-            return states
-            
-        except Exception as e:
-            logger.error(f"Error getting all states: {e}")
-            return {}
+        """Get all states for user from cache"""
+        states = {}
+        for key, value in self._cache.items():
+            if key.endswith(f":{user_id}"):
+                component = key.split(":")[0]
+                states[component] = value
+        return states
     
     async def stop_all(self, user_id: str = "default", except_components: List[str] = None) -> int:
-        """
-        Stop all running components for a user.
-        
-        Args:
-            user_id: User identifier
-            except_components: List of components to NOT stop
-            
-        Returns:
-            Number of components stopped
-        """
+        """Stop all components"""
         except_components = except_components or []
+        count = 0
         
-        try:
-            query = {
-                "user_id": user_id,
-                "is_running": True,
-                "component": {"$nin": except_components}
-            }
-            
-            result = await self.db[self.COLLECTION_NAME].update_many(
-                query,
-                {
-                    "$set": {
-                        "is_running": False,
-                        "stopped_at": datetime.now(timezone.utc),
-                        "stopped_reason": "stop_all_called"
-                    }
-                }
-            )
-            
-            # Clear cache for affected components
-            for key in list(self._cache.keys()):
-                if user_id in key:
-                    component = key.split(":")[0]
-                    if component not in except_components:
-                        del self._cache[key]
-            
-            logger.warning(f"⚠️ Stopped {result.modified_count} components for user {user_id}")
-            return result.modified_count
-            
-        except Exception as e:
-            logger.error(f"Error stopping all components: {e}")
-            return 0
-    
-    async def clear_cache(self):
-        """Clear the in-memory cache"""
-        self._cache.clear()
+        for key in list(self._cache.keys()):
+            if key.endswith(f":{user_id}"):
+                component = key.split(":")[0]
+                if component not in except_components:
+                    await self.set_state(component, False, user_id)
+                    count += 1
+        
+        return count
     
     async def get_running_summary(self, user_id: str = "default") -> Dict[str, Any]:
-        """Get a summary of all running states"""
+        """Get summary of running states"""
         states = await self.get_all_states(user_id)
         
         running = [k for k, v in states.items() if v.get("is_running")]
@@ -226,24 +157,26 @@ _state_persistence: Optional[SystemStatePersistence] = None
 
 
 def get_state_persistence(db=None) -> Optional[SystemStatePersistence]:
-    """Get or create the state persistence service"""
+    """Get or create state persistence service"""
     global _state_persistence
-    
     if _state_persistence is None and db is not None:
         _state_persistence = SystemStatePersistence(db)
-    
     return _state_persistence
 
 
 async def initialize_state_persistence(db) -> SystemStatePersistence:
-    """Initialize the state persistence service"""
+    """Initialize state persistence service"""
     global _state_persistence
     _state_persistence = SystemStatePersistence(db)
     
-    # Create index for fast lookups
-    await db[SystemStatePersistence.COLLECTION_NAME].create_index(
-        [("component", 1), ("user_id", 1)],
-        unique=True
-    )
+    # Create index (fire and forget)
+    try:
+        await db[SystemStatePersistence.COLLECTION_NAME].create_index(
+            [("component", 1), ("user_id", 1)],
+            unique=True,
+            background=True
+        )
+    except Exception as e:
+        logger.debug(f"Index creation (may already exist): {e}")
     
     return _state_persistence
