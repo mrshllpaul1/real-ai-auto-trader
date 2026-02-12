@@ -456,14 +456,16 @@ const AILearningLoop = ({ embedded = false }) => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3">
                     <Award className="text-[#FFB800]" />
-                    Model Rankings (Last 30 Days)
+                    Model Rankings
                   </CardTitle>
-                  <CardDescription>AI models ranked by prediction accuracy</CardDescription>
+                  <CardDescription>AI models ranked by performance score</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {insights.model_rankings.map((model, index) => {
                       const badge = getAccuracyBadge(model.accuracy);
+                      const score = model.score ?? 0;
+                      const changePct = model.change_pct ?? 0;
                       return (
                         <div
                           key={model.model}
@@ -479,14 +481,37 @@ const AILearningLoop = ({ embedded = false }) => {
                               </span>
                             </div>
                             <div>
-                              <h3 className="font-bold text-white uppercase">{model.model}</h3>
-                              <p className="text-sm text-[#A1A1AA]">{model.predictions} predictions</p>
+                              <h3 className="font-bold text-white">
+                                {model.display_name || model.model}
+                              </h3>
+                              <div className="flex items-center gap-2 text-sm text-[#A1A1AA]">
+                                <span>Score: {score.toFixed(2)}</span>
+                                {changePct !== 0 && (
+                                  <span className={changePct >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}>
+                                    {changePct >= 0 ? '+' : ''}{changePct.toFixed(1)}%
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4">
-                            <div className="text-right">
-                              <div className={`text-2xl font-data font-bold ${getAccuracyColor(model?.accuracy || 0)}`}>
-                                {(model?.accuracy || 0).toFixed(1)}%
+                          <div className="flex items-center gap-6">
+                            <div className="text-center">
+                              <div className="text-xs text-[#A1A1AA]">Sharpe</div>
+                              <div className={`font-mono ${(model.sharpe_ratio || 0) >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                                {(model.sharpe_ratio || 0).toFixed(2)}
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-xs text-[#A1A1AA]">Win Rate</div>
+                              <div className="text-white font-mono">{model.win_rate || model.accuracy || 0}%</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-xs text-[#A1A1AA]">DD</div>
+                              <div className="text-[#FF0055] font-mono">{(model.drawdown || 0).toFixed(1)}%</div>
+                            </div>
+                            <div className="text-right min-w-[80px]">
+                              <div className={`text-xl font-data font-bold ${getAccuracyColor(model?.accuracy || 0)}`}>
+                                {(model?.accuracy || 0).toFixed(0)}%
                               </div>
                               <Badge className={badge.color}>{badge.label}</Badge>
                             </div>
