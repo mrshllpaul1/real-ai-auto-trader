@@ -290,6 +290,12 @@ async def delayed_init():
         from init.database_indexes import create_indexes
         index_results = await create_indexes(db)
         logger.info(f"✅ Database indexes created: {len(index_results.get('created', []))} new, {len(index_results.get('existing', []))} existing")
+        
+        # Initialize state persistence service
+        from services.state_persistence import initialize_state_persistence
+        await initialize_state_persistence(db)
+        logger.info("✅ System state persistence initialized")
+        
     except Exception as e:
         logger.warning(f"⚠️ Performance enhancement initialization warning: {e}")
 
