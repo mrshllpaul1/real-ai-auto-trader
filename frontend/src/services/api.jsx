@@ -12,10 +12,10 @@ console.log('[API Service] Using backend URL:', BACKEND_URL);
 const cache = new Map();
 const pendingRequests = new Map();
 const CACHE_DURATION = {
-  SHORT: 10000,    // 10 seconds - for rapidly changing data
-  MEDIUM: 30000,   // 30 seconds - for moderately changing data
-  LONG: 120000,    // 2 minutes - for slowly changing data
-  STATIC: 300000,  // 5 minutes - for mostly static data
+  SHORT: 15000,    // 15 seconds - for rapidly changing data
+  MEDIUM: 60000,   // 60 seconds - for moderately changing data
+  LONG: 180000,    // 3 minutes - for slowly changing data
+  STATIC: 600000,  // 10 minutes - for mostly static data
 };
 
 // Cache configuration for different endpoints
@@ -26,12 +26,18 @@ const CACHE_CONFIG = {
   '/ensemble/status': CACHE_DURATION.MEDIUM,
   '/training/status': CACHE_DURATION.SHORT,
   '/training-progress/active': CACHE_DURATION.SHORT,
-  '/universe/coins': CACHE_DURATION.LONG,
-  '/kraken-universe/coins': CACHE_DURATION.LONG,
+  '/universe/coins': CACHE_DURATION.STATIC,
+  '/kraken-universe/coins': CACHE_DURATION.STATIC,
   '/coindesk/news': CACHE_DURATION.MEDIUM,
   '/coindesk/sentiment': CACHE_DURATION.MEDIUM,
   '/settings': CACHE_DURATION.STATIC,
   '/gems/top': CACHE_DURATION.MEDIUM,
+  '/sound-settings': CACHE_DURATION.STATIC,
+  '/email-digest': CACHE_DURATION.LONG,
+  '/portfolio-share': CACHE_DURATION.MEDIUM,
+  '/achievements': CACHE_DURATION.LONG,
+  '/event-countdown': CACHE_DURATION.MEDIUM,
+  '/ai-explain': CACHE_DURATION.LONG,
 };
 
 const getCacheKey = (config) => {
