@@ -55,8 +55,26 @@ async def get_learning_report(
 ):
     """Get comprehensive AI learning report"""
     try:
-        report = await learning_engine.generate_learning_report()
-        return report
+        # Add timeout to prevent hanging
+        import asyncio
+        try:
+            report = await asyncio.wait_for(
+                learning_engine.generate_learning_report(),
+                timeout=5.0
+            )
+            return report
+        except asyncio.TimeoutError:
+            # Return basic report if timeout
+            return {
+                "total_strategies_evaluated": 0,
+                "total_learning_samples": 0,
+                "overall_accuracy": 0,
+                "total_learned_profit_loss": 0,
+                "best_performing_indicators": [],
+                "learning_system_status": "initializing",
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "note": "Data loading in progress. Refresh in a few seconds."
+            }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
