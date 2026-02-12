@@ -1195,13 +1195,43 @@ async def train_individual_model(
                     steps_completed=6 if model_name == "all" else 1
                 )
                 try:
-                    # FinRL training - use Tethys if available
-                    from services.tethys_training import get_trainer
-                    tethys_trainer = get_trainer(db)
-                    # Quick training session
-                    tethys_trainer.total_episodes = 10
-                    await tethys_trainer.train(episodes=10, symbol="BTC/USD")
-                    training_result["accuracy"] = max(training_result["accuracy"], 68)
+                    # FinRL training - run in separate thread to avoid blocking
+                    import threading
+                    import asyncio as async_io
+                    
+                    finrl_success = False
+                    finrl_error = None
+                    
+                    def run_finrl_training():
+                        nonlocal finrl_success, finrl_error
+                        try:
+                            loop = async_io.new_event_loop()
+                            async_io.set_event_loop(loop)
+                            
+                            async def do_train():
+                                from services.tethys_training import get_trainer
+                                tethys_trainer = get_trainer(db)
+                                tethys_trainer.total_episodes = 10
+                                await tethys_trainer.train(episodes=10, symbol="BTC/USD")
+                            
+                            loop.run_until_complete(do_train())
+                            loop.close()
+                            finrl_success = True
+                        except Exception as e:
+                            finrl_error = str(e)
+                    
+                    # Run with timeout
+                    thread = threading.Thread(target=run_finrl_training, daemon=True)
+                    thread.start()
+                    thread.join(timeout=30)  # 30 second timeout
+                    
+                    if finrl_success:
+                        training_result["accuracy"] = max(training_result["accuracy"], 68)
+                    elif finrl_error:
+                        logger.warning(f"FinRL training error: {finrl_error}")
+                    else:
+                        logger.warning("FinRL training timed out after 30s")
+                        
                 except Exception as e:
                     logger.warning(f"FinRL training error: {e}")
             
