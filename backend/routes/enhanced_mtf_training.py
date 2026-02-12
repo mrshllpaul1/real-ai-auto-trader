@@ -367,24 +367,61 @@ async def train_all_kraken(
     logger.info(f"🌐 Starting training on {len(all_coins)} Kraken coins...")
     
     async def train_with_progress():
+        import threading
+        import asyncio as async_io
+        
         try:
-            progress_manager.start_task(task_id, f"Training on {len(all_coins)} Kraken coins...")
+            await progress_manager.start_task(task_id, f"Training on {len(all_coins)} Kraken coins...")
             
-            # Run training with progress updates
-            result = await service.train_enhanced_model(
-                symbols=all_coins,
-                epochs=epochs,
-                download_data=download_data,
-                progress_callback=lambda p, m: progress_manager.update_progress(task_id, progress=p, message=m)
-            )
+            training_complete = False
+            training_error = None
+            training_result = None
             
-            progress_manager.complete_task(
-                task_id,
-                result={"accuracy": result.get("accuracy_pct"), "coins": len(all_coins)},
-                message=f"Completed training on {len(all_coins)} coins"
-            )
+            def run_training():
+                nonlocal training_complete, training_error, training_result
+                try:
+                    loop = async_io.new_event_loop()
+                    async_io.set_event_loop(loop)
+                    
+                    async def do_training():
+                        return await service.train_enhanced_model(
+                            symbols=all_coins,
+                            epochs=epochs,
+                            download_data=download_data,
+                            progress_callback=lambda p, m: progress_manager.update_progress(task_id, progress=p, message=m)
+                        )
+                    
+                    training_result = loop.run_until_complete(do_training())
+                    loop.close()
+                    training_complete = True
+                except Exception as e:
+                    training_error = str(e)
+            
+            # Run training in separate thread with long timeout (10 minutes for 600+ coins)
+            thread = threading.Thread(target=run_training, daemon=True)
+            thread.start()
+            
+            # Check progress every 5 seconds for up to 10 minutes
+            for _ in range(120):  # 120 * 5 = 600 seconds = 10 minutes
+                thread.join(timeout=5)
+                if training_complete or training_error:
+                    break
+                if not thread.is_alive():
+                    break
+            
+            if training_complete and training_result:
+                await progress_manager.complete_task(
+                    task_id,
+                    result={"accuracy": training_result.get("accuracy_pct"), "coins": len(all_coins)},
+                    message=f"Completed training on {len(all_coins)} coins"
+                )
+            elif training_error:
+                await progress_manager.fail_task(task_id, training_error)
+            else:
+                await progress_manager.fail_task(task_id, "Training timed out after 10 minutes")
+                
         except Exception as e:
-            progress_manager.fail_task(task_id, str(e))
+            await progress_manager.fail_task(task_id, str(e))
     
     if background_tasks:
         background_tasks.add_task(train_with_progress)
