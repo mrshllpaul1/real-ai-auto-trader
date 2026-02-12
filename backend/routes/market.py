@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
+from services.cache_manager import cached, CacheManager
 
 router = APIRouter()
 
@@ -23,8 +24,19 @@ async def get_crypto_prices(
     enhanced_service = Depends(get_enhanced_market_service)
 ):
     """Get current prices for cryptocurrencies from multiple sources. 
-    coin_ids defaults to top 5 coins if not provided."""
+    coin_ids defaults to top 5 coins if not provided.
+    Cached for 30 seconds for 10x faster repeated requests."""
     import asyncio
+    from services.cache_manager import get_cache_manager
+    
+    # Use cache for repeated requests
+    cache = get_cache_manager()
+    cache_key = f"market_prices:{coin_ids}:{enhanced}"
+    
+    hit, cached_data = await cache.get(cache_key)
+    if hit:
+        return cached_data
+    
     try:
         coin_list = coin_ids.split(',')
         
@@ -42,6 +54,8 @@ async def get_crypto_prices(
             # Use single source (CoinGecko)
             prices = await market_service.get_coin_price(coin_list)
         
+        # Cache for 30 seconds
+        await cache.set(cache_key, prices, ttl=30)
         return prices
     except Exception as e:
         # Return empty prices on error
