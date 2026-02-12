@@ -103,6 +103,9 @@ const AIHub = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          {/* Visual Training Progress - Shown prominently when training is active */}
+          <VisualTrainingProgress embedded={false} pollInterval={3000} showControls={true} />
+          
           <MobileTabsList>
             <TabsList className="glass-card flex-nowrap md:flex-wrap h-auto p-1 gap-1 w-max md:w-auto">
               {TAB_CONFIG.map((tab) => (
