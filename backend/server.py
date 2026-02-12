@@ -201,6 +201,15 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import performance metrics routes: {e}")
 
+# Import and include system state routes
+try:
+    from routes.system_state import router as system_state_router, set_db as set_system_state_db
+    set_system_state_db(db)
+    app.include_router(system_state_router, prefix="/api")
+    logger.info("✅ System state routes registered")
+except ImportError as e:
+    logger.warning(f"Could not import system state routes: {e}")
+
 # Add middleware in correct order (last added = first executed)
 # 1. Security Headers (outermost - first to execute)
 try:
