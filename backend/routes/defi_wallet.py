@@ -182,79 +182,43 @@ async def get_defi_positions(
     wallet_address: str,
     db = Depends(get_database)
 ):
-    """Get DeFi positions (LP, lending, staking) - simulated"""
+    """Get DeFi positions (LP, lending, staking) - requires blockchain API"""
+    # Check for cached positions from real API
+    cached = await db.defi_positions.find_one({
+        "wallet_address": wallet_address.lower()
+    }, {"_id": 0})
     
-    positions = [
-        {
-            "position_id": "pos_1",
-            "protocol": "Uniswap V3",
-            "protocol_logo": "https://cryptologos.cc/logos/uniswap-uni-logo.png",
-            "position_type": "liquidity",
-            "pool": "ETH/USDC",
-            "tokens": ["ETH", "USDC"],
-            "deposited": {"ETH": 1.0, "USDC": 2500},
-            "current_value_usd": 5100,
-            "pnl_usd": 100,
-            "pnl_pct": 2.0,
-            "fee_tier": "0.3%",
-            "fees_earned_usd": 45,
-            "in_range": True,
-            "chain": "ethereum"
-        },
-        {
-            "position_id": "pos_2",
-            "protocol": "Aave V3",
-            "protocol_logo": "https://cryptologos.cc/logos/aave-aave-logo.png",
-            "position_type": "lending",
-            "asset": "USDC",
-            "deposited_usd": 3000,
-            "current_value_usd": 3090,
-            "apy": 4.5,
-            "earned_usd": 90,
-            "health_factor": None,
-            "chain": "ethereum"
-        },
-        {
-            "position_id": "pos_3",
-            "protocol": "Lido",
-            "protocol_logo": "https://cryptologos.cc/logos/lido-dao-ldo-logo.png",
-            "position_type": "staking",
-            "asset": "ETH",
-            "staked_amount": 2.0,
-            "steth_balance": 2.01,
-            "current_value_usd": 5025,
-            "apy": 3.8,
-            "rewards_earned": 0.01,
-            "chain": "ethereum"
-        },
-        {
-            "position_id": "pos_4",
-            "protocol": "Curve",
-            "protocol_logo": "https://cryptologos.cc/logos/curve-dao-token-crv-logo.png",
-            "position_type": "liquidity",
-            "pool": "3pool",
-            "tokens": ["DAI", "USDC", "USDT"],
-            "deposited_usd": 2000,
-            "current_value_usd": 2015,
-            "apy": 2.1,
-            "crv_rewards": 12.5,
-            "chain": "ethereum"
+    if cached:
+        positions = cached.get("positions", [])
+        total_value = sum(p.get("current_value_usd", 0) for p in positions)
+        total_pnl = sum(p.get("pnl_usd", p.get("earned_usd", 0)) for p in positions)
+        
+        return {
+            "wallet_address": wallet_address,
+            "positions": positions,
+            "summary": {
+                "total_positions": len(positions),
+                "total_value_usd": round(total_value, 2),
+                "total_pnl_usd": round(total_pnl, 2),
+                "protocols_used": list(set(p.get("protocol", "") for p in positions))
+            },
+            "last_updated": cached.get("last_updated"),
+            "data_source": "cached"
         }
-    ]
     
-    total_value = sum(p["current_value_usd"] for p in positions)
-    total_pnl = sum(p.get("pnl_usd", p.get("earned_usd", 0)) for p in positions)
-    
+    # No real data
     return {
         "wallet_address": wallet_address,
-        "positions": positions,
+        "positions": [],
         "summary": {
-            "total_positions": len(positions),
-            "total_value_usd": round(total_value, 2),
-            "total_pnl_usd": round(total_pnl, 2),
-            "protocols_used": list(set(p["protocol"] for p in positions))
+            "total_positions": 0,
+            "total_value_usd": 0,
+            "total_pnl_usd": 0,
+            "protocols_used": []
         },
-        "last_updated": datetime.now(timezone.utc).isoformat()
+        "last_updated": datetime.now(timezone.utc).isoformat(),
+        "message": "Connect blockchain API (Alchemy, Moralis) in Settings to fetch real DeFi positions",
+        "requires_api_key": True
     }
 
 
@@ -267,41 +231,34 @@ async def get_nft_holdings(
     wallet_address: str,
     db = Depends(get_database)
 ):
-    """Get NFT holdings (simulated)"""
+    """Get NFT holdings - requires blockchain API"""
+    # Check for cached NFTs from real API
+    cached = await db.nft_holdings.find_one({
+        "wallet_address": wallet_address.lower()
+    }, {"_id": 0})
     
-    nfts = [
-        {
-            "contract_address": "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d",
-            "token_id": "1234",
-            "name": "Bored Ape #1234",
-            "collection": "Bored Ape Yacht Club",
-            "image_url": "https://placeholder.com/bayc.png",
-            "floor_price_eth": 25,
-            "floor_price_usd": 62500,
-            "last_sale_eth": 30,
-            "rarity_rank": 2500
-        },
-        {
-            "contract_address": "0x60e4d786628fea6478f785a6d7e704777c86a7c6",
-            "token_id": "5678",
-            "name": "Mutant Ape #5678",
-            "collection": "Mutant Ape Yacht Club",
-            "image_url": "https://placeholder.com/mayc.png",
-            "floor_price_eth": 5,
-            "floor_price_usd": 12500,
-            "last_sale_eth": 6,
-            "rarity_rank": 8000
+    if cached:
+        nfts = cached.get("nfts", [])
+        total_floor = sum(n.get("floor_price_usd", 0) for n in nfts)
+        
+        return {
+            "wallet_address": wallet_address,
+            "nfts": nfts,
+            "total_count": len(nfts),
+            "total_floor_value_usd": total_floor,
+            "last_updated": cached.get("last_updated"),
+            "data_source": "cached"
         }
-    ]
     
-    total_floor = sum(n["floor_price_usd"] for n in nfts)
-    
+    # No real data
     return {
         "wallet_address": wallet_address,
-        "nfts": nfts,
-        "total_count": len(nfts),
-        "total_floor_value_usd": total_floor,
-        "last_updated": datetime.now(timezone.utc).isoformat()
+        "nfts": [],
+        "total_count": 0,
+        "total_floor_value_usd": 0,
+        "last_updated": datetime.now(timezone.utc).isoformat(),
+        "message": "Connect blockchain API (Alchemy, Moralis) in Settings to fetch real NFT holdings",
+        "requires_api_key": True
     }
 
 
