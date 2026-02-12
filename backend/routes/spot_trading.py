@@ -1162,9 +1162,9 @@ async def sync_trade_history(
     errors = 0
     symbols_updated = set()
     
-    # Get database connection for trade_history collection
-    from server import db as server_db
-    trade_history_collection = server_db["trade_history"] if server_db is not None else None
+    # Get database from dependency
+    database = await get_database()
+    trade_history_collection = database["trade_history"]
     
     for trade in all_trades:
         try:
