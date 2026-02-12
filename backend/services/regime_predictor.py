@@ -32,7 +32,7 @@ warnings.filterwarnings('ignore')
 # Lazy TensorFlow loading - defer until actually needed
 TF_AVAILABLE = None  # Will be set on first check
 _tf_module = None
-# Initialized lazily in _ensure_dl_models once TensorFlow is available.
+# Initialized lazily when TensorFlow components are loaded for DL models.
 EarlyStopping = None
 
 def _ensure_tf():
