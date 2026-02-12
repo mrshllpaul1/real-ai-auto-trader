@@ -275,7 +275,7 @@ class MockDataRemovalTester:
             },
             {
                 'method': 'GET',
-                'endpoint': '/ml-optimization/distributed/cluster',
+                'endpoint': '/ml-optimization/distributed/status',
                 'expected_behavior': 'not_configured',
                 'description': 'Should return "not_configured" status (no fake workers)'
             }
