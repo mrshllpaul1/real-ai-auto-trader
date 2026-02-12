@@ -45,13 +45,37 @@ class PortfolioUpdate(BaseModel):
 @router.get("/status")
 async def get_tethys_status():
     """Get complete Tethys safety system status"""
-    global _safety_system
+    global _safety_system, _db
     
     if not _safety_system:
         from services.tethys_safety import get_tethys_safety, AGENT_NAME, AGENT_VERSION
         _safety_system = get_tethys_safety(_db)
     
-    return _safety_system.get_full_status()
+    status = _safety_system.get_full_status()
+    
+    # Check persisted states for various Tethys components
+    try:
+        from services.state_persistence import get_state_persistence
+        persistence = get_state_persistence(_db)
+        if persistence:
+            states = await persistence.get_all_states()
+            status["persisted_states"] = {
+                "tethys_trading": states.get("tethys_trading", {}).get("is_running", False),
+                "tethys_autopilot": states.get("tethys_autopilot", {}).get("is_running", False),
+                "auto_trading": states.get("auto_trading", {}).get("is_running", False),
+                "real_trading_enabled": states.get("real_trading", {}).get("is_running", False),
+            }
+            # Determine overall operational status based on any running component
+            is_operational = any([
+                states.get("tethys_trading", {}).get("is_running", False),
+                states.get("tethys_autopilot", {}).get("is_running", False),
+                states.get("auto_trading", {}).get("is_running", False),
+            ])
+            status["agent"]["status"] = "operational" if is_operational else "standby"
+    except Exception as e:
+        pass
+    
+    return status
 
 
 @router.get("/identity")
