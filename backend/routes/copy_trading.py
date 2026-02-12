@@ -148,43 +148,12 @@ async def get_leaderboard(
         
         leaderboard.sort(key=sort_key, reverse=True)
         
-        # If empty, provide sample data
-        if not leaderboard:
-            leaderboard = [
-                {
-                    "trader_id": "sample_trader_1",
-                    "display_name": "CryptoWhale",
-                    "bio": "10+ years trading experience. Focus on BTC and ETH.",
-                    "profit_share_pct": 10,
-                    "copiers": 245,
-                    "stats": {"total_trades": 892, "win_rate": 67.5, "roi": 142.3, "avg_trade_size": 1500},
-                    "joined_at": "2024-01-15T00:00:00Z"
-                },
-                {
-                    "trader_id": "sample_trader_2",
-                    "display_name": "AltcoinHunter",
-                    "bio": "Specializing in finding hidden gem altcoins.",
-                    "profit_share_pct": 15,
-                    "copiers": 189,
-                    "stats": {"total_trades": 567, "win_rate": 71.2, "roi": 198.7, "avg_trade_size": 500},
-                    "joined_at": "2024-03-22T00:00:00Z"
-                },
-                {
-                    "trader_id": "sample_trader_3",
-                    "display_name": "SwingMaster",
-                    "bio": "Swing trading with strict risk management.",
-                    "profit_share_pct": 12,
-                    "copiers": 156,
-                    "stats": {"total_trades": 423, "win_rate": 62.8, "roi": 89.4, "avg_trade_size": 2000},
-                    "joined_at": "2024-02-10T00:00:00Z"
-                }
-            ]
-        
         return {
             "leaderboard": leaderboard[:limit],
             "timeframe": timeframe,
             "sort_by": sort_by,
-            "total_traders": len(leaderboard)
+            "total_traders": len(leaderboard),
+            "message": "No traders found. Create a trader profile to appear on the leaderboard." if not leaderboard else None
         }
     except Exception as e:
         logger.error(f"Error getting leaderboard: {e}")
