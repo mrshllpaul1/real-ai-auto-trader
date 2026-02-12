@@ -32,7 +32,7 @@ warnings.filterwarnings('ignore')
 # Lazy TensorFlow loading - defer until actually needed
 TF_AVAILABLE = None  # Will be set on first check
 _tf_module = None
-# Global placeholder for the EarlyStopping class; set lazily when TensorFlow loads.
+# Global placeholder for EarlyStopping to avoid importing TensorFlow at module load.
 _early_stopping_class = None
 
 def _ensure_tf():
