@@ -247,13 +247,13 @@ class MockDataRemovalTester:
             },
             {
                 'method': 'GET',
-                'endpoint': '/social-trading/feed',
+                'endpoint': '/social/feed',
                 'expected_behavior': 'empty_array',
                 'description': 'Should return empty feed (no sample trades)'
             },
             {
                 'method': 'GET',
-                'endpoint': '/strategy-marketplace/strategies',
+                'endpoint': '/marketplace/strategies',
                 'expected_behavior': 'empty_array',
                 'description': 'Should return empty strategies (no sample strategies)'
             },
