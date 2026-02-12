@@ -168,7 +168,8 @@ def main():
     if failed_endpoints:
         print(f"\n❌ FAILED ENDPOINTS ({len(failed_endpoints)}):")
         for result in failed_endpoints:
-            print(f"   • {result['method']} {result['endpoint']} - {result.get('error', f'HTTP {result[\"status_code\"]}')} ")
+            error_msg = result.get('error', f'HTTP {result["status_code"]}')
+            print(f"   • {result['method']} {result['endpoint']} - {error_msg}")
     
     if slow_endpoints:
         print(f"\n🐌 SLOW ENDPOINTS ({len(slow_endpoints)}) - Over 100ms:")
