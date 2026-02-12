@@ -1229,13 +1229,12 @@ async def sync_trade_history(
                         "timestamp": datetime.fromtimestamp(trade_time, tz=timezone.utc),
                         "source": "kraken_sync"
                     }
-                    result = await trade_history_collection.update_one(
+                    # Use replace_one with upsert=True for better motor compatibility
+                    await trade_history_collection.replace_one(
                         {"trade_id": order_id},
-                        {"$set": trade_doc},
+                        trade_doc,
                         upsert=True
                     )
-                    if processed <= 3:  # Log first few for debugging
-                        logger.info(f"Saved trade {order_id} to trade_history: modified={result.modified_count}, upserted={result.upserted_id is not None}")
                 except Exception as te:
                     logger.error(f"Failed to save trade to trade_history: {te}")
             
