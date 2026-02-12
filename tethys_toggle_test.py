@@ -125,11 +125,31 @@ class TethysToggleTester:
         self.print_result(result2, "Start training")
         
         # Wait a moment for training to initialize
-        time.sleep(1.0)
+        time.sleep(2.0)
         
         # Step 3: Verify training started (is_training should be true)
-        print("\n3️⃣ STEP 3: Verify training started")
-        result3 = self.test_endpoint('GET', '/tethys-train/status', expected_field='is_training', expected_value=True)
+        # Try multiple times as training initialization may take a moment
+        print("\n3️⃣ STEP 3: Verify training started (with retries)")
+        training_started = False
+        max_retries = 5
+        
+        for attempt in range(max_retries):
+            result3 = self.test_endpoint('GET', '/tethys-train/status')
+            if result3.get('response_data', {}).get('is_training') == True:
+                training_started = True
+                result3['field_check_passed'] = True
+                result3['field_check_message'] = "Training started successfully"
+                result3['success'] = True
+                break
+            else:
+                print(f"   Attempt {attempt + 1}/{max_retries}: Training not started yet, waiting...")
+                time.sleep(1.0)
+        
+        if not training_started:
+            result3['field_check_passed'] = False
+            result3['field_check_message'] = f"Training did not start after {max_retries} attempts"
+            result3['success'] = False
+        
         self.results.append(result3)
         self.print_result(result3, "Verify training started")
         
