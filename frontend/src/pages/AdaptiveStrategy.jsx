@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
 import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
+import { useComponentState, ComponentType } from '../hooks/useSystemState';
 
 const regimeColors = {
   bull: '#00FF94',
