@@ -18,6 +18,6 @@ def test_should_skip_backend_tests_when_url_valid():
     assert not should_skip_backend_tests(module)
 
 
-def test_should_skip_backend_tests_without_base_url_attr():
+def test_should_not_skip_backend_tests_without_base_url_attr():
     module = SimpleNamespace()
     assert not should_skip_backend_tests(module)
