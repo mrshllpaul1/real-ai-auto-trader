@@ -1,6 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 from services.cache_manager import cached, CacheManager
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -16,6 +19,17 @@ async def get_database():
     from server import db
     return db
 
+
+# Fallback prices for when all sources fail
+FALLBACK_PRICES = {
+    "bitcoin": {"price": 0, "source": "fallback", "cached": True},
+    "ethereum": {"price": 0, "source": "fallback", "cached": True},
+    "solana": {"price": 0, "source": "fallback", "cached": True},
+    "binancecoin": {"price": 0, "source": "fallback", "cached": True},
+    "ripple": {"price": 0, "source": "fallback", "cached": True},
+}
+
+
 @router.get("/prices")
 async def get_crypto_prices(
     coin_ids: str = "bitcoin,ethereum,solana,binancecoin,ripple",
@@ -25,9 +39,11 @@ async def get_crypto_prices(
 ):
     """Get current prices for cryptocurrencies from multiple sources. 
     coin_ids defaults to top 5 coins if not provided.
-    Cached for 30 seconds for 10x faster repeated requests."""
+    Cached for 30 seconds for 10x faster repeated requests.
+    Includes automatic fallback on errors."""
     import asyncio
     from services.cache_manager import get_cache_manager
+    from services.error_recovery import get_error_recovery_manager, categorize_error
     
     # Use cache for repeated requests
     cache = get_cache_manager()
@@ -37,9 +53,9 @@ async def get_crypto_prices(
     if hit:
         return cached_data
     
+    coin_list = coin_ids.split(',')
+    
     try:
-        coin_list = coin_ids.split(',')
-        
         if enhanced:
             # Use aggregated data with timeout
             try:
@@ -48,6 +64,7 @@ async def get_crypto_prices(
                     timeout=10.0
                 )
             except asyncio.TimeoutError:
+                logger.warning("Enhanced market service timeout, falling back to simple service")
                 # Fallback to simple service
                 prices = await market_service.get_coin_price(coin_list)
         else:
@@ -57,9 +74,31 @@ async def get_crypto_prices(
         # Cache for 30 seconds
         await cache.set(cache_key, prices, ttl=30)
         return prices
+        
     except Exception as e:
-        # Return empty prices on error
-        return {coin: {"price": 0, "error": str(e)} for coin in coin_ids.split(',')}
+        # Log and track error
+        logger.error(f"Market prices error: {e}")
+        
+        try:
+            error_manager = get_error_recovery_manager()
+            category = categorize_error(e)
+            await error_manager.handle_error(e, {
+                'endpoint': '/market/prices',
+                'coin_ids': coin_ids,
+            })
+        except:
+            pass
+        
+        # Return fallback prices with error indication
+        fallback = {
+            coin: {
+                "price": FALLBACK_PRICES.get(coin, {}).get("price", 0),
+                "error": str(e),
+                "source": "fallback"
+            } 
+            for coin in coin_list
+        }
+        return fallback
 
 @router.get("/global")
 async def get_global_metrics(
