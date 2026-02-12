@@ -54,11 +54,11 @@ class RateLimitConfig:
         '/api/openapi.json',
         '/health',
         '/',
-        '/api/training/',
-        '/api/training-progress/',
-        '/api/tethys-train/',
-        '/api/enhanced-mtf-training/',
-        '/api/learning/',
+        '/api/training',
+        '/api/training-progress',
+        '/api/tethys-train',
+        '/api/enhanced-mtf-training',
+        '/api/learning',
     ]
 
 
