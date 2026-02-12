@@ -315,7 +315,7 @@ async def resolve_alert(alert_id: str, db = Depends(get_database)):
     Mark an alert as resolved.
     """
     try:
-        if not db:
+        if db is None:
             raise HTTPException(status_code=503, detail="Database not available")
         
         from bson import ObjectId
