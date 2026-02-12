@@ -110,7 +110,7 @@ const AdaptiveStrategy = ({ embedded = false }) => {
       setPredictedEvents(eventsRes.data?.events || []);
       setOptimalStrategy(optimalRes.data);
       setOnChainData(onChainRes.data);
-      setIsMonitoring(statusRes.data?.is_monitoring || false);
+      // Don't override monitoring state from local status - use persisted state
       setCoverageStats(coverageRes.data);
       setEventCalendar(calendarRes.data);
       
