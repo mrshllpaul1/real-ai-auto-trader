@@ -10,6 +10,7 @@ import {
   RefreshCw, ChevronDown, ChevronUp, Waves, Wifi, WifiOff
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useComponentState, ComponentType } from '../hooks/useSystemState';
 
 const API_URL = window.__RUNTIME_CONFIG__?.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_BACKEND_URL;
 const WS_URL = API_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
