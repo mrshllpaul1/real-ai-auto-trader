@@ -29,6 +29,15 @@ const TethysDashboard = () => {
   const wsRef = useRef(null);
   const pollingInitializedRef = useRef(false);
 
+  // Use persisted state for Tethys trading
+  const { 
+    isRunning: tethysTradingPersisted, 
+    setRunning: setTethysTradingState,
+    refresh: refreshTethysState 
+  } = useComponentState(ComponentType.TETHYS_TRADING, {
+    pollInterval: 10000,
+  });
+
   // WebSocket disabled - using HTTP polling for reliable updates in deployment
   // Kubernetes ingress doesn't support WebSocket protocol upgrade
   useEffect(() => {
