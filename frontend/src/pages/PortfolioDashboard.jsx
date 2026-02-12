@@ -165,7 +165,7 @@ const PortfolioDashboard = ({ embedded = false }) => {
                   <span className="text-sm text-[#A1A1AA]">Initial Budget</span>
                 </div>
                 <div className="text-3xl font-data font-bold text-white">
-                  ${summary?.initial_budget?.toLocaleString() || 0}
+                  ${(summary?.initial_budget ?? 0).toLocaleString()}
                 </div>
               </CardContent>
             </Card>
@@ -178,7 +178,7 @@ const PortfolioDashboard = ({ embedded = false }) => {
                   <span className="text-sm text-[#A1A1AA]">Current Value</span>
                 </div>
                 <div className="text-3xl font-data font-bold text-white">
-                  ${summary?.current_value?.toLocaleString() || 0}
+                  ${(summary?.current_value ?? 0).toLocaleString()}
                 </div>
               </CardContent>
             </Card>
