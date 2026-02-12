@@ -41,11 +41,23 @@ async def get_indicator_performance(
 ):
     """Get performance analysis of technical indicators"""
     try:
-        indicators = await learning_engine.get_best_performing_indicators()
-        return {
-            "indicators": indicators,
-            "count": len(indicators)
-        }
+        # Add timeout to prevent hanging
+        import asyncio
+        try:
+            indicators = await asyncio.wait_for(
+                learning_engine.get_best_performing_indicators(),
+                timeout=5.0
+            )
+            return {
+                "indicators": indicators,
+                "count": len(indicators)
+            }
+        except asyncio.TimeoutError:
+            return {
+                "indicators": [],
+                "count": 0,
+                "note": "Data loading in progress. Refresh in a few seconds."
+            }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
