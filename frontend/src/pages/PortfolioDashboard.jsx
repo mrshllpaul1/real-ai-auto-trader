@@ -366,11 +366,11 @@ const PortfolioDashboard = ({ embedded = false }) => {
                                   <div className="bg-[#1F1F1F] border border-[#333] p-3 rounded-lg shadow-xl">
                                     <p className="text-[#A1A1AA] text-sm">{label}</p>
                                     <p className="text-white font-bold">
-                                      Value: ${payload[0].value?.toFixed(2)}
+                                      Value: ${(payload[0]?.value ?? 0).toFixed(2)}
                                     </p>
-                                    {payload[0].payload.pnl !== undefined && (
+                                    {payload[0]?.payload?.pnl != null && (
                                       <p className={payload[0].payload.pnl >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}>
-                                        P&L: {payload[0].payload.pnl >= 0 ? '+' : ''}${payload[0].payload.pnl?.toFixed(2)}
+                                        P&L: {payload[0].payload.pnl >= 0 ? '+' : ''}${(payload[0].payload.pnl ?? 0).toFixed(2)}
                                       </p>
                                     )}
                                   </div>
