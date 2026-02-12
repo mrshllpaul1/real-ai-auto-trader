@@ -149,12 +149,13 @@ const AdaptiveStrategy = ({ embedded = false }) => {
     try {
       if (isMonitoring) {
         await api.post('/adaptive-strategy/monitoring/stop');
+        await setMonitoringState(false);
         toast.info('Adaptive monitoring stopped');
       } else {
         await api.post('/adaptive-strategy/monitoring/start');
+        await setMonitoringState(true);
         toast.success('Adaptive monitoring started');
       }
-      setIsMonitoring(!isMonitoring);
     } catch (error) {
       toast.error('Failed to toggle monitoring');
     }
