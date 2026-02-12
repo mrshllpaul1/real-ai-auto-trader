@@ -500,8 +500,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Web3 Wallet and AI Explainability APIs Testing" # COMPLETED - All new APIs tested and working
-  stuck_tasks: []
+    - "Comprehensive End-to-End Frontend Testing - Tethys AI Crypto Trading Platform" # COMPLETED - All frontend features tested and working
+  stuck_tasks: 
+    - "WebSocket Connection Fixes Testing" # Persistent WebSocket issues despite multiple fix attempts
   test_all: false
   test_priority: "high_first"
 
