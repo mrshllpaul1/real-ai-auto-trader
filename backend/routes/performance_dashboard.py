@@ -429,28 +429,3 @@ async def get_pnl_chart_data(days: int = Query(30, ge=1, le=365)):
             "message": "Error fetching P&L data. Please try again.",
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
-
-
-def _generate_sample_pnl_data(days: int) -> list:
-    """Generate sample P&L data for visualization when no real data exists"""
-    import random
-    from datetime import timedelta
-    
-    data = []
-    cumulative = 0
-    base_date = datetime.now(timezone.utc) - timedelta(days=days)
-    
-    for i in range(days):
-        date = (base_date + timedelta(days=i)).strftime("%Y-%m-%d")
-        # Random daily P&L between -50 and +80 (slight positive bias)
-        daily_pnl = random.uniform(-50, 80)
-        cumulative += daily_pnl
-        data.append({
-            "date": date,
-            "pnl": round(daily_pnl, 2),
-            "cumulative_pnl": round(cumulative, 2),
-            "trades": random.randint(0, 5),
-            "volume": round(random.uniform(100, 1000), 2)
-        })
-    
-    return data
