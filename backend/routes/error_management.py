@@ -344,7 +344,7 @@ async def debug_endpoint(endpoint_path: str, db = Depends(get_database)):
     Get debug information for a specific endpoint.
     """
     try:
-        if not db:
+        if db is None:
             return {"message": "Database not available"}
         
         # Get recent errors for this endpoint
