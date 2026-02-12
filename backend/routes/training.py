@@ -1269,9 +1269,11 @@ async def train_individual_model(
             await progress_manager.fail_task(task_id, str(e))
     
     # Use asyncio.create_task for truly non-blocking background execution
+    logger.info(f"[train-model] Creating background task for {task_id}")
     asyncio.create_task(train_model_with_progress())
+    logger.info(f"[train-model] Background task created, returning response")
     
-    return {
+    response_data = {
         "status": "training_started",
         "task_id": task_id,
         "model_name": model_name,
@@ -1279,6 +1281,8 @@ async def train_individual_model(
         "message": f"Training {model_name} model in background. Check /training-progress/task/{task_id} for updates.",
         "progress_endpoint": f"/api/training-progress/task/{task_id}"
     }
+    logger.info(f"[train-model] Returning: {response_data}")
+    return response_data
 
 
 @router.get("/model-status/{model_name}")
