@@ -210,6 +210,15 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import system state routes: {e}")
 
+# Import and include error management routes
+try:
+    from routes.error_management import router as error_management_router, set_db as set_error_db
+    set_error_db(db)
+    app.include_router(error_management_router, prefix="/api")
+    logger.info("✅ Error management routes registered")
+except ImportError as e:
+    logger.warning(f"Could not import error management routes: {e}")
+
 # Add middleware in correct order (last added = first executed)
 # 1. Security Headers (outermost - first to execute)
 try:
