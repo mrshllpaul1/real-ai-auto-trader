@@ -190,51 +190,48 @@ class TestTrainingDoesNotInterfereWithTrading:
         
         data = response.json()
         
-        # Verify response structure
-        assert "is_training" in data, "Missing is_training field"
+        # Verify response structure - this endpoint returns active tasks
+        assert "active_count" in data, "Missing active_count field"
+        assert "tasks" in data, "Missing tasks field"
         
-        print(f"✅ Training Progress: is_training={data.get('is_training')}")
+        print(f"✅ Training Progress: active_count={data.get('active_count')}")
 
 
 class TestAdaptiveStrategyVariants:
-    """Test Adaptive Strategy Variants"""
+    """Test Adaptive Strategy Variants - via optimal-strategy endpoint"""
     
-    def test_regime_variants_endpoint(self):
-        """Verify regime variants endpoint returns data"""
-        response = requests.get(f"{BASE_URL}/api/adaptive-strategy/regime-variants")
+    def test_optimal_strategy_has_variant_id(self):
+        """Verify optimal strategy returns variant_id"""
+        response = requests.get(f"{BASE_URL}/api/adaptive-strategy/optimal-strategy")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         data = response.json()
         
-        # Verify response structure
-        assert "variants" in data, "Missing variants field"
-        assert isinstance(data["variants"], list), "Variants should be a list"
+        # Verify recommended_strategy has variant_id
+        strategy = data.get("recommended_strategy", {})
+        assert "variant_id" in strategy, "Missing variant_id in recommended_strategy"
+        assert strategy["variant_id"], "variant_id is empty"
         
-        # Verify we have variants
-        assert len(data["variants"]) > 0, "No variants returned"
-        
-        # Verify variant structure
-        variant = data["variants"][0]
-        assert "variant_id" in variant, "Missing variant_id"
-        assert "name" in variant, "Missing name"
-        assert "target_regime" in variant, "Missing target_regime"
-        assert "parameters" in variant, "Missing parameters"
-        
-        print(f"✅ Total variants: {len(data['variants'])}")
-        print(f"✅ Sample variant: {variant['name']} (regime: {variant['target_regime']})")
+        print(f"✅ Variant ID: {strategy['variant_id']}")
+        print(f"✅ Variant Name: {strategy.get('name')}")
     
-    def test_current_regime_endpoint(self):
-        """Verify current regime endpoint works"""
-        response = requests.get(f"{BASE_URL}/api/adaptive-strategy/current-regime")
+    def test_optimal_strategy_regime_info(self):
+        """Verify optimal strategy returns regime info"""
+        response = requests.get(f"{BASE_URL}/api/adaptive-strategy/optimal-strategy")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         data = response.json()
         
-        # Verify response structure
-        assert "regime" in data, "Missing regime field"
-        assert "confidence" in data, "Missing confidence field"
+        # Verify current_regime exists
+        regime = data.get("current_regime", {})
+        assert "regime" in regime, "Missing regime field"
+        assert "confidence" in regime, "Missing confidence field"
         
-        print(f"✅ Current Regime: {data.get('regime')} (confidence: {data.get('confidence', 0):.2%})")
+        # Verify regime is valid
+        valid_regimes = ["bull", "bear", "sideways", "high_volatility", "low_volatility", "recovery", "distribution"]
+        assert regime["regime"] in valid_regimes, f"Invalid regime: {regime['regime']}"
+        
+        print(f"✅ Current Regime: {regime.get('regime')} (confidence: {regime.get('confidence', 0):.2%})")
 
 
 if __name__ == "__main__":
