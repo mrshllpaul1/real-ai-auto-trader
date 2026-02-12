@@ -2230,6 +2230,21 @@ class AdaptiveStrategyService:
     
     async def get_adaptation_status(self) -> Dict[str, Any]:
         """Get current adaptation status"""
+        # Check persisted state if not running in memory
+        if not self.is_monitoring:
+            try:
+                from services.state_persistence import get_state_persistence
+                persistence = get_state_persistence(self.db)
+                if persistence:
+                    state = await persistence.get_state("adaptive_monitoring")
+                    if state and state.get("is_running"):
+                        # State says we should be running - restart if needed
+                        self.is_monitoring = True
+                        self._adaptation_task = asyncio.create_task(self._adaptation_loop())
+                        logger.info("🔄 Restored adaptive monitoring from persisted state")
+            except Exception as e:
+                logger.warning(f"Could not check persisted state: {e}")
+        
         return {
             "is_monitoring": self.is_monitoring,
             "current_regime": asdict(self.current_regime) if self.current_regime else None,
