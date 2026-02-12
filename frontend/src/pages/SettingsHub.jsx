@@ -3,7 +3,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { 
-  Settings as SettingsIcon, Key, Shield, MessageCircle, BookOpen, Layout
+  Settings as SettingsIcon, Key, Shield, MessageCircle, BookOpen, Layout,
+  Volume2, Mail, Share2
 } from 'lucide-react';
 import { 
   Breadcrumb, 
@@ -22,8 +23,11 @@ const TelegramNotifications = lazy(() => import('./TelegramNotifications'));
 const TradingJournal = lazy(() => import('./TradingJournal'));
 const Guide = lazy(() => import('./Guide'));
 const DashboardCustomization = lazy(() => import('./DashboardCustomization'));
+const SoundSettings = lazy(() => import('./SoundSettings'));
+const EmailDigest = lazy(() => import('./EmailDigest'));
+const PortfolioShare = lazy(() => import('./PortfolioShare'));
 
-const TABS = ['settings', 'setup', 'budget', 'telegram', 'journal', 'guide', 'customize'];
+const TABS = ['settings', 'setup', 'budget', 'telegram', 'journal', 'sounds', 'email', 'share', 'guide', 'customize'];
 
 const TAB_LABELS = {
   'settings': 'Settings',
@@ -31,6 +35,9 @@ const TAB_LABELS = {
   'budget': 'Budget',
   'telegram': 'Telegram',
   'journal': 'Journal',
+  'sounds': 'Sound Alerts',
+  'email': 'Email Digest',
+  'share': 'Portfolio Share',
   'guide': 'Guide',
   'customize': 'Customize'
 };
@@ -41,8 +48,11 @@ const TAB_CONFIG = [
   { value: 'budget', icon: Shield, label: 'Budget', color: 'green' },
   { value: 'telegram', icon: MessageCircle, label: 'Telegram', color: 'blue' },
   { value: 'journal', icon: BookOpen, label: 'Journal', color: 'purple' },
+  { value: 'sounds', icon: Volume2, label: 'Sounds', color: 'emerald' },
+  { value: 'email', icon: Mail, label: 'Email', color: 'orange' },
+  { value: 'share', icon: Share2, label: 'Share', color: 'pink' },
   { value: 'guide', icon: BookOpen, label: 'Guide', color: 'cyan' },
-  { value: 'customize', icon: Layout, label: 'Customize', color: 'pink' },
+  { value: 'customize', icon: Layout, label: 'Customize', color: 'rose' },
 ];
 
 // Memoized tab trigger for performance
