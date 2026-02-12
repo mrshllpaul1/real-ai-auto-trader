@@ -18,7 +18,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Any, Optional
 
 # Use production URL from environment
-BACKEND_URL = "https://code-improver-71.preview.emergentagent.com/api"
+BACKEND_URL = "https://filecheck-4.preview.emergentagent.com/api"
 print(f"🔗 Testing Hardened Hidden Gem Prediction at: {BACKEND_URL}")
 
 class HardenedGemTester:
