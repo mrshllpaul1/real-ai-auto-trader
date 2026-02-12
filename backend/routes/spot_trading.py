@@ -1164,7 +1164,7 @@ async def sync_trade_history(
     
     # Get database connection for trade_history collection
     from server import db as server_db
-    trade_history_collection = server_db["trade_history"] if server_db else None
+    trade_history_collection = server_db["trade_history"] if server_db is not None else None
     
     for trade in all_trades:
         try:
