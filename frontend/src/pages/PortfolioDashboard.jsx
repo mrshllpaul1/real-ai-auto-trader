@@ -265,12 +265,12 @@ const PortfolioDashboard = ({ embedded = false }) => {
                                 const data = payload[0].payload;
                                 return (
                                   <div className="bg-[#1F1F1F] border border-[#333] p-3 rounded-lg shadow-xl">
-                                    <p className="text-white font-bold">{data.name}</p>
-                                    <p className="text-[#A1A1AA]">${data.value?.toFixed(2)}</p>
-                                    <p className="text-[#9D00FF]">{data.percentage?.toFixed(1)}%</p>
-                                    {data.pnl_pct !== 0 && (
+                                    <p className="text-white font-bold">{data?.name || 'Unknown'}</p>
+                                    <p className="text-[#A1A1AA]">${(data?.value ?? 0).toFixed(2)}</p>
+                                    <p className="text-[#9D00FF]">{(data?.percentage ?? 0).toFixed(1)}%</p>
+                                    {data?.pnl_pct != null && data.pnl_pct !== 0 && (
                                       <p className={data.pnl_pct >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}>
-                                        P&L: {data.pnl_pct >= 0 ? '+' : ''}{data.pnl_pct?.toFixed(2)}%
+                                        P&L: {data.pnl_pct >= 0 ? '+' : ''}{(data.pnl_pct ?? 0).toFixed(2)}%
                                       </p>
                                     )}
                                   </div>
