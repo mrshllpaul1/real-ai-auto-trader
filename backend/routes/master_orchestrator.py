@@ -40,7 +40,19 @@ async def get_master_status():
     from services.master_orchestrator import get_master_orchestrator
     
     orchestrator = get_master_orchestrator(_db)
-    return orchestrator.get_status()
+    status = orchestrator.get_status()
+    
+    # Check persisted state
+    try:
+        from services.state_persistence import get_state_persistence
+        persistence = get_state_persistence(_db)
+        if persistence:
+            state = await persistence.get_state("master_orchestrator")
+            status["persisted_running"] = state.get("is_running", False) if state else False
+    except Exception as e:
+        status["persisted_running"] = None
+    
+    return status
 
 
 @router.post("/start")
@@ -54,6 +66,15 @@ async def start_orchestrator(background_tasks: BackgroundTasks):
         return {"status": "already_running", "current": orchestrator.get_status()}
     
     background_tasks.add_task(orchestrator.start)
+    
+    # Persist state
+    try:
+        from services.state_persistence import get_state_persistence
+        persistence = get_state_persistence(_db)
+        if persistence:
+            await persistence.set_state("master_orchestrator", True, metadata={"mode": orchestrator.mode.value})
+    except Exception as e:
+        pass
     
     return {
         "status": "started",
@@ -69,6 +90,15 @@ async def stop_orchestrator():
     
     orchestrator = get_master_orchestrator(_db)
     orchestrator.stop()
+    
+    # Persist state
+    try:
+        from services.state_persistence import get_state_persistence
+        persistence = get_state_persistence(_db)
+        if persistence:
+            await persistence.set_state("master_orchestrator", False)
+    except Exception as e:
+        pass
     
     return {"status": "stopped"}
 
