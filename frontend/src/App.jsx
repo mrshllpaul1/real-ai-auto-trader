@@ -5,10 +5,10 @@ import ErrorBoundary, { PageErrorBoundary } from "./components/ErrorBoundary";
 import { PageLoadingSkeleton } from "./components/LoadingSkeleton";
 import KeyboardShortcutsModal from "./components/KeyboardShortcutsModal";
 
-// Hub Pages (lazy loaded for better performance)
-const CommandCenter = lazy(() => import("./pages/CommandCenter"));
-const TradingHub = lazy(() => import("./pages/TradingHub"));
-const AIHub = lazy(() => import("./pages/AIHub"));
+// Hub Pages (lazy loaded with prefetch hints)
+const CommandCenter = lazy(() => import(/* webpackPrefetch: true */ "./pages/CommandCenter"));
+const TradingHub = lazy(() => import(/* webpackPrefetch: true */ "./pages/TradingHub"));
+const AIHub = lazy(() => import(/* webpackPrefetch: true */ "./pages/AIHub"));
 const BacktestHub = lazy(() => import("./pages/BacktestHub"));
 const NewsHub = lazy(() => import("./pages/NewsHub"));
 const ScannerHub = lazy(() => import("./pages/ScannerHub"));
@@ -38,7 +38,19 @@ import { motion } from "framer-motion";
 import { TradingModeProvider } from "./context/TradingModeContext";
 import { LoadingProvider } from "./context/LoadingContext";
 
-// Suspense wrapper with loading skeleton
+// Prefetch commonly used routes on idle
+const prefetchRoutes = () => {
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(() => {
+      // Prefetch most common pages during idle time
+      import("./pages/TradingHub");
+      import("./pages/AIHub");
+      import("./pages/SettingsHub");
+    }, { timeout: 2000 });
+  }
+};
+
+// Suspense wrapper with optimized loading skeleton
 const SuspenseWrapper = ({ children }) => (
   <Suspense fallback={<PageLoadingSkeleton />}>
     {children}
