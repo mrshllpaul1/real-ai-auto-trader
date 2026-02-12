@@ -82,8 +82,10 @@ const TethysDashboard = () => {
         method: 'POST'
       });
       const data = await res.json();
+      await setTethysTradingState(true, { interval: 60 });
       toast.success('Trading loop started');
       fetchData();
+      refreshTethysState();
     } catch (error) {
       toast.error('Failed to start trading');
     }
@@ -92,8 +94,10 @@ const TethysDashboard = () => {
   const stopTrading = async () => {
     try {
       await fetch(`${API_URL}/api/tethys-trading/stop`, { method: 'POST' });
+      await setTethysTradingState(false);
       toast.success('Trading stopped');
       fetchData();
+      refreshTethysState();
     } catch (error) {
       toast.error('Failed to stop trading');
     }
