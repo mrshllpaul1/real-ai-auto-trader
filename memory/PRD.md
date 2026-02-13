@@ -5,6 +5,21 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ---
 
+## Session Update - Feb 13, 2026 (LATEST)
+
+### 🔴 KNOWN ISSUE: Adaptive Strategy Page CDN Cache
+**Status:** Code fix applied, waiting for CDN cache expiration
+**Issue:** `PageLoadingSkeleton is not defined` error on `/ai?tab=adaptive`
+**Root Cause:** CDN/proxy caching stale JavaScript files (timestamp: `t=1771003749060`)
+**Fix Applied:**
+- Updated import in `/app/frontend/src/pages/AdaptiveStrategy.jsx`
+- Changed from `LoadingSkeletons` (plural) to `LoadingSkeleton` (singular)
+- Local server serving correct code (verified via localhost:3000)
+- CDN serving cached old code (beyond our control)
+**Resolution:** Wait for CDN cache to expire (may take 5-15 minutes) or contact platform support
+
+---
+
 ## Session Update - Feb 13, 2026 (COMPLETE)
 
 ### ✅ AI Predictions Added to Trading Pages (Feb 13, 2026)
