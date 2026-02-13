@@ -11,7 +11,7 @@ import json
 from typing import Dict, List, Tuple
 
 # Backend URL from environment
-BACKEND_URL = "https://smart-trade-ai-68.preview.emergentagent.com/api"
+BACKEND_URL = "https://launch-crypto-2.preview.emergentagent.com/api"
 
 class OptimizedBackendTester:
     def __init__(self):

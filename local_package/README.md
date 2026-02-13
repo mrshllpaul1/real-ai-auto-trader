@@ -156,4 +156,4 @@ TWELVE_DATA_API_KEY=your_key
 
 ## Support
 
-Test URL: https://smart-trade-ai-68.preview.emergentagent.com
+Test URL: https://launch-crypto-2.preview.emergentagent.com
