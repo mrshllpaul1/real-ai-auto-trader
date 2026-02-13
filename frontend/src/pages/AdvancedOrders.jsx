@@ -195,6 +195,10 @@ const AdvancedOrders = ({ embedded = false }) => {
     : ['BTC/USD', 'ETH/USD', 'SOL/USD', 'ARB/USD', 'DOGE/USD'];
   const frequencies = ['hourly', 'daily', 'weekly', 'monthly'];
 
+  if (loading) {
+    return <PageLoadingSkeleton />;
+  }
+
   return (
     <div className="min-h-screen bg-[#0A0A0A] p-4 md:p-6" data-testid="advanced-orders-page">
       {/* Header */}
