@@ -10,7 +10,7 @@ class RiskManager:
         
         if not settings:
             # Default risk settings
-            settings = {
+            default_settings = {
                 "user_id": user_id,
                 "max_investment_per_trade": 1000,  # USD
                 "stop_loss_percentage": 5,  # %
@@ -19,7 +19,9 @@ class RiskManager:
                 "max_portfolio_allocation": 20,  # % per coin
                 "risk_level": "medium"  # low, medium, high
             }
-            await self.db.risk_settings.insert_one(settings)
+            await self.db.risk_settings.insert_one(default_settings)
+            # Return a clean copy without _id
+            settings = {k: v for k, v in default_settings.items() if k != "_id"}
         
         return settings
     
