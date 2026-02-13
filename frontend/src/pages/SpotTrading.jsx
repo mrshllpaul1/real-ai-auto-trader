@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight,
   RefreshCw, Search, Zap, Brain, AlertTriangle, CheckCircle, XCircle,
-  ArrowRight, BarChart2, Activity, Clock, ChevronDown, ChevronUp
+  ArrowRight, BarChart2, Activity, Clock, ChevronDown, ChevronUp, Calculator
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -12,6 +12,7 @@ import {
   CardSkeleton,
   PageLoadingSkeleton
 } from '../components/LoadingSkeletons';
+import { AIPositionSizingCard } from '../components/AIPositionSizing';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '';
 
