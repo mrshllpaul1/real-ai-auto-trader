@@ -319,6 +319,7 @@ const Sidebar = () => {
     { path: '/news', icon: Newspaper, label: 'News & Events' },
     { path: '/scanner', icon: Radar, label: 'Scanner & Social' },
     { path: '/defi', icon: Sprout, label: 'DeFi' },
+    { path: '/error-analytics', icon: Bug, label: 'Error Analytics' },
     { path: '/settings', icon: Settings, label: 'Settings' },
   ];
 
