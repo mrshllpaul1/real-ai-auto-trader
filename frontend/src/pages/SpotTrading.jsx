@@ -9,7 +9,8 @@ import {
   StatsGridSkeleton, 
   TradingPanelSkeleton, 
   TableSkeleton, 
-  CardSkeleton 
+  CardSkeleton,
+  PageLoadingSkeleton
 } from '../components/LoadingSkeletons';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '';
