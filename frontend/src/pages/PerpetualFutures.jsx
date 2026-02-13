@@ -366,27 +366,27 @@ const PerpetualFutures = ({ embedded = false }) => {
                               {pos.leverage}x {pos.side.toUpperCase()}
                             </span>
                           </div>
-                          <p className="text-sm text-[#A1A1AA]">Size: ${pos.(size_usd ?? 0).toLocaleString()}</p>
+                          <p className="text-sm text-[#A1A1AA]">Size: ${(pos?.size_usd ?? 0).toLocaleString()}</p>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                         <div>
                           <p className="text-[#A1A1AA]">Entry</p>
-                          <p className="text-white font-medium">${pos.(entry_price ?? 0).toLocaleString()}</p>
+                          <p className="text-white font-medium">${(pos?.entry_price ?? 0).toLocaleString()}</p>
                         </div>
                         <div>
                           <p className="text-[#A1A1AA]">Mark</p>
-                          <p className="text-white font-medium">${pos.(mark_price ?? 0).toLocaleString()}</p>
+                          <p className="text-white font-medium">${(pos?.mark_price ?? 0).toLocaleString()}</p>
                         </div>
                         <div>
                           <p className="text-[#A1A1AA]">Liq. Price</p>
-                          <p className="text-red-400 font-medium">${pos.(liquidation_price ?? 0).toLocaleString()}</p>
+                          <p className="text-red-400 font-medium">${(pos?.liquidation_price ?? 0).toLocaleString()}</p>
                         </div>
                         <div>
                           <p className="text-[#A1A1AA]">PnL</p>
                           <p className={`font-bold ${pos.unrealized_pnl >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
-                            ${pos.(unrealized_pnl ?? 0).toLocaleString()} ({pos.roe}%)
+                            ${(pos?.unrealized_pnl ?? 0).toLocaleString()} ({pos.roe}%)
                           </p>
                         </div>
                         <div>
