@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight,
   RefreshCw, Search, Zap, Brain, AlertTriangle, CheckCircle, XCircle,
-  ArrowRight, BarChart2, Activity, Clock, ChevronDown, ChevronUp, Calculator
+  ArrowRight, BarChart2, Activity, Clock, ChevronDown, ChevronUp, Calculator,
+  Lightbulb
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -13,6 +14,7 @@ import {
   PageLoadingSkeleton
 } from '../components/LoadingSkeletons';
 import { AIPositionSizingCard } from '../components/AIPositionSizing';
+import { AIConfidenceExplanation } from '../components/AIConfidenceExplanation';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '';
 
