@@ -119,6 +119,17 @@ const AIPortfolioSection = () => {
 
   // Not initialized - show setup
   if (!portfolio?.initialized) {
+    const presetAmounts = [100, 250, 500, 1000, 2500, 5000, 10000];
+    
+    const handleAmountChange = (value) => {
+      const numValue = parseFloat(value.replace(/[^0-9.]/g, '')) || 0;
+      setInitialCapital(Math.max(0, numValue));
+    };
+    
+    const incrementAmount = (delta) => {
+      setInitialCapital(prev => Math.max(100, prev + delta));
+    };
+    
     return (
       <div className="space-y-4">
         <div className="p-4 bg-[#121212] rounded-lg border border-[#9D00FF]/30">
@@ -129,23 +140,104 @@ const AIPortfolioSection = () => {
           <p className="text-sm text-[#A1A1AA] mb-4">
             Allocate funds for AI to manage autonomously with real Kraken trades.
           </p>
-          <div className="flex gap-3">
-            <Input
-              type="number"
-              value={initialCapital}
-              onChange={(e) => setInitialCapital(Number(e.target.value))}
-              className="bg-[#0A0A0A] border-[#1F1F1F] text-white w-32"
-              min={100}
-              data-testid="initial-capital-input"
-            />
+          
+          {/* Amount Input Section */}
+          <div className="space-y-4">
+            <Label className="text-sm text-[#A1A1AA]">Investment Amount (USD)</Label>
+            
+            {/* Main Input with +/- Controls */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => incrementAmount(-100)}
+                className="h-10 w-10 bg-[#0A0A0A] border-[#1F1F1F] hover:bg-[#1F1F1F] text-white"
+                data-testid="decrease-amount-btn"
+              >
+                <Minus size={16} />
+              </Button>
+              
+              <div className="relative flex-1">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A1A1AA]" size={18} />
+                <Input
+                  type="text"
+                  value={initialCapital.toLocaleString()}
+                  onChange={(e) => handleAmountChange(e.target.value)}
+                  className="bg-[#0A0A0A] border-[#1F1F1F] text-white text-xl font-bold pl-10 pr-4 h-12 text-center"
+                  placeholder="Enter amount"
+                  data-testid="initial-capital-input"
+                />
+              </div>
+              
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => incrementAmount(100)}
+                className="h-10 w-10 bg-[#0A0A0A] border-[#1F1F1F] hover:bg-[#1F1F1F] text-white"
+                data-testid="increase-amount-btn"
+              >
+                <Plus size={16} />
+              </Button>
+            </div>
+            
+            {/* Preset Amount Buttons */}
+            <div className="flex flex-wrap gap-2">
+              {presetAmounts.map((amount) => (
+                <Button
+                  key={amount}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setInitialCapital(amount)}
+                  className={`${
+                    initialCapital === amount 
+                      ? 'bg-[#9D00FF] border-[#9D00FF] text-white' 
+                      : 'bg-[#0A0A0A] border-[#1F1F1F] text-[#A1A1AA] hover:text-white hover:border-[#9D00FF]'
+                  }`}
+                  data-testid={`preset-${amount}-btn`}
+                >
+                  ${amount.toLocaleString()}
+                </Button>
+              ))}
+            </div>
+            
+            {/* Slider for fine-tuning */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs text-[#A1A1AA]">
+                <span>$100</span>
+                <span>$10,000+</span>
+              </div>
+              <Slider
+                value={[Math.min(initialCapital, 10000)]}
+                onValueChange={([val]) => setInitialCapital(val)}
+                min={100}
+                max={10000}
+                step={100}
+                className="w-full"
+                data-testid="amount-slider"
+              />
+            </div>
+            
+            {/* Custom Amount Input for values > 10000 */}
+            {initialCapital > 10000 && (
+              <p className="text-xs text-[#9D00FF]">
+                Custom amount: ${initialCapital.toLocaleString()} (use input above for large amounts)
+              </p>
+            )}
+            
+            {/* Initialize Button */}
             <Button 
               onClick={initializePortfolio}
-              className="bg-[#9D00FF] hover:bg-[#7D00CC] text-white"
+              className="w-full bg-[#9D00FF] hover:bg-[#7D00CC] text-white h-12 text-lg font-bold"
+              disabled={initialCapital < 100}
               data-testid="init-ai-btn"
             >
-              <Wallet className="mr-2" size={16} />
-              Initialize ${initialCapital}
+              <Wallet className="mr-2" size={20} />
+              Initialize Portfolio with ${initialCapital.toLocaleString()}
             </Button>
+            
+            {initialCapital < 100 && (
+              <p className="text-xs text-[#FF0055] text-center">Minimum investment: $100</p>
+            )}
           </div>
         </div>
       </div>
