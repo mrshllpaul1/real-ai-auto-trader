@@ -12,7 +12,7 @@ from services.websocket_manager import get_performance_ws_manager
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/performance", tags=["Performance Monitoring"])
+router = APIRouter(prefix="/api/perf-monitor", tags=["Performance Monitoring"])
 
 
 @router.websocket("/ws")
