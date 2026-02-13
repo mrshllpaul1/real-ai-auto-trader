@@ -1,15 +1,16 @@
 /**
  * Performance Monitoring Dashboard
  * Real-time performance metrics, API latency, and system health
+ * With WebSocket support for live updates
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   Activity, Zap, Clock, Server, Database, Cpu, HardDrive,
   Wifi, RefreshCw, TrendingUp, TrendingDown, AlertTriangle,
   CheckCircle, XCircle, BarChart3, LineChart as LineChartIcon,
-  Gauge, Timer, Globe, ArrowUp, ArrowDown, Minus
+  Gauge, Timer, Globe, ArrowUp, ArrowDown, Minus, WifiOff
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,68 @@ const STATUS_COLORS = {
   unknown: '#666666',
 };
 
+// WebSocket hook for real-time performance metrics
+const usePerformanceWebSocket = (onMetrics) => {
+  const [wsConnected, setWsConnected] = useState(false);
+  const wsRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    const API_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '';
+    const wsUrl = API_URL.replace('https://', 'wss://').replace('http://', 'ws://') + '/api/performance/ws';
+    
+    const connect = () => {
+      try {
+        wsRef.current = new WebSocket(wsUrl);
+        
+        wsRef.current.onopen = () => {
+          console.log('Performance WebSocket connected');
+          setWsConnected(true);
+        };
+        
+        wsRef.current.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'performance_metrics' && data.data) {
+              onMetrics(data.data);
+            }
+          } catch (e) {
+            // Ignore non-JSON messages (heartbeat, pong)
+          }
+        };
+        
+        wsRef.current.onclose = () => {
+          console.log('Performance WebSocket closed');
+          setWsConnected(false);
+          // Reconnect after 5 seconds
+          reconnectTimeoutRef.current = setTimeout(connect, 5000);
+        };
+        
+        wsRef.current.onerror = (error) => {
+          console.error('Performance WebSocket error:', error);
+          setWsConnected(false);
+        };
+      } catch (e) {
+        console.error('WebSocket connection failed:', e);
+        setWsConnected(false);
+      }
+    };
+    
+    connect();
+    
+    return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [onMetrics]);
+  
+  return wsConnected;
+};
+
 const PerformanceDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState(null);
@@ -45,6 +108,14 @@ const PerformanceDashboard = () => {
   const [dbStats, setDbStats] = useState(null);
   const [timeRange, setTimeRange] = useState('1h');
   const [activeTab, setActiveTab] = useState('overview');
+  
+  // WebSocket for real-time metrics
+  const handleWsMetrics = useCallback((newMetrics) => {
+    setMetrics(newMetrics);
+    setLoading(false);
+  }, []);
+  
+  const wsConnected = usePerformanceWebSocket(handleWsMetrics);
 
   // Fetch performance metrics
   const fetchMetrics = useCallback(async () => {
