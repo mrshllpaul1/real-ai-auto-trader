@@ -409,7 +409,6 @@ const CommandCenter = () => {
         await setAutopilotState(true);
       }
       fetchData();
-      refreshAutopilotState();
       toast.success(isCurrentlyActive ? 'Autopilot stopped' : 'Autopilot started');
     } catch (error) {
       toast.error('Failed to toggle autopilot');
@@ -427,7 +426,6 @@ const CommandCenter = () => {
         await setOrchestratorState(true);
       }
       fetchData();
-      refreshOrchestratorState();
       toast.success(isCurrentlyActive ? 'Orchestrator stopped' : 'Orchestrator started');
     } catch (error) {
       toast.error('Failed to toggle orchestrator');
