@@ -7,6 +7,16 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ## Session Update - Feb 13, 2026 (LATEST)
 
+### ✅ AI Portfolio Manager Amount Selector Enhanced (Feb 13, 2026)
+**File:** `/app/frontend/src/components/AIPortfolioSection.jsx`
+**Features Added:**
+- Manual text input with $ prefix for typing any custom amount
+- +/- buttons to increment/decrement by $100
+- Preset quick-select buttons: $100, $250, $500, $1,000, $2,500, $5,000, $10,000
+- Slider for fine-tuning amounts between $100-$10,000
+- Input validation with $100 minimum requirement
+- Number formatting with commas for readability
+
 ### 🔴 KNOWN ISSUE: Adaptive Strategy Page CDN Cache
 **Status:** Code fix applied, waiting for CDN cache expiration
 **Issue:** `PageLoadingSkeleton is not defined` error on `/ai?tab=adaptive`
