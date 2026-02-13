@@ -13,8 +13,13 @@ import toast from '../utils/toast';
 import { 
   Mail, Clock, Calendar, Send, Eye, History, 
   TrendingUp, PieChart, Bot, Newspaper, Save, RefreshCcw,
-  CheckCircle, AlertCircle, AlertTriangle, Key, Zap, Bell, Trash2
+  CheckCircle, AlertCircle, AlertTriangle, Key, Zap, Bell, Trash2, BellRing
 } from 'lucide-react';
+import { 
+  requestNotificationPermission, 
+  isPushSupported, 
+  showLocalNotification 
+} from '../services/pushNotifications';
 
 const EmailDigest = ({ embedded = false }) => {
   const [settings, setSettings] = useState({
