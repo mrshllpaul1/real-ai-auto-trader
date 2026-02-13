@@ -97,6 +97,9 @@ const OptionsTrading = ({ embedded = false }) => {
   };
 
   const filteredOptions = chain?.options?.filter(opt => opt.expiry === selectedExpiry) || [];
+  
+  // AI Prediction for selected symbol
+  const { prediction: aiPrediction, loading: aiLoading, refetch: refetchAi } = useAIPrediction(selectedSymbol);
 
   if (loading) {
     return <PageLoadingSkeleton />;
