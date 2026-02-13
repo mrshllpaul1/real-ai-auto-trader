@@ -256,8 +256,13 @@ const PerpetualFutures = ({ embedded = false }) => {
                     <th className="text-left p-4 text-[#A1A1AA] text-sm font-medium">Market</th>
                     <th className="text-right p-4 text-[#A1A1AA] text-sm font-medium">Mark Price</th>
                     <th className="text-right p-4 text-[#A1A1AA] text-sm font-medium">24h Change</th>
+                    <th className="text-center p-4 text-[#A1A1AA] text-sm font-medium">
+                      <div className="flex items-center justify-center gap-1">
+                        <Brain size={14} className="text-[#9D00FF]" />
+                        AI Signal
+                      </div>
+                    </th>
                     <th className="text-right p-4 text-[#A1A1AA] text-sm font-medium">Volume</th>
-                    <th className="text-right p-4 text-[#A1A1AA] text-sm font-medium">Open Interest</th>
                     <th className="text-right p-4 text-[#A1A1AA] text-sm font-medium">Funding</th>
                     <th className="text-right p-4 text-[#A1A1AA] text-sm font-medium">Max Lev</th>
                     <th className="text-right p-4 text-[#A1A1AA] text-sm font-medium">Action</th>
