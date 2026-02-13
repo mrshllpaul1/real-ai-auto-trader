@@ -1,0 +1,14 @@
+artifact_uri: file:///app/backend/mlruns/377898301508199054/9a817f18f0ab4e65a22d20c75a072552/artifacts
+end_time: 1770600888704
+entry_point_name: ''
+experiment_id: '377898301508199054'
+lifecycle_stage: active
+run_id: 9a817f18f0ab4e65a22d20c75a072552
+run_name: train_BTC_USD_50ep
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1770600888325
+status: 4
+tags: []
+user_id: root

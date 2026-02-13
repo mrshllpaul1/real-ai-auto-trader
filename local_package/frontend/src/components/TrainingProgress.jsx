@@ -1,0 +1,288 @@
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Card, CardContent } from './ui/card';
+import { Progress } from './ui/progress';
+import { Button } from './ui/button';
+import { 
+  Brain, CheckCircle, XCircle, Clock, Loader2,
+  ChevronDown, ChevronUp, Wifi, WifiOff, Square, StopCircle
+} from 'lucide-react';
+import api from '../services/api';
+import { toast } from 'sonner';
+
+/**
+ * Training Progress Monitor Component
+ * 
+ * Shows real-time progress of long-running training tasks.
+ * Uses HTTP polling for reliable updates in deployment environment.
+ * Can be used as a floating notification or embedded component.
+ */
+const TrainingProgress = ({ 
+  taskId = null, 
+  embedded = false,
+  onComplete = null,
+  pollInterval = 5000  // HTTP polling interval for real-time updates
+}) => {
+  const [task, setTask] = useState(null);
+  const [activeTasks, setActiveTasks] = useState([]);
+  const [expanded, setExpanded] = useState(true);
+  const pollingInitializedRef = useRef(false);
+
+  // HTTP polling is used for reliable real-time updates in deployment
+  // Kubernetes ingress doesn't support WebSocket protocol upgrade
+  useEffect(() => {
+    if (!pollingInitializedRef.current) {
+      console.info('[TrainingProgress] Using HTTP polling mode for updates');
+      pollingInitializedRef.current = true;
+    }
+  }, []);
+
+  // HTTP polling for reliable real-time updates
+  const fetchActiveTasks = useCallback(async () => {
+    try {
+      const response = await api.get('/training-progress/active');
+      setActiveTasks(response.data.tasks || []);
+    } catch (err) {
+      // Silently fail for active tasks fetch
+    }
+  }, []);
+
+  // Fetch specific task status (fallback)
+  const fetchTaskStatus = useCallback(async () => {
+    if (!taskId) return;
+    try {
+      const response = await api.get(`/training-progress/task/${taskId}`);
+      setTask(response.data);
+      
+      if (response.data.status === 'completed' && onComplete) {
+        onComplete(response.data);
+      }
+    } catch (err) {
+      if (err.response?.status !== 404) {
+        console.error('Error fetching task:', err);
+      }
+    }
+  }, [taskId, onComplete]);
+
+  useEffect(() => {
+    // Initial fetch
+    if (taskId) {
+      fetchTaskStatus();
+    } else {
+      fetchActiveTasks();
+    }
+
+    // HTTP polling for updates
+    const interval = setInterval(() => {
+      if (taskId) {
+        fetchTaskStatus();
+      } else {
+        fetchActiveTasks();
+      }
+    }, pollInterval);
+
+    return () => clearInterval(interval);
+  }, [taskId, fetchTaskStatus, fetchActiveTasks, pollInterval]);
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'running':
+        return <Loader2 className="w-4 h-4 animate-spin text-blue-400" />;
+      case 'completed':
+        return <CheckCircle className="w-4 h-4 text-green-400" />;
+      case 'failed':
+        return <XCircle className="w-4 h-4 text-red-400" />;
+      default:
+        return <Clock className="w-4 h-4 text-gray-400" />;
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'running':
+        return 'border-blue-500/30 bg-blue-500/5';
+      case 'completed':
+        return 'border-green-500/30 bg-green-500/5';
+      case 'failed':
+        return 'border-red-500/30 bg-red-500/5';
+      default:
+        return 'border-gray-500/30 bg-gray-500/5';
+    }
+  };
+
+  const formatDuration = (seconds) => {
+    if (!seconds) return '0s';
+    if (seconds < 60) return `${Math.round(seconds)}s`;
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.round(seconds % 60);
+    return `${mins}m ${secs}s`;
+  };
+
+  const handleStopTask = async (taskId) => {
+    try {
+      await api.post(`/training-progress/stop/${taskId}`);
+      toast.success('Training stopped', {
+        description: 'The training task has been stopped gracefully'
+      });
+      // Remove task from activeTasks
+      setActiveTasks(prev => prev.filter(t => t.task_id !== taskId));
+    } catch (error) {
+      toast.error('Failed to stop training', {
+        description: error.response?.data?.detail || 'Please try again'
+      });
+    }
+  };
+
+  const handleStopAllTasks = async () => {
+    try {
+      await api.post('/training-progress/stop-all');
+      toast.success('All training stopped', {
+        description: 'All training tasks have been stopped'
+      });
+      setActiveTasks([]);
+    } catch (error) {
+      toast.error('Failed to stop training', {
+        description: error.response?.data?.detail || 'Please try again'
+      });
+    }
+  };
+
+  const renderTask = (t) => (
+    <div 
+      key={t.task_id}
+      className={`p-3 rounded-lg border ${getStatusColor(t.status)} transition-all`}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          {getStatusIcon(t.status)}
+          <span className="text-sm font-medium text-white capitalize">
+            {t.task_type?.replace(/-/g, ' ') || 'Training'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-400">
+            {formatDuration(t.duration_seconds)}
+          </span>
+          {t.status === 'running' && (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleStopTask(t.task_id); }}
+              className="p-1 rounded hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors"
+              title="Stop this training"
+            >
+              <Square className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+      </div>
+      
+      {t.status === 'running' && (
+        <>
+          <Progress 
+            value={t.progress} 
+            className="h-2 mb-2 bg-gray-700"
+          />
+          <div className="flex justify-between text-xs text-gray-400">
+            <span>{t.message || 'Processing...'}</span>
+            <span>{t.progress}%</span>
+          </div>
+          {t.current_item && (
+            <div className="text-xs text-gray-500 mt-1">
+              Current: {t.current_item}
+            </div>
+          )}
+          {t.items_processed > 0 && t.total_items > 0 && (
+            <div className="text-xs text-gray-500 mt-1">
+              {t.items_processed} / {t.total_items} items
+            </div>
+          )}
+        </>
+      )}
+      
+      {t.status === 'completed' && (
+        <div className="text-xs text-green-400">
+          ✓ {t.message || 'Completed successfully'}
+        </div>
+      )}
+      
+      {t.status === 'failed' && (
+        <div className="text-xs text-red-400">
+          ✗ {t.error || 'Task failed'}
+        </div>
+      )}
+      
+      {t.status === 'stopped' && (
+        <div className="text-xs text-orange-400">
+          ⏹ {t.message || 'Training stopped'}
+        </div>
+      )}
+    </div>
+  );
+
+  // Single task mode
+  if (taskId && task) {
+    if (embedded) {
+      return renderTask(task);
+    }
+    return (
+      <Card className="bg-[#0a0a0a] border-gray-800">
+        <CardContent className="p-4">
+          {renderTask(task)}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Active tasks mode - floating notification style
+  if (!taskId && activeTasks.length > 0) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50 w-80">
+        <Card className="bg-[#0a0a0a]/95 border-gray-700 backdrop-blur-sm shadow-xl">
+          <CardContent className="p-3">
+            <div 
+              className="flex items-center justify-between cursor-pointer mb-2"
+              onClick={() => setExpanded(!expanded)}
+            >
+              <div className="flex items-center gap-2">
+                <Brain className="w-4 h-4 text-purple-400" />
+                <span className="text-sm font-medium text-white">
+                  Training Progress ({activeTasks.length})
+                </span>
+                {activeTasks.length > 0 ? (
+                  <WifiOff className="w-3 h-3 text-green-400" title="HTTP Polling Active" />
+                ) : (
+                  <WifiOff className="w-3 h-3 text-gray-400" title="HTTP Polling" />
+                )}
+              </div>
+              <div className="flex items-center gap-1">
+                {activeTasks.length > 0 && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleStopAllTasks(); }}
+                    className="px-2 py-1 rounded text-xs bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
+                    title="Stop all training"
+                  >
+                    <StopCircle className="w-3 h-3" />
+                    Stop All
+                  </button>
+                )}
+                {expanded ? (
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                ) : (
+                  <ChevronUp className="w-4 h-4 text-gray-400" />
+                )}
+              </div>
+            </div>
+            
+            {expanded && (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {activeTasks.map(renderTask)}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+export default TrainingProgress;

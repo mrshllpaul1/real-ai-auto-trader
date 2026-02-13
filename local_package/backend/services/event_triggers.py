@@ -1,0 +1,804 @@
+"""
+Custom Event Triggers for Automated Trading
+Monitors news events and executes trades based on user-defined triggers.
+Enhanced with fuzzy matching, synonyms, and reduced false negatives.
+"""
+
+import asyncio
+from datetime import datetime, timezone, timedelta
+from typing import Dict, Any, List, Optional
+from motor.motor_asyncio import AsyncIOMotorDatabase
+import re
+
+
+# Synonym mappings to reduce false negatives
+KEYWORD_SYNONYMS = {
+    # Institutional buyers
+    "microstrategy": ["mstr", "michael saylor", "saylor", "strategy"],
+    "blackrock": ["ibit", "larry fink", "ishares", "blk", "buidl", "tokenize", "tokenization"],
+    "grayscale": ["gbtc", "ethe", "barry silbert", "dcg", "digital currency group"],
+    "tesla": ["elon musk", "tsla", "spacex"],
+    "fidelity": ["fbtc", "wise origin", "fidelity digital"],
+    "vanguard": ["vanguard group", "vanguard fund"],
+    "ark": ["ark invest", "cathie wood", "arkb"],
+    
+    # Regulatory bodies & people
+    "sec": ["securities", "gensler", "enforcement", "regulatory", "securities exchange"],
+    "cftc": ["commodities", "commodity futures"],
+    "trump": ["white house", "administration", "president", "executive order", "trump administration"],
+    "etf": ["exchange traded fund", "spot etf", "bitcoin etf", "eth etf", "crypto etf"],
+    "fomc": ["federal reserve", "fed", "powell", "interest rate", "rate decision", "fed meeting", "rate cut", "rate hike"],
+    
+    # Market events
+    "crash": ["plunge", "dump", "collapse", "tank", "tumble", "freefall", "bloodbath", "selloff", "sell-off"],
+    "rally": ["surge", "pump", "spike", "soar", "moon", "breakout", "rip", "skyrocket"],
+    "halving": ["halvening", "block reward", "mining reward", "bitcoin halving"],
+    "bull": ["bullish", "bull run", "bull market", "uptrend"],
+    "bear": ["bearish", "bear market", "downtrend", "correction"],
+    
+    # Exchange events
+    "bankruptcy": ["insolvent", "bankrupt", "chapter 11", "liquidation", "default"],
+    "hack": ["exploit", "breach", "attack", "stolen", "drained", "compromised", "vulnerability"],
+    "exchange": ["trading platform", "cex", "dex", "crypto exchange"],
+    
+    # Major exchanges
+    "binance": ["cz", "changpeng zhao", "bnb", "binance.us"],
+    "coinbase": ["brian armstrong", "coin", "base"],
+    "kraken": ["jesse powell", "payward"],
+    "ftx": ["sam bankman-fried", "sbf", "alameda"],
+    
+    # Whale movements
+    "whale": ["large holder", "big transfer", "massive", "huge", "giant", "major holder"],
+    "million": ["mln", "mm", "millions"],
+    "billion": ["bln", "bn", "billions"],
+    
+    # Price milestones
+    "ath": ["all-time high", "all time high", "record high", "new high", "highest ever"],
+    "atl": ["all-time low", "all time low", "record low", "lowest"],
+    
+    # Network events
+    "upgrade": ["fork", "update", "hardfork", "hard fork", "softfork", "improvement", "v2", "v3", "mainnet"],
+    "outage": ["down", "halted", "congestion", "offline", "degraded", "network issue"],
+    
+    # Investment types
+    "institutional": ["institution", "hedge fund", "pension", "endowment", "fund", "asset manager"],
+    "purchase": ["buy", "bought", "acquire", "acquired", "accumulate", "add", "accumulating"],
+    "sold": ["sell", "selling", "liquidate", "dump", "offload"],
+    
+    # DeFi & Crypto specific
+    "defi": ["decentralized finance", "yield", "liquidity", "protocol", "tvl"],
+    "nft": ["non-fungible", "collectible", "digital art"],
+    "staking": ["stake", "validator", "delegation", "proof of stake"],
+    "layer": ["l1", "l2", "layer 1", "layer 2", "scaling", "rollup"],
+    "rwa": ["real world assets", "tokenization", "tokenize", "tokenized"],
+    
+    # Sentiment indicators
+    "positive": ["bullish", "optimistic", "growth", "gains", "profit"],
+    "negative": ["bearish", "pessimistic", "loss", "losses", "risk"],
+    
+    # AI & Tech
+    "ai": ["artificial intelligence", "machine learning", "ml", "gpt", "llm", "chatgpt", "nvidia", "gpu"],
+    
+    # Stablecoins
+    "stablecoin": ["usdt", "usdc", "dai", "busd", "tusd", "paxos"],
+    "depeg": ["depegged", "lost peg", "peg", "pegged"],
+    
+    # Countries/Regions
+    "china": ["chinese", "beijing", "prc"],
+    "usa": ["united states", "american", "us government"],
+    "el salvador": ["nayib bukele", "bukele"],
+    
+    # New entrants
+    "partnership": ["partners", "collaboration", "integration", "deal", "agreement", "joins"],
+    "adoption": ["adopts", "accepts", "embraces", "integrates"],
+}
+
+# Confidence score adjustments
+MATCH_CONFIDENCE = {
+    "exact_keyword": 100,      # Exact keyword match
+    "synonym_match": 85,       # Synonym of keyword matched
+    "partial_match": 60,       # Partial word match (e.g., "bitcoin" in "bitcoins")
+    "fuzzy_match": 40,         # Fuzzy/similar match
+}
+
+
+class EventTrigger:
+    """Represents a custom event trigger for automated trading"""
+    
+    def __init__(
+        self,
+        trigger_id: str,
+        name: str,
+        keywords: List[str],
+        coins: List[str],
+        action: str,  # "buy", "sell", "alert"
+        amount_usd: float = None,
+        amount_pct: float = None,  # Percentage of portfolio
+        sentiment_filter: str = None,  # "positive", "negative", "any"
+        category_filter: str = None,
+        cooldown_hours: int = 24,
+        enabled: bool = True,
+        created_at: datetime = None
+    ):
+        self.trigger_id = trigger_id
+        self.name = name
+        self.keywords = [k.lower() for k in keywords]
+        self.coins = [c.upper() for c in coins]
+        self.action = action.lower()
+        self.amount_usd = amount_usd
+        self.amount_pct = amount_pct
+        self.sentiment_filter = sentiment_filter
+        self.category_filter = category_filter
+        self.cooldown_hours = cooldown_hours
+        self.enabled = enabled
+        self.created_at = created_at or datetime.now(timezone.utc)
+        self.last_triggered = None
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "trigger_id": self.trigger_id,
+            "name": self.name,
+            "keywords": self.keywords,
+            "coins": self.coins,
+            "action": self.action,
+            "amount_usd": self.amount_usd,
+            "amount_pct": self.amount_pct,
+            "sentiment_filter": self.sentiment_filter,
+            "category_filter": self.category_filter,
+            "cooldown_hours": self.cooldown_hours,
+            "enabled": self.enabled,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "last_triggered": self.last_triggered.isoformat() if self.last_triggered else None
+        }
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'EventTrigger':
+        created_at = data.get("created_at")
+        if isinstance(created_at, str):
+            created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+        
+        trigger = cls(
+            trigger_id=data["trigger_id"],
+            name=data["name"],
+            keywords=data["keywords"],
+            coins=data["coins"],
+            action=data["action"],
+            amount_usd=data.get("amount_usd"),
+            amount_pct=data.get("amount_pct"),
+            sentiment_filter=data.get("sentiment_filter"),
+            category_filter=data.get("category_filter"),
+            cooldown_hours=data.get("cooldown_hours", 24),
+            enabled=data.get("enabled", True),
+            created_at=created_at
+        )
+        
+        last_triggered = data.get("last_triggered")
+        if last_triggered and isinstance(last_triggered, str):
+            trigger.last_triggered = datetime.fromisoformat(last_triggered.replace("Z", "+00:00"))
+        
+        return trigger
+
+
+# Pre-built trigger templates
+TRIGGER_TEMPLATES = {
+    "elon_doge": {
+        "name": "Elon Musk DOGE Tweets",
+        "keywords": ["elon", "musk", "doge", "dogecoin"],
+        "coins": ["DOGE"],
+        "action": "buy",
+        "sentiment_filter": "positive",
+        "cooldown_hours": 12,
+        "description": "Buy DOGE when Elon Musk tweets positively about it"
+    },
+    "elon_btc": {
+        "name": "Elon Musk Bitcoin News",
+        "keywords": ["elon", "musk", "bitcoin", "btc", "tesla"],
+        "coins": ["BTC"],
+        "action": "alert",
+        "sentiment_filter": "any",
+        "cooldown_hours": 6,
+        "description": "Alert when Elon Musk mentions Bitcoin"
+    },
+    "sec_regulatory": {
+        "name": "SEC Regulatory Actions",
+        "keywords": ["sec", "gensler", "lawsuit", "charges", "enforcement"],
+        "coins": ["BTC", "ETH", "BNB", "SOL"],
+        "action": "sell",
+        "sentiment_filter": "negative",
+        "cooldown_hours": 24,
+        "description": "Sell when SEC takes negative action"
+    },
+    "etf_approval": {
+        "name": "ETF Approval News",
+        "keywords": ["etf", "approved", "approval", "blackrock", "fidelity"],
+        "coins": ["BTC", "ETH"],
+        "action": "buy",
+        "sentiment_filter": "positive",
+        "cooldown_hours": 24,
+        "description": "Buy on ETF approval news"
+    },
+    "exchange_hack": {
+        "name": "Exchange Hack Alert",
+        "keywords": ["hack", "hacked", "exploit", "breach", "stolen", "drained"],
+        "coins": ["BTC", "ETH"],
+        "action": "alert",
+        "sentiment_filter": "negative",
+        "cooldown_hours": 6,
+        "description": "Alert on exchange security breaches"
+    },
+    "china_ban": {
+        "name": "China Crypto Ban News",
+        "keywords": ["china", "ban", "crackdown", "illegal", "prohibition"],
+        "coins": ["BTC"],
+        "action": "sell",
+        "sentiment_filter": "negative",
+        "cooldown_hours": 48,
+        "description": "Sell on China crypto ban news"
+    },
+    "institutional_buy": {
+        "name": "Institutional Bitcoin Purchase",
+        "keywords": ["microstrategy", "saylor", "institutional", "purchase", "bought", "buys", "acquires"],
+        "coins": ["BTC"],
+        "action": "buy",
+        "sentiment_filter": "positive",
+        "cooldown_hours": 24,
+        "description": "Buy when institutions announce BTC purchases"
+    },
+    "whale_alert": {
+        "name": "Whale Movement Alert",
+        "keywords": ["whale", "large transfer", "moved", "million", "billion"],
+        "coins": ["BTC", "ETH"],
+        "action": "alert",
+        "sentiment_filter": "any",
+        "cooldown_hours": 4,
+        "description": "Alert on large crypto movements"
+    },
+    # NEW TEMPLATES
+    "blackrock_tokenization": {
+        "name": "BlackRock Tokenization News",
+        "keywords": ["blackrock", "tokenize", "tokenization", "tokenizing", "rwa", "real world assets", "buidl"],
+        "coins": ["ETH", "ONDO", "LINK"],
+        "action": "buy",
+        "sentiment_filter": "positive",
+        "cooldown_hours": 24,
+        "description": "Buy when BlackRock announces tokenization initiatives"
+    },
+    "fed_rate_decision": {
+        "name": "Fed Interest Rate Decision",
+        "keywords": ["federal reserve", "fomc", "interest rate", "rate cut", "rate hike", "powell", "fed meeting"],
+        "coins": ["BTC", "ETH"],
+        "action": "alert",
+        "sentiment_filter": "any",
+        "cooldown_hours": 6,
+        "description": "Alert on Federal Reserve rate decisions"
+    },
+    "major_partnership": {
+        "name": "Major Partnership Announcement",
+        "keywords": ["partnership", "partners", "collaboration", "integration", "deal", "agreement"],
+        "coins": ["BTC", "ETH", "SOL", "LINK"],
+        "action": "buy",
+        "sentiment_filter": "positive",
+        "cooldown_hours": 12,
+        "description": "Buy on major crypto partnership news"
+    },
+    "protocol_upgrade": {
+        "name": "Protocol Upgrade News",
+        "keywords": ["upgrade", "fork", "hardfork", "update", "improvement", "v2", "v3", "mainnet"],
+        "coins": ["ETH", "SOL", "ADA"],
+        "action": "buy",
+        "sentiment_filter": "positive",
+        "cooldown_hours": 24,
+        "description": "Buy on major protocol upgrades"
+    },
+    "trump_crypto": {
+        "name": "Trump Crypto Policy",
+        "keywords": ["trump", "administration", "executive order", "crypto policy", "strategic reserve"],
+        "coins": ["BTC", "ETH"],
+        "action": "buy",
+        "sentiment_filter": "positive",
+        "cooldown_hours": 24,
+        "description": "Buy on positive Trump administration crypto news"
+    },
+    "defi_exploit": {
+        "name": "DeFi Exploit Alert",
+        "keywords": ["exploit", "rug pull", "rugpull", "flash loan", "drained", "vulnerability", "smart contract"],
+        "coins": ["ETH", "BNB"],
+        "action": "sell",
+        "sentiment_filter": "negative",
+        "cooldown_hours": 6,
+        "description": "Sell on DeFi exploit news"
+    },
+    "stablecoin_depeg": {
+        "name": "Stablecoin Depeg Alert",
+        "keywords": ["depeg", "depegged", "lost peg", "stablecoin", "usdt", "usdc", "usdd", "collapse"],
+        "coins": ["BTC", "ETH"],
+        "action": "sell",
+        "sentiment_filter": "negative",
+        "cooldown_hours": 4,
+        "description": "Sell on stablecoin depeg news"
+    },
+    "sovereign_adoption": {
+        "name": "Sovereign/Nation Adoption",
+        "keywords": ["legal tender", "national currency", "el salvador", "country", "nation", "government adopts", "cbdc"],
+        "coins": ["BTC"],
+        "action": "buy",
+        "sentiment_filter": "positive",
+        "cooldown_hours": 48,
+        "description": "Buy on nation-level crypto adoption news"
+    },
+    "grayscale_flows": {
+        "name": "Grayscale Fund Flows",
+        "keywords": ["grayscale", "gbtc", "ethe", "inflows", "outflows", "fund flows"],
+        "coins": ["BTC", "ETH"],
+        "action": "alert",
+        "sentiment_filter": "any",
+        "cooldown_hours": 12,
+        "description": "Alert on significant Grayscale fund flow news"
+    },
+    "ai_crypto": {
+        "name": "AI & Crypto Integration",
+        "keywords": ["ai", "artificial intelligence", "machine learning", "chatgpt", "openai", "nvidia", "gpu"],
+        "coins": ["RNDR", "FET", "AGIX", "TAO"],
+        "action": "buy",
+        "sentiment_filter": "positive",
+        "cooldown_hours": 12,
+        "description": "Buy AI-related tokens on positive AI+crypto news"
+    },
+    "layer2_launch": {
+        "name": "Layer 2 Launch/News",
+        "keywords": ["layer 2", "l2", "rollup", "optimism", "arbitrum", "zksync", "polygon", "base"],
+        "coins": ["ETH", "OP", "ARB", "MATIC"],
+        "action": "buy",
+        "sentiment_filter": "positive",
+        "cooldown_hours": 24,
+        "description": "Buy on Layer 2 scaling solution news"
+    },
+    "halving_event": {
+        "name": "Bitcoin Halving",
+        "keywords": ["halving", "halvening", "block reward", "mining reward", "bitcoin halving"],
+        "coins": ["BTC"],
+        "action": "buy",
+        "sentiment_filter": "any",
+        "cooldown_hours": 72,
+        "description": "Buy around Bitcoin halving events"
+    }
+}
+
+
+class EventTriggerService:
+    """
+    Service for managing and executing custom event triggers.
+    """
+    
+    def __init__(
+        self,
+        db: AsyncIOMotorDatabase,
+        coindesk_service=None,
+        correlation_engine=None,
+        kraken_service=None,
+        alert_service=None
+    ):
+        self.db = db
+        self.coindesk_service = coindesk_service
+        self.correlation_engine = correlation_engine
+        self.kraken_service = kraken_service
+        self.alert_service = alert_service
+        self.triggers_collection = "event_triggers"
+        self.trigger_history_collection = "trigger_executions"
+        self._triggers_cache: Dict[str, EventTrigger] = {}
+        self._monitoring = False
+        self._last_check = None
+    
+    async def create_trigger(self, trigger: EventTrigger) -> Dict[str, Any]:
+        """Create a new event trigger"""
+        trigger_dict = trigger.to_dict()
+        
+        # Check if trigger with same ID exists
+        existing = await self.db[self.triggers_collection].find_one({"trigger_id": trigger.trigger_id})
+        if existing:
+            return {"error": f"Trigger with ID {trigger.trigger_id} already exists"}
+        
+        await self.db[self.triggers_collection].insert_one(trigger_dict)
+        self._triggers_cache[trigger.trigger_id] = trigger
+        
+        # Remove MongoDB _id before returning
+        trigger_dict.pop("_id", None)
+        
+        return {
+            "status": "created",
+            "trigger": trigger_dict
+        }
+    
+    async def create_from_template(
+        self,
+        template_name: str,
+        trigger_id: str,
+        amount_usd: float = None,
+        amount_pct: float = None,
+        enabled: bool = True
+    ) -> Dict[str, Any]:
+        """Create a trigger from a pre-built template"""
+        if template_name not in TRIGGER_TEMPLATES:
+            return {
+                "error": f"Template '{template_name}' not found",
+                "available_templates": list(TRIGGER_TEMPLATES.keys())
+            }
+        
+        template = TRIGGER_TEMPLATES[template_name]
+        
+        trigger = EventTrigger(
+            trigger_id=trigger_id,
+            name=template["name"],
+            keywords=template["keywords"],
+            coins=template["coins"],
+            action=template["action"],
+            amount_usd=amount_usd,
+            amount_pct=amount_pct,
+            sentiment_filter=template.get("sentiment_filter"),
+            cooldown_hours=template.get("cooldown_hours", 24),
+            enabled=enabled
+        )
+        
+        return await self.create_trigger(trigger)
+    
+    async def get_trigger(self, trigger_id: str) -> Optional[EventTrigger]:
+        """Get a trigger by ID"""
+        if trigger_id in self._triggers_cache:
+            return self._triggers_cache[trigger_id]
+        
+        data = await self.db[self.triggers_collection].find_one({"trigger_id": trigger_id})
+        if data:
+            trigger = EventTrigger.from_dict(data)
+            self._triggers_cache[trigger_id] = trigger
+            return trigger
+        return None
+    
+    async def list_triggers(self, enabled_only: bool = False) -> List[Dict[str, Any]]:
+        """List all triggers"""
+        query = {"enabled": True} if enabled_only else {}
+        triggers = await self.db[self.triggers_collection].find(
+            query, {"_id": 0}
+        ).to_list(length=100)
+        return triggers
+    
+    async def update_trigger(self, trigger_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+        """Update a trigger"""
+        result = await self.db[self.triggers_collection].update_one(
+            {"trigger_id": trigger_id},
+            {"$set": updates}
+        )
+        
+        if result.modified_count > 0:
+            # Clear cache
+            if trigger_id in self._triggers_cache:
+                del self._triggers_cache[trigger_id]
+            return {"status": "updated", "trigger_id": trigger_id}
+        
+        return {"error": "Trigger not found"}
+    
+    async def delete_trigger(self, trigger_id: str) -> Dict[str, Any]:
+        """Delete a trigger"""
+        result = await self.db[self.triggers_collection].delete_one({"trigger_id": trigger_id})
+        
+        if result.deleted_count > 0:
+            if trigger_id in self._triggers_cache:
+                del self._triggers_cache[trigger_id]
+            return {"status": "deleted", "trigger_id": trigger_id}
+        
+        return {"error": "Trigger not found"}
+    
+    async def toggle_trigger(self, trigger_id: str, enabled: bool) -> Dict[str, Any]:
+        """Enable or disable a trigger"""
+        return await self.update_trigger(trigger_id, {"enabled": enabled})
+    
+    def _get_expanded_keywords(self, keywords: List[str]) -> Dict[str, List[str]]:
+        """Expand keywords with synonyms for better matching"""
+        expanded = {}
+        for kw in keywords:
+            kw_lower = kw.lower()
+            expanded[kw_lower] = [kw_lower]
+            
+            # Add synonyms if available
+            if kw_lower in KEYWORD_SYNONYMS:
+                expanded[kw_lower].extend(KEYWORD_SYNONYMS[kw_lower])
+            
+            # Check if this keyword is a synonym of another
+            for main_kw, synonyms in KEYWORD_SYNONYMS.items():
+                if kw_lower in synonyms or kw_lower == main_kw:
+                    expanded[kw_lower].append(main_kw)
+                    expanded[kw_lower].extend(synonyms)
+            
+            # Remove duplicates
+            expanded[kw_lower] = list(set(expanded[kw_lower]))
+        
+        return expanded
+    
+    def _fuzzy_word_match(self, word: str, text: str) -> bool:
+        """Check for word with common variations (plurals, -ing, -ed, etc.)"""
+        patterns = [
+            rf'\b{re.escape(word)}\b',           # Exact word boundary
+            rf'\b{re.escape(word)}s?\b',         # Plural
+            rf'\b{re.escape(word)}ed\b',         # Past tense
+            rf'\b{re.escape(word)}ing\b',        # Present participle
+            rf'\b{re.escape(word)}\'s\b',        # Possessive
+        ]
+        for pattern in patterns:
+            if re.search(pattern, text, re.IGNORECASE):
+                return True
+        return False
+    
+    def check_event_matches_trigger(
+        self,
+        trigger: EventTrigger,
+        event: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Check if an event matches a trigger's criteria.
+        Enhanced with synonym matching, fuzzy matching, and better scoring.
+        """
+        title = event.get("title", "").lower()
+        body = event.get("body", "").lower()
+        text = title + " " + body
+        
+        # Expand keywords with synonyms
+        expanded_keywords = self._get_expanded_keywords(trigger.keywords)
+        
+        # Track all matches with confidence scores
+        matches = []
+        total_confidence = 0
+        
+        for original_kw, variations in expanded_keywords.items():
+            for variant in variations:
+                # Exact match in text
+                if variant in text:
+                    match_type = "exact_keyword" if variant == original_kw else "synonym_match"
+                    confidence = MATCH_CONFIDENCE[match_type]
+                    matches.append({
+                        "keyword": original_kw,
+                        "matched": variant,
+                        "type": match_type,
+                        "confidence": confidence
+                    })
+                    total_confidence = max(total_confidence, confidence)
+                    break  # Found match for this keyword, move to next
+                
+                # Word boundary match (prevents false positives like "coin" in "coincidence")
+                elif self._fuzzy_word_match(variant, text):
+                    match_type = "partial_match"
+                    confidence = MATCH_CONFIDENCE[match_type]
+                    matches.append({
+                        "keyword": original_kw,
+                        "matched": variant,
+                        "type": match_type,
+                        "confidence": confidence
+                    })
+                    total_confidence = max(total_confidence, confidence)
+                    break
+        
+        if not matches:
+            return {"matches": False, "reason": "No keyword match"}
+        
+        # Calculate final confidence based on number and quality of matches
+        num_matches = len(matches)
+        avg_confidence = sum(m["confidence"] for m in matches) / num_matches
+        final_confidence = min(100, int(avg_confidence + (num_matches - 1) * 10))
+        
+        # Check sentiment filter
+        sentiment = event.get("sentiment", "NEUTRAL")
+        if trigger.sentiment_filter and trigger.sentiment_filter != "any":
+            if trigger.sentiment_filter == "positive" and sentiment != "POSITIVE":
+                return {"matches": False, "reason": "Sentiment not positive"}
+            if trigger.sentiment_filter == "negative" and sentiment != "NEGATIVE":
+                return {"matches": False, "reason": "Sentiment not negative"}
+        
+        # Check category filter
+        if trigger.category_filter:
+            categories = event.get("categories", [])
+            if trigger.category_filter.upper() not in [c.upper() for c in categories]:
+                return {"matches": False, "reason": "Category not matched"}
+        
+        # Check cooldown
+        if trigger.last_triggered:
+            cooldown_end = trigger.last_triggered + timedelta(hours=trigger.cooldown_hours)
+            if datetime.now(timezone.utc) < cooldown_end:
+                return {"matches": False, "reason": "Cooldown active"}
+        
+        # Boost confidence for title matches (more relevant)
+        title_matches = [m for m in matches if m["matched"] in title]
+        if title_matches:
+            final_confidence = min(100, final_confidence + 15)
+        
+        return {
+            "matches": True,
+            "keyword_matches": [m["keyword"] for m in matches],
+            "match_details": matches,
+            "sentiment": sentiment,
+            "confidence": final_confidence,
+            "title_match": len(title_matches) > 0
+        }
+    
+    async def execute_trigger(
+        self,
+        trigger: EventTrigger,
+        event: Dict[str, Any],
+        match_result: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Execute a triggered action"""
+        execution = {
+            "trigger_id": trigger.trigger_id,
+            "trigger_name": trigger.name,
+            "event_title": event.get("title"),
+            "event_sentiment": event.get("sentiment"),
+            "action": trigger.action,
+            "coins": trigger.coins,
+            "match_confidence": match_result.get("confidence"),
+            "keyword_matches": match_result.get("keyword_matches"),
+            "executed_at": datetime.now(timezone.utc),
+            "success": False,
+            "result": None
+        }
+        
+        try:
+            if trigger.action == "alert":
+                # Send alert only
+                if self.alert_service:
+                    await self.alert_service.send_alert(
+                        title=f"🚨 Event Trigger: {trigger.name}",
+                        message=f"Event: {event.get('title')}\nCoins: {', '.join(trigger.coins)}\nSentiment: {event.get('sentiment')}",
+                        alert_type="event_trigger",
+                        priority="high"
+                    )
+                execution["result"] = {"type": "alert_sent"}
+                execution["success"] = True
+                
+            elif trigger.action in ["buy", "sell"]:
+                # Execute trade (if Kraken service available)
+                if self.kraken_service:
+                    for coin in trigger.coins:
+                        trade_result = {
+                            "coin": coin,
+                            "action": trigger.action,
+                            "amount_usd": trigger.amount_usd,
+                            "amount_pct": trigger.amount_pct,
+                            "status": "pending_confirmation"
+                        }
+                        
+                        # For safety, we log the intent but require manual confirmation
+                        # Real trades should go through the AI chat confirmation flow
+                        execution["result"] = trade_result
+                        execution["success"] = True
+                        
+                        # Send alert about trade intent
+                        if self.alert_service:
+                            await self.alert_service.send_alert(
+                                title=f"💰 Trade Trigger: {trigger.action.upper()} {coin}",
+                                message=f"Event: {event.get('title')}\nAction: {trigger.action.upper()} {coin}\nAmount: ${trigger.amount_usd or 'Portfolio %'}\nConfirm in AI Chat to execute.",
+                                alert_type="trade_trigger",
+                                priority="critical"
+                            )
+                else:
+                    execution["result"] = {"error": "Trading service not available"}
+            
+            # Update last triggered time
+            trigger.last_triggered = datetime.now(timezone.utc)
+            await self.update_trigger(trigger.trigger_id, {
+                "last_triggered": trigger.last_triggered.isoformat()
+            })
+            
+        except Exception as e:
+            execution["success"] = False
+            execution["result"] = {"error": str(e)}
+        
+        # Store execution history
+        await self.db[self.trigger_history_collection].insert_one(execution)
+        
+        # Remove MongoDB _id before returning (added by insert_one)
+        execution.pop('_id', None)
+        
+        # Convert datetime to ISO string for JSON serialization
+        if isinstance(execution.get('executed_at'), datetime):
+            execution['executed_at'] = execution['executed_at'].isoformat()
+        
+        return execution
+    
+    async def check_recent_events(self) -> List[Dict[str, Any]]:
+        """Check recent news events against all enabled triggers"""
+        if not self.coindesk_service:
+            return []
+        
+        # Get enabled triggers
+        triggers_data = await self.list_triggers(enabled_only=True)
+        triggers = [EventTrigger.from_dict(t) for t in triggers_data]
+        
+        if not triggers:
+            return []
+        
+        # Get recent news
+        try:
+            result = await self.coindesk_service._request(
+                "/news/v1/article/list",
+                {"limit": 30, "lang": "EN"}
+            )
+            events = result.get("Data", [])
+        except Exception as e:
+            print(f"Error fetching news: {e}")
+            return []
+        
+        executions = []
+        
+        for event in events:
+            event_data = {
+                "title": event.get("TITLE", ""),
+                "body": event.get("BODY", "")[:500],
+                "sentiment": event.get("SENTIMENT", "NEUTRAL"),
+                "categories": [c.get("NAME") for c in event.get("CATEGORY_DATA", [])],
+                "published_at": event.get("PUBLISHED_ON"),
+                "url": event.get("URL")
+            }
+            
+            for trigger in triggers:
+                match_result = self.check_event_matches_trigger(trigger, event_data)
+                
+                if match_result["matches"]:
+                    execution = await self.execute_trigger(trigger, event_data, match_result)
+                    executions.append(execution)
+        
+        self._last_check = datetime.now(timezone.utc)
+        
+        return executions
+    
+    async def get_execution_history(self, trigger_id: str = None, limit: int = 50) -> List[Dict[str, Any]]:
+        """Get trigger execution history"""
+        query = {"trigger_id": trigger_id} if trigger_id else {}
+        
+        history = await self.db[self.trigger_history_collection].find(
+            query, {"_id": 0}
+        ).sort("executed_at", -1).limit(limit).to_list(limit)
+        
+        return history
+    
+    async def get_templates(self) -> Dict[str, Any]:
+        """Get available trigger templates"""
+        return TRIGGER_TEMPLATES
+    
+    async def get_stats(self) -> Dict[str, Any]:
+        """Get trigger service statistics"""
+        total_triggers = await self.db[self.triggers_collection].count_documents({})
+        enabled_triggers = await self.db[self.triggers_collection].count_documents({"enabled": True})
+        total_executions = await self.db[self.trigger_history_collection].count_documents({})
+        successful_executions = await self.db[self.trigger_history_collection].count_documents({"success": True})
+        
+        # Recent executions
+        recent = await self.db[self.trigger_history_collection].find(
+            {}, {"_id": 0}
+        ).sort("executed_at", -1).limit(5).to_list(5)
+        
+        return {
+            "total_triggers": total_triggers,
+            "enabled_triggers": enabled_triggers,
+            "total_executions": total_executions,
+            "successful_executions": successful_executions,
+            "success_rate": round(successful_executions / total_executions * 100, 1) if total_executions > 0 else 0,
+            "last_check": self._last_check.isoformat() if self._last_check else None,
+            "recent_executions": recent,
+            "available_templates": list(TRIGGER_TEMPLATES.keys())
+        }
+
+
+# Global instance
+_trigger_service = None
+
+def get_event_trigger_service(
+    db: AsyncIOMotorDatabase = None,
+    coindesk_service=None,
+    correlation_engine=None,
+    kraken_service=None,
+    alert_service=None
+):
+    """Get or create event trigger service instance"""
+    global _trigger_service
+    if _trigger_service is None and db is not None:
+        _trigger_service = EventTriggerService(
+            db, coindesk_service, correlation_engine, kraken_service, alert_service
+        )
+    return _trigger_service
