@@ -157,6 +157,10 @@ const PerpetualFutures = ({ embedded = false }) => {
     { id: 'history', label: 'History', icon: ArrowUpRight }
   ];
 
+  if (loading) {
+    return <PageLoadingSkeleton />;
+  }
+
   return (
     <div className="min-h-screen bg-[#0A0A0A] p-4 md:p-6" data-testid="perpetuals-page">
       {/* Header */}
