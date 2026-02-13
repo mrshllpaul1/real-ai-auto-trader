@@ -575,22 +575,6 @@ export const MarketOverviewSkeleton = () => (
   </div>
 );
 
-// Base skeleton component (for internal use)
-const SkeletonBase = ({ className = '', animate = true }) => (
-  <div
-    className={`bg-[#1F1F1F] rounded ${animate ? 'animate-pulse' : ''} ${className}`}
-  />
-);
-
-// Shimmer overlay (for internal use - re-export for external use)
-const ShimmerOverlay = () => (
-  <motion.div
-    className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/5 to-transparent"
-    animate={{ translateX: ['100%', '-100%'] }}
-    transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-  />
-);
-
 export default {
   CardSkeleton,
   StatsGridSkeleton,
@@ -612,7 +596,4 @@ export default {
   WalletBalanceSkeleton,
   AlertSkeleton,
   MarketOverviewSkeleton,
-};
-  PageSkeleton,
-  DashboardSkeleton,
 };
