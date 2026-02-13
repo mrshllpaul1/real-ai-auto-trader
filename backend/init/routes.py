@@ -288,6 +288,18 @@ def register_routes(api_router: APIRouter, db=None):
     from services.error_alerting_service import init_error_alerting_service
     init_error_alerting_service(db)
     
+    # ============================================
+    # NEW: Data Backup & Risk Management
+    # ============================================
+    
+    # Data Backup
+    from routes import backup as backup_routes
+    api_router.include_router(backup_routes.router, tags=["Data Backup"])
+    
+    # Trading Monitoring & Kill Switch
+    from routes import monitoring as monitoring_routes
+    api_router.include_router(monitoring_routes.router, tags=["Trading Monitoring"])
+    
     logger.info("✅ All routes registered (including new enhancements)")
     
     return api_router
