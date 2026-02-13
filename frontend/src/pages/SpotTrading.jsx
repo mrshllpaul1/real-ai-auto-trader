@@ -5,7 +5,12 @@ import {
   ArrowRight, BarChart2, Activity, Clock, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
+import { 
+  StatsGridSkeleton, 
+  TradingPanelSkeleton, 
+  TableSkeleton, 
+  CardSkeleton 
+} from '../components/LoadingSkeletons';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '';
 
