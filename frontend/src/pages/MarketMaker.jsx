@@ -217,6 +217,20 @@ const MarketMaker = ({ embedded = false }) => {
         </Card>
       </motion.div>
 
+      {/* AI Prediction Card */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.15 }}
+      >
+        <AIPredictionCard 
+          symbol={symbolClean}
+          prediction={aiPrediction}
+          loading={aiLoading}
+          onRefresh={refetchAi}
+        />
+      </motion.div>
+
       {/* P&L Cards */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
