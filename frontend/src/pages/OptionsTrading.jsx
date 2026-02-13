@@ -136,24 +136,34 @@ const OptionsTrading = ({ embedded = false }) => {
 
       {/* Current Price Banner */}
       {chain && (
-        <Card className="bg-gradient-to-r from-[#FF9500]/20 to-[#FF9500]/5 border-[#FF9500]/30">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-[#A1A1AA]">{selectedSymbol} Current Price</span>
-                <div className="text-3xl font-data font-bold text-white">
-                  ${(chain?.current_price ?? 0).toLocaleString()}
+        <div className="grid lg:grid-cols-3 gap-4">
+          <Card className="lg:col-span-2 bg-gradient-to-r from-[#FF9500]/20 to-[#FF9500]/5 border-[#FF9500]/30">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[#A1A1AA]">{selectedSymbol} Current Price</span>
+                  <div className="text-3xl font-data font-bold text-white">
+                    ${(chain?.current_price ?? 0).toLocaleString()}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-[#A1A1AA]">Implied Volatility</span>
+                  <div className="text-2xl font-data text-[#FF9500]">
+                    {((chain?.volatility ?? 0) * 100).toFixed(1)}%
+                  </div>
                 </div>
               </div>
-              <div className="text-right">
-                <span className="text-[#A1A1AA]">Implied Volatility</span>
-                <div className="text-2xl font-data text-[#FF9500]">
-                  {((chain?.volatility ?? 0) * 100).toFixed(1)}%
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+          
+          {/* AI Prediction Card */}
+          <AIPredictionCard 
+            symbol={selectedSymbol}
+            prediction={aiPrediction}
+            loading={aiLoading}
+            onRefresh={refetchAi}
+          />
+        </div>
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
