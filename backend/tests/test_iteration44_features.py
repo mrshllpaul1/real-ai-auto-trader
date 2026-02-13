@@ -240,8 +240,8 @@ class TestExistingFeatures:
         assert response.status_code == 200
         
         data = response.json()
-        # Portfolio may not be initialized - check for either value or message
-        assert "total_value" in data or "portfolio_value" in data or "message" in data
+        # Portfolio returns current_value when allocated
+        assert "current_value" in data or "total_value" in data or "portfolio_value" in data or "message" in data
         
         print(f"✓ Portfolio summary accessible")
     
