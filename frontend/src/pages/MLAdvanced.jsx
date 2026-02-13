@@ -219,7 +219,7 @@ const MLAdvanced = () => {
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
                       <p className="text-[#A1A1AA]">Calibration Error</p>
-                      <p className="text-[#00FF94]">{model.metrics?.mean_calibration_error?.toFixed(3)}</p>
+                      <p className="text-[#00FF94]">{model.metrics?.(mean_calibration_error ?? 0).toFixed(3)}</p>
                     </div>
                     <div>
                       <p className="text-[#A1A1AA]">90% Coverage</p>
@@ -292,7 +292,7 @@ const MLAdvanced = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                   <div className="p-3 bg-[#0A0A0A] border border-[#333] rounded-lg">
                     <p className="text-sm text-[#A1A1AA]">Expected Price</p>
-                    <p className="text-xl font-bold text-white">${predictions.summary?.expected_price?.toLocaleString()}</p>
+                    <p className="text-xl font-bold text-white">${predictions.summary?.(expected_price ?? 0).toLocaleString()}</p>
                   </div>
                   <div className="p-3 bg-[#0A0A0A] border border-[#333] rounded-lg">
                     <p className="text-sm text-[#A1A1AA]">Expected Return</p>

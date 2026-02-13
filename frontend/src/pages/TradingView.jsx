@@ -444,7 +444,7 @@ const TradingView = () => {
               <div className="flex justify-between">
                 <span className="text-[#A1A1AA]">24h Change</span>
                 <span className={priceChange >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}>
-                  {priceChange?.toFixed(2) || '0.00'}%
+                  {(priceChange ?? 0).toFixed(2) || '0.00'}%
                 </span>
               </div>
               <div className="flex justify-between">

@@ -301,7 +301,7 @@ const AdvancedOrders = ({ embedded = false }) => {
                         </div>
                         <div>
                           <p className="text-[#A1A1AA]">Stop Price</p>
-                          <p className="text-[#FF5555] font-medium">${order.current_stop_price?.toLocaleString()}</p>
+                          <p className="text-[#FF5555] font-medium">${order.(current_stop_price ?? 0).toLocaleString()}</p>
                         </div>
                         <div>
                           <p className="text-[#A1A1AA]">Quantity</p>
@@ -393,11 +393,11 @@ const AdvancedOrders = ({ embedded = false }) => {
                         </div>
                         <div>
                           <p className="text-[#A1A1AA]">Invested</p>
-                          <p className="text-[#00FF94] font-medium">${bot.total_invested?.toLocaleString()}</p>
+                          <p className="text-[#00FF94] font-medium">${bot.(total_invested ?? 0).toLocaleString()}</p>
                         </div>
                         <div>
                           <p className="text-[#A1A1AA]">Avg Price</p>
-                          <p className="text-white font-medium">${bot.average_price?.toLocaleString()}</p>
+                          <p className="text-white font-medium">${bot.(average_price ?? 0).toLocaleString()}</p>
                         </div>
                       </div>
                     </div>
@@ -446,15 +446,15 @@ const AdvancedOrders = ({ embedded = false }) => {
                       <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
                           <p className="text-[#A1A1AA]">Entry</p>
-                          <p className="text-white font-medium">${order.entry_price?.toLocaleString()}</p>
+                          <p className="text-white font-medium">${order.(entry_price ?? 0).toLocaleString()}</p>
                         </div>
                         <div>
                           <p className="text-[#A1A1AA]">Take Profit</p>
-                          <p className="text-green-400 font-medium">${order.take_profit_price?.toLocaleString()}</p>
+                          <p className="text-green-400 font-medium">${order.(take_profit_price ?? 0).toLocaleString()}</p>
                         </div>
                         <div>
                           <p className="text-[#A1A1AA]">Stop Loss</p>
-                          <p className="text-red-400 font-medium">${order.stop_loss_price?.toLocaleString()}</p>
+                          <p className="text-red-400 font-medium">${order.(stop_loss_price ?? 0).toLocaleString()}</p>
                         </div>
                       </div>
                     </div>

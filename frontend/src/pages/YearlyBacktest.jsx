@@ -206,7 +206,7 @@ const YearlyBacktest = ({ embedded = false }) => {
   };
 
   const formatPercent = (value) => {
-    return `${value >= 0 ? '+' : ''}${value?.toFixed(2)}%`;
+    return `${value >= 0 ? '+' : ''}${(value ?? 0).toFixed(2)}%`;
   };
 
   const getReturnColor = (value) => {
@@ -276,7 +276,7 @@ const YearlyBacktest = ({ embedded = false }) => {
                 <span className="text-xs text-slate-400">Win Rate</span>
               </div>
               <p className="text-2xl font-bold text-blue-400">
-                {data.win_rate?.toFixed(1)}%
+                {data.(win_rate ?? 0).toFixed(1)}%
               </p>
               <p className="text-sm text-slate-400">
                 {data.winning_trades}/{data.total_trades} trades
@@ -291,7 +291,7 @@ const YearlyBacktest = ({ embedded = false }) => {
                 <span className="text-xs text-slate-400">Sharpe Ratio</span>
               </div>
               <p className="text-2xl font-bold text-purple-400">
-                {data.sharpe_ratio?.toFixed(2)}
+                {data.(sharpe_ratio ?? 0).toFixed(2)}
               </p>
               <p className="text-sm text-slate-400">
                 Risk-adjusted return
@@ -306,7 +306,7 @@ const YearlyBacktest = ({ embedded = false }) => {
                 <span className="text-xs text-slate-400">Max Drawdown</span>
               </div>
               <p className="text-2xl font-bold text-amber-400">
-                -{data.max_drawdown_pct?.toFixed(2)}%
+                -{data.(max_drawdown_pct ?? 0).toFixed(2)}%
               </p>
               <p className="text-sm text-slate-400">
                 Profit Factor: {data.profit_factor}
@@ -444,7 +444,7 @@ const YearlyBacktest = ({ embedded = false }) => {
                 <span className="text-xs text-slate-400">Total Return</span>
               </div>
               <p className="text-xl font-bold text-blue-400">
-                +{data.total_return_pct?.toFixed(1)}%
+                +{data.(total_return_pct ?? 0).toFixed(1)}%
               </p>
             </CardContent>
           </Card>
@@ -456,7 +456,7 @@ const YearlyBacktest = ({ embedded = false }) => {
                 <span className="text-xs text-slate-400">CAGR</span>
               </div>
               <p className="text-xl font-bold text-purple-400">
-                {data.cagr_pct?.toFixed(2)}%
+                {data.(cagr_pct ?? 0).toFixed(2)}%
               </p>
             </CardContent>
           </Card>
@@ -468,7 +468,7 @@ const YearlyBacktest = ({ embedded = false }) => {
                 <span className="text-xs text-slate-400">Win Rate</span>
               </div>
               <p className="text-xl font-bold text-cyan-400">
-                {data.overall_win_rate?.toFixed(1)}%
+                {data.(overall_win_rate ?? 0).toFixed(1)}%
               </p>
             </CardContent>
           </Card>
@@ -570,13 +570,13 @@ const YearlyBacktest = ({ embedded = false }) => {
                       </td>
                       <td className="p-3 text-right">
                         <Badge variant={row.winRate >= 50 ? 'default' : 'secondary'}>
-                          {row.winRate?.toFixed(1)}%
+                          {row.(winRate ?? 0).toFixed(1)}%
                         </Badge>
                       </td>
                       <td className="p-3 text-right text-slate-300">{row.trades}</td>
                       <td className="p-3 text-right">
                         <span className={row.sharpe >= 1 ? 'text-green-400' : 'text-amber-400'}>
-                          {row.sharpe?.toFixed(2)}
+                          {row.(sharpe ?? 0).toFixed(2)}
                         </span>
                       </td>
                     </tr>

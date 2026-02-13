@@ -255,8 +255,8 @@ const Analytics = ({ embedded = false }) => {
                     {realPositions.slice(0, 6).map((pos, i) => (
                       <div key={i} className="bg-[#0A0A0A] rounded p-2 text-center">
                         <div className="font-bold text-sm">{pos.coin_id?.toUpperCase()}</div>
-                        <div className="text-xs text-[#A1A1AA]">{pos.quantity?.toFixed(4)}</div>
-                        <div className="text-xs text-[#00FF94]">${pos.entry_price?.toFixed(2)}</div>
+                        <div className="text-xs text-[#A1A1AA]">{pos.(quantity ?? 0).toFixed(4)}</div>
+                        <div className="text-xs text-[#00FF94]">${pos.(entry_price ?? 0).toFixed(2)}</div>
                       </div>
                     ))}
                   </div>

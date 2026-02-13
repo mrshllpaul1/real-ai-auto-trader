@@ -311,7 +311,7 @@ const GemScanner = ({ embedded = false }) => {
                           <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
                             <div className="bg-[#0A0A0A] p-2 rounded">
                               <span className="text-[#A1A1AA]">Price:</span>
-                              <span className="ml-1 font-data text-white">${alert.current_price?.toLocaleString()}</span>
+                              <span className="ml-1 font-data text-white">${alert.(current_price ?? 0).toLocaleString()}</span>
                             </div>
                             <div className="bg-[#0A0A0A] p-2 rounded">
                               <span className="text-[#A1A1AA]">RSI:</span>

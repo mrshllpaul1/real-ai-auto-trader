@@ -422,17 +422,17 @@ const TradingBudget = ({ embedded = false }) => {
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-white">{pos.coin_id?.toUpperCase()}</span>
                           <Badge className={pos.pnl_pct >= 0 ? 'bg-[#00FF94]/20 text-[#00FF94]' : 'bg-[#FF0055]/20 text-[#FF0055]'}>
-                            {pos.pnl_pct >= 0 ? '+' : ''}{pos.pnl_pct?.toFixed(2)}%
+                            {pos.pnl_pct >= 0 ? '+' : ''}{pos.(pnl_pct ?? 0).toFixed(2)}%
                           </Badge>
                         </div>
                         <p className="text-sm text-[#A1A1AA]">
-                          {pos.quantity?.toFixed(6)} @ ${pos.entry_price?.toFixed(4)}
+                          {pos.(quantity ?? 0).toFixed(6)} @ ${pos.(entry_price ?? 0).toFixed(4)}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-data text-white">${pos.current_value?.toFixed(2)}</p>
+                        <p className="font-data text-white">${pos.(current_value ?? 0).toFixed(2)}</p>
                         <p className={`text-sm ${pos.pnl_usd >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
-                          {pos.pnl_usd >= 0 ? '+' : ''}${pos.pnl_usd?.toFixed(2)}
+                          {pos.pnl_usd >= 0 ? '+' : ''}${pos.(pnl_usd ?? 0).toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -478,10 +478,10 @@ const TradingBudget = ({ embedded = false }) => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-white font-data">${tx.amount_usd?.toFixed(2)}</p>
+                      <p className="text-white font-data">${tx.(amount_usd ?? 0).toFixed(2)}</p>
                       {tx.pnl_usd !== undefined && (
                         <p className={`text-xs ${tx.pnl_usd >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
-                          P&L: {tx.pnl_usd >= 0 ? '+' : ''}${tx.pnl_usd?.toFixed(2)}
+                          P&L: {tx.pnl_usd >= 0 ? '+' : ''}${tx.(pnl_usd ?? 0).toFixed(2)}
                         </p>
                       )}
                     </div>

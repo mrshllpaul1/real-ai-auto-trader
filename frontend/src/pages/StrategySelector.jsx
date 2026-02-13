@@ -161,7 +161,7 @@ const StrategySelector = () => {
                       <div className="flex items-center gap-2 mb-1">
                         <Zap size={20} className="text-[#9D00FF]" />
                         <span className="text-3xl font-data font-bold text-[#9D00FF]">
-                          {strategy.confidence_score?.toFixed(0)}%
+                          {strategy.(confidence_score ?? 0).toFixed(0)}%
                         </span>
                       </div>
                       <p className="text-xs text-[#A1A1AA]">AI Confidence</p>

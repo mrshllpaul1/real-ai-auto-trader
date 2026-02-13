@@ -188,20 +188,20 @@ const PerpetualFutures = ({ embedded = false }) => {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4">
             <p className="text-sm text-[#A1A1AA]">Account Balance</p>
-            <p className="text-xl font-bold text-white">${account.account_balance?.toLocaleString()}</p>
+            <p className="text-xl font-bold text-white">${account.(account_balance ?? 0).toLocaleString()}</p>
           </div>
           <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4">
             <p className="text-sm text-[#A1A1AA]">Available</p>
-            <p className="text-xl font-bold text-[#00FF94]">${account.available_balance?.toLocaleString()}</p>
+            <p className="text-xl font-bold text-[#00FF94]">${account.(available_balance ?? 0).toLocaleString()}</p>
           </div>
           <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4">
             <p className="text-sm text-[#A1A1AA]">Margin Used</p>
-            <p className="text-xl font-bold text-[#FF9500]">${account.margin_used?.toLocaleString()}</p>
+            <p className="text-xl font-bold text-[#FF9500]">${account.(margin_used ?? 0).toLocaleString()}</p>
           </div>
           <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4">
             <p className="text-sm text-[#A1A1AA]">Unrealized PnL</p>
             <p className={`text-xl font-bold ${account.unrealized_pnl >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
-              ${account.unrealized_pnl?.toLocaleString()}
+              ${account.(unrealized_pnl ?? 0).toLocaleString()}
             </p>
           </div>
           <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4">
@@ -272,7 +272,7 @@ const PerpetualFutures = ({ embedded = false }) => {
                           <span className="text-white font-medium">{market.symbol}</span>
                         </div>
                       </td>
-                      <td className="p-4 text-right text-white font-mono">${market.mark_price?.toLocaleString()}</td>
+                      <td className="p-4 text-right text-white font-mono">${market.(mark_price ?? 0).toLocaleString()}</td>
                       <td className={`p-4 text-right font-medium ${market['24h_change'] >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
                         {market['24h_change'] >= 0 ? '+' : ''}{market['24h_change']}%
                       </td>
@@ -331,12 +331,12 @@ const PerpetualFutures = ({ embedded = false }) => {
                     </div>
                     <div>
                       <p className="text-sm text-[#A1A1AA]">Total Margin</p>
-                      <p className="text-xl font-bold text-[#FF9500]">${positions.summary?.total_margin_used?.toLocaleString()}</p>
+                      <p className="text-xl font-bold text-[#FF9500]">${positions.summary?.(total_margin_used ?? 0).toLocaleString()}</p>
                     </div>
                     <div>
                       <p className="text-sm text-[#A1A1AA]">Unrealized PnL</p>
                       <p className={`text-xl font-bold ${positions.summary?.total_unrealized_pnl >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
-                        ${positions.summary?.total_unrealized_pnl?.toLocaleString()}
+                        ${positions.summary?.(total_unrealized_pnl ?? 0).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -366,27 +366,27 @@ const PerpetualFutures = ({ embedded = false }) => {
                               {pos.leverage}x {pos.side.toUpperCase()}
                             </span>
                           </div>
-                          <p className="text-sm text-[#A1A1AA]">Size: ${pos.size_usd?.toLocaleString()}</p>
+                          <p className="text-sm text-[#A1A1AA]">Size: ${pos.(size_usd ?? 0).toLocaleString()}</p>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                         <div>
                           <p className="text-[#A1A1AA]">Entry</p>
-                          <p className="text-white font-medium">${pos.entry_price?.toLocaleString()}</p>
+                          <p className="text-white font-medium">${pos.(entry_price ?? 0).toLocaleString()}</p>
                         </div>
                         <div>
                           <p className="text-[#A1A1AA]">Mark</p>
-                          <p className="text-white font-medium">${pos.mark_price?.toLocaleString()}</p>
+                          <p className="text-white font-medium">${pos.(mark_price ?? 0).toLocaleString()}</p>
                         </div>
                         <div>
                           <p className="text-[#A1A1AA]">Liq. Price</p>
-                          <p className="text-red-400 font-medium">${pos.liquidation_price?.toLocaleString()}</p>
+                          <p className="text-red-400 font-medium">${pos.(liquidation_price ?? 0).toLocaleString()}</p>
                         </div>
                         <div>
                           <p className="text-[#A1A1AA]">PnL</p>
                           <p className={`font-bold ${pos.unrealized_pnl >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
-                            ${pos.unrealized_pnl?.toLocaleString()} ({pos.roe}%)
+                            ${pos.(unrealized_pnl ?? 0).toLocaleString()} ({pos.roe}%)
                           </p>
                         </div>
                         <div>
@@ -486,7 +486,7 @@ const PerpetualFutures = ({ embedded = false }) => {
                       <span className="text-white">{trade.symbol}</span>
                     </div>
                     <div className="flex items-center gap-6">
-                      <span className="text-[#A1A1AA]">${trade.entry_price?.toLocaleString()} → ${trade.close_price?.toLocaleString()}</span>
+                      <span className="text-[#A1A1AA]">${trade.(entry_price ?? 0).toLocaleString()} → ${trade.(close_price ?? 0).toLocaleString()}</span>
                       <span className={`font-bold ${trade.realized_pnl >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
                         {trade.realized_pnl >= 0 ? '+' : ''}${trade.realized_pnl}
                       </span>
@@ -519,7 +519,7 @@ const PerpetualFutures = ({ embedded = false }) => {
             >
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-white">{selectedMarket.symbol}</h2>
-                <span className="text-[#A1A1AA]">${selectedMarket.mark_price?.toLocaleString()}</span>
+                <span className="text-[#A1A1AA]">${selectedMarket.(mark_price ?? 0).toLocaleString()}</span>
               </div>
 
               <div className="space-y-4">

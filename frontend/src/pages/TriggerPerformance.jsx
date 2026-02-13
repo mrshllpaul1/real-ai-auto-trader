@@ -428,7 +428,7 @@ const TriggerPerformance = ({ embedded = false }) => {
                     </p>
                     {exec.pnl_usd !== undefined && (
                       <p className={`text-sm ${exec.pnl_usd >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
-                        ${exec.pnl_usd?.toFixed(2)}
+                        ${exec.(pnl_usd ?? 0).toFixed(2)}
                       </p>
                     )}
                   </div>

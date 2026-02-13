@@ -176,7 +176,7 @@ const SocialFeed = () => {
 
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <span className="px-2 py-0.5 bg-gray-700 rounded">{trade.strategy || 'manual'}</span>
-                      <span>· Entry: ${trade.entry_price?.toLocaleString()}</span>
+                      <span>· Entry: ${trade.(entry_price ?? 0).toLocaleString()}</span>
                     </div>
                   </div>
 

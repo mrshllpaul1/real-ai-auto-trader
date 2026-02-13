@@ -23,7 +23,7 @@ const AIBrainTab = ({ enhancedStatus, onTrainModel, isTraining }) => (
         <CardContent className="pt-4 text-center">
           <Brain className="w-8 h-8 mx-auto mb-2 text-purple-400" />
           <div className="text-2xl font-bold text-white">
-            {enhancedStatus?.accuracy?.toFixed(1) || 0}%
+            {enhancedStatus?.(accuracy ?? 0).toFixed(1) || 0}%
           </div>
           <div className="text-sm text-gray-400">AI Accuracy</div>
         </CardContent>
@@ -43,7 +43,7 @@ const AIBrainTab = ({ enhancedStatus, onTrainModel, isTraining }) => (
         <CardContent className="pt-4 text-center">
           <TrendingUp className="w-8 h-8 mx-auto mb-2 text-green-400" />
           <div className="text-2xl font-bold text-white">
-            {enhancedStatus?.win_rate?.toFixed(1) || 0}%
+            {enhancedStatus?.(win_rate ?? 0).toFixed(1) || 0}%
           </div>
           <div className="text-sm text-gray-400">Win Rate</div>
         </CardContent>
@@ -140,7 +140,7 @@ const TethysTab = ({ tethysStatus, onToggleTethys }) => (
         <CardContent className="pt-4 text-center">
           <Activity className="w-8 h-8 mx-auto mb-2 text-orange-400" />
           <div className="text-2xl font-bold text-white">
-            {tethysStatus?.confidence?.toFixed(0) || 0}%
+            {tethysStatus?.(confidence ?? 0).toFixed(0) || 0}%
           </div>
           <div className="text-sm text-gray-400">Confidence</div>
         </CardContent>
@@ -217,7 +217,7 @@ const TethysTab = ({ tethysStatus, onToggleTethys }) => (
                   <span className="text-white">{signal.symbol}</span>
                 </div>
                 <div className="text-gray-400 text-sm">
-                  {signal.confidence?.toFixed(0)}% confidence
+                  {signal.(confidence ?? 0).toFixed(0)}% confidence
                 </div>
               </div>
             ))}
@@ -249,7 +249,7 @@ const LearningTab = ({ learningStatus, onTrain }) => (
         <CardContent className="pt-4 text-center">
           <TrendingUp className="w-8 h-8 mx-auto mb-2 text-green-400" />
           <div className="text-2xl font-bold text-white">
-            {learningStatus?.improvement?.toFixed(1) || 0}%
+            {learningStatus?.(improvement ?? 0).toFixed(1) || 0}%
           </div>
           <div className="text-sm text-gray-400">Improvement</div>
         </CardContent>

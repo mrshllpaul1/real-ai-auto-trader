@@ -406,7 +406,7 @@ const TelegramNotifications = ({ embedded = false }) => {
                     <div>
                       <p className="text-white font-medium">{alert.symbol}</p>
                       <p className="text-sm text-[#A1A1AA]">
-                        Alert when price goes <span className={alert.direction === 'above' ? 'text-[#00FF94]' : 'text-red-400'}>{alert.direction}</span> ${alert.target_price?.toLocaleString()}
+                        Alert when price goes <span className={alert.direction === 'above' ? 'text-[#00FF94]' : 'text-red-400'}>{alert.direction}</span> ${alert.(target_price ?? 0).toLocaleString()}
                       </p>
                     </div>
                     <button
