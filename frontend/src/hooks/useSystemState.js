@@ -1,12 +1,16 @@
 /**
- * System State Management Hook
- * ============================
+ * System State Management Hook v2
+ * ===============================
  * Manages persistent running states across the app.
  * States survive page navigation and browser refresh.
+ * 
+ * Updated: Feb 13, 2026 - Fixed React.useState issues
  */
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import * as React from 'react';
 import api from '../services/api';
+
+const { useState, useEffect, useCallback, useRef } = React;
 
 /**
  * Component types that can be tracked
@@ -71,26 +75,31 @@ export const setComponentState = async (component, isRunning, metadata = {}, use
  * @param {string} component - Component type from ComponentType
  * @param {object} options - Options
  */
-export const useComponentState = (component, options = {}) => {
+export function useComponentState(component, options = {}) {
   const {
     userId = 'default',
     pollInterval = null,
     onStateChange = null,
   } = options;
 
-  // Ensure we're using React hooks properly
-  const [isRunning, setIsRunning] = React.useState(false);
-  const [loading, setLoading] = React.useState(true);
-  const [metadata, setMetadata] = React.useState({});
-  const mountedRef = React.useRef(true);
+  const [isRunning, setIsRunning] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [metadata, setMetadata] = useState({});
+  const mountedRef = useRef(true);
+  const isRunningRef = useRef(isRunning);
 
-  // Fetch initial state
-  const fetchState = React.useCallback(async () => {
+  // Keep ref in sync
+  useEffect(() => {
+    isRunningRef.current = isRunning;
+  }, [isRunning]);
+
+  // Fetch state
+  const fetchState = useCallback(async () => {
     try {
       const state = await fetchComponentState(component, userId);
       if (mountedRef.current) {
         const newIsRunning = state.is_running || false;
-        if (newIsRunning !== isRunning && onStateChange) {
+        if (newIsRunning !== isRunningRef.current && onStateChange) {
           onStateChange(newIsRunning);
         }
         setIsRunning(newIsRunning);
@@ -105,10 +114,10 @@ export const useComponentState = (component, options = {}) => {
       }
       return { is_running: false, metadata: {} };
     }
-  }, [component, userId, isRunning, onStateChange]);
+  }, [component, userId, onStateChange]);
 
   // Update state
-  const updateState = React.useCallback(async (newIsRunning, newMetadata = {}) => {
+  const updateState = useCallback(async (newIsRunning, newMetadata = {}) => {
     try {
       const result = await setComponentState(component, newIsRunning, newMetadata, userId);
       if (result.success && mountedRef.current) {
@@ -126,18 +135,17 @@ export const useComponentState = (component, options = {}) => {
   }, [component, userId, onStateChange]);
 
   // Initial fetch
-  React.useEffect(() => {
+  useEffect(() => {
     mountedRef.current = true;
     fetchState();
     return () => {
       mountedRef.current = false;
     };
-  }, []);
+  }, [fetchState]);
 
   // Polling
-  React.useEffect(() => {
+  useEffect(() => {
     if (!pollInterval) return;
-
     const interval = setInterval(fetchState, pollInterval);
     return () => clearInterval(interval);
   }, [pollInterval, fetchState]);
@@ -149,22 +157,22 @@ export const useComponentState = (component, options = {}) => {
     setRunning: updateState,
     refresh: fetchState,
   };
-};
+}
 
 /**
  * Hook to manage all system states at once
  */
-export const useAllSystemStates = (options = {}) => {
+export function useAllSystemStates(options = {}) {
   const {
     userId = 'default',
     pollInterval = null,
   } = options;
 
-  const [states, setStates] = React.useState({});
-  const [loading, setLoading] = React.useState(true);
-  const mountedRef = React.useRef(true);
+  const [states, setStates] = useState({});
+  const [loading, setLoading] = useState(true);
+  const mountedRef = useRef(true);
 
-  const fetchStates = React.useCallback(async () => {
+  const fetchStates = useCallback(async () => {
     try {
       const allStates = await fetchAllSystemStates(userId);
       if (mountedRef.current) {
@@ -179,27 +187,26 @@ export const useAllSystemStates = (options = {}) => {
     }
   }, [userId]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     mountedRef.current = true;
     fetchStates();
     return () => {
       mountedRef.current = false;
     };
-  }, []);
+  }, [fetchStates]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!pollInterval) return;
-
     const interval = setInterval(fetchStates, pollInterval);
     return () => clearInterval(interval);
   }, [pollInterval, fetchStates]);
 
-  const isComponentRunning = React.useCallback((component) => {
-    return states[component]?.is_running || false;
+  const isComponentRunning = useCallback((comp) => {
+    return states[comp]?.is_running || false;
   }, [states]);
 
-  const updateComponentState = React.useCallback(async (component, isRunning, metadata = {}) => {
-    const result = await setComponentState(component, isRunning, metadata, userId);
+  const updateComponentState = useCallback(async (comp, isRunning, meta = {}) => {
+    const result = await setComponentState(comp, isRunning, meta, userId);
     if (result.success) {
       await fetchStates();
     }
@@ -213,7 +220,7 @@ export const useAllSystemStates = (options = {}) => {
     updateComponentState,
     refresh: fetchStates,
   };
-};
+}
 
 export default {
   ComponentType,
