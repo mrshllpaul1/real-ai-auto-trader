@@ -307,3 +307,112 @@ async def detailed_health():
         'errors': error_stats,
         'timestamp': datetime.utcnow().isoformat()
     }
+
+
+# Pydantic models for frontend error reporting
+from pydantic import BaseModel
+from typing import List, Dict, Any, Optional as PydanticOptional
+
+class FrontendError(BaseModel):
+    error_id: PydanticOptional[str] = None
+    type: PydanticOptional[str] = 'frontend_error'
+    severity: PydanticOptional[str] = 'medium'
+    category: PydanticOptional[str] = 'unknown'
+    message: str
+    stack: PydanticOptional[str] = ''
+    component_stack: PydanticOptional[str] = ''
+    component_name: PydanticOptional[str] = 'Unknown'
+    url: PydanticOptional[str] = ''
+    pathname: PydanticOptional[str] = ''
+    user_agent: PydanticOptional[str] = ''
+    timestamp: PydanticOptional[str] = None
+    session_id: PydanticOptional[str] = None
+    user_id: PydanticOptional[str] = 'anonymous'
+
+class BatchErrorRequest(BaseModel):
+    errors: List[Dict[str, Any]]
+
+
+@error_router.post('/errors')
+async def report_frontend_error(error: FrontendError):
+    """Report a single frontend error"""
+    try:
+        store = get_error_store()
+        
+        # Create error info for storage
+        error_info = {
+            'error_id': error.error_id or f"fe_{datetime.utcnow().timestamp()}",
+            'type': error.type,
+            'severity': error.severity,
+            'category': error.category,
+            'message': error.message,
+            'stack': error.stack,
+            'component_stack': error.component_stack,
+            'component_name': error.component_name,
+            'url': error.url,
+            'pathname': error.pathname,
+            'user_agent': error.user_agent,
+            'session_id': error.session_id,
+            'user_id': error.user_id,
+            'timestamp': error.timestamp or datetime.utcnow().isoformat(),
+            'source': 'frontend',
+        }
+        
+        # Store the error
+        await store.record_frontend_error(error_info)
+        
+        return {
+            'status': 'recorded',
+            'error_id': error_info['error_id'],
+            'timestamp': datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Failed to record frontend error: {e}")
+        return {'status': 'failed', 'error': str(e)}
+
+
+@error_router.post('/errors/batch')
+async def report_batch_errors(request: BatchErrorRequest):
+    """Report multiple frontend errors at once"""
+    try:
+        store = get_error_store()
+        recorded = 0
+        failed = 0
+        
+        for error_data in request.errors:
+            try:
+                error_info = {
+                    'error_id': error_data.get('id') or f"fe_{datetime.utcnow().timestamp()}_{recorded}",
+                    'type': error_data.get('category', 'unknown'),
+                    'severity': error_data.get('severity', 'medium'),
+                    'message': error_data.get('message', 'Unknown error'),
+                    'stack': error_data.get('stack', ''),
+                    'component_stack': error_data.get('componentStack', ''),
+                    'url': error_data.get('context', {}).get('url', ''),
+                    'pathname': error_data.get('context', {}).get('pathname', ''),
+                    'user_agent': error_data.get('device', {}).get('userAgent', ''),
+                    'session_id': error_data.get('context', {}).get('sessionId'),
+                    'user_id': error_data.get('context', {}).get('userId', 'anonymous'),
+                    'fingerprint': error_data.get('fingerprint', ''),
+                    'timestamp': error_data.get('context', {}).get('timestamp') or datetime.utcnow().isoformat(),
+                    'source': 'frontend_batch',
+                    'device_info': error_data.get('device', {}),
+                    'request_info': error_data.get('request', {}),
+                }
+                
+                await store.record_frontend_error(error_info)
+                recorded += 1
+            except Exception as e:
+                logger.error(f"Failed to record batch error: {e}")
+                failed += 1
+        
+        return {
+            'status': 'processed',
+            'recorded': recorded,
+            'failed': failed,
+            'timestamp': datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Failed to process batch errors: {e}")
+        return {'status': 'failed', 'error': str(e)}
+
