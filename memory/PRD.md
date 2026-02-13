@@ -7,6 +7,30 @@ Build a real money AI crypto auto trading app named "Tethys" with aggressive gro
 
 ## Session Update - Feb 13, 2026 (COMPLETE)
 
+### ✅ AI Predictions Added to Trading Pages (Feb 13, 2026)
+
+**New Component:** `/app/frontend/src/components/AIPrediction.jsx`
+- `AIPredictionCard` - Displays AI prediction with signal, score, confidence
+- `useAIPrediction` - Hook to fetch predictions for a symbol
+- `TradingSignalsSummary` - Multi-symbol signal overview
+
+**Pages Updated:**
+1. **Perpetual Futures** - AI Signal column in markets table
+2. **Options Trading** - AI Prediction card next to price banner
+3. **Market Maker** - AI Prediction card after status banner
+
+**Features:**
+- Real-time signal display (BUY/SELL/HOLD/LONG/SHORT)
+- Score (0-100) and confidence percentage
+- Component breakdown (Technical, Sentiment, Momentum)
+- Color-coded signals (green=buy, red=sell, yellow=hold)
+- Auto-refresh capability
+
+### ✅ FIXED: Risk Settings ObjectId Error (Feb 13, 2026)
+- Issue: `/api/risk/settings/{user_id}` returning ObjectId in response
+- Fix: Clean copy of settings returned after insert_one
+- File: `/app/backend/services/risk_manager.py`
+
 ### ✅ FIXED: Trading Page Error (Feb 13, 2026)
 - Issue: PageLoadingSkeleton was not exported from LoadingSkeletons.jsx
 - Fix: Added PageLoadingSkeleton export and import in SpotTrading.jsx
