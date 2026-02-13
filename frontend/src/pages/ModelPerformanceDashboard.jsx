@@ -248,11 +248,7 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
   );
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-[#0A0A0F]">
-        <RefreshCw className="w-8 h-8 text-cyan-400 animate-spin" />
-      </div>
-    );
+    return <PageLoadingSkeleton />;
   }
 
   return (
