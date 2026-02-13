@@ -57,6 +57,10 @@ const AIExplainability = () => {
     }
   };
 
+  if (loading && !explanation) {
+    return <PageLoadingSkeleton />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-950 p-6">
       {/* Header */}
