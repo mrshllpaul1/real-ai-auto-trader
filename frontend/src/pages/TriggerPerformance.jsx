@@ -62,14 +62,7 @@ const TriggerPerformance = ({ embedded = false }) => {
   }, [loadData]);
 
   if (loading || !data) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-[#9D00FF] mx-auto mb-4" />
-          <p className="text-[#A1A1AA]">Loading Trigger Performance...</p>
-        </div>
-      </div>
-    );
+    return <PageLoadingSkeleton />;
   }
 
   const { summary, by_category, trigger_metrics, top_performers, recent_executions } = data;
