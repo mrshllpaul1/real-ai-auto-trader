@@ -300,6 +300,14 @@ def register_routes(api_router: APIRouter, db=None):
     from routes import monitoring as monitoring_routes
     api_router.include_router(monitoring_routes.router, tags=["Trading Monitoring"])
     
+    # ============================================
+    # AI Confidence Explanation
+    # ============================================
+    from routes import confidence_explain as confidence_explain_routes
+    from services.confidence_explainer import get_confidence_explainer
+    api_router.include_router(confidence_explain_routes.router, tags=["AI Confidence Explanation"])
+    confidence_explain_routes.set_dependencies(db, get_confidence_explainer(db))
+    
     logger.info("✅ All routes registered (including new enhancements)")
     
     return api_router
