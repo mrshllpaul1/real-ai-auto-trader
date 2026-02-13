@@ -134,8 +134,43 @@ class ErrorStore:
                 'errors_last_hour': len(recent_errors),
                 'by_severity': by_severity,
                 'by_type': by_type,
-                'error_counts': dict(self.error_counts)
+                'error_counts': dict(self.error_counts),
+                'frontend_errors': len(self.frontend_errors) if hasattr(self, 'frontend_errors') else 0
             }
+
+    async def record_frontend_error(self, error_info: Dict):
+        """Record a frontend error"""
+        async with self._lock:
+            if not hasattr(self, 'frontend_errors'):
+                self.frontend_errors = []
+            
+            # Limit stored errors to prevent memory issues
+            if len(self.frontend_errors) > 1000:
+                self.frontend_errors = self.frontend_errors[-500:]
+            
+            self.frontend_errors.append({
+                **error_info,
+                'recorded_at': datetime.utcnow().isoformat()
+            })
+            
+            # Also try to persist to database
+            try:
+                from config.database import get_database
+                db = await get_database()
+                if db is not None:
+                    await db.frontend_errors.insert_one({
+                        **error_info,
+                        'recorded_at': datetime.utcnow()
+                    })
+            except Exception as e:
+                logger.warning(f"Failed to persist frontend error to DB: {e}")
+
+    async def get_frontend_errors(self, limit: int = 100) -> List[Dict]:
+        """Get recent frontend errors"""
+        async with self._lock:
+            if not hasattr(self, 'frontend_errors'):
+                return []
+            return self.frontend_errors[-limit:]
 
 
 # Global error store
