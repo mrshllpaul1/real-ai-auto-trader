@@ -48,6 +48,130 @@ async def get_explanation_status():
     }
 
 
+@router.get("/feature-importance")
+async def get_feature_importance():
+    """
+    Get the feature importance weights used by the explanation model.
+    Useful for understanding which factors matter most in predictions.
+    """
+    if _explainer is None:
+        raise HTTPException(status_code=503, detail="Explanation service not initialized")
+    
+    weights = _explainer.FEATURE_WEIGHTS
+    
+    # Flatten and sort by importance
+    all_features = []
+    for category, features in weights.items():
+        for feature, importance in features.items():
+            all_features.append({
+                "category": category,
+                "feature": feature,
+                "importance": importance,
+                "importance_pct": f"{importance * 100:.1f}%"
+            })
+    
+    all_features.sort(key=lambda x: x["importance"], reverse=True)
+    
+    return {
+        "by_category": weights,
+        "ranked": all_features,
+        "total_features": len(all_features),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@router.get("/thresholds")
+async def get_interpretation_thresholds():
+    """
+    Get the thresholds used for interpreting feature values.
+    Helps understand what values are considered significant.
+    """
+    if _explainer is None:
+        raise HTTPException(status_code=503, detail="Explanation service not initialized")
+    
+    return {
+        "thresholds": _explainer.THRESHOLDS,
+        "interpretation_guide": {
+            "rsi": {
+                "description": "Relative Strength Index",
+                "oversold": "Below threshold indicates oversold (bullish signal)",
+                "overbought": "Above threshold indicates overbought (bearish signal)"
+            },
+            "fear_greed": {
+                "description": "Market Fear & Greed Index",
+                "extreme_fear": "Below threshold indicates extreme fear (contrarian bullish)",
+                "extreme_greed": "Above threshold indicates extreme greed (contrarian bearish)"
+            },
+            "volume_change": {
+                "description": "Volume relative to average",
+                "significant": "Above threshold indicates above-average activity",
+                "extreme": "Above threshold indicates major volume surge"
+            },
+            "volatility": {
+                "description": "Price volatility measure",
+                "low": "Below threshold indicates calm market",
+                "high": "Above threshold indicates high volatility"
+            }
+        },
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@router.get("/batch")
+async def explain_multiple_symbols(
+    symbols: str = Query(..., description="Comma-separated list of symbols"),
+    top_n: int = Query(3, ge=1, le=10, description="Number of key drivers per symbol")
+):
+    """
+    Get brief explanations for multiple symbols at once.
+    Returns summary-level data optimized for dashboard display.
+    """
+    if _explainer is None:
+        raise HTTPException(status_code=503, detail="Explanation service not initialized")
+    
+    symbol_list = [s.strip().upper() for s in symbols.split(",")]
+    results = []
+    
+    for symbol in symbol_list[:10]:  # Limit to 10 symbols
+        try:
+            prediction = await _get_prediction_for_symbol(symbol)
+            
+            if prediction:
+                explanation = _explainer.explain_confidence(
+                    symbol=symbol,
+                    confidence=prediction.get("confidence", 0.5),
+                    signal=prediction.get("signal", "hold"),
+                    features=prediction.get("features", {})
+                )
+                
+                results.append({
+                    "symbol": symbol,
+                    "confidence": explanation["confidence"],
+                    "signal": explanation["signal"],
+                    "summary": explanation["summary"],
+                    "key_drivers": explanation["key_drivers"][:top_n],
+                    "confidence_level": explanation["confidence_level"],
+                    "agreement_score": explanation["agreement_score"]
+                })
+            else:
+                results.append({
+                    "symbol": symbol,
+                    "error": "No prediction available"
+                })
+        except Exception as e:
+            logger.error(f"Error explaining {symbol}: {e}")
+            results.append({
+                "symbol": symbol,
+                "error": str(e)
+            })
+    
+    return {
+        "explanations": results,
+        "count": len(results),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
 @router.get("/{symbol}")
 async def explain_symbol_confidence(
     symbol: str,
