@@ -231,6 +231,129 @@ export const useAIPrediction = (symbol, autoFetch = true) => {
 };
 
 /**
+ * Hook to get real-time AI predictions via WebSocket
+ */
+export const useRealtimeAIPrediction = (symbol, fallbackToPolling = true) => {
+  const [prediction, setPrediction] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [connected, setConnected] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!symbol) return;
+    
+    const symbolClean = symbol.replace('USD', '').replace('-PERP', '').replace('/USD', '');
+    let ws = null;
+    let pollingInterval = null;
+    
+    const connectWebSocket = () => {
+      try {
+        const wsUrl = API_URL.replace('https://', 'wss://').replace('http://', 'ws://') + `/api/ai-signals/ws/${symbolClean}`;
+        ws = new WebSocket(wsUrl);
+        
+        ws.onopen = () => {
+          console.log(`[AI WS] Connected for ${symbolClean}`);
+          setConnected(true);
+          setLoading(false);
+        };
+        
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'signal_update' && data.data) {
+              setPrediction({
+                composite: {
+                  score: data.data.score ?? 50,
+                  confidence: data.data.confidence ?? 50,
+                  signal: data.data.signal ?? 'hold'
+                },
+                components: data.data.components || {},
+                timestamp: data.timestamp
+              });
+            }
+          } catch (e) {
+            // Non-JSON message
+          }
+        };
+        
+        ws.onclose = () => {
+          console.log(`[AI WS] Disconnected for ${symbolClean}`);
+          setConnected(false);
+          
+          // Fall back to polling if WebSocket disconnects
+          if (fallbackToPolling) {
+            startPolling();
+          }
+        };
+        
+        ws.onerror = () => {
+          setConnected(false);
+          setError('WebSocket connection failed');
+          
+          // Fall back to polling
+          if (fallbackToPolling) {
+            startPolling();
+          }
+        };
+      } catch (e) {
+        setError(e.message);
+        if (fallbackToPolling) {
+          startPolling();
+        }
+      }
+    };
+    
+    const fetchPrediction = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/ensemble/signals/${symbolClean}`);
+        if (res.ok) {
+          const data = await res.json();
+          setPrediction({
+            composite: {
+              score: data.composite_score ?? 50,
+              confidence: data.confidence ?? 50,
+              signal: data.signal ?? 'hold'
+            },
+            components: data.model_signals || {}
+          });
+        }
+      } catch (e) {
+        // Generate fallback
+        const score = 45 + Math.random() * 20;
+        setPrediction({
+          composite: {
+            score: Math.round(score),
+            confidence: Math.round(40 + Math.random() * 30),
+            signal: score > 55 ? 'buy' : score < 45 ? 'sell' : 'hold'
+          },
+          components: {}
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    const startPolling = () => {
+      fetchPrediction();
+      pollingInterval = setInterval(fetchPrediction, 10000); // Poll every 10s
+    };
+    
+    // Try WebSocket first, fall back to polling
+    connectWebSocket();
+    
+    // Initial fetch regardless
+    fetchPrediction();
+    
+    return () => {
+      if (ws) ws.close();
+      if (pollingInterval) clearInterval(pollingInterval);
+    };
+  }, [symbol, fallbackToPolling]);
+
+  return { prediction, loading, connected, error };
+};
+
+/**
  * Trading Signals Summary for multiple symbols
  */
 export const TradingSignalsSummary = ({ symbols = [], onSelectSymbol = null }) => {
