@@ -199,16 +199,17 @@ class ErrorMonitoringMiddleware(BaseHTTPMiddleware):
         return ErrorSeverity.INFO
     
     async def dispatch(self, request: Request, call_next):
-        request_id = request.headers.get(REQUEST_ID_HEADER) or str(uuid.uuid4())[:8]
+        extracted_request_id = request.headers.get(REQUEST_ID_HEADER)
+        request_id = extracted_request_id or str(uuid.uuid4())[:8]
         set_request_id(request_id)
         start_time = datetime.utcnow()
-        content_length = request.headers.get('content-length') or "unknown"
+        content_length_str = request.headers.get('content-length') or "unknown"
         
         try:
             if self.log_all_requests:
                 logger.info(
                     f"Request [{request_id}]: {request.method} {request.url.path} "
-                    f"params_count={len(request.query_params)} content_length={content_length}"
+                    f"params_count={len(request.query_params)} content_length={content_length_str}"
                 )
             response = await call_next(request)
             
