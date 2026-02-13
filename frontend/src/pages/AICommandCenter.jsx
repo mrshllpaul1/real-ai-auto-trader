@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 import api, { clearAllCacheAndRefresh } from '../services/api';
 import toast from '../utils/toast';
 import VisualTrainingProgress from '../components/VisualTrainingProgress';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 // AI Brain Tab - Enhanced AI Dashboard
 const AIBrainTab = ({ enhancedStatus, onTrainModel, isTraining }) => (
