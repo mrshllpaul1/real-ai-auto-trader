@@ -1,7 +1,7 @@
 {
-  "short_name": "CryptoTrade",
-  "name": "AI Crypto Auto Trading",
-  "description": "Real money AI-powered cryptocurrency auto trading with machine learning",
+  "short_name": "Tethys AI",
+  "name": "Tethys AI - Crypto Trading Platform",
+  "description": "AI-powered cryptocurrency trading with real-time analytics, ML predictions, and automated execution",
   "icons": [
     {
       "src": "/logo192.png",
@@ -16,30 +16,63 @@
       "purpose": "any maskable"
     }
   ],
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "display": "standalone",
-  "theme_color": "#00FF94",
-  "background_color": "#050505",
-  "orientation": "portrait-primary",
+  "theme_color": "#9D00FF",
+  "background_color": "#0A0A0A",
+  "orientation": "any",
   "scope": "/",
-  "categories": ["finance", "trading", "cryptocurrency"],
+  "categories": ["finance", "trading", "cryptocurrency", "investment"],
   "prefer_related_applications": false,
   "related_applications": [],
+  "id": "tethys-ai-crypto-trading",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "display_override": ["standalone", "minimal-ui"],
+  "handle_links": "preferred",
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
   "screenshots": [],
   "shortcuts": [
     {
       "name": "Dashboard",
       "short_name": "Dashboard",
-      "description": "View trading dashboard",
-      "url": "/",
+      "description": "View trading dashboard and portfolio",
+      "url": "/?tab=dashboard",
       "icons": [{ "src": "/logo192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Trading",
+      "name": "Trading Hub",
       "short_name": "Trade",
-      "description": "Execute trades",
+      "description": "Execute trades and manage positions",
       "url": "/trading",
       "icons": [{ "src": "/logo192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "AI Hub",
+      "short_name": "AI",
+      "description": "AI predictions and ensemble signals",
+      "url": "/ai",
+      "icons": [{ "src": "/logo192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Performance",
+      "short_name": "Monitor",
+      "description": "System performance metrics",
+      "url": "/performance-monitor",
+      "icons": [{ "src": "/logo192.png", "sizes": "192x192" }]
     }
-  ]
+  ],
+  "share_target": {
+    "action": "/share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
 }
