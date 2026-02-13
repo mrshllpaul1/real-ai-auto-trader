@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const API_BASE = process.env.REACT_APP_BACKEND_URL;
 

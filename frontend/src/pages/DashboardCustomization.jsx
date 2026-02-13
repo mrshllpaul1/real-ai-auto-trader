@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import toast from '../utils/toast';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const DashboardCustomization = ({ embedded = false }) => {
   const [layout, setLayout] = useState(null);

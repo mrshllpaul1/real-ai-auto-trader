@@ -14,6 +14,7 @@ import {
   TrendingUp, TrendingDown, PieChart, Lock, Unlock,
   RefreshCcw, Calendar, Award, CheckCircle
 } from 'lucide-react';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const PortfolioShare = ({ embedded = false }) => {
   const [shareConfig, setShareConfig] = useState({

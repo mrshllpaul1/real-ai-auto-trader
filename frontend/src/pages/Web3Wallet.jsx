@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Wallet, Link2, Unlink, RefreshCw, ChevronDown, ExternalLink, Coins, Image, Layers, PieChart } from 'lucide-react';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '';
 

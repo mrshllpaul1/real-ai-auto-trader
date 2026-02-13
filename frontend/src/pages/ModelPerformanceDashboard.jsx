@@ -16,6 +16,7 @@ import api, { clearAllCacheAndRefresh } from '../services/api';
 import TrainingProgress from '../components/TrainingProgress';
 import ModelBenchmarkDashboard from '../components/ModelBenchmarkDashboard';
 import { toast } from 'sonner';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 // Performance optimization: Detect low-power devices
 const isLowPowerDevice = () => {

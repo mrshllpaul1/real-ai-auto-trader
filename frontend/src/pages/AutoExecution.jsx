@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
 import { useTradingMode } from '../context/TradingModeContext';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const AutoExecution = ({ embedded = false }) => {
   const [status, setStatus] = useState(null);

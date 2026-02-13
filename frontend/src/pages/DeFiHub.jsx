@@ -13,6 +13,7 @@ import {
   MobileTabsList,
   LazyTabContent 
 } from '@/components/HubNavigation';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 // Lazy load page components for better performance
 const DeFiWallet = lazy(() => import('./DeFiWallet'));

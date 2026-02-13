@@ -13,6 +13,7 @@ import {
 import { motion } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 // Simple chart components for accuracy visualization
 const AccuracyTrendChart = ({ data, title }) => {

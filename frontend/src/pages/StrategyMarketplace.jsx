@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Store, Star, TrendingUp, Users, Filter, Search, ChevronDown, Sparkles, Shield, Clock, DollarSign } from 'lucide-react';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '';
 

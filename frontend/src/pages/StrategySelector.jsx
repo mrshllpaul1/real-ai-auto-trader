@@ -6,6 +6,7 @@ import { Sparkles, TrendingUp, TrendingDown, Zap, RefreshCw } from 'lucide-react
 import { motion } from 'framer-motion';
 import { strategyAPI } from '../services/api';
 import { toast } from 'sonner';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const StrategySelector = () => {
   const [strategies, setStrategies] = useState([]);

@@ -7,6 +7,7 @@ import { Newspaper, TrendingUp, Brain, History, Zap, AlertCircle, ExternalLink, 
 import { motion } from 'framer-motion';
 import api, { coindeskAPI } from '../services/api';
 import { toast } from 'sonner';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const NewsAndIntelligence = ({ embedded = false }) => {
   const [news, setNews] = useState([]);

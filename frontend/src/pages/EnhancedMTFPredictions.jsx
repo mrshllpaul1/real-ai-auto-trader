@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import toast from '../utils/toast';
 import TrainingProgress from '../components/TrainingProgress';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 // Fear & Greed Gauge Component
 const FearGreedGauge = ({ value, classification }) => {

@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const AITeacher = ({ embedded = false }) => {
   const [messages, setMessages] = useState([]);

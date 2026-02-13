@@ -6,6 +6,7 @@ import { BarChart3, Calendar, Gem, LineChart, Shield } from 'lucide-react';
 import { 
   Breadcrumb, useTabState, useTabKeyboardNav, KeyboardHint, MobileTabsList, LazyTabContent 
 } from '@/components/HubNavigation';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const BacktestEngine = lazy(() => import('./BacktestEngine'));
 const YearlyBacktest = lazy(() => import('./YearlyBacktest'));

@@ -6,6 +6,7 @@ import { Brain, TrendingUp, Zap, BarChart3, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const AILearning = ({ embedded = false }) => {
   const [learningReport, setLearningReport] = useState(null);

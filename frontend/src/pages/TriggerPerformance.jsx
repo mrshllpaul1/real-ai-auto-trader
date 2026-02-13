@@ -11,6 +11,7 @@ import {
 import { motion } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const categoryIcons = {
   celebrity: Users,

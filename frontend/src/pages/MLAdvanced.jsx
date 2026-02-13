@@ -10,6 +10,7 @@ import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, 
   AreaChart, Area, BarChart, Bar, CartesianGrid, Legend, ReferenceLine
 } from 'recharts';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.REACT_APP_BACKEND_URL || '');
 

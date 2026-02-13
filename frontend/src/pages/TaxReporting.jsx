@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Receipt, Download, Calendar, DollarSign, TrendingUp, TrendingDown, AlertTriangle, FileText, ChevronDown, PieChart } from 'lucide-react';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '';
 

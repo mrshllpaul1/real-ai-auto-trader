@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import api from '../services/api';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const AdvancedAI = () => {
   const [newsStatus, setNewsStatus] = useState(null);
