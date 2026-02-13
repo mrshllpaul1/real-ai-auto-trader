@@ -194,7 +194,13 @@ class AutoDebugger {
 
   async reportError(error) {
     try {
-      const API_URL = import.meta.env?.REACT_APP_BACKEND_URL || '';
+      // Safely get API URL
+      let API_URL = '';
+      try {
+        API_URL = import.meta.env?.REACT_APP_BACKEND_URL || '';
+      } catch (e) {
+        // import.meta not available
+      }
       await fetch(`${API_URL}/api/error-tracking/report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
