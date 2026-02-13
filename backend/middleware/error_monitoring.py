@@ -15,9 +15,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 from collections import deque
 import os
+from utils.request_context import clear_request_id, get_request_id, set_request_id
 
 logger = logging.getLogger(__name__)
-from utils.request_context import clear_request_id, get_request_id, set_request_id
 
 
 class ErrorSeverity:
@@ -200,13 +200,13 @@ class ErrorMonitoringMiddleware(BaseHTTPMiddleware):
         request_id = request.headers.get('X-Request-ID') or str(uuid.uuid4())[:8]
         set_request_id(request_id)
         start_time = datetime.utcnow()
-        content_length = request.headers.get('content-length')
+        content_length_header = request.headers.get('content-length')
         
         try:
             if self.log_all_requests:
                 logger.info(
                     f"Request [{request_id}]: {request.method} {request.url.path} "
-                    f"query={dict(request.query_params)} content_length={content_length}"
+                    f"query={dict(request.query_params)} content_length={content_length_header}"
                 )
             response = await call_next(request)
             
