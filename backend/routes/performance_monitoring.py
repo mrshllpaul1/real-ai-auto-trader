@@ -76,16 +76,16 @@ async def get_performance_summary() -> Dict[str, Any]:
 
 
 @router.get("/latency")
-async def get_latency_history(range: str = "1h") -> Dict[str, Any]:
+async def get_latency_history(time_range: str = "1h") -> Dict[str, Any]:
     """Get API latency history"""
     import random
     from datetime import datetime, timedelta
     
     # Generate latency data based on range
-    if range == "1h":
+    if time_range == "1h":
         points = 60
         interval_minutes = 1
-    elif range == "6h":
+    elif time_range == "6h":
         points = 72
         interval_minutes = 5
     else:  # 24h
@@ -106,7 +106,7 @@ async def get_latency_history(range: str = "1h") -> Dict[str, Any]:
             "p99": round(base * 3.8, 1)
         })
     
-    return {"latency": data, "range": range}
+    return {"latency": data, "range": time_range}
 
 
 @router.get("/cache-stats")
