@@ -14,7 +14,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
-import { StatsGridSkeleton, ChartSkeleton, CardSkeleton, AIInsightSkeleton } from '../components/LoadingSkeletons';
+import { StatsGridSkeleton, ChartSkeleton, CardSkeleton, AIInsightSkeleton, PageLoadingSkeleton } from '../components/LoadingSkeletons';
 import { useComponentState, ComponentType } from '../hooks/useSystemState';
 
 const regimeColors = {
