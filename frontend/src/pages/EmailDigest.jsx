@@ -584,6 +584,68 @@ const EmailDigest = ({ embedded = false }) => {
               </CardContent>
             </Card>
 
+            {/* Push Notifications */}
+            {pushSupported && (
+              <Card className="bg-slate-800/50 border-slate-700">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-white">
+                    <BellRing className="w-5 h-5 text-yellow-400" />
+                    Push Notifications
+                  </CardTitle>
+                  <CardDescription>
+                    Receive browser notifications for error alerts
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-white">Enable Push Notifications</Label>
+                      <p className="text-sm text-slate-400">
+                        Get instant alerts even when the app is in background
+                      </p>
+                    </div>
+                    {pushPermission === 'granted' ? (
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-green-500/20 text-green-400">
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          Enabled
+                        </Badge>
+                        <Button
+                          onClick={testPushNotification}
+                          variant="outline"
+                          size="sm"
+                          className="border-yellow-500/50 text-yellow-400"
+                        >
+                          Test
+                        </Button>
+                      </div>
+                    ) : pushPermission === 'denied' ? (
+                      <Badge className="bg-red-500/20 text-red-400">
+                        Blocked
+                      </Badge>
+                    ) : (
+                      <Button
+                        onClick={enablePushNotifications}
+                        variant="outline"
+                        className="border-yellow-500/50 text-yellow-400"
+                      >
+                        <BellRing className="w-4 h-4 mr-2" />
+                        Enable
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {pushPermission === 'denied' && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                      <p className="text-sm text-red-400">
+                        Push notifications are blocked. To enable them, click the lock icon in your browser's address bar and allow notifications.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Recipient Emails */}
             <Card className="bg-slate-800/50 border-slate-700">
               <CardHeader>
