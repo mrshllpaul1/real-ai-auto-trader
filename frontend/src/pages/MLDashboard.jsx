@@ -103,6 +103,10 @@ const MLDashboard = () => {
     { id: 'alerts', label: 'Alerts', icon: AlertCircle, count: alerts.filter(a => !a.acknowledged).length }
   ];
 
+  if (loading && !dashboard) {
+    return <PageLoadingSkeleton />;
+  }
+
   return (
     <div className="min-h-screen bg-[#0A0A0A] p-4 md:p-6" data-testid="ml-dashboard-page">
       {/* Header */}
