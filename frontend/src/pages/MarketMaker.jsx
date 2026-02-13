@@ -11,12 +11,13 @@ import { motion } from 'framer-motion';
 import {
   Activity, Play, Pause, Settings2, TrendingUp, TrendingDown,
   DollarSign, BarChart3, RefreshCw, AlertTriangle, Layers,
-  ArrowUpDown, Percent, Target, Clock, Zap
+  ArrowUpDown, Percent, Target, Clock, Zap, Brain
 } from 'lucide-react';
 import api from '../services/api';
 import toast from '../utils/toast';
 import TradingPairSelector from '../components/TradingPairSelector';
 import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
+import { AIPredictionCard, useAIPrediction } from '../components/AIPrediction';
 
 const MarketMaker = ({ embedded = false }) => {
   const [status, setStatus] = useState(null);
