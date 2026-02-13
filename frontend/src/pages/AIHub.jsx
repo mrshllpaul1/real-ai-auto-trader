@@ -20,7 +20,7 @@ import VisualTrainingProgress from '@/components/VisualTrainingProgress';
 
 // Lazy load page components
 const AICommandCenter = lazy(() => import('./AICommandCenter'));
-const AdaptiveStrategy = lazy(() => import('./AdaptiveStrategyPage'));
+const AdaptiveStrategy = lazy(() => import('./AdaptiveStrategy'));
 const AutoTrading = lazy(() => import('./AutoTrading'));
 const AutoExecution = lazy(() => import('./AutoExecution'));
 const EnsembleAI = lazy(() => import('./EnsembleAI'));
