@@ -240,6 +240,62 @@ const Web3Wallet = () => {
         </div>
       )}
 
+      {/* AI Portfolio Analysis */}
+      <div className="grid md:grid-cols-2 gap-4 mb-8">
+        <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-4">
+            <Brain className="w-5 h-5 text-purple-400" />
+            <span className="text-white font-medium">AI Portfolio Analysis</span>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Portfolio Health</span>
+              <span className="text-green-400 font-medium">Good</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Diversification Score</span>
+              <span className="text-orange-400 font-medium">72/100</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Risk Level</span>
+              <span className="text-yellow-400 font-medium">Medium</span>
+            </div>
+            <div className="border-t border-gray-700 pt-3 mt-3">
+              <p className="text-xs text-gray-500">
+                AI recommendation: Consider rebalancing to reduce concentration risk
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="w-5 h-5 text-green-400" />
+            <span className="text-white font-medium">Token Signals</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {['ETH', 'MATIC', 'ARB', 'OP'].map((token) => {
+              const isBullish = Math.random() > 0.4;
+              return (
+                <div key={token} className="flex items-center justify-between bg-gray-900/50 rounded-lg px-3 py-2">
+                  <span className="text-white font-medium">{token}</span>
+                  <div className="flex items-center gap-1">
+                    {isBullish ? (
+                      <TrendingUp className="w-4 h-4 text-green-400" />
+                    ) : (
+                      <TrendingDown className="w-4 h-4 text-red-400" />
+                    )}
+                    <span className={`text-sm font-medium ${isBullish ? 'text-green-400' : 'text-red-400'}`}>
+                      {isBullish ? 'BUY' : 'HOLD'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
         {['tokens', 'defi', 'nfts'].map(tab => (
