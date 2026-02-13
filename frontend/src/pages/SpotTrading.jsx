@@ -841,8 +841,34 @@ const SpotTrading = ({ embedded = false }) => {
         <div className="lg:col-span-1 space-y-4">
           {/* AI Signal for Selected Pair */}
           {pairDetails?.ai_signal && (
-            <AISignalCard signal={pairDetails.ai_signal} />
+            <AISignalCard 
+              signal={pairDetails.ai_signal} 
+              symbol={selectedSymbol}
+              onExplainClick={() => setShowAIExplanation(true)}
+            />
           )}
+          
+          {/* AI Confidence Explanation Panel */}
+          <AnimatePresence>
+            {showAIExplanation && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="relative">
+                  <button
+                    onClick={() => setShowAIExplanation(false)}
+                    className="absolute top-2 right-2 z-10 p-1 bg-[#222] rounded-lg text-[#888] hover:text-white"
+                  >
+                    <XCircle size={16} />
+                  </button>
+                  <AIConfidenceExplanation symbol={selectedSymbol} />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           
           {/* AI Position Sizing */}
           <AIPositionSizingCard
