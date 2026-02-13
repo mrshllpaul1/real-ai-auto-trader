@@ -608,7 +608,7 @@ const SpotTrading = ({ embedded = false }) => {
               </div>
               <div className="text-xs text-[#888]">
                 {orderResult.success 
-                  ? `${orderResult.details?.side} ${orderResult.(details?.volume ?? 0).toFixed(6)} ${orderResult.details?.symbol}`
+                  ? `${orderResult.details?.side} ${(orderResult.details?.volume ?? 0).toFixed(6)} ${orderResult.details?.symbol}`
                   : orderResult.error}
               </div>
             </div>
