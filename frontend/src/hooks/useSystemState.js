@@ -5,7 +5,7 @@
  * States survive page navigation and browser refresh.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../services/api';
 
 /**
@@ -28,40 +28,40 @@ export const ComponentType = {
 export const fetchAllSystemStates = async (userId = 'default') => {
   try {
     const response = await api.get(`/system-state/all?user_id=${userId}`);
-    return response.data;
+    return response.data || {};
   } catch (error) {
     console.error('Failed to fetch system states:', error);
-    return { running_components: [], states: {} };
+    return {};
   }
 };
 
 /**
- * Get state of a specific component
+ * Fetch a single component's state
  */
 export const fetchComponentState = async (component, userId = 'default') => {
   try {
     const response = await api.get(`/system-state/${component}?user_id=${userId}`);
-    return response.data;
+    return response.data || { is_running: false, metadata: {} };
   } catch (error) {
-    console.error(`Failed to fetch ${component} state:`, error);
-    return { is_running: false };
+    console.error(`Failed to fetch state for ${component}:`, error);
+    return { is_running: false, metadata: {} };
   }
 };
 
 /**
- * Set state of a component
+ * Update a component's state
  */
 export const setComponentState = async (component, isRunning, metadata = {}, userId = 'default') => {
   try {
-    const response = await api.post('/system-state/set', {
+    const response = await api.post('/system-state/update', {
       component,
-      is_running: isRunning,
       user_id: userId,
+      is_running: isRunning,
       metadata,
     });
-    return response.data;
+    return response.data || { success: false };
   } catch (error) {
-    console.error(`Failed to set ${component} state:`, error);
+    console.error(`Failed to update state for ${component}:`, error);
     return { success: false };
   }
 };
@@ -74,45 +74,59 @@ export const setComponentState = async (component, isRunning, metadata = {}, use
 export const useComponentState = (component, options = {}) => {
   const {
     userId = 'default',
-    pollInterval = null, // Set to milliseconds to enable polling
+    pollInterval = null,
     onStateChange = null,
   } = options;
 
-  const [isRunning, setIsRunning] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [metadata, setMetadata] = useState({});
-  const mountedRef = useRef(true);
+  // Ensure we're using React hooks properly
+  const [isRunning, setIsRunning] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
+  const [metadata, setMetadata] = React.useState({});
+  const mountedRef = React.useRef(true);
 
   // Fetch initial state
-  const fetchState = useCallback(async () => {
-    const state = await fetchComponentState(component, userId);
-    if (mountedRef.current) {
-      const newIsRunning = state.is_running || false;
-      if (newIsRunning !== isRunning && onStateChange) {
-        onStateChange(newIsRunning);
+  const fetchState = React.useCallback(async () => {
+    try {
+      const state = await fetchComponentState(component, userId);
+      if (mountedRef.current) {
+        const newIsRunning = state.is_running || false;
+        if (newIsRunning !== isRunning && onStateChange) {
+          onStateChange(newIsRunning);
+        }
+        setIsRunning(newIsRunning);
+        setMetadata(state.metadata || {});
+        setLoading(false);
       }
-      setIsRunning(newIsRunning);
-      setMetadata(state.metadata || {});
-      setLoading(false);
+      return state;
+    } catch (error) {
+      console.error('Error fetching state:', error);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
+      return { is_running: false, metadata: {} };
     }
-    return state;
   }, [component, userId, isRunning, onStateChange]);
 
   // Update state
-  const updateState = useCallback(async (newIsRunning, newMetadata = {}) => {
-    const result = await setComponentState(component, newIsRunning, newMetadata, userId);
-    if (result.success && mountedRef.current) {
-      setIsRunning(newIsRunning);
-      setMetadata(prev => ({ ...prev, ...newMetadata }));
-      if (onStateChange) {
-        onStateChange(newIsRunning);
+  const updateState = React.useCallback(async (newIsRunning, newMetadata = {}) => {
+    try {
+      const result = await setComponentState(component, newIsRunning, newMetadata, userId);
+      if (result.success && mountedRef.current) {
+        setIsRunning(newIsRunning);
+        setMetadata(prev => ({ ...prev, ...newMetadata }));
+        if (onStateChange) {
+          onStateChange(newIsRunning);
+        }
       }
+      return result;
+    } catch (error) {
+      console.error('Error updating state:', error);
+      return { success: false };
     }
-    return result;
   }, [component, userId, onStateChange]);
 
   // Initial fetch
-  useEffect(() => {
+  React.useEffect(() => {
     mountedRef.current = true;
     fetchState();
     return () => {
@@ -121,7 +135,7 @@ export const useComponentState = (component, options = {}) => {
   }, []);
 
   // Polling
-  useEffect(() => {
+  React.useEffect(() => {
     if (!pollInterval) return;
 
     const interval = setInterval(fetchState, pollInterval);
@@ -143,25 +157,29 @@ export const useComponentState = (component, options = {}) => {
 export const useAllSystemStates = (options = {}) => {
   const {
     userId = 'default',
-    pollInterval = 30000, // 30 seconds default
+    pollInterval = null,
   } = options;
 
-  const [states, setStates] = useState({});
-  const [runningComponents, setRunningComponents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const mountedRef = useRef(true);
+  const [states, setStates] = React.useState({});
+  const [loading, setLoading] = React.useState(true);
+  const mountedRef = React.useRef(true);
 
-  const fetchStates = useCallback(async () => {
-    const data = await fetchAllSystemStates(userId);
-    if (mountedRef.current) {
-      setStates(data.states || {});
-      setRunningComponents(data.running_components || []);
-      setLoading(false);
+  const fetchStates = React.useCallback(async () => {
+    try {
+      const allStates = await fetchAllSystemStates(userId);
+      if (mountedRef.current) {
+        setStates(allStates);
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Error fetching all states:', error);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
-    return data;
   }, [userId]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     mountedRef.current = true;
     fetchStates();
     return () => {
@@ -169,57 +187,39 @@ export const useAllSystemStates = (options = {}) => {
     };
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!pollInterval) return;
+
     const interval = setInterval(fetchStates, pollInterval);
     return () => clearInterval(interval);
   }, [pollInterval, fetchStates]);
 
-  const isComponentRunning = useCallback((component) => {
+  const isComponentRunning = React.useCallback((component) => {
     return states[component]?.is_running || false;
   }, [states]);
 
+  const updateComponentState = React.useCallback(async (component, isRunning, metadata = {}) => {
+    const result = await setComponentState(component, isRunning, metadata, userId);
+    if (result.success) {
+      await fetchStates();
+    }
+    return result;
+  }, [userId, fetchStates]);
+
   return {
     states,
-    runningComponents,
     loading,
     isComponentRunning,
+    updateComponentState,
     refresh: fetchStates,
   };
 };
 
-/**
- * Helper hook for common toggle patterns
- */
-export const useToggleComponent = (component, startApi, stopApi, options = {}) => {
-  const { isRunning, loading, setRunning, refresh } = useComponentState(component, options);
-  const [toggling, setToggling] = useState(false);
-
-  const toggle = useCallback(async () => {
-    setToggling(true);
-    try {
-      if (isRunning) {
-        await stopApi();
-        await setRunning(false);
-      } else {
-        await startApi();
-        await setRunning(true);
-      }
-      await refresh();
-    } catch (error) {
-      console.error(`Failed to toggle ${component}:`, error);
-    } finally {
-      setToggling(false);
-    }
-  }, [isRunning, startApi, stopApi, setRunning, refresh, component]);
-
-  return {
-    isRunning,
-    loading,
-    toggling,
-    toggle,
-    refresh,
-  };
+export default {
+  ComponentType,
+  useComponentState,
+  useAllSystemStates,
+  fetchAllSystemStates,
+  fetchComponentState,
+  setComponentState,
 };
-
-export default useComponentState;
