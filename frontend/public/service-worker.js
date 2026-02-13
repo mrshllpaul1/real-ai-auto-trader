@@ -1,51 +1,140 @@
-const CACHE_NAME = 'crypto-trade-v3';
-const API_BASE = '/api';
+const CACHE_NAME = 'tethys-ai-v4';
+const STATIC_CACHE = 'tethys-static-v4';
+const DYNAMIC_CACHE = 'tethys-dynamic-v4';
+const API_CACHE = 'tethys-api-v4';
 
 const urlsToCache = [
   '/',
+  '/manifest.json',
+  '/offline.html'
+];
+
+// Static assets to cache during install
+const staticAssets = [
   '/static/css/main.css',
   '/static/js/main.js',
-  '/manifest.json'
+  '/logo192.png',
+  '/logo512.png',
+  '/favicon.ico'
+];
+
+// API routes to cache with stale-while-revalidate
+const apiCacheRoutes = [
+  '/api/health',
+  '/api/portfolio/visualization/summary',
+  '/api/market/overview',
+  '/api/coins/universe'
 ];
 
 // Install service worker and cache assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing...');
+  console.log('[SW] Installing Tethys AI Service Worker...');
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
-      .then(() => self.skipWaiting())
+    Promise.all([
+      caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)),
+      caches.open(STATIC_CACHE).then((cache) => {
+        return cache.addAll(staticAssets).catch(err => {
+          console.log('[SW] Static assets cache failed (non-critical):', err);
+        });
+      })
+    ]).then(() => self.skipWaiting())
   );
 });
 
 // Activate and clean old caches
 self.addEventListener('activate', (event) => {
   console.log('[SW] Activating...');
+  const currentCaches = [CACHE_NAME, STATIC_CACHE, DYNAMIC_CACHE, API_CACHE];
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
+          .filter((name) => !currentCaches.includes(name))
+          .map((name) => {
+            console.log('[SW] Deleting old cache:', name);
+            return caches.delete(name);
+          })
       );
     }).then(() => self.clients.claim())
   );
 });
 
-// Network first for API, cache first for static
+// Network first for API, cache first for static, stale-while-revalidate for dynamic
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
-  // API requests - network first
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') return;
+  
+  // Skip WebSocket connections
+  if (url.protocol === 'ws:' || url.protocol === 'wss:') return;
+  
+  // API requests - network first with cache fallback
   if (url.pathname.startsWith('/api')) {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => caches.match(event.request))
-    );
+    // Use stale-while-revalidate for common API routes
+    const shouldCache = apiCacheRoutes.some(route => url.pathname.includes(route));
+    
+    if (shouldCache) {
+      event.respondWith(
+        caches.open(API_CACHE).then(cache => {
+          return cache.match(event.request).then(cachedResponse => {
+            const fetchPromise = fetch(event.request)
+              .then(networkResponse => {
+                if (networkResponse && networkResponse.ok) {
+                  cache.put(event.request, networkResponse.clone());
+                }
+                return networkResponse;
+              })
+              .catch(() => cachedResponse);
+            
+            return cachedResponse || fetchPromise;
+          });
+        })
+      );
+    } else {
+      // Network first for non-cached API
+      event.respondWith(
+        fetch(event.request)
+          .catch(() => caches.match(event.request))
+      );
+    }
     return;
   }
   
   // Static assets - cache first
+  if (url.pathname.match(/\.(css|js|png|jpg|jpeg|gif|svg|woff2?|ttf|eot)$/)) {
+    event.respondWith(
+      caches.match(event.request).then(response => {
+        return response || fetch(event.request).then(fetchResponse => {
+          return caches.open(STATIC_CACHE).then(cache => {
+            cache.put(event.request, fetchResponse.clone());
+            return fetchResponse;
+          });
+        });
+      })
+    );
+    return;
+  }
+  
+  // HTML - network first with offline fallback
+  if (event.request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          caches.open(DYNAMIC_CACHE).then(cache => {
+            cache.put(event.request, response.clone());
+          });
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request)
+            .then(cachedResponse => cachedResponse || caches.match('/offline.html'));
+        })
+    );
+    return;
+  }
+  
+  // Default - network with cache fallback
   event.respondWith(
     caches.match(event.request)
       .then((response) => response || fetch(event.request))
