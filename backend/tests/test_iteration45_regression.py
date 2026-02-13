@@ -174,21 +174,22 @@ class TestPortfolioAndDashboard:
         # Portfolio may not be initialized - that's OK
         print(f"✓ Portfolio summary endpoint accessible: {data.get('message', 'data retrieved')}")
     
-    def test_kraken_portfolio(self):
-        """Test GET /api/kraken/portfolio - main portfolio endpoint"""
-        response = requests.get(f"{BASE_URL}/api/kraken/portfolio")
+    def test_kraken_balance(self):
+        """Test GET /api/kraken/balance - main portfolio endpoint"""
+        response = requests.get(f"{BASE_URL}/api/kraken/balance")
         assert response.status_code == 200
         
         data = response.json()
-        print(f"✓ Kraken portfolio retrieved")
+        assert "balances" in data
+        print(f"✓ Kraken balance retrieved: {data.get('total_currencies', 0)} currencies")
     
-    def test_global_market_data(self):
-        """Test GET /api/global-market - market overview"""
-        response = requests.get(f"{BASE_URL}/api/global-market")
+    def test_command_center_data(self):
+        """Test GET /api/command-center/data - command center data"""
+        response = requests.get(f"{BASE_URL}/api/command-center/data")
         assert response.status_code == 200
         
         data = response.json()
-        print(f"✓ Global market data retrieved")
+        print(f"✓ Command center data retrieved")
 
 
 class TestAIEndpoints:
@@ -245,13 +246,14 @@ class TestTradingEndpoints:
         data = response.json()
         print(f"✓ Scanner status retrieved")
     
-    def test_backtest_status(self):
-        """Test GET /api/backtest/status - backtest engine status"""
-        response = requests.get(f"{BASE_URL}/api/backtest/status")
+    def test_triggers_status(self):
+        """Test GET /api/triggers/status - event triggers status"""
+        response = requests.get(f"{BASE_URL}/api/triggers/status")
         assert response.status_code == 200
         
         data = response.json()
-        print(f"✓ Backtest status retrieved")
+        assert "total_triggers" in data
+        print(f"✓ Triggers status retrieved: {data.get('total_triggers', 0)} triggers")
 
 
 class TestEmailDigestEndpoints:
@@ -278,13 +280,14 @@ class TestEmailDigestEndpoints:
 class TestTriggerPerformance:
     """Tests for Trigger Performance endpoints"""
     
-    def test_event_triggers_status(self):
-        """Test GET /api/event-triggers/status"""
-        response = requests.get(f"{BASE_URL}/api/event-triggers/status")
+    def test_triggers_status(self):
+        """Test GET /api/triggers/status"""
+        response = requests.get(f"{BASE_URL}/api/triggers/status")
         assert response.status_code == 200
         
         data = response.json()
-        print(f"✓ Event triggers status retrieved")
+        assert "total_triggers" in data
+        print(f"✓ Triggers status retrieved")
     
     def test_notifications_endpoint(self):
         """Test GET /api/notifications/ - notifications list"""
