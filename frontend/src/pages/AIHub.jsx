@@ -1,3 +1,4 @@
+// AIHub - AI Features Center - Updated Feb 2026
 import React, { lazy, memo, Suspense } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
