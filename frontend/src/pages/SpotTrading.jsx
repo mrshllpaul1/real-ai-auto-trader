@@ -446,6 +446,7 @@ const SpotTrading = ({ embedded = false }) => {
   const [showOrderResult, setShowOrderResult] = useState(false);
   const [tradingStatus, setTradingStatus] = useState(null);
   const [showRecommendations, setShowRecommendations] = useState(false);
+  const [showAIExplanation, setShowAIExplanation] = useState(false);
   
   // Helper to safely fetch JSON with retry
   const safeFetchJSON = async (url, retries = 2) => {
