@@ -83,7 +83,8 @@ class ExchangeService:
     def cache(self) -> KrakenCacheService:
         """Lazy load cache service"""
         if self._cache is None:
-            self._cache = KrakenCacheService(self.db)
+            # KrakenCacheService expects a KrakenTradeService instance, not db
+            self._cache = KrakenCacheService(self.kraken)
         return self._cache
     
     @property
