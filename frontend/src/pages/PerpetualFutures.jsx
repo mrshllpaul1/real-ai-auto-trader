@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, TrendingDown, DollarSign, Percent, RefreshCw, Plus,
   ChevronDown, ChevronUp, Target, AlertTriangle, Calculator, X,
-  ArrowUpRight, ArrowDownRight, Zap, Shield, Activity
+  ArrowUpRight, ArrowDownRight, Zap, Shield, Activity, Brain
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
+import { AIPredictionCard, useAIPrediction } from '../components/AIPrediction';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.REACT_APP_BACKEND_URL || '');
 
