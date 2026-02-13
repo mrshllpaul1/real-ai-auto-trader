@@ -206,7 +206,9 @@ const AdaptiveStrategy = ({ embedded = false }) => {
   }, [loadData]);
 
   if (loading) {
-    return <PageLoadingSkeleton />;
+    // Use imported PageLoadingSkeleton if available, otherwise use fallback
+    const Skeleton = typeof PageLoadingSkeleton !== 'undefined' ? PageLoadingSkeleton : PageLoadingSkeletonFallback;
+    return <Skeleton />;
   }
 
   const regime = currentRegime?.regime || optimalStrategy?.current_regime?.regime || 'unknown';
