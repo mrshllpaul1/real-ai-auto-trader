@@ -323,23 +323,37 @@ const CommandCenter = () => {
   const [orchestratorStatus, setOrchestratorStatus] = useState(null);
   const [upgradesStatus, setUpgradesStatus] = useState(null);
 
-  // Use persisted state for orchestrator
-  const { 
-    isRunning: orchestratorPersisted, 
-    setRunning: setOrchestratorState,
-    refresh: refreshOrchestratorState 
-  } = useComponentState(ComponentType.MASTER_ORCHESTRATOR, {
-    pollInterval: 15000,
-  });
-
-  // Use persisted state for autopilot
-  const { 
-    isRunning: autopilotPersisted, 
-    setRunning: setAutopilotState,
-    refresh: refreshAutopilotState 
-  } = useComponentState(ComponentType.TETHYS_AUTOPILOT, {
-    pollInterval: 15000,
-  });
+  // Simplified persisted state - using local state with API sync
+  const [orchestratorPersisted, setOrchestratorPersisted] = useState(false);
+  const [autopilotPersisted, setAutopilotPersisted] = useState(false);
+  
+  // Helper to update component state via API
+  const updateComponentState = async (component, isRunning) => {
+    const baseUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '';
+    try {
+      await fetch(`${baseUrl}/api/system-state/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ component, user_id: 'default', is_running: isRunning, metadata: {} })
+      });
+      return true;
+    } catch (e) {
+      console.error('Failed to update state:', e);
+      return false;
+    }
+  };
+  
+  const setOrchestratorState = async (running) => {
+    if (await updateComponentState(ComponentType.MASTER_ORCHESTRATOR, running)) {
+      setOrchestratorPersisted(running);
+    }
+  };
+  
+  const setAutopilotState = async (running) => {
+    if (await updateComponentState(ComponentType.TETHYS_AUTOPILOT, running)) {
+      setAutopilotPersisted(running);
+    }
+  };
 
   const fetchData = useCallback(async (forceRefresh = false) => {
     try {
