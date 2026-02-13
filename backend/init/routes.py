@@ -170,6 +170,7 @@ def register_routes(api_router: APIRouter, db=None):
     api_router.include_router(onchain_data_routes.router, tags=["On-Chain Data"])
     api_router.include_router(whale_alerts_routes.router, tags=["Whale Alerts & Backtesting"])
     api_router.include_router(performance_dashboard_routes.router, tags=["Performance Dashboard"])
+    api_router.include_router(defi_ai_routes.router, tags=["DeFi AI Predictions"])
     
     # Yearly Adaptive Backtest
     from routes import yearly_backtest as yearly_backtest_routes
