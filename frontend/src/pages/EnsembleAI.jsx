@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { useComponentState, ComponentType } from '../hooks/useSystemState';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 // Progress bar component
 const ProgressBar = ({ progress, message }) => (
