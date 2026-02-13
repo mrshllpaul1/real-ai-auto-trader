@@ -247,3 +247,35 @@ async def calculate_stop_loss(
         "stop_loss": stop_loss,
         "take_profit": take_profit
     }
+
+
+@router.get("/ml-status")
+async def get_ml_status():
+    """Check which ML libraries are installed"""
+    from services.ml_fallback import check_ml_available
+    
+    status = check_ml_available()
+    
+    # Calculate overall status
+    heavy_libs = ["tensorflow", "torch"]
+    light_libs = ["sklearn", "xgboost", "lightgbm"]
+    
+    heavy_installed = sum(1 for lib in heavy_libs if status.get(lib, False))
+    light_installed = sum(1 for lib in light_libs if status.get(lib, False))
+    
+    if heavy_installed > 0:
+        mode = "full"
+        message = "Full ML capabilities available"
+    elif light_installed > 0:
+        mode = "light"
+        message = "Basic ML available (no deep learning)"
+    else:
+        mode = "fallback"
+        message = "Using simple technical analysis (no ML libraries)"
+    
+    return {
+        "mode": mode,
+        "message": message,
+        "libraries": status,
+        "recommendation": "App works fine without heavy ML. Install sklearn and xgboost for better predictions."
+    }
