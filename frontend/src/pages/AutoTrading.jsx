@@ -14,6 +14,7 @@ import AICoinSelectionSection from '../components/AICoinSelectionSection';
 import AutomatedTradingSection from '../components/AutomatedTradingSection';
 import { useTradingMode } from '../context/TradingModeContext';
 import { useComponentState, ComponentType, setComponentState } from '../hooks/useSystemState';
+import { CardSkeleton } from '../components/LoadingSkeletons';
 
 // Weekly Scheduler Section Component
 const WeeklySchedulerSection = () => {
