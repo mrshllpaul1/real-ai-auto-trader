@@ -1,15 +1,16 @@
 /**
  * Error Analytics Dashboard
- * Real-time error monitoring, trends, and alerting
+ * Real-time error monitoring, trends, alerting, and error grouping
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertTriangle, Bug, TrendingUp, TrendingDown, RefreshCw,
   Clock, AlertCircle, CheckCircle, XCircle, BarChart3,
   PieChart as PieChartIcon, Activity, Bell, BellOff, Filter,
-  ChevronDown, ChevronUp, ExternalLink, Copy, Check, Trash2
+  ChevronDown, ChevronUp, ExternalLink, Copy, Check, Trash2,
+  Layers, Hash, GitMerge, Eye, EyeOff, Search, SortAsc, SortDesc
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,58 @@ const CATEGORY_COLORS = {
   unknown: '#666666',
 };
 
+/**
+ * Generate fingerprint for error grouping
+ */
+const generateFingerprint = (error) => {
+  const message = (error.message || '').replace(/\d+/g, 'X').substring(0, 100);
+  const type = error.error_type || error.type || 'unknown';
+  const path = error.pathname || error.url?.split('?')[0] || '';
+  return `${type}|${message}|${path}`;
+};
+
+/**
+ * Group errors by fingerprint for deduplication
+ */
+const groupErrors = (errors) => {
+  const groups = new Map();
+  
+  errors.forEach(error => {
+    const fingerprint = generateFingerprint(error);
+    
+    if (groups.has(fingerprint)) {
+      const group = groups.get(fingerprint);
+      group.count += 1;
+      group.errors.push(error);
+      // Update last seen
+      const errorTime = new Date(error.timestamp);
+      if (errorTime > new Date(group.lastSeen)) {
+        group.lastSeen = error.timestamp;
+        group.latestError = error;
+      }
+      // Update first seen
+      if (errorTime < new Date(group.firstSeen)) {
+        group.firstSeen = error.timestamp;
+      }
+    } else {
+      groups.set(fingerprint, {
+        fingerprint,
+        count: 1,
+        errors: [error],
+        firstSeen: error.timestamp,
+        lastSeen: error.timestamp,
+        latestError: error,
+        message: error.message,
+        type: error.error_type || error.type,
+        severity: error.severity,
+        pathname: error.pathname || error.url?.split('?')[0],
+      });
+    }
+  });
+  
+  return Array.from(groups.values());
+};
+
 const ErrorAnalyticsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
@@ -52,9 +105,78 @@ const ErrorAnalyticsDashboard = () => {
   const [alerts, setAlerts] = useState([]);
   const [alertsEnabled, setAlertsEnabled] = useState(true);
   const [selectedError, setSelectedError] = useState(null);
+  const [selectedGroup, setSelectedGroup] = useState(null);
   const [timeRange, setTimeRange] = useState('24h');
   const [severityFilter, setSeverityFilter] = useState('all');
   const [copied, setCopied] = useState(false);
+  const [viewMode, setViewMode] = useState('grouped'); // 'grouped' or 'individual'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('count'); // 'count', 'lastSeen', 'severity'
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [activeTab, setActiveTab] = useState('overview');
+
+  // Group and filter errors
+  const groupedErrors = useMemo(() => {
+    let filtered = errors;
+    
+    // Apply severity filter
+    if (severityFilter !== 'all') {
+      filtered = filtered.filter(e => e.severity === severityFilter);
+    }
+    
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(e => 
+        (e.message || '').toLowerCase().includes(query) ||
+        (e.pathname || '').toLowerCase().includes(query) ||
+        (e.error_type || '').toLowerCase().includes(query)
+      );
+    }
+    
+    const groups = groupErrors(filtered);
+    
+    // Sort groups
+    groups.sort((a, b) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case 'count':
+          comparison = a.count - b.count;
+          break;
+        case 'lastSeen':
+          comparison = new Date(a.lastSeen) - new Date(b.lastSeen);
+          break;
+        case 'severity':
+          const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+          comparison = (severityOrder[a.severity] || 0) - (severityOrder[b.severity] || 0);
+          break;
+        default:
+          comparison = 0;
+      }
+      return sortOrder === 'desc' ? -comparison : comparison;
+    });
+    
+    return groups;
+  }, [errors, severityFilter, searchQuery, sortBy, sortOrder]);
+
+  // Calculate deduplication stats
+  const deduplicationStats = useMemo(() => {
+    const totalErrors = errors.length;
+    const uniqueGroups = groupedErrors.length;
+    const deduplicationRate = totalErrors > 0 
+      ? ((totalErrors - uniqueGroups) / totalErrors * 100).toFixed(1)
+      : 0;
+    const avgErrorsPerGroup = uniqueGroups > 0 
+      ? (totalErrors / uniqueGroups).toFixed(1)
+      : 0;
+    
+    return {
+      totalErrors,
+      uniqueGroups,
+      deduplicationRate,
+      avgErrorsPerGroup,
+    };
+  }, [errors, groupedErrors]);
 
   // Fetch error statistics
   const fetchStats = useCallback(async () => {
