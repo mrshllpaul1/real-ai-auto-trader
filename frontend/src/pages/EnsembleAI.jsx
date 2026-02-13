@@ -209,11 +209,7 @@ const EnsembleAI = ({ embedded = false }) => {
   }, [rebuilding, rebuildStateLoading, fetchBuildStatus]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-[#00FF94] animate-spin" />
-      </div>
-    );
+    return <PageLoadingSkeleton />;
   }
 
   return (
