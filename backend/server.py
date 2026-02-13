@@ -11,7 +11,15 @@ import asyncio
 import os
 
 # Configuration imports
-from config.app_config import APP_TITLE, APP_DESCRIPTION, APP_VERSION, CORS_ORIGINS, LOG_FORMAT, LOG_LEVEL
+from config.app_config import (
+    APP_TITLE,
+    APP_DESCRIPTION,
+    APP_VERSION,
+    CORS_ORIGINS,
+    LOG_FORMAT,
+    LOG_LEVEL,
+    LOG_ALL_REQUESTS,
+)
 from config.database import db, client, close_db
 from config.websocket import ConnectionManager
 
@@ -27,6 +35,12 @@ def get_service(name: str):
 
 # Configure logging
 logging.basicConfig(level=getattr(logging, LOG_LEVEL), format=LOG_FORMAT)
+try:
+    from utils.request_context import RequestIdFilter
+
+    logging.getLogger().addFilter(RequestIdFilter())
+except Exception as e:
+    logging.getLogger(__name__).warning(f"Request ID logging filter not available: {e}")
 logger = logging.getLogger(__name__)
 
 # Create the main app with enhanced API documentation
@@ -231,7 +245,7 @@ except ImportError as e:
 # 2. Error Monitoring
 try:
     from middleware.error_monitoring import ErrorMonitoringMiddleware
-    app.add_middleware(ErrorMonitoringMiddleware, log_all_requests=False)
+    app.add_middleware(ErrorMonitoringMiddleware, log_all_requests=LOG_ALL_REQUESTS)
     logger.info("✅ Error Monitoring middleware enabled")
 except ImportError as e:
     logger.warning(f"Could not import error monitoring middleware: {e}")

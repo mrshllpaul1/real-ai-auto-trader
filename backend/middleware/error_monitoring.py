@@ -17,6 +17,7 @@ from collections import deque
 import os
 
 logger = logging.getLogger(__name__)
+from utils.request_context import clear_request_id, get_request_id, set_request_id
 
 
 class ErrorSeverity:
@@ -168,6 +169,7 @@ class ErrorMonitoringMiddleware(BaseHTTPMiddleware):
     def _extract_request_info(self, request: Request) -> Dict:
         """Extract relevant request information"""
         return {
+            'request_id': get_request_id(),
             'method': request.method,
             'url': str(request.url),
             'path': request.url.path,
@@ -195,24 +197,31 @@ class ErrorMonitoringMiddleware(BaseHTTPMiddleware):
         return ErrorSeverity.INFO
     
     async def dispatch(self, request: Request, call_next):
-        error_id = str(uuid.uuid4())[:8]
+        request_id = request.headers.get('X-Request-ID') or str(uuid.uuid4())[:8]
+        set_request_id(request_id)
         start_time = datetime.utcnow()
+        content_length = request.headers.get('content-length')
         
         try:
+            if self.log_all_requests:
+                logger.info(
+                    f"Request [{request_id}]: {request.method} {request.url.path} "
+                    f"query={dict(request.query_params)} content_length={content_length}"
+                )
             response = await call_next(request)
             
             # Log slow requests
             duration = (datetime.utcnow() - start_time).total_seconds()
             if duration > 5.0:  # Requests taking more than 5 seconds
                 logger.warning(
-                    f"Slow request [{error_id}]: {request.method} {request.url.path} "
+                    f"Slow request [{request_id}]: {request.method} {request.url.path} "
                     f"took {duration:.2f}s"
                 )
             
             # Log errors (4xx, 5xx)
             if response.status_code >= 400:
                 error_record = ErrorRecord(
-                    error_id=error_id,
+                    error_id=request_id,
                     timestamp=datetime.utcnow(),
                     severity=self._determine_severity(response.status_code, None),
                     error_type=f"HTTP_{response.status_code}",
@@ -225,19 +234,25 @@ class ErrorMonitoringMiddleware(BaseHTTPMiddleware):
                 
                 if response.status_code >= 500:
                     logger.error(
-                        f"Error [{error_id}]: {request.method} {request.url.path} "
+                        f"Error [{request_id}]: {request.method} {request.url.path} "
                         f"returned {response.status_code}"
                     )
             
+            if self.log_all_requests:
+                logger.info(
+                    f"Response [{request_id}]: {request.method} {request.url.path} "
+                    f"status={response.status_code} duration={duration:.2f}s"
+                )
+
             # Add error ID to response headers
-            response.headers['X-Request-ID'] = error_id
+            response.headers['X-Request-ID'] = request_id
             
             return response
             
         except Exception as exc:
             # Capture unhandled exceptions
             error_record = ErrorRecord(
-                error_id=error_id,
+                error_id=request_id,
                 timestamp=datetime.utcnow(),
                 severity=ErrorSeverity.CRITICAL,
                 error_type=type(exc).__name__,
@@ -249,7 +264,7 @@ class ErrorMonitoringMiddleware(BaseHTTPMiddleware):
             await self.error_store.add_error(error_record)
             
             logger.critical(
-                f"Unhandled exception [{error_id}]: {type(exc).__name__}: {str(exc)}\n"
+                f"Unhandled exception [{request_id}]: {type(exc).__name__}: {str(exc)}\n"
                 f"Path: {request.method} {request.url.path}\n"
                 f"Traceback:\n{traceback.format_exc()}"
             )
@@ -259,11 +274,13 @@ class ErrorMonitoringMiddleware(BaseHTTPMiddleware):
                 status_code=500,
                 content={
                     'detail': 'Internal server error',
-                    'error_id': error_id,
+                    'error_id': request_id,
                     'timestamp': datetime.utcnow().isoformat()
                 },
-                headers={'X-Request-ID': error_id}
+                headers={'X-Request-ID': request_id}
             )
+        finally:
+            clear_request_id()
 
 
 # Error monitoring endpoints
