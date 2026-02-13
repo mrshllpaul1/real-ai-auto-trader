@@ -110,6 +110,10 @@ const RiskAnalyzer = ({ embedded = false }) => {
     { id: 'black_swan', name: 'Black Swan', desc: 'BTC -50%, extreme volatility' }
   ];
 
+  if (loading && !overview) {
+    return <PageLoadingSkeleton />;
+  }
+
   return (
     <div className="min-h-screen bg-[#0A0A0A] p-4 md:p-6" data-testid="risk-analyzer-page">
       {/* Header */}
