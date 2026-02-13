@@ -592,7 +592,7 @@ const EventTimeline = ({ embedded = false }) => {
                           </h3>
                           {event.correlation_score && (
                             <p className="text-xs text-[#A1A1AA]">
-                              Correlation confidence: {(event.correlation_score * 100).toFixed(0)}%
+                              Correlation confidence: {((event?.correlation_score ?? 0) * 100).toFixed(0)}%
                             </p>
                           )}
                         </div>

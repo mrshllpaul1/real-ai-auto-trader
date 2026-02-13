@@ -583,7 +583,7 @@ const MLAdvanced = () => {
                               style={{ width: `${param.importance * 100}%` }}
                             />
                           </div>
-                          <span className="text-white text-sm w-12">{(param.importance * 100).toFixed(0)}%</span>
+                          <span className="text-white text-sm w-12">{((param?.importance ?? 0) * 100).toFixed(0)}%</span>
                         </div>
                       ))}
                     </div>

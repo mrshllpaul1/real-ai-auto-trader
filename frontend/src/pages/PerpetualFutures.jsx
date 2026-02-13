@@ -279,7 +279,7 @@ const PerpetualFutures = ({ embedded = false }) => {
                       <td className="p-4 text-right text-[#A1A1AA]">${(market['24h_volume'] / 1e6).toFixed(0)}M</td>
                       <td className="p-4 text-right text-[#A1A1AA]">${(market.open_interest / 1e6).toFixed(0)}M</td>
                       <td className={`p-4 text-right font-medium ${market.funding_rate >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
-                        {(market.funding_rate * 100).toFixed(4)}%
+                        {((market?.funding_rate ?? 0) * 100).toFixed(4)}%
                       </td>
                       <td className="p-4 text-right text-white">{market.max_leverage}x</td>
                       <td className="p-4 text-right">
@@ -426,18 +426,18 @@ const PerpetualFutures = ({ embedded = false }) => {
                     <div>
                       <p className="text-xs text-[#A1A1AA]">Current</p>
                       <p className={`font-bold ${rate.current_rate >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
-                        {(rate.current_rate * 100).toFixed(4)}%
+                        {((rate?.current_rate ?? 0) * 100).toFixed(4)}%
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-[#A1A1AA]">Predicted</p>
                       <p className={`font-medium ${rate.predicted_rate >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
-                        {(rate.predicted_rate * 100).toFixed(4)}%
+                        {((rate?.predicted_rate ?? 0) * 100).toFixed(4)}%
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-[#A1A1AA]">24h Avg</p>
-                      <p className="text-white">{(rate.average_rate_24h * 100).toFixed(4)}%</p>
+                      <p className="text-white">{((rate?.average_rate_24h ?? 0) * 100).toFixed(4)}%</p>
                     </div>
                   </div>
                 </div>

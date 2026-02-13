@@ -269,7 +269,7 @@ const AdvancedAI = () => {
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-[#A1A1AA]">Win Rate</span>
                         <span className={agent.win_rate >= 0.5 ? 'text-green-400' : 'text-red-400'}>
-                          {(agent.win_rate * 100).toFixed(0)}%
+                          {((agent?.win_rate ?? 0) * 100).toFixed(0)}%
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-xs">

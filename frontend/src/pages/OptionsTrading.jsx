@@ -150,7 +150,7 @@ const OptionsTrading = ({ embedded = false }) => {
               <div className="text-right">
                 <span className="text-[#A1A1AA]">Implied Volatility</span>
                 <div className="text-2xl font-data text-[#FF9500]">
-                  {(chain.volatility * 100).toFixed(1)}%
+                  {((chain?.volatility ?? 0) * 100).toFixed(1)}%
                 </div>
               </div>
             </div>

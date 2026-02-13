@@ -82,7 +82,7 @@ const PredictionCard = ({ prediction }) => {
           </div>
           <div>
             <div className="font-semibold text-white">{prediction.symbol}</div>
-            <div className="text-xs text-gray-400">Model Accuracy: {(prediction.model_accuracy * 100).toFixed(0)}%</div>
+            <div className="text-xs text-gray-400">Model Accuracy: {((prediction?.model_accuracy ?? 0) * 100).toFixed(0)}%</div>
           </div>
         </div>
         <SignalBadge signal={prediction.signal} confidence={prediction.confidence_pct} />
@@ -110,12 +110,12 @@ const PredictionCard = ({ prediction }) => {
       <div className="flex gap-2 mt-3">
         {sentiment.fomo_score > 0.5 && (
           <Badge className="bg-orange-500/20 text-orange-400 text-xs">
-            FOMO: {(sentiment.fomo_score * 100).toFixed(0)}%
+            FOMO: {((sentiment?.fomo_score ?? 0) * 100).toFixed(0)}%
           </Badge>
         )}
         {sentiment.fear_score > 0.5 && (
           <Badge className="bg-red-500/20 text-red-400 text-xs">
-            Fear: {(sentiment.fear_score * 100).toFixed(0)}%
+            Fear: {((sentiment?.fear_score ?? 0) * 100).toFixed(0)}%
           </Badge>
         )}
       </div>
@@ -414,7 +414,7 @@ const EnhancedMTFPredictions = ({ embedded = false }) => {
                   {trainingStatus.accuracy > 0 && (
                     <div className="flex justify-between">
                       <span className="text-gray-400">Accuracy</span>
-                      <span className="text-green-400">{(trainingStatus.accuracy * 100).toFixed(1)}%</span>
+                      <span className="text-green-400">{((trainingStatus?.accuracy ?? 0) * 100).toFixed(1)}%</span>
                     </div>
                   )}
                 </div>

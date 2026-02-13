@@ -195,7 +195,7 @@ const AIExplainability = () => {
                             }`}>
                               {feat.signal}
                             </span>
-                            <span className="text-sm text-gray-400">{(feat.importance * 100).toFixed(0)}%</span>
+                            <span className="text-sm text-gray-400">{((feat?.importance ?? 0) * 100).toFixed(0)}%</span>
                           </div>
                         </div>
                         <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
@@ -236,7 +236,7 @@ const AIExplainability = () => {
                     {explanation.model_info?.components?.map((comp, i) => (
                       <div key={i} className="flex justify-between text-xs py-1">
                         <span className="text-gray-400">{comp.name}</span>
-                        <span className="text-white">{(comp.weight * 100).toFixed(0)}%</span>
+                        <span className="text-white">{((comp?.weight ?? 0) * 100).toFixed(0)}%</span>
                       </div>
                     ))}
                   </div>
@@ -397,7 +397,7 @@ const AIExplainability = () => {
                       <span className={`font-medium ${
                         whatIfScenario.confidence_change >= 0 ? 'text-green-400' : 'text-red-400'
                       }`}>
-                        {whatIfScenario.confidence_change >= 0 ? '+' : ''}{(whatIfScenario.confidence_change * 100).toFixed(0)}%
+                        {whatIfScenario.confidence_change >= 0 ? '+' : ''}{((whatIfScenario?.confidence_change ?? 0) * 100).toFixed(0)}%
                       </span>
                     </div>
 

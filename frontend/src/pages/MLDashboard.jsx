@@ -201,7 +201,7 @@ const MLDashboard = () => {
                     <div className="grid grid-cols-3 gap-2 text-sm">
                       <div>
                         <p className="text-[#A1A1AA]">Accuracy</p>
-                        <p className="text-white">{(model.accuracy_24h * 100).toFixed(1)}%</p>
+                        <p className="text-white">{((model?.accuracy_24h ?? 0) * 100).toFixed(1)}%</p>
                       </div>
                       <div>
                         <p className="text-[#A1A1AA]">Sharpe</p>

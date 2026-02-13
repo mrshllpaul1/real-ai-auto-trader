@@ -268,7 +268,7 @@ const AdaptiveStrategy = ({ embedded = false }) => {
                         className="w-24 h-2"
                       />
                       <span className="text-xs font-bold" style={{ color: regimeColor }}>
-                        {(currentRegime.confidence * 100).toFixed(0)}%
+                        {((currentRegime?.confidence ?? 0) * 100).toFixed(0)}%
                       </span>
                     </div>
                   )}
@@ -631,7 +631,7 @@ const AdaptiveStrategy = ({ embedded = false }) => {
                                 <div className="flex items-center gap-1">
                                   <Gauge size={12} className="text-[#666]" />
                                   <span className="text-xs font-bold" style={{ color: event.probability >= 0.9 ? '#00FF94' : event.probability >= 0.7 ? '#00B4FF' : event.probability >= 0.5 ? '#FFB800' : '#FF6B00' }}>
-                                    {(event.probability * 100).toFixed(0)}%
+                                    {((event?.probability ?? 0) * 100).toFixed(0)}%
                                   </span>
                                 </div>
                               </div>
@@ -683,7 +683,7 @@ const AdaptiveStrategy = ({ embedded = false }) => {
                                   strokeLinecap="round"
                                 />
                                 <text x="18" y="22" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">
-                                  {(event.probability * 100).toFixed(0)}%
+                                  {((event?.probability ?? 0) * 100).toFixed(0)}%
                                 </text>
                               </svg>
                             </div>
@@ -727,7 +727,7 @@ const AdaptiveStrategy = ({ embedded = false }) => {
                           </span>
                           {td.avg_probability > 0 && (
                             <span className="text-[9px]" style={{ color: td.avg_probability >= 0.7 ? '#00FF94' : '#FFB800' }}>
-                              {(td.avg_probability * 100).toFixed(0)}%
+                              {((td?.avg_probability ?? 0) * 100).toFixed(0)}%
                             </span>
                           )}
                         </div>
@@ -959,7 +959,7 @@ const AdaptiveStrategy = ({ embedded = false }) => {
                             <Badge style={{ backgroundColor: `${impactColors[event.expected_impact]}20`, color: impactColors[event.expected_impact] }}>
                               {event.expected_impact}
                             </Badge>
-                            <span className="text-xs text-[#666]">{(event.probability * 100).toFixed(0)}%</span>
+                            <span className="text-xs text-[#666]">{((event?.probability ?? 0) * 100).toFixed(0)}%</span>
                           </div>
                           <p className="text-white font-medium text-sm">{event.description}</p>
                           <p className="text-xs text-[#666] mt-1">{event.predicted_date}</p>

@@ -386,7 +386,7 @@ const TethysDashboard = () => {
                       marketSentiment.signal === 'BULLISH' ? 'text-green-400' :
                       marketSentiment.signal === 'BEARISH' ? 'text-red-400' : 'text-yellow-400'
                     }`}>
-                      {(marketSentiment.overall_score * 100).toFixed(0)}%
+                      {((marketSentiment?.overall_score ?? 0) * 100).toFixed(0)}%
                     </span>
                     <Badge className={`text-[10px] ${
                       marketSentiment.signal === 'BULLISH' ? 'bg-green-500/20 text-green-400' :
