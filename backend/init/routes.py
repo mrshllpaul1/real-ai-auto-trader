@@ -75,6 +75,10 @@ def register_routes(api_router: APIRouter, db=None):
     from routes import defi_ai as defi_ai_routes
     from routes import ai_signals_ws as ai_signals_ws_routes
     
+    # AI Error Management & Auto-Correction
+    from routes import ai_error_management as ai_error_routes
+    api_router.include_router(ai_error_routes.router, tags=["AI Error Management"])
+    
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
     api_router.include_router(api_keys.router)  # API Key Management - uses own prefix
