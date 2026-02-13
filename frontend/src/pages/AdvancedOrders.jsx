@@ -7,6 +7,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import useTradingPairs from '../hooks/useTradingPairs';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.REACT_APP_BACKEND_URL || '');
 
