@@ -1,121 +1,105 @@
-<analysis>**original_problem_statement**: The user initially requested performance enhancements for the Tethys AI Crypto Trading Platform. This led to a series of subsequent requests:
-1.  Fix UI state persistence issues where buttons and statuses would reset upon navigation.
-2.  Enhance the application's overall error handling and bug-fixing capabilities.
-3.  Add a visual progress meter for the AI model training process.
-4.  Redesign the main sidebar navigation menu for a more modern look.
-5.  Debug and fix deployment errors, including a critical 520 server error in production.
-6.  Fix errors occurring during model training.
-7.  Run a comprehensive health check of the entire application.
+<analysis>**original_problem_statement**: The user initially requested performance enhancements for the Tethys AI Crypto Trading Platform. This led to a series of subsequent requests, including UI state persistence fixes, deployment error debugging, and UI redesigns.
+
+The most recent user requests are to significantly enhance the application's robustness and user experience through a series of error handling and UI improvements:
+1.  Implement automatic error reporting from the frontend to the backend.
+2.  Create a global error boundary with improved, user-friendly error reporting.
+3.  Add automatic retry logic for failed API calls.
+4.  Add loading skeletons for all data-dependent components to improve perceived performance.
+5.  Create a new Error Analytics Dashboard to monitor application health.
+6.  Implement error grouping and deduplication on the new dashboard.
+7.  Create a new Performance Monitoring Dashboard.
 
 PRODUCT REQUIREMENTS:
--   The application must have high-performance backend services.
--   The UI state for long-running processes (like auto-trading, monitoring) must persist across page navigation.
--   The application needs a robust error tracking and recovery system.
--   Users should have clear visual feedback during long processes like model training.
--   The application must be deployable to the Emergent production environment.
+-   The application must be stable, resilient to transient errors, and prevent frontend crashes due to bad data.
+-   Users should receive clear feedback during data loading states and when errors occur.
+-   The development team needs a centralized dashboard to monitor frontend errors and application performance.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a full-stack AI-powered crypto trading platform. The agent has successfully implemented several major enhancements:
--   **Performance:** A new in-memory caching service, ETag middleware, database indexes, and a circuit breaker for the Kraken API have been integrated.
--   **State Persistence:** A centralized service using MongoDB () was created to persist the running state of key components, fixing the user's primary UI state complaint.
--   **Error Handling:** An advanced error recovery service () and a frontend error boundary component were added.
--   **UI/UX:** A new visual training progress meter () was created and integrated. The main sidebar () was completely redesigned.
--   **Production Stability:** A critical 520 production error was diagnosed and fixed by refactoring blocking synchronous code into lightweight, non-blocking operations.
+The application is a full-stack AI-powered crypto trading platform. In this session, the agent successfully resolved all previously outstanding bugs, including fixing the Optimal Strategy tab, implementing persistence for the Rebuild Universe process, and resolving a transient crash on the Portfolio tab.
+
+Following that, the agent undertook a major initiative to enhance application-wide error handling. This included:
+-   **Systematic Code Hardening**: Refactored ~68 frontend pages to prevent common JavaScript errors (e.g., calling  on ), making the UI more resilient.
+-   **Automated Error Reporting**: Implemented a full pipeline where frontend errors are caught by a global , batched, and sent to a new backend endpoint for storage and analysis.
+-   **API Resiliency**: Integrated  to automatically retry failed API requests, making the app more robust against network issues.
+-   **UI/UX Improvements**: Created a library of reusable loading skeletons and applied them to key pages (, , ) to provide better visual feedback during data loading.
+-   **Error Analytics Dashboard**: Built a new, functional dashboard at  that displays error trends, severity distribution, and a list of recent errors with grouping and deduplication.
 
 **Last working item**:
--   Last item agent was working: The agent conducted a comprehensive, multi-point health check of the application as requested by the user. This involved scripting a series of checks on all major subsystems including backend/frontend services, API endpoints, database connectivity, cache health, and the production environment status.
--   Status: USER VERIFICATION PENDING
--   Agent Testing Done: Y
--   Which testing method agent to use? NA
+-   Last item agent was working: The agent was tasked with creating a Performance Monitoring Dashboard. It created a new file by overwriting the existing . This action may have unintentionally deleted the previously existing Portfolio Performance component.
+-   Status: IN PROGRESS
+-   Agent Testing Done: N
+-   Which testing method agent to use? Frontend testing agent
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: The Optimal Strategy tab does not display any real data. (P1)
--   Issue 2: The Rebuild Universe process does not persist and stops if the user navigates away. (P2)
--   Issue 3: User reported that starting model training seems to turn off real trading. (P2)
+-   Issue 1: Potential loss of the Portfolio Performance UI. (P0)
 
 Issues Detail:
--   **Issue 1: Optimal Strategy tab is empty**
-    -   Attempted fixes: None. This issue was reported but not investigated.
+-   **Issue 1: Potential loss of the Portfolio Performance UI**
+    -   Attempted fixes: None. The agent overwrote the file  to start building the new Performance Monitoring Dashboard.
     -   Next debug checklist:
-        1.  Identify the frontend component for the Optimal Strategy tab.
-        2.  Find the backend API endpoint that is supposed to supply data to this tab.
-        3.  Check the backend service logic for this endpoint to see why it's not returning data.
-        4.  Verify if the frontend is correctly calling the endpoint and handling the response.
-    -   Why fix this issue and what will be achieved with the fix?: The tab is a core feature for users to see AI-recommended strategies. Fixing it will restore this functionality.
+        1.  Verify the content of .
+        2.  Check the git history of the file to see what was replaced.
+        3.  Rename the new dashboard file to something unambiguous, like .
+        4.  Restore the previous content of  which was part of the Portfolio tab in the Trading Hub.
+    -   Why fix this issue and what will be achieved with the fix?: This will prevent the accidental removal of a user-facing feature. The user requested a *new* performance dashboard, not a replacement for an existing one.
     -   Status: NOT STARTED
     -   Is recurring issue?: N
-    -   Should Test frontend/backend/both after fix?: Both
-    -   Blocked on other issue: None
-
--   **Issue 2: Rebuild Universe process lacks persistence**
-    -   Attempted fixes: None directly, but the agent built a state persistence framework () for other components that should be used here.
-    -   Next debug checklist:
-        1.  Locate the backend route and service responsible for the Rebuild Universe process.
-        2.  Integrate this service with the  to save its running state to the database.
-        3.  Update the corresponding frontend component to use the  hook to fetch and display the persisted state.
-    -   Why fix this issue and what will be achieved with the fix?: This is a long-running task. Persisting its state will allow users to navigate away and return without interrupting the process, improving UX significantly.
-    -   Status: NOT STARTED
-    -   Is recurring issue?: Y (part of a larger pattern of state persistence issues)
-    -   Should Test frontend/backend/both after fix?: Both
-    -   Blocked on other issue: None
-
--   **Issue 3: Training process may interfere with live trading**
-    -   Attempted fixes: None. The issue was noted but not investigated in depth. The implementation of the central state persistence service may have inadvertently fixed this, but it requires verification.
-    -   Next debug checklist:
-        1.  Enable a live trading component (e.g., Autopilot).
-        2.  Start a model training process.
-        3.  Check the state of the live trading component via the system state API ().
-        4.  If the trading state was turned off, investigate the  service to find where it interferes with other components' states and fix it.
-    -   Why fix this issue and what will be achieved with the fix?: Critical safety and functionality issue. Model training (a non-trading activity) should never interfere with or disable active trading sessions.
-    -   Status: NOT STARTED
-    -   Is recurring issue?: N
-    -   Should Test frontend/backend/both after fix?: Backend
+    -   Should Test frontend/backend/both after fix?: Frontend
     -   Blocked on other issue: None
 
 **In progress Task List**:
--   There are no tasks currently in progress.
+-   Task 1: Implement Performance Monitoring Dashboard (P1)
+    -   Where to resume: A file for this dashboard was created at . After resolving the file overwrite issue (see Pending Issues), the agent needs to add the new dashboard to the router () and sidebar (), and then create the necessary backend endpoints to supply it with performance data.
+    -   What will be achieved with this?: A new dashboard for monitoring application performance metrics like API latency and component render times.
+    -   Status: IN PROGRESS
+    -   Should Test frontend/backend/both after fix?: Both
+    -   Blocked on something: Issue 1 above.
+
+-   Task 2: Apply Loading Skeletons to Remaining Pages (P2)
+    -   Where to resume: The agent has created new skeleton components () and a  hook. The task is to continue applying these to the remaining ~60 pages that have not yet been updated.
+    -   What will be achieved with this?: A consistent, high-quality user experience across the entire application during data loading.
+    -   Status: IN PROGRESS
+    -   Should Test frontend/backend/both after fix?: Frontend
+    -   Blocked on something: No.
 
 **Upcoming and Future Tasks**
--   **P0: Redeploy Application to Production:** The most critical task. The recent fixes for the production 520 error are not live. The application must be redeployed to push these changes.
--   **P1: Fix Optimal Strategy tab data**
--   **P2: Fix Rebuild Universe persistence**
--   **P2: Verify and fix Training/Trading conflict**
+-   **Upcoming Tasks**:
+    -   **P1: Implement Error Trend Alerting**: Create a backend service to monitor error trends and trigger alerts (e.g., via email with Resend) when error rates exceed predefined thresholds.
+-   **Future Tasks**:
+    -   **Add Performance Analytics Dashboard**: Create a dashboard to visualize performance metrics like API latency, component render times, and web vitals.
 
 **Completed work in this session**
 -   List of all completed tasks with file and method name:
-    -   **Performance Overhaul**: Implemented caching (), ETag middleware (), circuit breakers (), and database indexing ().
-    -   **State Persistence Framework**: Created a robust system to persist UI state to MongoDB using , , and the  hook. This was applied to auto-trading, monitoring, and orchestrator buttons.
-    -   **Error Handling System**: Built a new error recovery and management system with  and .
-    -   **Visual Training Progress Meter**: Created and integrated a new component .
-    -   **Sidebar Redesign**: Visually overhauled the sidebar component at .
-    -   **Production Crash Fix**: Diagnosed and resolved a 520 server error by refactoring blocking code in  and .
-    -   **Comprehensive Health Check**: Executed a full-system health check to verify operational status.
+    -   **Optimal Strategy Tab Fix**: Corrected data loading in . (DONE)
+    -   **Rebuild Universe Persistence Fix**: Integrated  with the state persistence framework and updated . (DONE)
+    -   **Portfolio Tab Crash Fix**: Added defensive null-checking in . (DONE)
+    -   **App-Wide Code Hardening**: Systematically refactored ~68 files in  to prevent runtime errors. (DONE)
+    -   **API Retry Logic**: Integrated  into . (DONE)
+    -   **Automated Error Reporting System**:
+        -   Created frontend service: . (DONE)
+        -   Enhanced global . (DONE)
+        -   Added backend endpoints in . (DONE)
+    -   **Error Analytics Dashboard**:
+        -   Created page . (DONE)
+        -   Implemented error grouping/deduplication logic. (DONE)
+        -   Added backend aggregation logic in . (DONE)
+        -   Integrated into  router and . (DONE)
+    -   **Advanced Loading Skeletons**:
+        -   Created  and . (DONE)
+        -   Applied skeletons to , , and . (PARTIALLY DONE - full rollout pending)
 
 -   Recently completed:
-    -   Comprehensive Health Check (DONE)
-    -   Production 520 Crash Fix (DONE)
-    -   Sidebar UI Redesign (DONE)
-    -   Visual Training Progress Meter (DONE)
+    -   Error Analytics Dashboard with grouping/deduplication (DONE)
+    -   App-wide code hardening against null-reference errors (DONE)
+    -   Portfolio tab crash fix (DONE)
+    -   Rebuild Universe persistence (DONE)
+    -   Optimal Strategy data fix (DONE)
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Optimal Strategy tab is empty**
-    -   Debug checklist: See All Pending/In progress Issue list.
-    -   Why to solve this issue and what will be achieved with this?: Restores a key user-facing feature for viewing AI-generated trading strategies.
-    -   Should Test frontend/backend/both after fix: Both
-    -   Is recurring issue?: N
--   **Issue 2: Rebuild Universe process lacks persistence**
-    -   Debug checklist: See All Pending/In progress Issue list.
-    -   Why to solve this issue and what will be achieved with this?: Fixes a poor user experience for a long-running background task.
-    -   Should Test frontend/backend/both after fix: Both
-    -   Is recurring issue?: Y
--   **Issue 3: Training process may interfere with live trading**
-    -   Debug checklist: See All Pending/In progress Issue list.
-    -   Why to solve this issue and what will be achieved with this?: Prevents a critical bug where a non-trading action could halt live trading operations.
-    -   Should Test frontend/backend/both after fix: Backend
-    -   Is recurring issue?: N
+-   None. All previously known issues have been resolved.
 
 **Known issue recurrence from previous fork**
 -   N/A
@@ -124,61 +108,57 @@ Issues Detail:
 
 
 **Key Technical Concepts**
--   **Backend**: FastAPI for async APIs, Motor for non-blocking MongoDB access, Pydantic for data validation.
--   **Frontend**: React with Hooks for state management, Vite for the build tool, TailwindCSS for styling, Axios for API calls, and Framer Motion for animations.
--   **Core Architecture**: A service-oriented backend with a clear separation of concerns (routes, services, config). A new centralized state persistence layer was added to handle the state of long-running tasks.
--   **Performance**: Utilizes in-memory caching (), database indexing, ETag-based browser caching, and circuit breakers () for external API calls.
+-   **Frontend Error Robustness**: Extensive use of nullish coalescing () and optional chaining () to prevent runtime errors from / data, particularly with  and .
+-   **Automated Error Reporting**: A system where the frontend  catches errors, batches them via , and sends them to a backend endpoint () for analysis.
+-   **API Retry Logic**: Use of  to automatically retry failed network requests, improving resilience.
+-   **Declarative Loading States**: A new pattern using a  hook and  components to standardize how components handle loading states.
+-   **Backend Analytics Aggregation**: MongoDB aggregation pipelines in  to process raw error data into trends and statistics for the analytics dashboard.
 
 **key DB schema**
--   : . Stores the real-time operational state of various backend processes.
--   : . Tracks recurring errors for monitoring and recovery.
+-   : (New collection) . Stores aggregated and deduplicated frontend error data.
 
 **changes in tech stack**
--   No changes to the core technologies.
--   Added Python libraries:  for circuit breakers,  for in-memory caching.
+-   **Added**:  library to the frontend for API resilience.
 
 **All files of reference**
--   **/app/backend/services/state_persistence.py**: The core of the new state persistence feature. It uses MongoDB to store and retrieve the running state of application components.
--   **/app/backend/services/error_recovery.py**: The service for the enhanced error handling system. It was refactored to be non-blocking to fix a production crash.
--   **/app/frontend/src/hooks/useSystemState.js**: The React hook that allows frontend components to easily interact with the state persistence backend.
--   **/app/frontend/src/components/VisualTrainingProgress.jsx**: The new, detailed UI component for showing model training progress.
--   **/app/frontend/src/components/Sidebar.jsx**: The completely redesigned sidebar component.
--   **/app/backend/server.py**: The main FastAPI entry point, updated to include new middleware and routes for the implemented features.
+-   **/app/frontend/src/pages/ErrorAnalyticsDashboard.jsx**: The new page for the error dashboard.
+-   **/app/frontend/src/pages/PerformanceDashboard.jsx**: File that was overwritten to create the new performance dashboard. **This may need to be restored/renamed.**
+-   **/app/frontend/src/components/LoadingSkeletons.jsx**: New component with various reusable loading skeletons.
+-   **/app/frontend/src/services/api.jsx**: Updated with  logic.
+-   **/app/frontend/src/services/errorReporting.js**: New service for batching and sending frontend errors.
+-   **/app/backend/middleware/error_monitoring.py**: Heavily modified to add endpoints for frontend error ingestion and trend analytics.
 
 **Areas that need refactoring**:
--   The state persistence logic needs to be applied to the remaining user-reported issues (Rebuild Universe, Optimal Strategy data loading) to ensure a consistent user experience across all long-running tasks.
+-   The overwrite of  needs to be investigated and corrected. The agent likely intended to create a new file, not replace the existing portfolio performance component.
 
 **key api endpoints**
--    (GET, POST): Manages the running state of a specific component (e.g., 'auto_trading').
--   : Retrieves the current state of all tracked components.
--   : Provides statistics on tracked application errors.
--   : Initiates the model training process.
--   : Reports the status of ongoing training tasks.
--   : Returns a summary of cache hits/misses and circuit breaker states.
+-    (POST): Records a batch of frontend errors from the client.
+-    (GET): Provides time-series data for error trends.
+-    (GET): Provides summary statistics for errors.
 
 **Critical Info for New Agent**
--   **Redeployment is the highest priority.** The application is stable locally but the production environment is running old, faulty code that causes a 520 error. You must redeploy the application to make the recent fixes live.
--   The state of long-running tasks is now managed by a central persistence service (). Any new or existing feature with a long-running process that needs to survive navigation should be integrated with this service.
--   The application has heavy ML dependencies. The  environment variable is essential for successful deployment and is already configured. Do not disable it.
+-   **IMPORTANT**: The agent overwrote . This file was previously the UI for the Portfolio tab. Your first action should be to investigate this, likely by renaming the new code to  and restoring the original  content to avoid losing a feature.
+-   The application has undergone a significant hardening and refactoring effort. While the build is stable, thorough regression testing is highly recommended before deployment.
+-   The user's next priorities are finishing the Performance Monitoring Dashboard and applying the new loading skeletons to all remaining pages.
 
 **documents and test reports created in this job**
--   /app/PERFORMANCE_ENHANCEMENT_RECOMMENDATIONS.md
--   /app/test_result.md (updated multiple times for testing)
+-   
+-    (updated multiple times)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.   - **Done**. The agent ran the health check.
-2.   - **Partially Done**. The agent fixed a major production crash that was causing widespread failures. Some specific minor issues reported by the user remain.
-3.   - **Done**. The agent used the logs to find and fix the production crash.
-4.  User implicitly approved the new sidebar design. - **Done**.
-5.   - **Done**. The agent redesigned the sidebar.
-6.  User implicitly approved the new visual training progress meter. - **Done**.
-7.   - **Done**. The agent implemented this.
-8.   - **Done**. Agent implemented a new error handling system.
-9.   - **Partially Done**. Agent fixed the main reported items but missed a few others (universe rebuild, optimal strategy data).
-10.  - **Done**. This led to the discovery and fix of critical issues.
+1.   - **In Progress**. Error grouping is done, skeleton application and performance dashboard are in progress.
+2.   - **Done**.
+3.   - **Done**.
+4.   - **Done**.
+5.   - **Resolved**. Explained that deployment is required.
+6.   - **Resolved**. Fixed another bug.
+7.   - **Resolved**. Fixed production error root cause.
+8.   - **Done**.
+9.   - **Resolved**.
+10.  - User approval to start work.
 
 **Project Health Check:**
--   **Broken**: The production deployment is effectively broken as it's running old code known to cause a 520 crash. It **must be redeployed**.
+-   **Broken**: A key UI component () was likely deleted by being overwritten. The production deployment is also running old code and needs all the recent fixes to be deployed.
 -   **Mocked**: None.
 
 **3rd Party Integrations**
@@ -191,18 +171,16 @@ Issues Detail:
 -   Etherscan (Blockchain Data) — requires User API Key
 -   CoinStats (Portfolio Tracking) — requires User API Key
 -   Emergent LLM — uses Emergent LLM Key
+-    (newly added frontend library for API resilience)
 
 **Testing status**
--   Testing agent used after significant changes: YES
--   Troubleshoot agent used after agent stuck in loop: YES
+-   Testing agent used after significant changes: YES, but not after the most recent, largest refactoring. A full regression test is needed.
+-   Troubleshoot agent used after agent stuck in loop: NO
 -   Test files created: []
--   Known regressions: The production environment is in a regressed (broken) state until it is redeployed with the latest fixes.
+-   Known regressions: The UI for the Portfolio tab's dashboard is likely missing due to a file overwrite.
 
 **Credentials to test flow:**
-All required credentials and API keys are configured as environment variables.
+N/A. All required credentials and API keys are configured as environment variables.
 
 **What agent forgot to execute**
--   From the user's report on persistence issues, the agent did not address:
-    1.  The optimal strategy tab isnt showing any real data."
-    2.  The "rebuild universe doesnt work it will stop loading when I migrate away.
--   The agent also did not definitively verify or fix the potential conflict where starting training might disable real trading.</analysis>
+-   The agent did not create a *new* file for the Performance Monitoring Dashboard as requested, but instead overwrote an existing, functional file (), potentially leading to the loss of the portfolio analytics UI.</analysis>

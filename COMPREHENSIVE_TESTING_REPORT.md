@@ -372,8 +372,8 @@ nginx-code-proxy RUNNING   pid 45
 - All environment variables set ✅
 
 **URL:**
-- Deployment: https://crypto-ai-fixes.preview.emergentagent.com ✅
-- Backend API: https://crypto-ai-fixes.preview.emergentagent.com/api ✅
+- Deployment: https://cryptoai-enhance.preview.emergentagent.com ✅
+- Backend API: https://cryptoai-enhance.preview.emergentagent.com/api ✅
 
 ---
 

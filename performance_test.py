@@ -11,7 +11,7 @@ from typing import Dict, List, Tuple
 import statistics
 
 # Backend URL from environment configuration
-BASE_URL = "https://crypto-ai-fixes.preview.emergentagent.com/api"
+BASE_URL = "https://cryptoai-enhance.preview.emergentagent.com/api"
 
 class PerformanceTester:
     def __init__(self):
