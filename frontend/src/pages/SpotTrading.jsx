@@ -297,7 +297,7 @@ const OrderForm = ({ symbol, pairDetails, onOrder, balance }) => {
 };
 
 // AI Signal Card
-const AISignalCard = ({ signal }) => {
+const AISignalCard = ({ signal, symbol, onExplainClick }) => {
   if (!signal) return null;
   
   // Extract composite data from signal
@@ -317,9 +317,21 @@ const AISignalCard = ({ signal }) => {
   
   return (
     <div className="bg-[#111] border border-[#222] rounded-xl p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <Brain size={18} className="text-[#9D00FF]" />
-        <span className="text-white font-bold">AI Analysis</span>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Brain size={18} className="text-[#9D00FF]" />
+          <span className="text-white font-bold">AI Analysis</span>
+        </div>
+        {onExplainClick && (
+          <button
+            onClick={onExplainClick}
+            className="flex items-center gap-1 px-2 py-1 bg-[#9D00FF]/20 rounded-lg text-xs text-[#9D00FF] hover:bg-[#9D00FF]/30 transition-colors"
+            data-testid="explain-ai-btn"
+          >
+            <Lightbulb size={12} />
+            Why?
+          </button>
+        )}
       </div>
       
       <div className="flex items-center justify-between mb-4">
