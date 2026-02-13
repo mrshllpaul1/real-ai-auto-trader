@@ -16,11 +16,30 @@ from datetime import datetime, timezone
 logger = logging.getLogger(__name__)
 
 # Re-export from existing services for backwards compatibility
-from services.kraken_service import KrakenService
-from services.kraken_cache_service import KrakenCacheService
-from services.kraken_executor import KrakenExecutor
-from services.kraken_orderbook_ws import KrakenOrderBookWS
-from services.order_book_analyzer import OrderBookAnalyzer
+try:
+    from services.kraken_service import KrakenTradeService as KrakenService
+except ImportError:
+    KrakenService = None
+    
+try:
+    from services.kraken_cache_service import KrakenCacheService
+except ImportError:
+    KrakenCacheService = None
+    
+try:
+    from services.kraken_executor import KrakenExecutor
+except ImportError:
+    KrakenExecutor = None
+    
+try:
+    from services.kraken_orderbook_ws import KrakenOrderBookWS
+except ImportError:
+    KrakenOrderBookWS = None
+    
+try:
+    from services.order_book_analyzer import OrderBookAnalyzer
+except ImportError:
+    OrderBookAnalyzer = None
 
 __all__ = [
     'KrakenService',
