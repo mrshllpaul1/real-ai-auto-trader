@@ -118,14 +118,7 @@ const TethysDashboard = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center p-4">
-        <div className="text-center">
-          <Waves className="w-16 h-16 text-cyan-400 animate-pulse mx-auto mb-4" />
-          <p className="text-cyan-300 text-lg">Loading Tethys...</p>
-        </div>
-      </div>
-    );
+    return <PageLoadingSkeleton />;
   }
 
   const riskState = dashboardData?.risk?.state || {};
