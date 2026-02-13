@@ -13,7 +13,11 @@ import api, { tradingAPI, marketAPI, clearAllCacheAndRefresh } from '../services
 import { toast } from 'sonner';
 import MarketOverview from '../components/MarketOverview';
 import { CardSkeleton, TableSkeleton } from '../components/LoadingSkeleton';
-import { useComponentState, ComponentType, setComponentState } from '../hooks/useSystemState';
+// Simplified state management - inline to avoid circular deps
+const ComponentType = {
+  MASTER_ORCHESTRATOR: 'master_orchestrator',
+  TETHYS_AUTOPILOT: 'tethys_autopilot',
+};
 
 // Loading Skeleton for Command Center
 const CommandCenterSkeleton = () => (
