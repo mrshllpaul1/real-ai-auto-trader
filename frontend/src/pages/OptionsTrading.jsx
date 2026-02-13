@@ -14,6 +14,7 @@ import {
 import api from '../services/api';
 import toast from '../utils/toast';
 import TradingPairSelector from '../components/TradingPairSelector';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const OptionsTrading = ({ embedded = false }) => {
   const [chain, setChain] = useState(null);
