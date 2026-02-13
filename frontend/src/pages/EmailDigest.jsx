@@ -144,6 +144,45 @@ const EmailDigest = ({ embedded = false }) => {
     }
   };
   
+  const enablePushNotifications = async () => {
+    try {
+      const result = await requestNotificationPermission();
+      setPushPermission(result.granted ? 'granted' : 'denied');
+      
+      if (result.granted) {
+        setAlertConfig(prev => ({ ...prev, push_notifications_enabled: true }));
+        toast.success('Push notifications enabled!');
+        
+        // Send test notification
+        await showLocalNotification('🔔 Notifications Enabled', {
+          body: 'You will now receive push notifications for error alerts',
+          tag: 'push-enabled'
+        });
+      } else {
+        toast.error('Push notifications blocked', { 
+          description: 'Please enable notifications in your browser settings' 
+        });
+      }
+    } catch (error) {
+      toast.error('Failed to enable push notifications');
+    }
+  };
+  
+  const testPushNotification = async () => {
+    const sent = await showLocalNotification('🚨 Test Error Alert', {
+      body: 'This is a test error alert notification',
+      tag: 'test-alert',
+      vibrate: [200, 100, 200, 100, 400],
+      requireInteraction: true
+    });
+    
+    if (sent) {
+      toast.success('Test notification sent!');
+    } else {
+      toast.error('Could not send test notification');
+    }
+  };
+  
   const testResendConnection = async () => {
     if (!alertConfig.resend_api_key) {
       toast.error('Please enter your Resend API key first');
