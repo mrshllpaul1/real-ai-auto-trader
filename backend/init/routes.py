@@ -276,6 +276,14 @@ def register_routes(api_router: APIRouter, db=None):
     api_router.include_router(ai_explain_routes.router, tags=["AI Explainability"])
     ai_explain_routes.set_db(db)
     
+    # Error Alerting (Resend Integration)
+    from routes import error_alerting as error_alerting_routes
+    api_router.include_router(error_alerting_routes.router, tags=["Error Alerting"])
+    
+    # Initialize error alerting service
+    from services.error_alerting_service import init_error_alerting_service
+    init_error_alerting_service(db)
+    
     logger.info("✅ All routes registered (including new enhancements)")
     
     return api_router
