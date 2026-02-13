@@ -282,7 +282,8 @@ const EmailDigest = ({ embedded = false }) => {
 
         <Tabs defaultValue="settings" className="space-y-6">
           <TabsList className="bg-slate-800/50">
-            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="settings">Digest Settings</TabsTrigger>
+            <TabsTrigger value="alerts">Error Alerts</TabsTrigger>
             <TabsTrigger value="preview">Preview</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
