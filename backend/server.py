@@ -219,6 +219,14 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import error management routes: {e}")
 
+# Import and include performance monitoring WebSocket routes
+try:
+    from routes.performance_monitoring import router as perf_monitoring_router
+    app.include_router(perf_monitoring_router)
+    logger.info("✅ Performance monitoring WebSocket routes registered")
+except ImportError as e:
+    logger.warning(f"Could not import performance monitoring routes: {e}")
+
 # Add middleware in correct order (last added = first executed)
 # 1. Security Headers (outermost - first to execute)
 try:
