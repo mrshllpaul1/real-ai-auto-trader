@@ -38,6 +38,7 @@ logging.basicConfig(level=getattr(logging, LOG_LEVEL), format=LOG_FORMAT)
 try:
     from utils.request_context import RequestIdFilter
 
+    # Apply to root logger so all app logs carry request_id when available.
     logging.getLogger().addFilter(RequestIdFilter())
 except Exception as e:
     logging.getLogger(__name__).warning(f"Request ID logging filter not available: {e}")
