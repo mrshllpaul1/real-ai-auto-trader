@@ -90,11 +90,7 @@ const AdvancedAI = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <RefreshCw className="animate-spin text-[#00FF94]" size={48} />
-      </div>
-    );
+    return <PageLoadingSkeleton />;
   }
 
   return (
