@@ -35,23 +35,21 @@ def get_service(name: str):
 
 # Configure logging
 logging.basicConfig(level=getattr(logging, LOG_LEVEL), format=LOG_FORMAT)
-_record_factory = logging.getLogRecordFactory()
-
-
-def _request_id_record_factory(*args, **kwargs):
-    record = _record_factory(*args, **kwargs)
-    if not hasattr(record, "request_id"):
-        record.request_id = "-"
-    return record
-
-
-logging.setLogRecordFactory(_request_id_record_factory)
 try:
     from utils.request_context import RequestIdFilter
 
     # Apply to root logger so all app logs carry request_id when available.
     logging.getLogger().addFilter(RequestIdFilter())
 except Exception as e:
+    _record_factory = logging.getLogRecordFactory()
+
+    def _request_id_record_factory(*args, **kwargs):
+        record = _record_factory(*args, **kwargs)
+        if not hasattr(record, "request_id"):
+            record.request_id = "-"
+        return record
+
+    logging.setLogRecordFactory(_request_id_record_factory)
     logging.getLogger(__name__).warning(
         f"Failed to configure request ID logging filter: {e}"
     )

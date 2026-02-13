@@ -202,13 +202,13 @@ class ErrorMonitoringMiddleware(BaseHTTPMiddleware):
         request_id = request.headers.get(REQUEST_ID_HEADER) or str(uuid.uuid4())[:8]
         set_request_id(request_id)
         start_time = datetime.utcnow()
-        content_length = request.headers.get('content-length') or "unknown"
+        content_length_value = request.headers.get('content-length') or "unknown"
         
         try:
             if self.log_all_requests:
                 logger.info(
                     f"Request [{request_id}]: {request.method} {request.url.path} "
-                    f"query_count={len(request.query_params)} content_length={content_length}"
+                    f"query_count={len(request.query_params)} content_length={content_length_value}"
                 )
             response = await call_next(request)
             
