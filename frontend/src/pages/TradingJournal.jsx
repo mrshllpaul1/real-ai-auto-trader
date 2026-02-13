@@ -51,6 +51,10 @@ export default function TradingJournal() {
   const regWin = insights?.gem_performance?.regular_win_rate || 0;
   const totalTrades = (stats?.total_trades || 0) + realTradesCount;
 
+  if (loading) {
+    return <PageLoadingSkeleton />;
+  }
+
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-8">
       <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
