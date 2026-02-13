@@ -4,13 +4,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ErrorBoundary, { PageErrorBoundary } from "./components/ErrorBoundary";
 import { PageLoadingSkeleton } from "./components/LoadingSkeleton";
 import KeyboardShortcutsModal from "./components/KeyboardShortcutsModal";
-import autoDebugger from "./services/autoDebugger";
-
-// Initialize auto-debugger on app load
-if (typeof window !== 'undefined') {
-  autoDebugger.init();
-  console.log('[App] AutoDebugger initialized');
-}
 
 // Hub Pages (lazy loaded with prefetch hints)
 const CommandCenter = lazy(() => import(/* webpackPrefetch: true */ "./pages/CommandCenter"));
