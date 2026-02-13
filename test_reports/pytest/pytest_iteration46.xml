@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="23" skipped="0" tests="23" time="586.711" timestamp="2026-02-13T19:08:24.749327+00:00" hostname="agent-env-c6e0761e-6182-4202-9b5d-c101adf4314b"><testcase classname="tests.test_iteration46_features.TestHealthAndBasicAPIs" name="test_health_endpoint" time="60.163"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:24: in test_health_endpoint
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestHealthAndBasicAPIs" name="test_growth_status" time="60.311"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:33: in test_growth_status
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestHealthAndBasicAPIs" name="test_master_status" time="60.264"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:42: in test_master_status
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestDeFiAIEndpoints" name="test_yield_prediction_eth" time="60.281"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:55: in test_yield_prediction_eth
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestDeFiAIEndpoints" name="test_yield_prediction_btc" time="60.288"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:67: in test_yield_prediction_btc
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestDeFiAIEndpoints" name="test_wallet_prediction" time="60.289"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:76: in test_wallet_prediction
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestDeFiAIEndpoints" name="test_protocol_analysis" time="60.225"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:86: in test_protocol_analysis
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestAISignalsEndpoints" name="test_ai_signal_btcusd" time="60.159"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:100: in test_ai_signal_btcusd
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestAISignalsEndpoints" name="test_ai_signal_ethusd" time="60.211"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:112: in test_ai_signal_ethusd
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestAdaptiveStrategyEndpoints" name="test_adaptive_strategy_status" time="41.734"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:125: in test_adaptive_strategy_status
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestAdaptiveStrategyEndpoints" name="test_current_regime" time="0.267"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:132: in test_current_regime
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestAdaptiveStrategyEndpoints" name="test_regime_variants" time="0.133"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:140: in test_regime_variants
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestAdaptiveStrategyEndpoints" name="test_optimal_strategy" time="0.143"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:148: in test_optimal_strategy
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestTradingEndpoints" name="test_kraken_portfolio" time="0.117"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:159: in test_kraken_portfolio
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestTradingEndpoints" name="test_portfolio_status" time="0.142"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:167: in test_portfolio_status
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestTradingEndpoints" name="test_positions_list" time="0.528"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:174: in test_positions_list
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestAdvancedOrdersEndpoints" name="test_trailing_stops_list" time="0.349"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:185: in test_trailing_stops_list
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestAdvancedOrdersEndpoints" name="test_dca_bots_list" time="0.187"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:192: in test_dca_bots_list
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestSystemStateEndpoints" name="test_system_state_all" time="0.133"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:203: in test_system_state_all
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestSystemStateEndpoints" name="test_system_state_component" time="0.168"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:210: in test_system_state_component
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestUpgradesEndpoints" name="test_upgrades_status" time="0.144"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:222: in test_upgrades_status
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestMarketDataEndpoints" name="test_market_prices" time="0.143"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:234: in test_market_prices
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_iteration46_features.TestMarketDataEndpoints" name="test_market_overview" time="0.112"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">backend/tests/test_iteration46_features.py:241: in test_market_overview
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase></testsuite></testsuites>
