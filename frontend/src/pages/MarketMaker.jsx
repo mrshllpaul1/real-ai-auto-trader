@@ -42,6 +42,10 @@ const MarketMaker = ({ embedded = false }) => {
     enabled: true
   });
 
+  // AI Prediction for selected symbol
+  const symbolClean = config.symbol.replace('/USD', '').replace('USD', '');
+  const { prediction: aiPrediction, loading: aiLoading, refetch: refetchAi } = useAIPrediction(symbolClean);
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
