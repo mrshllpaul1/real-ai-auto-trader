@@ -122,9 +122,7 @@ const WeeklySchedulerSection = () => {
     return (
       <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
         <CardContent className="py-8">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-[#00FF94]" />
-          </div>
+          <CardSkeleton count={1} />
         </CardContent>
       </Card>
     );
