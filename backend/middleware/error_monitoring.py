@@ -451,3 +451,86 @@ async def report_batch_errors(request: BatchErrorRequest):
         logger.error(f"Failed to process batch errors: {e}")
         return {'status': 'failed', 'error': str(e)}
 
+
+
+@error_router.get('/errors/trends')
+async def get_error_trends(range: str = '24h'):
+    """Get error trends over time"""
+    try:
+        store = get_error_store()
+        now = datetime.utcnow()
+        
+        # Calculate time range
+        if range == '24h':
+            hours = 24
+            interval_hours = 1
+        elif range == '7d':
+            hours = 168
+            interval_hours = 6
+        else:  # 30d
+            hours = 720
+            interval_hours = 24
+        
+        trends = []
+        
+        async with store._lock:
+            all_errors = list(store.errors)
+            if hasattr(store, 'frontend_errors'):
+                # Convert frontend errors to similar format for processing
+                for fe in store.frontend_errors:
+                    all_errors.append(type('obj', (object,), {
+                        'timestamp': datetime.fromisoformat(fe.get('timestamp', now.isoformat()).replace('Z', '')),
+                        'severity': fe.get('severity', 'medium'),
+                    })())
+            
+            for i in range(0, hours, interval_hours):
+                start_time = now - timedelta(hours=hours-i)
+                end_time = now - timedelta(hours=hours-i-interval_hours)
+                
+                # Count errors in this interval
+                interval_errors = [
+                    e for e in all_errors 
+                    if hasattr(e, 'timestamp') and start_time <= e.timestamp < end_time
+                ]
+                
+                # Group by severity
+                severity_counts = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0}
+                for error in interval_errors:
+                    sev = getattr(error, 'severity', 'medium')
+                    if sev in severity_counts:
+                        severity_counts[sev] += 1
+                
+                trends.append({
+                    'time': start_time.isoformat(),
+                    'label': start_time.strftime('%H:%M' if range == '24h' else '%m/%d'),
+                    'errors': len(interval_errors),
+                    **severity_counts
+                })
+        
+        return {
+            'range': range,
+            'trends': trends,
+            'generated_at': now.isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Failed to get error trends: {e}")
+        return {'range': range, 'trends': [], 'error': str(e)}
+
+
+@error_router.delete('/errors/clear')
+async def clear_errors():
+    """Clear error history (admin action)"""
+    try:
+        store = get_error_store()
+        async with store._lock:
+            store.errors.clear()
+            store.error_counts.clear()
+            store.error_rates.clear()
+            if hasattr(store, 'frontend_errors'):
+                store.frontend_errors.clear()
+        
+        return {'status': 'cleared', 'timestamp': datetime.utcnow().isoformat()}
+    except Exception as e:
+        logger.error(f"Failed to clear errors: {e}")
+        return {'status': 'failed', 'error': str(e)}
+
