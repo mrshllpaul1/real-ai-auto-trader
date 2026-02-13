@@ -14,7 +14,12 @@ import {
 import { motion } from 'framer-motion';
 import api from '../services/api';
 import toast from '../utils/toast';
-import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
+import { 
+  StatsGridSkeleton, 
+  PieChartSkeleton, 
+  ChartSkeleton, 
+  PositionSkeleton 
+} from '../components/LoadingSkeletons';
 
 const COLORS = ['#9D00FF', '#00FF94', '#FFB800', '#FF0055', '#007AFF', '#FF6B00', '#00D4FF', '#FF00FF'];
 
