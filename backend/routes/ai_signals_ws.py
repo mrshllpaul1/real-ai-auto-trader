@@ -140,13 +140,13 @@ async def ai_signals_multi_websocket(websocket: WebSocket):
         logger.error(f"Multi-symbol AI Signal WebSocket error: {e}")
 
 
-@router.get("/api/ai-signals/{symbol}")
+@router.get("/ai-signals/{symbol}")
 async def get_ai_signal(symbol: str):
     """REST endpoint to get current AI signal for a symbol"""
     return generate_ai_signal(symbol)
 
 
-@router.get("/api/ai-signals/batch")
+@router.get("/ai-signals/batch")
 async def get_batch_ai_signals(symbols: str):
     """Get AI signals for multiple symbols (comma-separated)"""
     symbol_list = [s.strip() for s in symbols.split(",")]
