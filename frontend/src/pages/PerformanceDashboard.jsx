@@ -45,7 +45,7 @@ const usePerformanceWebSocket = (onMetrics) => {
 
   useEffect(() => {
     const API_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '';
-    const wsUrl = API_URL.replace('https://', 'wss://').replace('http://', 'ws://') + '/api/performance/ws';
+    const wsUrl = API_URL.replace('https://', 'wss://').replace('http://', 'ws://') + '/api/perf-monitor/ws';
     
     const connect = () => {
       try {
