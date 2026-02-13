@@ -141,6 +141,7 @@ function App() {
                     <Route path="/defi" element={<PageErrorBoundary><SuspenseWrapper><DeFiHub /></SuspenseWrapper></PageErrorBoundary>} />
                     <Route path="/settings" element={<PageErrorBoundary><SuspenseWrapper><SettingsHub /></SuspenseWrapper></PageErrorBoundary>} />
                     <Route path="/error-analytics" element={<PageErrorBoundary><SuspenseWrapper><ErrorAnalyticsDashboard /></SuspenseWrapper></PageErrorBoundary>} />
+                    <Route path="/performance-monitor" element={<PageErrorBoundary><SuspenseWrapper><PerformanceMonitorDashboard /></SuspenseWrapper></PageErrorBoundary>} />
                     
                     {/* Legacy routes - redirect to hubs */}
                     <Route path="/spot-trading" element={<Navigate to="/trading" replace />} />
