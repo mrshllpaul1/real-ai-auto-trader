@@ -50,6 +50,7 @@ __pycache__/
 *pyc*
 venv/
 .venv/
+.coverage
 
 # Development tools
 chainlit.md

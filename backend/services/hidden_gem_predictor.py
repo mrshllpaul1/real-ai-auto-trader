@@ -660,8 +660,6 @@ Format: SYMBOL | Confidence% | Expected Move | Reason (one line each)"""
         Deep historical training using simulation data from 2009-2026.
         Learns patterns from actual historical gem discoveries.
         """
-        global _gem_training_status
-        
         _gem_training_status["running"] = True
         _gem_training_status["started_at"] = datetime.now(timezone.utc).isoformat()
         _gem_training_status["progress"] = 0
@@ -830,8 +828,6 @@ Format: SYMBOL | Confidence% | Expected Move | Reason (one line each)"""
         Train the gem predictor using REAL historical OHLCV data from CryptoCompare.
         This method uses actual price/volume data stored in MongoDB.
         """
-        global _gem_training_status
-        
         _gem_training_status["running"] = True
         _gem_training_status["started_at"] = datetime.now(timezone.utc).isoformat()
         _gem_training_status["progress"] = 0

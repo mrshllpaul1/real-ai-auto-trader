@@ -15,8 +15,11 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 from collections import deque
 import os
+from utils.request_context import clear_request_id, get_request_id, set_request_id
 
 logger = logging.getLogger(__name__)
+
+REQUEST_ID_HEADER = "X-Request-ID"
 
 
 class ErrorSeverity:
@@ -203,6 +206,7 @@ class ErrorMonitoringMiddleware(BaseHTTPMiddleware):
     def _extract_request_info(self, request: Request) -> Dict:
         """Extract relevant request information"""
         return {
+            'request_id': get_request_id(),
             'method': request.method,
             'url': str(request.url),
             'path': request.url.path,
@@ -228,26 +232,58 @@ class ErrorMonitoringMiddleware(BaseHTTPMiddleware):
                 return ErrorSeverity.ERROR
             return ErrorSeverity.WARNING
         return ErrorSeverity.INFO
+
+    def _log_request_details(
+        self,
+        label: str,
+        request_id: str,
+        request: Request,
+        param_count: int,
+        content_length_value: str,
+        status_code: Optional[int] = None,
+        duration: Optional[float] = None,
+    ) -> None:
+        message = (
+            f"{label} [{request_id}]: {request.method} {request.url.path} "
+            f"param_count={param_count} content_length={content_length_value}"
+        )
+        if status_code is not None:
+            message += f" status={status_code}"
+        if duration is not None:
+            message += f" duration={duration:.2f}s"
+        logger.info(message)
     
     async def dispatch(self, request: Request, call_next):
-        error_id = str(uuid.uuid4())[:8]
+        extracted_request_id = request.headers.get(REQUEST_ID_HEADER)
+        request_id = extracted_request_id or str(uuid.uuid4())[:8]
+        set_request_id(request_id)
         start_time = datetime.utcnow()
+        content_length_value = request.headers.get('content-length') or "unknown"
+        param_count = len(request.query_params)
         
         try:
+            if self.log_all_requests:
+                self._log_request_details(
+                    "Request",
+                    request_id,
+                    request,
+                    param_count,
+                    content_length_value,
+                )
             response = await call_next(request)
             
             # Log slow requests
             duration = (datetime.utcnow() - start_time).total_seconds()
             if duration > 5.0:  # Requests taking more than 5 seconds
                 logger.warning(
-                    f"Slow request [{error_id}]: {request.method} {request.url.path} "
+                    f"Slow request [{request_id}]: {request.method} {request.url.path} "
                     f"took {duration:.2f}s"
                 )
             
             # Log errors (4xx, 5xx)
             if response.status_code >= 400:
                 error_record = ErrorRecord(
-                    error_id=error_id,
+                    error_id=request_id,
                     timestamp=datetime.utcnow(),
                     severity=self._determine_severity(response.status_code, None),
                     error_type=f"HTTP_{response.status_code}",
@@ -260,19 +296,30 @@ class ErrorMonitoringMiddleware(BaseHTTPMiddleware):
                 
                 if response.status_code >= 500:
                     logger.error(
-                        f"Error [{error_id}]: {request.method} {request.url.path} "
+                        f"Error [{request_id}]: {request.method} {request.url.path} "
                         f"returned {response.status_code}"
                     )
             
+            if self.log_all_requests:
+                self._log_request_details(
+                    "Response",
+                    request_id,
+                    request,
+                    param_count,
+                    content_length_value,
+                    status_code=response.status_code,
+                    duration=duration,
+                )
+
             # Add error ID to response headers
-            response.headers['X-Request-ID'] = error_id
+            response.headers[REQUEST_ID_HEADER] = request_id
             
             return response
             
         except Exception as exc:
             # Capture unhandled exceptions
             error_record = ErrorRecord(
-                error_id=error_id,
+                error_id=request_id,
                 timestamp=datetime.utcnow(),
                 severity=ErrorSeverity.CRITICAL,
                 error_type=type(exc).__name__,
@@ -284,7 +331,7 @@ class ErrorMonitoringMiddleware(BaseHTTPMiddleware):
             await self.error_store.add_error(error_record)
             
             logger.critical(
-                f"Unhandled exception [{error_id}]: {type(exc).__name__}: {str(exc)}\n"
+                f"Unhandled exception [{request_id}]: {type(exc).__name__}: {str(exc)}\n"
                 f"Path: {request.method} {request.url.path}\n"
                 f"Traceback:\n{traceback.format_exc()}"
             )
@@ -294,11 +341,13 @@ class ErrorMonitoringMiddleware(BaseHTTPMiddleware):
                 status_code=500,
                 content={
                     'detail': 'Internal server error',
-                    'error_id': error_id,
+                    'error_id': request_id,
                     'timestamp': datetime.utcnow().isoformat()
                 },
-                headers={'X-Request-ID': error_id}
+                headers={REQUEST_ID_HEADER: request_id}
             )
+        finally:
+            clear_request_id()
 
 
 # Error monitoring endpoints

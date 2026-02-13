@@ -25,7 +25,7 @@ def set_dependencies(db, scheduler=None):
 
 def get_scheduler():
     """Get or create the scheduler instance"""
-    global _scheduler, _db
+    global _scheduler
     if _scheduler is None and _db is not None:
         from services.model_retrain_scheduler import get_retrain_scheduler
         _scheduler = get_retrain_scheduler(_db)
@@ -116,7 +116,6 @@ async def update_scheduler_config(config: ScheduleConfig):
 @router.get("/history")
 async def get_retrain_history(limit: int = 10):
     """Get history of scheduled retrains"""
-    global _db
     if not _db:
         return {"history": [], "total": 0}
     

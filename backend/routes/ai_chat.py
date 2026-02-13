@@ -100,8 +100,6 @@ async def execute_trade_command(request: TradeExecutionRequest):
     - {"action": "buy", "coin": "BTC", "amount_usd": 100, "confirm": false} -> Preview
     - {"action": "buy", "coin": "BTC", "amount_usd": 100, "confirm": true} -> Execute
     """
-    global _pending_trades
-    
     if not _kraken_service:
         raise HTTPException(status_code=503, detail="Trading service not initialized. Kraken API not connected.")
     

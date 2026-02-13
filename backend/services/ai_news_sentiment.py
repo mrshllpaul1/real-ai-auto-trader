@@ -614,7 +614,6 @@ Return ONLY the JSON, no other text."""
 _sentiment_service = None
 
 def get_sentiment_service():
-    global _sentiment_service
     return _sentiment_service
 
 def set_sentiment_service(service):

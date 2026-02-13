@@ -49,7 +49,7 @@ async def start_trading_loop(
     background_tasks: BackgroundTasks = None
 ):
     """Start continuous trading loop"""
-    global _trading_loop, _db
+    global _trading_loop
     
     from services.tethys_trading import get_trading_loop
     _trading_loop = get_trading_loop(_db)
@@ -82,8 +82,6 @@ async def start_trading_loop(
 @router.post("/stop")
 async def stop_trading_loop():
     """Stop trading loop"""
-    global _trading_loop, _db
-    
     if not _trading_loop:
         return {"status": "not_running"}
     
@@ -104,7 +102,7 @@ async def stop_trading_loop():
 @router.get("/status")
 async def get_trading_status():
     """Get trading loop status"""
-    global _trading_loop, _db
+    global _trading_loop
     
     if not _trading_loop:
         from services.tethys_trading import get_trading_loop
@@ -128,7 +126,7 @@ async def get_trading_status():
 @router.post("/tick")
 async def process_single_tick(symbol: str = "BTC/USD"):
     """Process a single trading tick"""
-    global _trading_loop, _db
+    global _trading_loop
     
     from services.tethys_trading import get_trading_loop
     _trading_loop = get_trading_loop(_db)
@@ -144,8 +142,6 @@ async def process_single_tick(symbol: str = "BTC/USD"):
 @router.get("/history")
 async def get_trade_history(limit: int = 50):
     """Get recent trade history"""
-    global _trading_loop
-    
     if not _trading_loop:
         return {"trades": [], "count": 0}
     
@@ -178,8 +174,6 @@ async def get_trade_history(limit: int = 50):
 @router.get("/explain/latest")
 async def get_latest_explanation():
     """Get explanation for most recent decision"""
-    global _trading_loop
-    
     if not _trading_loop or not _trading_loop._explainer:
         return {"status": "no_data"}
     
@@ -193,8 +187,6 @@ async def get_latest_explanation():
 @router.get("/explain/summary")
 async def get_explanation_summary():
     """Get feature importance summary"""
-    global _trading_loop
-    
     if not _trading_loop or not _trading_loop._explainer:
         from services.tethys_trading import TradingExplainer
         return {"status": "explainer_not_initialized"}
@@ -207,7 +199,7 @@ async def explain_specific_decision(
     symbol: str = "BTC/USD"
 ):
     """Generate explanation for a new decision"""
-    global _trading_loop, _db
+    global _trading_loop
     
     from services.tethys_trading import get_trading_loop
     _trading_loop = get_trading_loop(_db)
@@ -324,8 +316,6 @@ def simulate_backtest(params: Dict) -> Dict:
 @router.get("/evolve/status")
 async def get_evolution_status():
     """Get evolution status"""
-    global _evolver
-    
     if not _evolver:
         return {"status": "not_started"}
     
@@ -335,8 +325,6 @@ async def get_evolution_status():
 @router.get("/evolve/population")
 async def get_current_population():
     """Get current population"""
-    global _evolver
-    
     if not _evolver:
         return {"population": []}
     
@@ -388,7 +376,7 @@ async def run_full_trading_cycle(symbol: str = "BTC/USD"):
     4. Risk check
     5. Return complete analysis
     """
-    global _trading_loop, _db
+    global _trading_loop
     
     from services.tethys_trading import get_trading_loop
     _trading_loop = get_trading_loop(_db)
@@ -415,7 +403,7 @@ async def run_full_trading_cycle(symbol: str = "BTC/USD"):
 @router.get("/dashboard")
 async def get_full_dashboard():
     """Get complete Tethys trading dashboard"""
-    global _trading_loop, _evolver, _db
+    global _trading_loop
     
     from services.tethys_trading import get_trading_loop
     _trading_loop = get_trading_loop(_db)

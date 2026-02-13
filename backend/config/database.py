@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 # MongoDB connection
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 DB_NAME = os.environ.get('DB_NAME', 'crypto_trading_db')
+DATABASE_NAME = DB_NAME  # Alias DATABASE_NAME for code that references DATABASE_NAME instead of DB_NAME
 
 # Connection Pooling Configuration for 3-5x faster queries
 POOL_CONFIG = {
@@ -130,7 +131,7 @@ async def reconnect_database():
         
         # Update global references
         client = new_client
-        db = new_client[DATABASE_NAME]
+        db = new_client[DB_NAME]
         
         logger.info("✅ Database reconnection successful")
         return True

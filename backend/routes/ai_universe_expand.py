@@ -37,7 +37,6 @@ _expansion_status = {
 
 async def run_expansion_task(target_count: int):
     """Background task to run universe expansion"""
-    global _expansion_status
     _expansion_status["running"] = True
     _expansion_status["started_at"] = datetime.utcnow().isoformat()
     

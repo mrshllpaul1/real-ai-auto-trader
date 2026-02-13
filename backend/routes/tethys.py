@@ -45,7 +45,7 @@ class PortfolioUpdate(BaseModel):
 @router.get("/status")
 async def get_tethys_status():
     """Get complete Tethys safety system status"""
-    global _safety_system, _db
+    global _safety_system
     
     if not _safety_system:
         from services.tethys_safety import get_tethys_safety, AGENT_NAME, AGENT_VERSION
@@ -241,8 +241,6 @@ async def get_audit_history(
     symbol: Optional[str] = None
 ):
     """Get historical audit records from database"""
-    global _db
-    
     if not _db:
         raise HTTPException(status_code=503, detail="Database not available")
     
@@ -325,7 +323,7 @@ async def evaluate_trade_decision(
     
     This is the main endpoint for evaluating trades before execution.
     """
-    global _safety_system, _db
+    global _safety_system
     
     if not _safety_system:
         from services.tethys_safety import get_tethys_safety

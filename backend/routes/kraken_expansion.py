@@ -29,7 +29,7 @@ def set_dependencies(db, expansion_service=None):
 
 def get_service():
     """Get expansion service with lazy initialization"""
-    global _expansion_service, _db
+    global _expansion_service
     if _expansion_service is None and _db is not None:
         from services.kraken_data_expansion_service import get_expansion_service
         _expansion_service = get_expansion_service(_db)

@@ -11,7 +11,15 @@ import asyncio
 import os
 
 # Configuration imports
-from config.app_config import APP_TITLE, APP_DESCRIPTION, APP_VERSION, CORS_ORIGINS, LOG_FORMAT, LOG_LEVEL
+from config.app_config import (
+    APP_TITLE,
+    APP_DESCRIPTION,
+    APP_VERSION,
+    CORS_ORIGINS,
+    LOG_FORMAT,
+    LOG_LEVEL,
+    LOG_ALL_REQUESTS,
+)
 from config.database import db, client, close_db
 from config.websocket import ConnectionManager
 
@@ -27,6 +35,24 @@ def get_service(name: str):
 
 # Configure logging
 logging.basicConfig(level=getattr(logging, LOG_LEVEL), format=LOG_FORMAT)
+try:
+    from utils.request_context import RequestIdFilter
+
+    # Apply to root logger so all app logs carry request_id when available.
+    logging.getLogger().addFilter(RequestIdFilter())
+except (ImportError, AttributeError) as e:
+    _record_factory = logging.getLogRecordFactory()
+
+    def _request_id_record_factory(*args, **kwargs):
+        record = _record_factory(*args, **kwargs)
+        if not hasattr(record, "request_id"):
+            record.request_id = "-"
+        return record
+
+    logging.setLogRecordFactory(_request_id_record_factory)
+    logging.getLogger(__name__).warning(
+        f"Failed to configure request ID logging filter: {e}"
+    )
 logger = logging.getLogger(__name__)
 
 # Create the main app with enhanced API documentation
@@ -239,7 +265,7 @@ except ImportError as e:
 # 2. Error Monitoring
 try:
     from middleware.error_monitoring import ErrorMonitoringMiddleware
-    app.add_middleware(ErrorMonitoringMiddleware, log_all_requests=False)
+    app.add_middleware(ErrorMonitoringMiddleware, log_all_requests=LOG_ALL_REQUESTS)
     logger.info("✅ Error Monitoring middleware enabled")
 except ImportError as e:
     logger.warning(f"Could not import error monitoring middleware: {e}")

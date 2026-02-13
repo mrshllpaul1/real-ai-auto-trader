@@ -25,4 +25,5 @@ CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*').split(',')
 
 # Logging configuration
 LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
-LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - [%(request_id)s] %(message)s'
+LOG_ALL_REQUESTS = os.environ.get('LOG_ALL_REQUESTS', 'false').lower() == 'true'

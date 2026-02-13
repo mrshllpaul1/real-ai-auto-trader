@@ -32,6 +32,8 @@ warnings.filterwarnings('ignore')
 # Lazy TensorFlow loading - defer until actually needed
 TF_AVAILABLE = None  # Will be set on first check
 _tf_module = None
+# Global placeholder for EarlyStopping to avoid importing TensorFlow at module load.
+_early_stopping_class = None
 
 def _ensure_tf():
     """Lazy load TensorFlow only when needed for DL models"""
@@ -149,8 +151,11 @@ class RegimePredictionEngine:
             return False
         
         # Now load TensorFlow components
+        global _early_stopping_class
         tf = _get_tf()
+        from tensorflow.keras.callbacks import EarlyStopping as TfEarlyStopping
         from tensorflow.keras.models import load_model
+        _early_stopping_class = TfEarlyStopping
         
         # Initialize DL model structures
         self._init_dl_models()
@@ -715,7 +720,7 @@ class RegimePredictionEngine:
                         
                         model = self.models[name]
                         
-                        early_stop = EarlyStopping(
+                        early_stop = _early_stopping_class(
                             monitor='val_loss',
                             patience=5,
                             restore_best_weights=True

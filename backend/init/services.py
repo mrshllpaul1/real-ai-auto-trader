@@ -26,7 +26,7 @@ def get_all_services() -> Dict[str, Any]:
 
 async def initialize_all_services(db):
     """Initialize all services - called after startup"""
-    global _initialized, _services
+    global _initialized
     
     if _initialized:
         return _services

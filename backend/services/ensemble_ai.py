@@ -456,7 +456,6 @@ class UniverseOptimizer:
         
     async def analyze_top_coins(self, limit: int = 1000, batch_size: int = 200, progress_callback=None) -> List[Dict]:
         """Analyze top coins by market cap using all AI models - processes in batches"""
-        global _universe_rebuild_status
         analyzed = []
         
         try:
@@ -684,8 +683,6 @@ class UniverseOptimizer:
         Build an optimal trading universe from top 1000 coins.
         Uses ensemble AI to score and rank all coins.
         """
-        global _universe_rebuild_status
-        
         result = {
             "status": "building",
             "target_size": target_size,
@@ -869,8 +866,6 @@ def get_universe_optimizer(db=None, market_service=None, ensemble=None, deep_lea
 
 async def run_universe_rebuild_background(optimizer: UniverseOptimizer, target_size: int = 50, analyze_count: int = 500):
     """Background task to run universe rebuild"""
-    global _universe_rebuild_status
-    
     _universe_rebuild_status["running"] = True
     _universe_rebuild_status["started_at"] = datetime.now(timezone.utc).isoformat()
     _universe_rebuild_status["progress"] = 0
