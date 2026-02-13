@@ -72,6 +72,12 @@ const EmailDigest = ({ embedded = false }) => {
     loadHistory();
     loadAlertConfig();
     loadAlertHistory();
+    
+    // Check push notification support
+    setPushSupported(isPushSupported());
+    if ('Notification' in window) {
+      setPushPermission(Notification.permission);
+    }
   }, []);
 
   const loadSettings = async () => {
