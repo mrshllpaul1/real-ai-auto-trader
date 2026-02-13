@@ -62,6 +62,8 @@ const EmailDigest = ({ embedded = false }) => {
   useEffect(() => {
     loadSettings();
     loadHistory();
+    loadAlertConfig();
+    loadAlertHistory();
   }, []);
 
   const loadSettings = async () => {
@@ -84,6 +86,96 @@ const EmailDigest = ({ embedded = false }) => {
     } catch (error) {
       console.error('Error loading history:', error);
     }
+  };
+  
+  // Error Alerting Functions
+  const loadAlertConfig = async () => {
+    try {
+      const response = await api.get('/error-alerting/config');
+      setAlertConfig(prev => ({ 
+        ...prev, 
+        ...response.data,
+        resend_api_key: '' // Don't populate key for security
+      }));
+      setAlertStatus(response.data);
+    } catch (error) {
+      console.error('Error loading alert config:', error);
+    }
+  };
+  
+  const loadAlertHistory = async () => {
+    try {
+      const response = await api.get('/error-alerting/history');
+      setAlertHistory(response.data.alerts || []);
+    } catch (error) {
+      console.error('Error loading alert history:', error);
+    }
+  };
+  
+  const saveAlertConfig = async () => {
+    setSavingAlerts(true);
+    try {
+      const configToSave = { ...alertConfig };
+      // Only include API key if it's been changed
+      if (!configToSave.resend_api_key) {
+        delete configToSave.resend_api_key;
+      }
+      await api.post('/error-alerting/config', configToSave);
+      toast.success('Error alert settings saved');
+      loadAlertConfig();
+    } catch (error) {
+      toast.error('Failed to save alert settings', { description: error.message });
+    } finally {
+      setSavingAlerts(false);
+    }
+  };
+  
+  const testResendConnection = async () => {
+    if (!alertConfig.resend_api_key) {
+      toast.error('Please enter your Resend API key first');
+      return;
+    }
+    if (!newRecipientEmail && alertConfig.recipient_emails.length === 0) {
+      toast.error('Please add a recipient email first');
+      return;
+    }
+    
+    setTestingConnection(true);
+    try {
+      const testEmail = newRecipientEmail || alertConfig.recipient_emails[0];
+      await api.post('/error-alerting/test-connection', {
+        api_key: alertConfig.resend_api_key,
+        recipient_email: testEmail
+      });
+      toast.success('Test email sent!', { description: `Check ${testEmail}` });
+    } catch (error) {
+      toast.error('Connection test failed', { description: error.response?.data?.detail || error.message });
+    } finally {
+      setTestingConnection(false);
+    }
+  };
+  
+  const addRecipientEmail = () => {
+    if (!newRecipientEmail || !newRecipientEmail.includes('@')) {
+      toast.error('Please enter a valid email');
+      return;
+    }
+    if (alertConfig.recipient_emails.includes(newRecipientEmail)) {
+      toast.error('Email already added');
+      return;
+    }
+    setAlertConfig(prev => ({
+      ...prev,
+      recipient_emails: [...prev.recipient_emails, newRecipientEmail]
+    }));
+    setNewRecipientEmail('');
+  };
+  
+  const removeRecipientEmail = (email) => {
+    setAlertConfig(prev => ({
+      ...prev,
+      recipient_emails: prev.recipient_emails.filter(e => e !== email)
+    }));
   };
 
   const saveSettings = async () => {
