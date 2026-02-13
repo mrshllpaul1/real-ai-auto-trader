@@ -1,0 +1,82 @@
+# ============================================
+# TETHYS AI TRADING PLATFORM - LOCAL SETUP
+# ============================================
+# Copy and paste these commands into your terminal
+
+# STEP 1: Clone from GitHub (after you Save to GitHub)
+# --------------------------------------------
+git clone YOUR_GITHUB_REPO_URL
+cd YOUR_REPO_NAME
+
+# STEP 2: Install MongoDB (choose your OS)
+# --------------------------------------------
+
+# macOS:
+brew install mongodb-community
+brew services start mongodb-community
+
+# Ubuntu/Debian:
+sudo apt update
+sudo apt install -y mongodb
+sudo systemctl start mongodb
+
+# Windows: Download from https://www.mongodb.com/try/download/community
+
+# STEP 3: Setup Backend
+# --------------------------------------------
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# STEP 4: Install ML Libraries (the heavy ones)
+# --------------------------------------------
+pip install tensorflow
+pip install keras
+pip install torch
+pip install scikit-learn
+pip install xgboost
+pip install lightgbm
+pip install stable-baselines3
+pip install gymnasium
+pip install transformers
+
+# STEP 5: Setup Frontend
+# --------------------------------------------
+cd ../frontend
+npm install
+
+# STEP 6: Create Environment Files
+# --------------------------------------------
+cd ..
+
+cat > backend/.env << 'EOF'
+MONGO_URL=mongodb://localhost:27017
+DB_NAME=tethys_trading
+EOF
+
+cat > frontend/.env << 'EOF'
+REACT_APP_BACKEND_URL=http://localhost:8001
+EOF
+
+# STEP 7: Restore Your Data
+# --------------------------------------------
+cd backups
+tar -xzf backups.tar.gz
+# Then import to MongoDB:
+mongorestore --db tethys_trading ./full_backup_*/
+
+# STEP 8: Start the App
+# --------------------------------------------
+
+# Terminal 1 - Start Backend:
+cd backend
+source venv/bin/activate
+uvicorn server:app --host 0.0.0.0 --port 8001 --reload
+
+# Terminal 2 - Start Frontend:
+cd frontend
+npm run dev
+
+# DONE! Open http://localhost:3000 in your browser
