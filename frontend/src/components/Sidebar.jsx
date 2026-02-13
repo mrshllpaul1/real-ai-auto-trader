@@ -320,6 +320,7 @@ const Sidebar = () => {
     { path: '/scanner', icon: Radar, label: 'Scanner & Social' },
     { path: '/defi', icon: Sprout, label: 'DeFi' },
     { path: '/error-analytics', icon: Bug, label: 'Error Analytics' },
+    { path: '/performance-monitor', icon: Gauge, label: 'Performance' },
     { path: '/settings', icon: Settings, label: 'Settings' },
   ];
 
