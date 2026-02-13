@@ -202,25 +202,25 @@ const StrategyMarketplace = () => {
               <div className="p-4 grid grid-cols-2 gap-3">
                 <div className="text-center p-2 bg-gray-900/50 rounded-lg">
                   <p className="text-lg font-bold text-green-400">
-                    +{strategy.(performance?.total_return ?? 0).toFixed(1)}%
+                    +{(strategy?.performance?.total_return ?? 0).toFixed(1)}%
                   </p>
                   <p className="text-xs text-gray-500">Total Return</p>
                 </div>
                 <div className="text-center p-2 bg-gray-900/50 rounded-lg">
                   <p className="text-lg font-bold text-white">
-                    {strategy.(performance?.win_rate ?? 0).toFixed(1)}%
+                    {(strategy?.performance?.win_rate ?? 0).toFixed(1)}%
                   </p>
                   <p className="text-xs text-gray-500">Win Rate</p>
                 </div>
                 <div className="text-center p-2 bg-gray-900/50 rounded-lg">
                   <p className="text-lg font-bold text-blue-400">
-                    {strategy.(performance?.sharpe_ratio ?? 0).toFixed(2)}
+                    {(strategy?.performance?.sharpe_ratio ?? 0).toFixed(2)}
                   </p>
                   <p className="text-xs text-gray-500">Sharpe Ratio</p>
                 </div>
                 <div className="text-center p-2 bg-gray-900/50 rounded-lg">
                   <p className="text-lg font-bold text-red-400">
-                    {strategy.(performance?.max_drawdown ?? 0).toFixed(1)}%
+                    {(strategy?.performance?.max_drawdown ?? 0).toFixed(1)}%
                   </p>
                   <p className="text-xs text-gray-500">Max Drawdown</p>
                 </div>

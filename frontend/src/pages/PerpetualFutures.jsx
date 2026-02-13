@@ -331,12 +331,12 @@ const PerpetualFutures = ({ embedded = false }) => {
                     </div>
                     <div>
                       <p className="text-sm text-[#A1A1AA]">Total Margin</p>
-                      <p className="text-xl font-bold text-[#FF9500]">${positions.(summary?.total_margin_used ?? 0).toLocaleString()}</p>
+                      <p className="text-xl font-bold text-[#FF9500]">${(positions?.summary?.total_margin_used ?? 0).toLocaleString()}</p>
                     </div>
                     <div>
                       <p className="text-sm text-[#A1A1AA]">Unrealized PnL</p>
                       <p className={`text-xl font-bold ${positions.summary?.total_unrealized_pnl >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
-                        ${positions.(summary?.total_unrealized_pnl ?? 0).toLocaleString()}
+                        ${(positions?.summary?.total_unrealized_pnl ?? 0).toLocaleString()}
                       </p>
                     </div>
                   </div>

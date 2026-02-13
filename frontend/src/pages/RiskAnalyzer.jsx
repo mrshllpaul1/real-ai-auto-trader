@@ -467,15 +467,15 @@ const RiskAnalyzer = ({ embedded = false }) => {
               </div>
               <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4 text-center">
                 <p className="text-sm text-[#A1A1AA]">Perpetuals</p>
-                <p className="text-2xl font-bold text-[#00FF94]">${exposure.(by_type?.perpetuals ?? 0).toLocaleString() || 0}</p>
+                <p className="text-2xl font-bold text-[#00FF94]">${(exposure?.by_type?.perpetuals ?? 0).toLocaleString() || 0}</p>
               </div>
               <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4 text-center">
                 <p className="text-sm text-[#A1A1AA]">Yield Farming</p>
-                <p className="text-2xl font-bold text-[#9D00FF]">${exposure.(by_type?.yield_farming ?? 0).toLocaleString() || 0}</p>
+                <p className="text-2xl font-bold text-[#9D00FF]">${(exposure?.by_type?.yield_farming ?? 0).toLocaleString() || 0}</p>
               </div>
               <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4 text-center">
                 <p className="text-sm text-[#A1A1AA]">Options</p>
-                <p className="text-2xl font-bold text-[#FF9500]">${exposure.(by_type?.options ?? 0).toLocaleString() || 0}</p>
+                <p className="text-2xl font-bold text-[#FF9500]">${(exposure?.by_type?.options ?? 0).toLocaleString() || 0}</p>
               </div>
             </div>
           </motion.div>
@@ -675,7 +675,7 @@ const RiskAnalyzer = ({ embedded = false }) => {
                         Perpetuals
                       </span>
                       <span className={`font-bold ${stressTest.impact_breakdown?.perpetuals >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
-                        {stressTest.impact_breakdown?.perpetuals >= 0 ? '+' : ''}${stressTest.(impact_breakdown?.perpetuals ?? 0).toLocaleString()}
+                        {stressTest.impact_breakdown?.perpetuals >= 0 ? '+' : ''}${(stressTest?.impact_breakdown?.perpetuals ?? 0).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-[#0A0A0A] border border-[#333] rounded-lg">
@@ -684,7 +684,7 @@ const RiskAnalyzer = ({ embedded = false }) => {
                         Yield Farming
                       </span>
                       <span className={`font-bold ${stressTest.impact_breakdown?.yield_farming >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
-                        {stressTest.impact_breakdown?.yield_farming >= 0 ? '+' : ''}${stressTest.(impact_breakdown?.yield_farming ?? 0).toLocaleString()}
+                        {stressTest.impact_breakdown?.yield_farming >= 0 ? '+' : ''}${(stressTest?.impact_breakdown?.yield_farming ?? 0).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-[#0A0A0A] border border-[#333] rounded-lg">
@@ -693,7 +693,7 @@ const RiskAnalyzer = ({ embedded = false }) => {
                         Options
                       </span>
                       <span className={`font-bold ${stressTest.impact_breakdown?.options >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
-                        {stressTest.impact_breakdown?.options >= 0 ? '+' : ''}${stressTest.(impact_breakdown?.options ?? 0).toLocaleString()}
+                        {stressTest.impact_breakdown?.options >= 0 ? '+' : ''}${(stressTest?.impact_breakdown?.options ?? 0).toLocaleString()}
                       </span>
                     </div>
                   </div>

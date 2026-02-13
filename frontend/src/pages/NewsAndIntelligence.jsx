@@ -146,7 +146,7 @@ const NewsAndIntelligence = ({ embedded = false }) => {
                 <div className="p-3 bg-[#121212] rounded-lg">
                   <div className="text-xs text-[#A1A1AA] mb-1">Success Rate</div>
                   <div className="text-2xl font-data font-bold text-[#007AFF]">
-                    {trainingStatus.(summary?.training_accuracy ?? 0).toFixed(1)}%
+                    {(trainingStatus?.summary?.training_accuracy ?? 0).toFixed(1)}%
                   </div>
                 </div>
                 <div className="p-3 bg-[#121212] rounded-lg">

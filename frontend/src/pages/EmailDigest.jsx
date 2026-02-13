@@ -378,7 +378,7 @@ const EmailDigest = ({ embedded = false }) => {
                       <div className="p-4 rounded-lg bg-slate-900/50">
                         <p className="text-slate-400 text-sm">Portfolio Value</p>
                         <p className="text-xl font-bold text-white">
-                          ${previewDigest.(summary?.portfolio_value ?? 0).toLocaleString() || '0'}
+                          ${(previewDigest?.summary?.portfolio_value ?? 0).toLocaleString() || '0'}
                         </p>
                       </div>
                       <div className="p-4 rounded-lg bg-slate-900/50">
@@ -388,7 +388,7 @@ const EmailDigest = ({ embedded = false }) => {
                       <div className="p-4 rounded-lg bg-slate-900/50">
                         <p className="text-slate-400 text-sm">Total P&L</p>
                         <p className={`text-xl font-bold ${(previewDigest.summary?.total_pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          ${previewDigest.(summary?.total_pnl ?? 0).toFixed(2) || '0'}
+                          ${(previewDigest?.summary?.total_pnl ?? 0).toFixed(2) || '0'}
                         </p>
                       </div>
                       <div className="p-4 rounded-lg bg-slate-900/50">

@@ -316,7 +316,7 @@ const TethysDashboard = () => {
                 <div className="flex justify-between">
                   <span className="text-slate-400 text-sm">Best Fitness</span>
                   <span className="text-green-400 font-mono">
-                    {tradingData.(evolution?.fitness ?? 0).toFixed(4)}
+                    {(tradingData?.evolution?.fitness ?? 0).toFixed(4)}
                   </span>
                 </div>
               </div>

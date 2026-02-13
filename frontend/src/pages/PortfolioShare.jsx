@@ -357,13 +357,13 @@ const PortfolioShare = ({ embedded = false }) => {
                           <div className="p-3 rounded-lg bg-black/20">
                             <p className={`text-xs ${shareConfig.theme === 'light' ? 'text-gray-500' : 'text-slate-400'}`}>Total P&L</p>
                             <p className={`text-xl font-bold ${(generatedShare.stats?.total_pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                              ${generatedShare.(stats?.total_pnl ?? 0).toFixed(2) || '0'}
+                              ${(generatedShare?.stats?.total_pnl ?? 0).toFixed(2) || '0'}
                             </p>
                           </div>
                           <div className="p-3 rounded-lg bg-black/20">
                             <p className={`text-xs ${shareConfig.theme === 'light' ? 'text-gray-500' : 'text-slate-400'}`}>Best Trade</p>
                             <p className="text-xl font-bold text-green-400">
-                              ${generatedShare.(stats?.best_trade ?? 0).toFixed(2) || '0'}
+                              ${(generatedShare?.stats?.best_trade ?? 0).toFixed(2) || '0'}
                             </p>
                           </div>
                         </div>
@@ -376,7 +376,7 @@ const PortfolioShare = ({ embedded = false }) => {
                                 Portfolio Value
                               </p>
                               <p className={`text-3xl font-bold ${shareConfig.theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
-                                {generatedShare.data?.total_value_masked || `$${generatedShare.(data?.total_value ?? 0).toLocaleString()}`}
+                                {generatedShare.data?.total_value_masked || `$${(generatedShare?.data?.total_value ?? 0).toLocaleString()}`}
                               </p>
                             </div>
                           )}

@@ -162,15 +162,15 @@ const YieldFarming = ({ embedded = false }) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4">
             <p className="text-sm text-[#A1A1AA]">Total Deposited</p>
-            <p className="text-xl font-bold text-white">${positions.(summary?.total_deposited_usd ?? 0).toLocaleString()}</p>
+            <p className="text-xl font-bold text-white">${(positions?.summary?.total_deposited_usd ?? 0).toLocaleString()}</p>
           </div>
           <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4">
             <p className="text-sm text-[#A1A1AA]">Current Value</p>
-            <p className="text-xl font-bold text-[#00FF94]">${positions.(summary?.total_current_value_usd ?? 0).toLocaleString()}</p>
+            <p className="text-xl font-bold text-[#00FF94]">${(positions?.summary?.total_current_value_usd ?? 0).toLocaleString()}</p>
           </div>
           <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4">
             <p className="text-sm text-[#A1A1AA]">Total Earned</p>
-            <p className="text-xl font-bold text-[#9D00FF]">${positions.(summary?.total_earned_usd ?? 0).toLocaleString()}</p>
+            <p className="text-xl font-bold text-[#9D00FF]">${(positions?.summary?.total_earned_usd ?? 0).toLocaleString()}</p>
           </div>
           <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4">
             <p className="text-sm text-[#A1A1AA]">Overall APY</p>

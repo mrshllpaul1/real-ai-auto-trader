@@ -82,7 +82,7 @@ const WeeklySchedulerSection = () => {
       toast.dismiss();
       
       if (res.data.success) {
-        toast.success(`Executed ${res.data.trades_count} trades! Total: $${res.(data?.total_invested ?? 0).toFixed(2)}`);
+        toast.success(`Executed ${res.data.trades_count} trades! Total: $${(res?.data?.total_invested ?? 0).toFixed(2)}`);
         await loadSchedulerData();
       }
     } catch (error) {
@@ -305,7 +305,7 @@ const WeeklySchedulerSection = () => {
                   </div>
                   <div className="text-sm">
                     <span className="text-[#888]">Invested: </span>
-                    <span className="text-[#00FF94] font-medium">${latestSelection.(execution_result?.total_invested ?? 0).toFixed(2)}</span>
+                    <span className="text-[#00FF94] font-medium">${(latestSelection?.execution_result?.total_invested ?? 0).toFixed(2)}</span>
                   </div>
                   <Badge className={latestSelection.execution_result.paper_trade ? 'bg-[#FFB800]/20 text-[#FFB800]' : 'bg-[#00FF94]/20 text-[#00FF94]'}>
                     {latestSelection.execution_result.paper_trade ? 'PAPER' : 'REAL'}

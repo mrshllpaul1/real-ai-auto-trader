@@ -383,11 +383,11 @@ const PortfolioRebalance = ({ embedded = false }) => {
                       </div>
                       <div className="p-3 bg-[#0A0A0A] border border-[#333] rounded-lg">
                         <p className="text-sm text-[#A1A1AA]">Trade Volume</p>
-                        <p className="text-xl font-bold text-white">${suggestions.(summary?.total_volume ?? 0).toLocaleString()}</p>
+                        <p className="text-xl font-bold text-white">${(suggestions?.summary?.total_volume ?? 0).toLocaleString()}</p>
                       </div>
                       <div className="p-3 bg-[#0A0A0A] border border-[#333] rounded-lg">
                         <p className="text-sm text-[#A1A1AA]">Est. Fees</p>
-                        <p className="text-xl font-bold text-[#A1A1AA]">${suggestions.(summary?.estimated_fees ?? 0).toFixed(2)}</p>
+                        <p className="text-xl font-bold text-[#A1A1AA]">${(suggestions?.summary?.estimated_fees ?? 0).toFixed(2)}</p>
                       </div>
                       <div className="p-3 bg-[#0A0A0A] border border-[#333] rounded-lg">
                         <p className="text-sm text-[#A1A1AA]">Risk Impact</p>
