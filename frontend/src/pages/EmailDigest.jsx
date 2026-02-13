@@ -35,6 +35,23 @@ const EmailDigest = ({ embedded = false }) => {
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
+  
+  // Error Alerting State
+  const [alertConfig, setAlertConfig] = useState({
+    resend_api_key: '',
+    recipient_emails: [],
+    enabled: false,
+    thresholds: {
+      errors_per_hour: 50,
+      critical_errors_trigger: 5
+    },
+    cooldown_minutes: 30
+  });
+  const [alertStatus, setAlertStatus] = useState(null);
+  const [alertHistory, setAlertHistory] = useState([]);
+  const [savingAlerts, setSavingAlerts] = useState(false);
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [newRecipientEmail, setNewRecipientEmail] = useState('');
 
   const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const TIMES = Array.from({ length: 24 }, (_, i) => {
