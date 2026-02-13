@@ -40,7 +40,7 @@ try:
 
     # Apply to root logger so all app logs carry request_id when available.
     logging.getLogger().addFilter(RequestIdFilter())
-except Exception as e:
+except (ImportError, AttributeError) as e:
     _record_factory = logging.getLogRecordFactory()
 
     def _request_id_record_factory(*args, **kwargs):
