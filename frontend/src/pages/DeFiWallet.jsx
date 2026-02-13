@@ -320,15 +320,15 @@ const DeFiWallet = ({ embedded = false }) => {
                   <div className="flex gap-6 mt-4">
                     <div>
                       <p className="text-sm text-[#A1A1AA]">Tokens</p>
-                      <p className="text-lg text-white">${balances?.(total_value_usd ?? 0).toLocaleString() || 0}</p>
+                      <p className="text-lg text-white">${(balances?.total_value_usd ?? 0).toLocaleString() || 0}</p>
                     </div>
                     <div>
                       <p className="text-sm text-[#A1A1AA]">DeFi</p>
-                      <p className="text-lg text-[#00FF94]">${positions?.summary?.(total_value_usd ?? 0).toLocaleString() || 0}</p>
+                      <p className="text-lg text-[#00FF94]">${positions?.(summary?.total_value_usd ?? 0).toLocaleString() || 0}</p>
                     </div>
                     <div>
                       <p className="text-sm text-[#A1A1AA]">NFTs</p>
-                      <p className="text-lg text-[#9D00FF]">${nfts?.(total_floor_value_usd ?? 0).toLocaleString() || 0}</p>
+                      <p className="text-lg text-[#9D00FF]">${(nfts?.total_floor_value_usd ?? 0).toLocaleString() || 0}</p>
                     </div>
                   </div>
                 </div>
@@ -345,7 +345,7 @@ const DeFiWallet = ({ embedded = false }) => {
                           </div>
                           <span className="text-white">{token.symbol}</span>
                         </div>
-                        <span className="text-[#A1A1AA]">${token.(value_usd ?? 0).toLocaleString()}</span>
+                        <span className="text-[#A1A1AA]">${(token?.value_usd ?? 0).toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
@@ -361,7 +361,7 @@ const DeFiWallet = ({ embedded = false }) => {
                           <p className="text-white text-sm">{pos.protocol}</p>
                           <p className="text-xs text-[#A1A1AA]">{pos.position_type}</p>
                         </div>
-                        <span className="text-[#00FF94]">${pos.(current_value_usd ?? 0).toLocaleString()}</span>
+                        <span className="text-[#00FF94]">${(pos?.current_value_usd ?? 0).toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
@@ -399,7 +399,7 @@ const DeFiWallet = ({ embedded = false }) => {
               >
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-white">Token Balances</h2>
-                  <span className="text-[#00FF94] font-bold">${balances?.(total_value_usd ?? 0).toLocaleString()}</span>
+                  <span className="text-[#00FF94] font-bold">${(balances?.total_value_usd ?? 0).toLocaleString()}</span>
                 </div>
                 <div className="space-y-3">
                   {balances?.balances?.map((token, i) => (
@@ -417,7 +417,7 @@ const DeFiWallet = ({ embedded = false }) => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-white font-medium">${token.(value_usd ?? 0).toLocaleString()}</p>
+                        <p className="text-white font-medium">${(token?.value_usd ?? 0).toLocaleString()}</p>
                         <p className="text-sm text-[#A1A1AA]">${token.price_usd}</p>
                       </div>
                     </div>
@@ -438,12 +438,12 @@ const DeFiWallet = ({ embedded = false }) => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                       <p className="text-sm text-[#A1A1AA]">Total Value</p>
-                      <p className="text-xl font-bold text-white">${positions?.summary?.(total_value_usd ?? 0).toLocaleString()}</p>
+                      <p className="text-xl font-bold text-white">${positions?.(summary?.total_value_usd ?? 0).toLocaleString()}</p>
                     </div>
                     <div>
                       <p className="text-sm text-[#A1A1AA]">Total PnL</p>
                       <p className={`text-xl font-bold ${(positions?.summary?.total_pnl_usd || 0) >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
-                        ${positions?.summary?.(total_pnl_usd ?? 0).toLocaleString()}
+                        ${positions?.(summary?.total_pnl_usd ?? 0).toLocaleString()}
                       </p>
                     </div>
                     <div>
@@ -473,7 +473,7 @@ const DeFiWallet = ({ embedded = false }) => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-white font-bold">${pos.(current_value_usd ?? 0).toLocaleString()}</p>
+                        <p className="text-white font-bold">${(pos?.current_value_usd ?? 0).toLocaleString()}</p>
                         {pos.apy && <p className="text-sm text-[#00FF94]">{pos.apy}% APY</p>}
                       </div>
                     </div>
@@ -499,7 +499,7 @@ const DeFiWallet = ({ embedded = false }) => {
               >
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-white">NFT Collection</h2>
-                  <span className="text-[#9D00FF] font-bold">Floor: ${nfts?.(total_floor_value_usd ?? 0).toLocaleString()}</span>
+                  <span className="text-[#9D00FF] font-bold">Floor: ${(nfts?.total_floor_value_usd ?? 0).toLocaleString()}</span>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {nfts?.nfts?.map((nft, i) => (

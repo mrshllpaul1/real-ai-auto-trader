@@ -144,7 +144,7 @@ const OptionsTrading = ({ embedded = false }) => {
               <div>
                 <span className="text-[#A1A1AA]">{selectedSymbol} Current Price</span>
                 <div className="text-3xl font-data font-bold text-white">
-                  ${chain.(current_price ?? 0).toLocaleString()}
+                  ${(chain?.current_price ?? 0).toLocaleString()}
                 </div>
               </div>
               <div className="text-right">

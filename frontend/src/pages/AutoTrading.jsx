@@ -82,7 +82,7 @@ const WeeklySchedulerSection = () => {
       toast.dismiss();
       
       if (res.data.success) {
-        toast.success(`Executed ${res.data.trades_count} trades! Total: $${res.data.(total_invested ?? 0).toFixed(2)}`);
+        toast.success(`Executed ${res.data.trades_count} trades! Total: $${res.(data?.total_invested ?? 0).toFixed(2)}`);
         await loadSchedulerData();
       }
     } catch (error) {
@@ -273,7 +273,7 @@ const WeeklySchedulerSection = () => {
                   <div key={idx} className="bg-[#1F1F1F] rounded px-2 py-1 flex items-center gap-1">
                     <span className="text-xs text-[#06b6d4] font-bold">{idx + 1}</span>
                     <span className="text-sm text-white">{coin.symbol || coin.coin_id}</span>
-                    <span className="text-xs text-[#666]">{coin.(total_score ?? 0).toFixed(0)}</span>
+                    <span className="text-xs text-[#666]">{(coin?.total_score ?? 0).toFixed(0)}</span>
                   </div>
                 ))}
               </div>
@@ -287,7 +287,7 @@ const WeeklySchedulerSection = () => {
                   {latestSelection.gem_coins.map((coin, idx) => (
                     <div key={idx} className="bg-[#9D00FF]/10 border border-[#9D00FF]/30 rounded px-2 py-1 flex items-center gap-1">
                       <span className="text-sm text-[#9D00FF] font-medium">{coin.symbol || coin.coin_id}</span>
-                      <span className="text-xs text-[#666]">{coin.(total_score ?? 0).toFixed(0) || coin.(gem_score ?? 0).toFixed(0)}</span>
+                      <span className="text-xs text-[#666]">{(coin?.total_score ?? 0).toFixed(0) || (coin?.gem_score ?? 0).toFixed(0)}</span>
                     </div>
                   ))}
                 </div>
@@ -305,7 +305,7 @@ const WeeklySchedulerSection = () => {
                   </div>
                   <div className="text-sm">
                     <span className="text-[#888]">Invested: </span>
-                    <span className="text-[#00FF94] font-medium">${latestSelection.execution_result.(total_invested ?? 0).toFixed(2)}</span>
+                    <span className="text-[#00FF94] font-medium">${latestSelection.(execution_result?.total_invested ?? 0).toFixed(2)}</span>
                   </div>
                   <Badge className={latestSelection.execution_result.paper_trade ? 'bg-[#FFB800]/20 text-[#FFB800]' : 'bg-[#00FF94]/20 text-[#00FF94]'}>
                     {latestSelection.execution_result.paper_trade ? 'PAPER' : 'REAL'}

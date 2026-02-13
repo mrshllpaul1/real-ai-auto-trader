@@ -254,7 +254,7 @@ const TethysDashboard = () => {
                     <div key={i} className="flex justify-between text-xs">
                       <span className="text-slate-500">{f.feature}</span>
                       <span className={f.avg_contribution > 0 ? 'text-green-400' : 'text-red-400'}>
-                        {f.(avg_contribution ?? 0).toFixed(3)}
+                        {(f?.avg_contribution ?? 0).toFixed(3)}
                       </span>
                     </div>
                   ))}
@@ -316,7 +316,7 @@ const TethysDashboard = () => {
                 <div className="flex justify-between">
                   <span className="text-slate-400 text-sm">Best Fitness</span>
                   <span className="text-green-400 font-mono">
-                    {tradingData.evolution.(fitness ?? 0).toFixed(4)}
+                    {tradingData.(evolution?.fitness ?? 0).toFixed(4)}
                   </span>
                 </div>
               </div>
@@ -590,7 +590,7 @@ const TethysDashboard = () => {
                   </div>
                   <InfoRow 
                     label="Best Sharpe" 
-                    value={trainingData?.training?.(best_sharpe ?? 0).toFixed(4) || 'N/A'} 
+                    value={trainingData?.(training?.best_sharpe ?? 0).toFixed(4) || 'N/A'} 
                   />
                 </>
               )}

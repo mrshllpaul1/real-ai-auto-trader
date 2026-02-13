@@ -162,15 +162,15 @@ const YieldFarming = ({ embedded = false }) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4">
             <p className="text-sm text-[#A1A1AA]">Total Deposited</p>
-            <p className="text-xl font-bold text-white">${positions.summary.(total_deposited_usd ?? 0).toLocaleString()}</p>
+            <p className="text-xl font-bold text-white">${positions.(summary?.total_deposited_usd ?? 0).toLocaleString()}</p>
           </div>
           <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4">
             <p className="text-sm text-[#A1A1AA]">Current Value</p>
-            <p className="text-xl font-bold text-[#00FF94]">${positions.summary.(total_current_value_usd ?? 0).toLocaleString()}</p>
+            <p className="text-xl font-bold text-[#00FF94]">${positions.(summary?.total_current_value_usd ?? 0).toLocaleString()}</p>
           </div>
           <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4">
             <p className="text-sm text-[#A1A1AA]">Total Earned</p>
-            <p className="text-xl font-bold text-[#9D00FF]">${positions.summary.(total_earned_usd ?? 0).toLocaleString()}</p>
+            <p className="text-xl font-bold text-[#9D00FF]">${positions.(summary?.total_earned_usd ?? 0).toLocaleString()}</p>
           </div>
           <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4">
             <p className="text-sm text-[#A1A1AA]">Overall APY</p>
@@ -360,15 +360,15 @@ const YieldFarming = ({ embedded = false }) => {
                     <div className="flex items-center gap-6">
                       <div>
                         <p className="text-sm text-[#A1A1AA]">Deposited</p>
-                        <p className="text-white font-medium">${pos.(deposited_usd ?? 0).toLocaleString()}</p>
+                        <p className="text-white font-medium">${(pos?.deposited_usd ?? 0).toLocaleString()}</p>
                       </div>
                       <div>
                         <p className="text-sm text-[#A1A1AA]">Current</p>
-                        <p className="text-[#00FF94] font-medium">${pos.(current_value_usd ?? 0).toLocaleString()}</p>
+                        <p className="text-[#00FF94] font-medium">${(pos?.current_value_usd ?? 0).toLocaleString()}</p>
                       </div>
                       <div>
                         <p className="text-sm text-[#A1A1AA]">Earned</p>
-                        <p className="text-[#9D00FF] font-medium">+${pos.(earned_usd ?? 0).toLocaleString()}</p>
+                        <p className="text-[#9D00FF] font-medium">+${(pos?.earned_usd ?? 0).toLocaleString()}</p>
                       </div>
                       <div>
                         <p className="text-sm text-[#A1A1AA]">APY</p>

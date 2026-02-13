@@ -194,7 +194,7 @@ const MarketMaker = ({ embedded = false }) => {
                   <div>
                     <span className="text-[#A1A1AA]">Position:</span>
                     <span className={`ml-2 font-data ${status.position >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
-                      {status.(position ?? 0).toFixed(6)}
+                      {(status?.position ?? 0).toFixed(6)}
                     </span>
                   </div>
                   <div>
@@ -203,7 +203,7 @@ const MarketMaker = ({ embedded = false }) => {
                   </div>
                   <div>
                     <span className="text-[#A1A1AA]">Mid Price:</span>
-                    <span className="ml-2 font-data text-white">${status.(last_mid_price ?? 0).toLocaleString() || 'N/A'}</span>
+                    <span className="ml-2 font-data text-white">${(status?.last_mid_price ?? 0).toLocaleString() || 'N/A'}</span>
                   </div>
                 </div>
               )}
@@ -226,7 +226,7 @@ const MarketMaker = ({ embedded = false }) => {
               <span className="text-sm text-[#A1A1AA]">Realized P&L</span>
             </div>
             <div className={`text-2xl font-data font-bold ${(pnl?.realized_pnl || 0) >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
-              ${pnl?.(realized_pnl ?? 0).toFixed(2) || '0.00'}
+              ${(pnl?.realized_pnl ?? 0).toFixed(2) || '0.00'}
             </div>
           </CardContent>
         </Card>
@@ -238,7 +238,7 @@ const MarketMaker = ({ embedded = false }) => {
               <span className="text-sm text-[#A1A1AA]">Unrealized P&L</span>
             </div>
             <div className={`text-2xl font-data font-bold ${(pnl?.unrealized_pnl || 0) >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
-              ${pnl?.(unrealized_pnl ?? 0).toFixed(2) || '0.00'}
+              ${(pnl?.unrealized_pnl ?? 0).toFixed(2) || '0.00'}
             </div>
           </CardContent>
         </Card>
@@ -250,7 +250,7 @@ const MarketMaker = ({ embedded = false }) => {
               <span className="text-sm text-[#A1A1AA]">Position Value</span>
             </div>
             <div className="text-2xl font-data font-bold text-white">
-              ${pnl?.(position_value_usd ?? 0).toFixed(2) || '0.00'}
+              ${(pnl?.position_value_usd ?? 0).toFixed(2) || '0.00'}
             </div>
           </CardContent>
         </Card>
@@ -262,7 +262,7 @@ const MarketMaker = ({ embedded = false }) => {
               <span className="text-sm text-[#A1A1AA]">Total P&L</span>
             </div>
             <div className={`text-2xl font-data font-bold ${(pnl?.total_pnl || 0) >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
-              ${pnl?.(total_pnl ?? 0).toFixed(2) || '0.00'}
+              ${(pnl?.total_pnl ?? 0).toFixed(2) || '0.00'}
             </div>
           </CardContent>
         </Card>
@@ -399,7 +399,7 @@ const MarketMaker = ({ embedded = false }) => {
                   <div className="space-y-2">
                     {orders.bids.map((order, i) => (
                       <div key={i} className="flex justify-between p-2 bg-[#00FF94]/10 rounded border border-[#00FF94]/20">
-                        <span className="text-[#00FF94] font-data">${order.(price ?? 0).toLocaleString()}</span>
+                        <span className="text-[#00FF94] font-data">${(order?.price ?? 0).toLocaleString()}</span>
                         <span className="text-white font-data">${order.size_usd}</span>
                         <Badge variant="outline" className="border-[#00FF94] text-[#00FF94]">L{order.level}</Badge>
                       </div>
@@ -424,7 +424,7 @@ const MarketMaker = ({ embedded = false }) => {
                   <div className="space-y-2">
                     {orders.asks.map((order, i) => (
                       <div key={i} className="flex justify-between p-2 bg-[#FF0055]/10 rounded border border-[#FF0055]/20">
-                        <span className="text-[#FF0055] font-data">${order.(price ?? 0).toLocaleString()}</span>
+                        <span className="text-[#FF0055] font-data">${(order?.price ?? 0).toLocaleString()}</span>
                         <span className="text-white font-data">${order.size_usd}</span>
                         <Badge variant="outline" className="border-[#FF0055] text-[#FF0055]">L{order.level}</Badge>
                       </div>

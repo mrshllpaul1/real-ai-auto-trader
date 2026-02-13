@@ -268,7 +268,7 @@ const CopyTrading = ({ embedded = false }) => {
                             <div>
                               <p className="text-xs text-[#A1A1AA]">ROI</p>
                               <p className={`font-data font-bold ${trader.stats?.roi >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
-                                {trader.stats?.roi >= 0 ? '+' : ''}{trader.stats?.(roi ?? 0).toFixed(1)}%
+                                {trader.stats?.roi >= 0 ? '+' : ''}{trader.(stats?.roi ?? 0).toFixed(1)}%
                               </p>
                             </div>
                             <div>

@@ -346,7 +346,7 @@ const AutoExecution = ({ embedded = false }) => {
                         <div>
                           <span className="font-bold text-white">{trade.symbol}</span>
                           <span className="text-xs text-[#A1A1AA] ml-2">
-                            ${trade.(entry_price ?? 0).toFixed(4)}
+                            ${(trade?.entry_price ?? 0).toFixed(4)}
                           </span>
                         </div>
                       </div>
@@ -356,7 +356,7 @@ const AutoExecution = ({ embedded = false }) => {
                           trade.profit_pct > 0 ? 'bg-[#00FF94]/20 text-[#00FF94]' :
                           'bg-[#FF0055]/20 text-[#FF0055]'
                         }>
-                          {trade.status === 'OPEN' ? 'OPEN' : `${trade.profit_pct > 0 ? '+' : ''}${trade.(profit_pct ?? 0).toFixed(2)}%`}
+                          {trade.status === 'OPEN' ? 'OPEN' : `${trade.profit_pct > 0 ? '+' : ''}${(trade?.profit_pct ?? 0).toFixed(2)}%`}
                         </Badge>
                       </div>
                     </div>
@@ -433,19 +433,19 @@ const AutoExecution = ({ embedded = false }) => {
                     <div className="p-4 bg-[#121212] rounded-lg">
                       <div className="text-xs text-[#A1A1AA] mb-1">Win Rate</div>
                       <div className={`text-3xl font-data font-bold ${aiPerformance.win_rate > 50 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
-                        {aiPerformance.(win_rate ?? 0).toFixed(1)}%
+                        {(aiPerformance?.win_rate ?? 0).toFixed(1)}%
                       </div>
                     </div>
                     <div className="p-4 bg-[#121212] rounded-lg">
                       <div className="text-xs text-[#A1A1AA] mb-1">Total Profit</div>
                       <div className={`text-3xl font-data font-bold ${aiPerformance.total_profit > 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
-                        {aiPerformance.total_profit > 0 ? '+' : ''}{aiPerformance.(total_profit ?? 0).toFixed(2)}%
+                        {aiPerformance.total_profit > 0 ? '+' : ''}{(aiPerformance?.total_profit ?? 0).toFixed(2)}%
                       </div>
                     </div>
                     <div className="p-4 bg-[#121212] rounded-lg">
                       <div className="text-xs text-[#A1A1AA] mb-1">Avg Profit/Trade</div>
                       <div className={`text-3xl font-data font-bold ${aiPerformance.avg_profit_per_trade > 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
-                        {aiPerformance.avg_profit_per_trade > 0 ? '+' : ''}{aiPerformance.(avg_profit_per_trade ?? 0).toFixed(2)}%
+                        {aiPerformance.avg_profit_per_trade > 0 ? '+' : ''}{(aiPerformance?.avg_profit_per_trade ?? 0).toFixed(2)}%
                       </div>
                     </div>
                   </div>
@@ -488,19 +488,19 @@ const AutoExecution = ({ embedded = false }) => {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                         <div>
                           <span className="text-[#A1A1AA]">Entry:</span>
-                          <span className="ml-2 font-data text-white">${pos.(entry_price ?? 0).toFixed(4)}</span>
+                          <span className="ml-2 font-data text-white">${(pos?.entry_price ?? 0).toFixed(4)}</span>
                         </div>
                         <div>
                           <span className="text-[#A1A1AA]">Size:</span>
-                          <span className="ml-2 font-data text-white">${pos.(position_size_usd ?? 0).toFixed(2)}</span>
+                          <span className="ml-2 font-data text-white">${(pos?.position_size_usd ?? 0).toFixed(2)}</span>
                         </div>
                         <div>
                           <span className="text-[#A1A1AA]">Stop Loss:</span>
-                          <span className="ml-2 font-data text-[#FF0055]">${pos.(stop_loss_price ?? 0).toFixed(4)}</span>
+                          <span className="ml-2 font-data text-[#FF0055]">${(pos?.stop_loss_price ?? 0).toFixed(4)}</span>
                         </div>
                         <div>
                           <span className="text-[#A1A1AA]">Take Profit:</span>
-                          <span className="ml-2 font-data text-[#00FF94]">${pos.(take_profit_price ?? 0).toFixed(4)}</span>
+                          <span className="ml-2 font-data text-[#00FF94]">${(pos?.take_profit_price ?? 0).toFixed(4)}</span>
                         </div>
                       </div>
                     </div>

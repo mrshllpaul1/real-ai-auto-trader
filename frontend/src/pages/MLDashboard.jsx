@@ -135,7 +135,7 @@ const MLDashboard = () => {
           </div>
           <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4">
             <p className="text-sm text-[#A1A1AA]">Predictions Today</p>
-            <p className="text-2xl font-bold text-white">{dashboard.summary?.(total_predictions_today ?? 0).toLocaleString()}</p>
+            <p className="text-2xl font-bold text-white">{dashboard.(summary?.total_predictions_today ?? 0).toLocaleString()}</p>
           </div>
           <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4">
             <p className="text-sm text-[#A1A1AA]">Avg Accuracy</p>
@@ -143,7 +143,7 @@ const MLDashboard = () => {
           </div>
           <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4">
             <p className="text-sm text-[#A1A1AA]">Avg Sharpe</p>
-            <p className="text-2xl font-bold text-[#9D00FF]">{dashboard.summary?.(avg_sharpe_24h ?? 0).toFixed(2)}</p>
+            <p className="text-2xl font-bold text-[#9D00FF]">{dashboard.(summary?.avg_sharpe_24h ?? 0).toFixed(2)}</p>
           </div>
         </div>
       )}

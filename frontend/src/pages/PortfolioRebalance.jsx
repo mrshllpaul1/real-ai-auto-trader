@@ -252,7 +252,7 @@ const PortfolioRebalance = ({ embedded = false }) => {
                 </ResponsiveContainer>
               </div>
               <div className="text-center mt-4">
-                <p className="text-2xl font-bold text-white">${analysis.(total_value ?? 0).toLocaleString()}</p>
+                <p className="text-2xl font-bold text-white">${(analysis?.total_value ?? 0).toLocaleString()}</p>
                 <p className="text-sm text-[#A1A1AA]">Total Portfolio Value</p>
               </div>
             </div>
@@ -325,7 +325,7 @@ const PortfolioRebalance = ({ embedded = false }) => {
                       <span className="text-white font-medium">{asset}</span>
                     </div>
                     <p className="text-2xl font-bold text-white">{data.percentage}%</p>
-                    <p className="text-sm text-[#A1A1AA]">${data.(total ?? 0).toLocaleString()}</p>
+                    <p className="text-sm text-[#A1A1AA]">${(data?.total ?? 0).toLocaleString()}</p>
                     <div className="mt-2 text-xs text-[#A1A1AA]">
                       {data.spot > 0 && <span className="mr-2">Spot: ${data.spot.toLocaleString()}</span>}
                       {data.perp > 0 && <span className="mr-2">Perp: ${data.perp.toLocaleString()}</span>}
@@ -383,11 +383,11 @@ const PortfolioRebalance = ({ embedded = false }) => {
                       </div>
                       <div className="p-3 bg-[#0A0A0A] border border-[#333] rounded-lg">
                         <p className="text-sm text-[#A1A1AA]">Trade Volume</p>
-                        <p className="text-xl font-bold text-white">${suggestions.summary?.(total_volume ?? 0).toLocaleString()}</p>
+                        <p className="text-xl font-bold text-white">${suggestions.(summary?.total_volume ?? 0).toLocaleString()}</p>
                       </div>
                       <div className="p-3 bg-[#0A0A0A] border border-[#333] rounded-lg">
                         <p className="text-sm text-[#A1A1AA]">Est. Fees</p>
-                        <p className="text-xl font-bold text-[#A1A1AA]">${suggestions.summary?.(estimated_fees ?? 0).toFixed(2)}</p>
+                        <p className="text-xl font-bold text-[#A1A1AA]">${suggestions.(summary?.estimated_fees ?? 0).toFixed(2)}</p>
                       </div>
                       <div className="p-3 bg-[#0A0A0A] border border-[#333] rounded-lg">
                         <p className="text-sm text-[#A1A1AA]">Risk Impact</p>
@@ -542,7 +542,7 @@ const PortfolioRebalance = ({ embedded = false }) => {
                 <div className="flex items-start gap-2">
                   <AlertTriangle size={16} className="text-yellow-400 mt-0.5" />
                   <p className="text-sm text-yellow-400">
-                    This will execute {suggestions?.suggested_trades?.length} trades totaling ${suggestions?.summary?.(total_volume ?? 0).toLocaleString()}
+                    This will execute {suggestions?.suggested_trades?.length} trades totaling ${suggestions?.(summary?.total_volume ?? 0).toLocaleString()}
                   </p>
                 </div>
               </div>

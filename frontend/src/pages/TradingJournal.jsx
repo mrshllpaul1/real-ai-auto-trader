@@ -232,12 +232,12 @@ export default function TradingJournal() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-medium">{trade.(volume ?? 0).toFixed(6)}</div>
-                    <div className="text-sm text-[#A1A1AA]">@ ${trade.(price ?? 0).toFixed(2)}</div>
+                    <div className="font-medium">{(trade?.volume ?? 0).toFixed(6)}</div>
+                    <div className="text-sm text-[#A1A1AA]">@ ${(trade?.price ?? 0).toFixed(2)}</div>
                   </div>
                   <div className="text-right">
-                    <div className="font-medium">${trade.(cost ?? 0).toFixed(2)}</div>
-                    <div className="text-xs text-[#A1A1AA]">Fee: ${trade.(fee ?? 0).toFixed(4)}</div>
+                    <div className="font-medium">${(trade?.cost ?? 0).toFixed(2)}</div>
+                    <div className="text-xs text-[#A1A1AA]">Fee: ${(trade?.fee ?? 0).toFixed(4)}</div>
                   </div>
                 </div>
               ))}

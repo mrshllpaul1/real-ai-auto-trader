@@ -202,25 +202,25 @@ const StrategyMarketplace = () => {
               <div className="p-4 grid grid-cols-2 gap-3">
                 <div className="text-center p-2 bg-gray-900/50 rounded-lg">
                   <p className="text-lg font-bold text-green-400">
-                    +{strategy.performance?.(total_return ?? 0).toFixed(1)}%
+                    +{strategy.(performance?.total_return ?? 0).toFixed(1)}%
                   </p>
                   <p className="text-xs text-gray-500">Total Return</p>
                 </div>
                 <div className="text-center p-2 bg-gray-900/50 rounded-lg">
                   <p className="text-lg font-bold text-white">
-                    {strategy.performance?.(win_rate ?? 0).toFixed(1)}%
+                    {strategy.(performance?.win_rate ?? 0).toFixed(1)}%
                   </p>
                   <p className="text-xs text-gray-500">Win Rate</p>
                 </div>
                 <div className="text-center p-2 bg-gray-900/50 rounded-lg">
                   <p className="text-lg font-bold text-blue-400">
-                    {strategy.performance?.(sharpe_ratio ?? 0).toFixed(2)}
+                    {strategy.(performance?.sharpe_ratio ?? 0).toFixed(2)}
                   </p>
                   <p className="text-xs text-gray-500">Sharpe Ratio</p>
                 </div>
                 <div className="text-center p-2 bg-gray-900/50 rounded-lg">
                   <p className="text-lg font-bold text-red-400">
-                    {strategy.performance?.(max_drawdown ?? 0).toFixed(1)}%
+                    {strategy.(performance?.max_drawdown ?? 0).toFixed(1)}%
                   </p>
                   <p className="text-xs text-gray-500">Max Drawdown</p>
                 </div>
@@ -232,12 +232,12 @@ const StrategyMarketplace = () => {
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1">
                       <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      <span className="text-sm text-white">{strategy.(avg_rating ?? 0).toFixed(1)}</span>
+                      <span className="text-sm text-white">{(strategy?.avg_rating ?? 0).toFixed(1)}</span>
                       <span className="text-xs text-gray-500">({strategy.reviews_count})</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Users className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-400">{strategy.(subscribers_count ?? 0).toLocaleString()}</span>
+                      <span className="text-sm text-gray-400">{(strategy?.subscribers_count ?? 0).toLocaleString()}</span>
                     </div>
                   </div>
                   <div className="flex gap-1">

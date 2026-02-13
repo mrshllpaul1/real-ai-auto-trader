@@ -236,10 +236,10 @@ const PerformanceDashboard = ({ embedded = false }) => {
             <span className="text-sm text-slate-400">Portfolio Value</span>
           </div>
           <p className="text-2xl font-bold text-white">
-            ${summary.(total_portfolio_value ?? 0).toLocaleString() || '0.00'}
+            ${(summary?.total_portfolio_value ?? 0).toLocaleString() || '0.00'}
           </p>
           <p className="text-xs text-slate-500 mt-1">
-            Crypto: ${summary.(current_portfolio_value ?? 0).toLocaleString()} | USD: ${summary.(usd_balance ?? 0).toLocaleString()}
+            Crypto: ${(summary?.current_portfolio_value ?? 0).toLocaleString()} | USD: ${(summary?.usd_balance ?? 0).toLocaleString()}
           </p>
         </motion.div>
 
@@ -255,7 +255,7 @@ const PerformanceDashboard = ({ embedded = false }) => {
             <span className="text-sm text-slate-400">Cost Basis</span>
           </div>
           <p className="text-2xl font-bold text-white">
-            ${summary.(total_cost_basis ?? 0).toLocaleString() || '—'}
+            ${(summary?.total_cost_basis ?? 0).toLocaleString() || '—'}
           </p>
           <p className="text-xs text-slate-500 mt-1">
             {data?.positions_with_entry || 0} positions tracked
@@ -282,10 +282,10 @@ const PerformanceDashboard = ({ embedded = false }) => {
             <span className="text-sm text-slate-400">Total P&L</span>
           </div>
           <p className={`text-2xl font-bold ${summary.total_pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-            {summary.total_pnl >= 0 ? '+' : ''}${summary.(total_pnl ?? 0).toFixed(2) || '0.00'}
+            {summary.total_pnl >= 0 ? '+' : ''}${(summary?.total_pnl ?? 0).toFixed(2) || '0.00'}
           </p>
           <p className={`text-sm mt-1 ${summary.total_pnl_percent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-            {summary.total_pnl_percent >= 0 ? '+' : ''}{summary.(total_pnl_percent ?? 0).toFixed(2) || '0.00'}%
+            {summary.total_pnl_percent >= 0 ? '+' : ''}{(summary?.total_pnl_percent ?? 0).toFixed(2) || '0.00'}%
           </p>
         </motion.div>
 
@@ -301,7 +301,7 @@ const PerformanceDashboard = ({ embedded = false }) => {
             <span className="text-sm text-slate-400">Win Rate</span>
           </div>
           <p className="text-2xl font-bold text-white">
-            {winLoss.(win_rate ?? 0).toFixed(0) || '0'}%
+            {(winLoss?.win_rate ?? 0).toFixed(0) || '0'}%
           </p>
           <p className="text-xs text-slate-500 mt-1">
             <span className="text-green-400">{winLoss.winning_positions || 0}W</span>
@@ -434,22 +434,22 @@ const PerformanceDashboard = ({ embedded = false }) => {
             <div className="flex justify-between items-center">
               <span className="text-slate-400">Unrealized P&L</span>
               <span className={`font-medium ${summary.unrealized_pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {summary.unrealized_pnl >= 0 ? '+' : ''}${summary.(unrealized_pnl ?? 0).toFixed(2) || '0.00'}
+                {summary.unrealized_pnl >= 0 ? '+' : ''}${(summary?.unrealized_pnl ?? 0).toFixed(2) || '0.00'}
                 <span className="text-sm ml-1">
-                  ({summary.unrealized_pnl_percent >= 0 ? '+' : ''}{summary.(unrealized_pnl_percent ?? 0).toFixed(2) || '0'}%)
+                  ({summary.unrealized_pnl_percent >= 0 ? '+' : ''}{(summary?.unrealized_pnl_percent ?? 0).toFixed(2) || '0'}%)
                 </span>
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-slate-400">Realized P&L</span>
               <span className={`font-medium ${summary.realized_pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {summary.realized_pnl >= 0 ? '+' : ''}${summary.(realized_pnl ?? 0).toFixed(2) || '0.00'}
+                {summary.realized_pnl >= 0 ? '+' : ''}${(summary?.realized_pnl ?? 0).toFixed(2) || '0.00'}
               </span>
             </div>
             <div className="border-t border-slate-700 pt-3 flex justify-between items-center">
               <span className="text-white font-medium">Total P&L</span>
               <span className={`font-bold ${summary.total_pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {summary.total_pnl >= 0 ? '+' : ''}${summary.(total_pnl ?? 0).toFixed(2) || '0.00'}
+                {summary.total_pnl >= 0 ? '+' : ''}${(summary?.total_pnl ?? 0).toFixed(2) || '0.00'}
               </span>
             </div>
           </div>
@@ -475,7 +475,7 @@ const PerformanceDashboard = ({ embedded = false }) => {
                   <Badge className="bg-green-500/20 text-green-400">Best</Badge>
                 </div>
                 <span className="text-green-400 font-medium">
-                  {bestPerformer.pnl_percent >= 0 ? '+' : ''}{bestPerformer.(pnl_percent ?? 0).toFixed(2)}%
+                  {bestPerformer.pnl_percent >= 0 ? '+' : ''}{(bestPerformer?.pnl_percent ?? 0).toFixed(2)}%
                 </span>
               </div>
             )}
@@ -487,7 +487,7 @@ const PerformanceDashboard = ({ embedded = false }) => {
                   <Badge className="bg-red-500/20 text-red-400">Worst</Badge>
                 </div>
                 <span className="text-red-400 font-medium">
-                  {worstPerformer.(pnl_percent ?? 0).toFixed(2)}%
+                  {(worstPerformer?.pnl_percent ?? 0).toFixed(2)}%
                 </span>
               </div>
             )}
@@ -529,9 +529,9 @@ const PerformanceDashboard = ({ embedded = false }) => {
                     <p className="font-medium text-white">{pos.symbol}</p>
                     <p className="text-xs text-slate-500">
                       {pos.entry_price ? (
-                        <>Entry: ${(pos?.entry_price ?? 0).toFixed(4)} → ${pos.(current_price ?? 0).toFixed(4)}</>
+                        <>Entry: ${(pos?.entry_price ?? 0).toFixed(4)} → ${(pos?.current_price ?? 0).toFixed(4)}</>
                       ) : (
-                        <>Current: ${pos.(current_price ?? 0).toFixed(4)}</>
+                        <>Current: ${(pos?.current_price ?? 0).toFixed(4)}</>
                       )}
                     </p>
                   </div>
@@ -540,10 +540,10 @@ const PerformanceDashboard = ({ embedded = false }) => {
                   {pos.pnl_percent !== null ? (
                     <>
                       <p className={`font-medium ${pos.pnl_percent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {pos.pnl_percent >= 0 ? '+' : ''}{pos.(pnl_percent ?? 0).toFixed(2)}%
+                        {pos.pnl_percent >= 0 ? '+' : ''}{(pos?.pnl_percent ?? 0).toFixed(2)}%
                       </p>
                       <p className={`text-xs ${pos.pnl_usd >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {pos.pnl_usd >= 0 ? '+' : ''}${pos.(pnl_usd ?? 0).toFixed(2)}
+                        {pos.pnl_usd >= 0 ? '+' : ''}${(pos?.pnl_usd ?? 0).toFixed(2)}
                       </p>
                     </>
                   ) : (

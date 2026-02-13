@@ -284,7 +284,7 @@ const Web3Wallet = () => {
                 </div>
                 <div className="text-right">
                   <p className="font-medium text-white">{formatCurrency(token.value_usd)}</p>
-                  <p className="text-xs text-gray-500">${token.(price_usd ?? 0).toLocaleString()}</p>
+                  <p className="text-xs text-gray-500">${(token?.price_usd ?? 0).toLocaleString()}</p>
                 </div>
               </div>
             ))}

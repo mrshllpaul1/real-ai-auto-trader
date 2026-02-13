@@ -399,13 +399,13 @@ const PositionManagement = ({ embedded = false }) => {
                             </span>
                           )}
                         </p>
-                        <p className="font-data text-white">${pos.(entry_price ?? 0).toFixed(4)}</p>
+                        <p className="font-data text-white">${(pos?.entry_price ?? 0).toFixed(4)}</p>
                       </div>
                       <div>
                         <p className="text-xs text-[#A1A1AA] mb-1 flex items-center gap-1">
                           <BarChart3 size={12} /> Current Price
                         </p>
-                        <p className="font-data text-white">${pos.(current_price ?? 0).toFixed(4) || 'N/A'}</p>
+                        <p className="font-data text-white">${(pos?.current_price ?? 0).toFixed(4) || 'N/A'}</p>
                       </div>
                     </div>
 
@@ -413,7 +413,7 @@ const PositionManagement = ({ embedded = false }) => {
                     <div className="p-3 rounded-lg bg-[#111] border border-[#1F1F1F]">
                       <div className="flex justify-between items-center">
                         <span className="text-xs text-[#A1A1AA]">Quantity</span>
-                        <span className="font-data text-white">{pos.(quantity ?? 0).toFixed(6)}</span>
+                        <span className="font-data text-white">{(pos?.quantity ?? 0).toFixed(6)}</span>
                       </div>
                     </div>
 
@@ -456,7 +456,7 @@ const PositionManagement = ({ embedded = false }) => {
                           <span className="text-xs text-[#00FF94]">Take Profit</span>
                         </div>
                         <p className="font-data text-[#00FF94] font-bold">
-                          ${pos.(take_profit_price ?? 0).toFixed(4) || 'N/A'}
+                          ${(pos?.take_profit_price ?? 0).toFixed(4) || 'N/A'}
                         </p>
                       </div>
                     </div>
@@ -466,12 +466,12 @@ const PositionManagement = ({ embedded = false }) => {
                       <div className="p-3 rounded-lg bg-[#9D00FF]/5 border border-[#9D00FF]/20">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-[#A1A1AA]">Highest Price</span>
-                          <span className="text-[#9D00FF] font-data">${pos.(highest_price ?? 0).toFixed(4)}</span>
+                          <span className="text-[#9D00FF] font-data">${(pos?.highest_price ?? 0).toFixed(4)}</span>
                         </div>
                         {pos.distance_to_trailing_stop && (
                           <div className="flex items-center justify-between text-sm mt-2">
                             <span className="text-[#A1A1AA]">Distance to Stop</span>
-                            <span className="text-white font-data">{pos.(distance_to_trailing_stop ?? 0).toFixed(2)}%</span>
+                            <span className="text-white font-data">{(pos?.distance_to_trailing_stop ?? 0).toFixed(2)}%</span>
                           </div>
                         )}
                       </div>

@@ -166,7 +166,7 @@ const NewsFilters = () => {
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-white">
-                    {marketOverview.(market_sentiment_score ?? 0).toFixed(0)}
+                    {(marketOverview?.market_sentiment_score ?? 0).toFixed(0)}
                   </div>
                   <div className="text-xs text-[#A1A1AA]">Sentiment Score</div>
                 </div>

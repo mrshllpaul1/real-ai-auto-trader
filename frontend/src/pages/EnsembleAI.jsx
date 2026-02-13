@@ -432,7 +432,7 @@ const EnsembleAI = ({ embedded = false }) => {
                 <div className="flex flex-wrap gap-2 text-xs text-[#A1A1AA]">
                   <span>MCap: ${(gem.market_cap / 1_000_000).toFixed(1)}M</span>
                   <span>24h: <span className={gem.price_change_24h > 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}>
-                    {gem.price_change_24h > 0 ? '+' : ''}{gem.(price_change_24h ?? 0).toFixed(1)}%
+                    {gem.price_change_24h > 0 ? '+' : ''}{(gem?.price_change_24h ?? 0).toFixed(1)}%
                   </span></span>
                 </div>
               </div>

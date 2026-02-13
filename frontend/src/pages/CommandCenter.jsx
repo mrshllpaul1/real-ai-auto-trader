@@ -58,7 +58,7 @@ const DashboardTab = ({ portfolio, krakenPortfolio, prices }) => (
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-white">
-            ${krakenPortfolio?.(total_value_usd ?? 0).toFixed(2) || '0.00'}
+            ${(krakenPortfolio?.total_value_usd ?? 0).toFixed(2) || '0.00'}
           </div>
           <div className="text-sm text-gray-400">
             {krakenPortfolio?.holdings_count || krakenPortfolio?.holdings?.length || 0} assets
@@ -74,7 +74,7 @@ const DashboardTab = ({ portfolio, krakenPortfolio, prices }) => (
         </CardHeader>
         <CardContent>
           <div className={`text-2xl font-bold ${(krakenPortfolio?.change_24h || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-            {krakenPortfolio?.change_24h >= 0 ? '+' : ''}{krakenPortfolio?.(change_24h ?? 0).toFixed(2) || '0.00'}%
+            {krakenPortfolio?.change_24h >= 0 ? '+' : ''}{(krakenPortfolio?.change_24h ?? 0).toFixed(2) || '0.00'}%
           </div>
         </CardContent>
       </Card>
@@ -87,7 +87,7 @@ const DashboardTab = ({ portfolio, krakenPortfolio, prices }) => (
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-white">
-            ${portfolio?.(current_value ?? 0).toFixed(2) || '700.00'}
+            ${(portfolio?.current_value ?? 0).toFixed(2) || '700.00'}
           </div>
           <div className="text-sm text-gray-400">Isolated trading budget</div>
         </CardContent>
@@ -118,10 +118,10 @@ const DashboardTab = ({ portfolio, krakenPortfolio, prices }) => (
                 {krakenPortfolio.holdings.slice(0, 10).map((h, i) => (
                   <tr key={i} className="border-b border-gray-800/50">
                     <td className="py-2 text-white font-medium">{h.symbol}</td>
-                    <td className="py-2 text-right text-gray-300">{h.(amount ?? 0).toFixed(4)}</td>
-                    <td className="py-2 text-right text-white">${h.(value_usd ?? 0).toFixed(2)}</td>
+                    <td className="py-2 text-right text-gray-300">{(h?.amount ?? 0).toFixed(4)}</td>
+                    <td className="py-2 text-right text-white">${(h?.value_usd ?? 0).toFixed(2)}</td>
                     <td className={`py-2 text-right ${(h.change_24h || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {h.(change_24h ?? 0).toFixed(2) || '0.00'}%
+                      {(h?.change_24h ?? 0).toFixed(2) || '0.00'}%
                     </td>
                   </tr>
                 ))}
@@ -157,7 +157,7 @@ const GrowthTab = ({ growthStatus, onToggleAutopilot }) => (
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-white">
-            ${growthStatus?.(current_value ?? 0).toFixed(2) || '500.00'}
+            ${(growthStatus?.current_value ?? 0).toFixed(2) || '500.00'}
           </div>
         </CardContent>
       </Card>
@@ -168,7 +168,7 @@ const GrowthTab = ({ growthStatus, onToggleAutopilot }) => (
         </CardHeader>
         <CardContent>
           <div className={`text-2xl font-bold ${(growthStatus?.total_pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-            {growthStatus?.total_pnl >= 0 ? '+' : ''}${growthStatus?.(total_pnl ?? 0).toFixed(2) || '0.00'}
+            {growthStatus?.total_pnl >= 0 ? '+' : ''}${(growthStatus?.total_pnl ?? 0).toFixed(2) || '0.00'}
           </div>
         </CardContent>
       </Card>

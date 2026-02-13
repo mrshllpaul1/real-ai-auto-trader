@@ -657,11 +657,11 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-gray-400">Memory Size</span>
-                    <span className="text-white">{intelligenceStatus?.models?.finrl_agent?.(memory_size ?? 0).toLocaleString() || 0}</span>
+                    <span className="text-white">{intelligenceStatus?.models?.(finrl_agent?.memory_size ?? 0).toLocaleString() || 0}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-gray-400">Training Steps</span>
-                    <span className="text-white">{intelligenceStatus?.models?.finrl_agent?.(training_steps ?? 0).toLocaleString() || 0}</span>
+                    <span className="text-white">{intelligenceStatus?.models?.(finrl_agent?.training_steps ?? 0).toLocaleString() || 0}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -709,7 +709,7 @@ const ModelPerformanceDashboard = ({ embedded = false }) => {
                     <div className="bg-[#1a1a2e] rounded-lg p-4">
                       <p className="text-gray-400 text-sm">Sharpe Ratio</p>
                       <p className="text-2xl font-bold text-white">
-                        {backtestResults.latest_results.metrics?.(sharpe_ratio ?? 0).toFixed(2) || 'N/A'}
+                        {backtestResults.latest_results.(metrics?.sharpe_ratio ?? 0).toFixed(2) || 'N/A'}
                       </p>
                     </div>
                     <div className="bg-[#1a1a2e] rounded-lg p-4">

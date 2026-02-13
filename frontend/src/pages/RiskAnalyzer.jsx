@@ -145,7 +145,7 @@ const RiskAnalyzer = ({ embedded = false }) => {
                     {overview.risk_level}
                   </p>
                   <p className="text-sm text-[#A1A1AA]">
-                    Portfolio: ${overview.(total_portfolio_value ?? 0).toLocaleString()}
+                    Portfolio: ${(overview?.total_portfolio_value ?? 0).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -216,7 +216,7 @@ const RiskAnalyzer = ({ embedded = false }) => {
                       Perpetual Futures
                     </span>
                     <span className="text-[#00FF94] font-bold">
-                      ${overview.risk_breakdown?.perpetuals?.(total_exposure ?? 0).toLocaleString() || 0}
+                      ${overview.risk_breakdown?.(perpetuals?.total_exposure ?? 0).toLocaleString() || 0}
                     </span>
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-sm">
@@ -227,8 +227,8 @@ const RiskAnalyzer = ({ embedded = false }) => {
                     <div>
                       <p className="text-[#A1A1AA]">Long/Short</p>
                       <p className="text-white">
-                        ${overview.risk_breakdown?.perpetuals?.(long_exposure ?? 0).toLocaleString() || 0} / 
-                        ${overview.risk_breakdown?.perpetuals?.(short_exposure ?? 0).toLocaleString() || 0}
+                        ${overview.risk_breakdown?.(perpetuals?.long_exposure ?? 0).toLocaleString() || 0} / 
+                        ${overview.risk_breakdown?.(perpetuals?.short_exposure ?? 0).toLocaleString() || 0}
                       </p>
                     </div>
                     <div>
@@ -248,7 +248,7 @@ const RiskAnalyzer = ({ embedded = false }) => {
                       Yield Farming
                     </span>
                     <span className="text-[#9D00FF] font-bold">
-                      ${overview.risk_breakdown?.yield_farming?.(total_exposure ?? 0).toLocaleString() || 0}
+                      ${overview.risk_breakdown?.(yield_farming?.total_exposure ?? 0).toLocaleString() || 0}
                     </span>
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-sm">
@@ -258,11 +258,11 @@ const RiskAnalyzer = ({ embedded = false }) => {
                     </div>
                     <div>
                       <p className="text-[#A1A1AA]">IL Exposure</p>
-                      <p className="text-white">${overview.risk_breakdown?.yield_farming?.(il_exposure ?? 0).toLocaleString() || 0}</p>
+                      <p className="text-white">${overview.risk_breakdown?.(yield_farming?.il_exposure ?? 0).toLocaleString() || 0}</p>
                     </div>
                     <div>
                       <p className="text-[#A1A1AA]">High Risk</p>
-                      <p className="text-white">${overview.risk_breakdown?.yield_farming?.(high_risk_exposure ?? 0).toLocaleString() || 0}</p>
+                      <p className="text-white">${overview.risk_breakdown?.(yield_farming?.high_risk_exposure ?? 0).toLocaleString() || 0}</p>
                     </div>
                   </div>
                 </div>
@@ -275,17 +275,17 @@ const RiskAnalyzer = ({ embedded = false }) => {
                       Options
                     </span>
                     <span className="text-[#FF9500] font-bold">
-                      ${overview.risk_breakdown?.options?.(total_exposure ?? 0).toLocaleString() || 0}
+                      ${overview.risk_breakdown?.(options?.total_exposure ?? 0).toLocaleString() || 0}
                     </span>
                   </div>
                   <div className="grid grid-cols-4 gap-2 text-sm">
                     <div>
                       <p className="text-[#A1A1AA]">Delta</p>
-                      <p className="text-white">{overview.risk_breakdown?.options?.(net_delta ?? 0).toFixed(2)}</p>
+                      <p className="text-white">{overview.risk_breakdown?.(options?.net_delta ?? 0).toFixed(2)}</p>
                     </div>
                     <div>
                       <p className="text-[#A1A1AA]">Gamma</p>
-                      <p className="text-white">{overview.risk_breakdown?.options?.(net_gamma ?? 0).toFixed(4)}</p>
+                      <p className="text-white">{overview.risk_breakdown?.(options?.net_gamma ?? 0).toFixed(4)}</p>
                     </div>
                     <div>
                       <p className="text-[#A1A1AA]">Theta</p>
@@ -422,7 +422,7 @@ const RiskAnalyzer = ({ embedded = false }) => {
                     <div className="flex-1">
                       <div className="flex justify-between mb-1">
                         <span className="text-white font-medium">{asset.asset}</span>
-                        <span className="text-[#A1A1AA]">${asset.(total ?? 0).toLocaleString()}</span>
+                        <span className="text-[#A1A1AA]">${(asset?.total ?? 0).toLocaleString()}</span>
                       </div>
                       <div className="h-2 bg-[#333] rounded-full overflow-hidden flex">
                         {asset.perpetuals > 0 && (
@@ -463,19 +463,19 @@ const RiskAnalyzer = ({ embedded = false }) => {
             <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4 text-center">
                 <p className="text-sm text-[#A1A1AA]">Total Exposure</p>
-                <p className="text-2xl font-bold text-white">${exposure.(total_exposure ?? 0).toLocaleString()}</p>
+                <p className="text-2xl font-bold text-white">${(exposure?.total_exposure ?? 0).toLocaleString()}</p>
               </div>
               <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4 text-center">
                 <p className="text-sm text-[#A1A1AA]">Perpetuals</p>
-                <p className="text-2xl font-bold text-[#00FF94]">${exposure.by_type?.(perpetuals ?? 0).toLocaleString() || 0}</p>
+                <p className="text-2xl font-bold text-[#00FF94]">${exposure.(by_type?.perpetuals ?? 0).toLocaleString() || 0}</p>
               </div>
               <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4 text-center">
                 <p className="text-sm text-[#A1A1AA]">Yield Farming</p>
-                <p className="text-2xl font-bold text-[#9D00FF]">${exposure.by_type?.(yield_farming ?? 0).toLocaleString() || 0}</p>
+                <p className="text-2xl font-bold text-[#9D00FF]">${exposure.(by_type?.yield_farming ?? 0).toLocaleString() || 0}</p>
               </div>
               <div className="bg-[#1F1F1F]/50 border border-[#333] rounded-xl p-4 text-center">
                 <p className="text-sm text-[#A1A1AA]">Options</p>
-                <p className="text-2xl font-bold text-[#FF9500]">${exposure.by_type?.(options ?? 0).toLocaleString() || 0}</p>
+                <p className="text-2xl font-bold text-[#FF9500]">${exposure.(by_type?.options ?? 0).toLocaleString() || 0}</p>
               </div>
             </div>
           </motion.div>
@@ -495,21 +495,21 @@ const RiskAnalyzer = ({ embedded = false }) => {
               <div className="space-y-4">
                 <div className="p-4 bg-[#0A0A0A] border border-[#333] rounded-lg">
                   <p className="text-sm text-[#A1A1AA] mb-1">95% VaR (1-day)</p>
-                  <p className="text-3xl font-bold text-red-400">${varData.(var_95 ?? 0).toLocaleString()}</p>
+                  <p className="text-3xl font-bold text-red-400">${(varData?.var_95 ?? 0).toLocaleString()}</p>
                   <p className="text-xs text-[#A1A1AA] mt-1">
                     5% chance of losing more than this amount in one day
                   </p>
                 </div>
                 <div className="p-4 bg-[#0A0A0A] border border-[#333] rounded-lg">
                   <p className="text-sm text-[#A1A1AA] mb-1">99% VaR (1-day)</p>
-                  <p className="text-3xl font-bold text-red-500">${varData.(var_99 ?? 0).toLocaleString()}</p>
+                  <p className="text-3xl font-bold text-red-500">${(varData?.var_99 ?? 0).toLocaleString()}</p>
                   <p className="text-xs text-[#A1A1AA] mt-1">
                     1% chance of losing more than this amount in one day
                   </p>
                 </div>
                 <div className="p-4 bg-[#0A0A0A] border border-[#333] rounded-lg">
                   <p className="text-sm text-[#A1A1AA] mb-1">Expected Shortfall (CVaR)</p>
-                  <p className="text-3xl font-bold text-red-600">${varData.(expected_shortfall ?? 0).toLocaleString()}</p>
+                  <p className="text-3xl font-bold text-red-600">${(varData?.expected_shortfall ?? 0).toLocaleString()}</p>
                   <p className="text-xs text-[#A1A1AA] mt-1">
                     Average loss when VaR is exceeded
                   </p>
@@ -523,7 +523,7 @@ const RiskAnalyzer = ({ embedded = false }) => {
               <div className="space-y-4">
                 <div className="flex justify-between p-3 bg-[#0A0A0A] border border-[#333] rounded-lg">
                   <span className="text-[#A1A1AA]">Portfolio Value</span>
-                  <span className="text-white font-bold">${varData.(portfolio_value ?? 0).toLocaleString()}</span>
+                  <span className="text-white font-bold">${(varData?.portfolio_value ?? 0).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between p-3 bg-[#0A0A0A] border border-[#333] rounded-lg">
                   <span className="text-[#A1A1AA]">Effective Leverage</span>
@@ -570,10 +570,10 @@ const RiskAnalyzer = ({ embedded = false }) => {
                   })}
                 </div>
                 <div className="absolute bottom-2 left-4 text-xs text-white">
-                  99% VaR: ${varData.(var_99 ?? 0).toLocaleString()}
+                  99% VaR: ${(varData?.var_99 ?? 0).toLocaleString()}
                 </div>
                 <div className="absolute bottom-2 left-24 text-xs text-white">
-                  95% VaR: ${varData.(var_95 ?? 0).toLocaleString()}
+                  95% VaR: ${(varData?.var_95 ?? 0).toLocaleString()}
                 </div>
               </div>
               <div className="flex justify-between mt-2 text-xs text-[#A1A1AA]">
@@ -642,18 +642,18 @@ const RiskAnalyzer = ({ embedded = false }) => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-[#A1A1AA]">Current Value</p>
-                      <p className="text-xl font-bold text-white">${stressTest.(current_portfolio_value ?? 0).toLocaleString()}</p>
+                      <p className="text-xl font-bold text-white">${(stressTest?.current_portfolio_value ?? 0).toLocaleString()}</p>
                     </div>
                     <div>
                       <p className="text-sm text-[#A1A1AA]">Projected Value</p>
                       <p className={`text-xl font-bold ${stressTest.total_impact >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
-                        ${stressTest.(projected_portfolio_value ?? 0).toLocaleString()}
+                        ${(stressTest?.projected_portfolio_value ?? 0).toLocaleString()}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-[#A1A1AA]">Total Impact</p>
                       <p className={`text-xl font-bold ${stressTest.total_impact >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
-                        {stressTest.total_impact >= 0 ? '+' : ''}${stressTest.(total_impact ?? 0).toLocaleString()}
+                        {stressTest.total_impact >= 0 ? '+' : ''}${(stressTest?.total_impact ?? 0).toLocaleString()}
                       </p>
                     </div>
                     <div>
@@ -675,7 +675,7 @@ const RiskAnalyzer = ({ embedded = false }) => {
                         Perpetuals
                       </span>
                       <span className={`font-bold ${stressTest.impact_breakdown?.perpetuals >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
-                        {stressTest.impact_breakdown?.perpetuals >= 0 ? '+' : ''}${stressTest.impact_breakdown?.(perpetuals ?? 0).toLocaleString()}
+                        {stressTest.impact_breakdown?.perpetuals >= 0 ? '+' : ''}${stressTest.(impact_breakdown?.perpetuals ?? 0).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-[#0A0A0A] border border-[#333] rounded-lg">
@@ -684,7 +684,7 @@ const RiskAnalyzer = ({ embedded = false }) => {
                         Yield Farming
                       </span>
                       <span className={`font-bold ${stressTest.impact_breakdown?.yield_farming >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
-                        {stressTest.impact_breakdown?.yield_farming >= 0 ? '+' : ''}${stressTest.impact_breakdown?.(yield_farming ?? 0).toLocaleString()}
+                        {stressTest.impact_breakdown?.yield_farming >= 0 ? '+' : ''}${stressTest.(impact_breakdown?.yield_farming ?? 0).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-[#0A0A0A] border border-[#333] rounded-lg">
@@ -693,7 +693,7 @@ const RiskAnalyzer = ({ embedded = false }) => {
                         Options
                       </span>
                       <span className={`font-bold ${stressTest.impact_breakdown?.options >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
-                        {stressTest.impact_breakdown?.options >= 0 ? '+' : ''}${stressTest.impact_breakdown?.(options ?? 0).toLocaleString()}
+                        {stressTest.impact_breakdown?.options >= 0 ? '+' : ''}${stressTest.(impact_breakdown?.options ?? 0).toLocaleString()}
                       </span>
                     </div>
                   </div>

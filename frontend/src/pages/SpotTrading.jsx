@@ -404,8 +404,8 @@ const HoldingsTable = ({ holdings }) => {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-white font-medium">${holding.(usd_value ?? 0).toFixed(2)}</div>
-            <div className="text-xs text-[#666]">@ ${holding.(price ?? 0).toFixed(2)}</div>
+            <div className="text-white font-medium">${(holding?.usd_value ?? 0).toFixed(2)}</div>
+            <div className="text-xs text-[#666]">@ ${(holding?.price ?? 0).toFixed(2)}</div>
           </div>
         </div>
       ))}
@@ -608,7 +608,7 @@ const SpotTrading = ({ embedded = false }) => {
               </div>
               <div className="text-xs text-[#888]">
                 {orderResult.success 
-                  ? `${orderResult.details?.side} ${orderResult.details?.(volume ?? 0).toFixed(6)} ${orderResult.details?.symbol}`
+                  ? `${orderResult.details?.side} ${orderResult.(details?.volume ?? 0).toFixed(6)} ${orderResult.details?.symbol}`
                   : orderResult.error}
               </div>
             </div>
@@ -679,7 +679,7 @@ const SpotTrading = ({ embedded = false }) => {
               <DollarSign size={16} className="text-[#00FF94]" />
               <span className="text-xs text-[#888]">USD Balance</span>
             </div>
-            <div className="text-2xl font-bold text-white">${balance.(usd_balance ?? 0).toFixed(2)}</div>
+            <div className="text-2xl font-bold text-white">${(balance?.usd_balance ?? 0).toFixed(2)}</div>
           </div>
           
           <div className="bg-[#111] border border-[#222] rounded-xl p-4">
@@ -687,7 +687,7 @@ const SpotTrading = ({ embedded = false }) => {
               <BarChart2 size={16} className="text-[#9D00FF]" />
               <span className="text-xs text-[#888]">Crypto Value</span>
             </div>
-            <div className="text-2xl font-bold text-white">${balance.(total_crypto_value ?? 0).toFixed(2)}</div>
+            <div className="text-2xl font-bold text-white">${(balance?.total_crypto_value ?? 0).toFixed(2)}</div>
           </div>
           
           <div className="bg-[#111] border border-[#222] rounded-xl p-4">
@@ -695,7 +695,7 @@ const SpotTrading = ({ embedded = false }) => {
               <Activity size={16} className="text-[#FFB800]" />
               <span className="text-xs text-[#888]">Portfolio Total</span>
             </div>
-            <div className="text-2xl font-bold text-white">${balance.(total_portfolio_value ?? 0).toFixed(2)}</div>
+            <div className="text-2xl font-bold text-white">${(balance?.total_portfolio_value ?? 0).toFixed(2)}</div>
           </div>
           
           <div className="bg-[#111] border border-[#222] rounded-xl p-4">
@@ -763,10 +763,10 @@ const SpotTrading = ({ embedded = false }) => {
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-white">
-                    ${pairDetails.price?.(last ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: pairDetails.price?.last > 1 ? 2 : 6 })}
+                    ${pairDetails.(price?.last ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: pairDetails.price?.last > 1 ? 2 : 6 })}
                   </div>
                   <div className={`text-sm ${pairDetails.price?.change_24h >= 0 ? 'text-[#00FF94]' : 'text-[#FF4444]'}`}>
-                    {pairDetails.price?.change_24h >= 0 ? '+' : ''}{pairDetails.price?.(change_24h ?? 0).toFixed(2)}% 24h
+                    {pairDetails.price?.change_24h >= 0 ? '+' : ''}{pairDetails.(price?.change_24h ?? 0).toFixed(2)}% 24h
                   </div>
                 </div>
               </div>
@@ -774,15 +774,15 @@ const SpotTrading = ({ embedded = false }) => {
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div className="bg-[#1a1a1a] rounded-lg p-2">
                   <div className="text-xs text-[#666]">24h High</div>
-                  <div className="text-sm text-white font-medium">${pairDetails.price?.(high_24h ?? 0).toFixed(2)}</div>
+                  <div className="text-sm text-white font-medium">${pairDetails.(price?.high_24h ?? 0).toFixed(2)}</div>
                 </div>
                 <div className="bg-[#1a1a1a] rounded-lg p-2">
                   <div className="text-xs text-[#666]">24h Low</div>
-                  <div className="text-sm text-white font-medium">${pairDetails.price?.(low_24h ?? 0).toFixed(2)}</div>
+                  <div className="text-sm text-white font-medium">${pairDetails.(price?.low_24h ?? 0).toFixed(2)}</div>
                 </div>
                 <div className="bg-[#1a1a1a] rounded-lg p-2">
                   <div className="text-xs text-[#666]">Spread</div>
-                  <div className="text-sm text-white font-medium">{pairDetails.price?.(spread ?? 0).toFixed(4)}%</div>
+                  <div className="text-sm text-white font-medium">{pairDetails.(price?.spread ?? 0).toFixed(4)}%</div>
                 </div>
               </div>
               
@@ -791,8 +791,8 @@ const SpotTrading = ({ embedded = false }) => {
                   <div className="flex justify-between text-sm">
                     <span className="text-[#888]">Your Balance</span>
                     <span className="text-white font-medium">
-                      {pairDetails.(user_balance ?? 0).toFixed(6)} {pairDetails.symbol}
-                      <span className="text-[#666] ml-2">(${pairDetails.(user_balance_usd ?? 0).toFixed(2)})</span>
+                      {(pairDetails?.user_balance ?? 0).toFixed(6)} {pairDetails.symbol}
+                      <span className="text-[#666] ml-2">(${(pairDetails?.user_balance_usd ?? 0).toFixed(2)})</span>
                     </span>
                   </div>
                 </div>
@@ -859,7 +859,7 @@ const SpotTrading = ({ embedded = false }) => {
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-white">{rec.symbol}</span>
-                            <span className="text-xs text-[#666]">${rec.(price ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: rec.price > 1 ? 2 : 6 })}</span>
+                            <span className="text-xs text-[#666]">${(rec?.price ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: rec.price > 1 ? 2 : 6 })}</span>
                           </div>
                           <div className={`px-2 py-1 rounded text-xs font-medium ${
                             rec.score >= 60 ? 'bg-[#00FF94]/20 text-[#00FF94]' :
@@ -872,7 +872,7 @@ const SpotTrading = ({ embedded = false }) => {
                         <div className="flex justify-between text-xs">
                           <span className="text-[#888]">{rec.recommendation}</span>
                           <span className={rec.score >= 50 ? 'text-[#00FF94]' : 'text-[#FF4444]'}>
-                            Score: {rec.(score ?? 0).toFixed(1)} | Conf: {rec.(confidence ?? 0).toFixed(1)}%
+                            Score: {(rec?.score ?? 0).toFixed(1)} | Conf: {(rec?.confidence ?? 0).toFixed(1)}%
                           </span>
                         </div>
                         {/* Component breakdown */}

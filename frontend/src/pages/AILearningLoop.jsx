@@ -38,7 +38,7 @@ const AccuracyTrendChart = ({ data, title }) => {
                 style={{ height: `${Math.max(height, 5)}%`, backgroundColor: color }}
               />
               <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/90 px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                {item.(accuracy ?? 0).toFixed(1)}%
+                {(item?.accuracy ?? 0).toFixed(1)}%
               </div>
             </div>
           );
@@ -65,7 +65,7 @@ const ModelComparisonChart = ({ models }) => {
               model.accuracy >= 70 ? 'text-[#00FF94]' : 
               model.accuracy >= 50 ? 'text-[#FFB800]' : 'text-[#FF0055]'
             }`}>
-              {model.(accuracy ?? 0).toFixed(1)}%
+              {(model?.accuracy ?? 0).toFixed(1)}%
             </span>
           </div>
           <div className="h-3 bg-[#1F1F1F] rounded-full overflow-hidden">
@@ -439,7 +439,7 @@ const AILearningLoop = ({ embedded = false }) => {
                   <Target className="text-[#FFB800]" />
                 </div>
                 <div className="text-2xl font-data font-bold text-[#FFB800]">
-                  {backtestStatus?.result?.(final_accuracy ?? 0).toFixed(0)}%
+                  {backtestStatus?.(result?.final_accuracy ?? 0).toFixed(0)}%
                 </div>
                 <div className="text-xs text-[#A1A1AA]">Gem Accuracy</div>
               </CardContent>
