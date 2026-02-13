@@ -19,6 +19,8 @@ from utils.request_context import clear_request_id, get_request_id, set_request_
 
 logger = logging.getLogger(__name__)
 
+REQUEST_ID_HEADER = "X-Request-ID"
+
 
 class ErrorSeverity:
     """Error severity levels"""
@@ -197,16 +199,16 @@ class ErrorMonitoringMiddleware(BaseHTTPMiddleware):
         return ErrorSeverity.INFO
     
     async def dispatch(self, request: Request, call_next):
-        request_id = request.headers.get('X-Request-ID') or str(uuid.uuid4())[:8]
+        request_id = request.headers.get(REQUEST_ID_HEADER) or str(uuid.uuid4())[:8]
         set_request_id(request_id)
         start_time = datetime.utcnow()
-        content_length = request.headers.get('content-length') or "unknown"
+        content_length_str = request.headers.get('content-length') or "unknown"
         
         try:
             if self.log_all_requests:
                 logger.info(
                     f"Request [{request_id}]: {request.method} {request.url.path} "
-                    f"query_count={len(request.query_params)} content_length={content_length}"
+                    f"query_count={len(request.query_params)} content_length={content_length_str}"
                 )
             response = await call_next(request)
             
@@ -245,7 +247,7 @@ class ErrorMonitoringMiddleware(BaseHTTPMiddleware):
                 )
 
             # Add error ID to response headers
-            response.headers['X-Request-ID'] = request_id
+            response.headers[REQUEST_ID_HEADER] = request_id
             
             return response
             
@@ -277,7 +279,7 @@ class ErrorMonitoringMiddleware(BaseHTTPMiddleware):
                     'error_id': request_id,
                     'timestamp': datetime.utcnow().isoformat()
                 },
-                headers={'X-Request-ID': request_id}
+                headers={REQUEST_ID_HEADER: request_id}
             )
         finally:
             clear_request_id()
