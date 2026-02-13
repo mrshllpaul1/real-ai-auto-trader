@@ -1,0 +1,49 @@
+# ============================================
+# TETHYS AI TRADING - EASY LOCAL SETUP
+# ============================================
+
+# STEP 1: After saving to GitHub, clone it
+git clone YOUR_GITHUB_URL
+cd YOUR_REPO_NAME
+
+# STEP 2: Setup Python (backend)
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements_minimal.txt
+
+# STEP 3: Setup JavaScript (frontend)
+cd ../frontend
+npm install
+
+# STEP 4: Create config files
+cd ..
+echo "MONGO_URL=mongodb://localhost:27017" > backend/.env
+echo "DB_NAME=tethys_trading" >> backend/.env
+echo "REACT_APP_BACKEND_URL=http://localhost:8001" > frontend/.env
+
+# STEP 5: Start MongoDB
+# macOS: brew services start mongodb-community
+# Linux: sudo systemctl start mongodb
+# Windows: Start MongoDB from Services
+
+# STEP 6: Open TWO terminal windows
+
+# TERMINAL 1 - Backend:
+cd backend
+source venv/bin/activate
+uvicorn server:app --port 8001
+
+# TERMINAL 2 - Frontend:
+cd frontend
+npm run dev
+
+# STEP 7: Open browser to http://localhost:3000
+
+# ============================================
+# OPTIONAL: Add ML later if you want
+# ============================================
+# pip install scikit-learn
+# pip install xgboost
+# pip install lightgbm
