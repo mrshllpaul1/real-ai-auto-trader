@@ -41,7 +41,9 @@ try:
     # Apply to root logger so all app logs carry request_id when available.
     logging.getLogger().addFilter(RequestIdFilter())
 except Exception as e:
-    logging.getLogger(__name__).warning(f"Request ID logging filter not available: {e}")
+    logging.getLogger(__name__).warning(
+        f"Failed to configure request ID logging filter: {e}"
+    )
 logger = logging.getLogger(__name__)
 
 # Create the main app with enhanced API documentation
