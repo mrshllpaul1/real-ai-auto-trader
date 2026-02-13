@@ -194,7 +194,7 @@ const MarketMaker = ({ embedded = false }) => {
                   <div>
                     <span className="text-[#A1A1AA]">Position:</span>
                     <span className={`ml-2 font-data ${status.position >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
-                      {status.(position ?? 0).toFixed(6) || 0}
+                      {status.(position ?? 0).toFixed(6)}
                     </span>
                   </div>
                   <div>

@@ -205,7 +205,7 @@ const MLDashboard = () => {
                       </div>
                       <div>
                         <p className="text-[#A1A1AA]">Sharpe</p>
-                        <p className="text-[#00FF94]">{model.sharpe_24h.toFixed(2)}</p>
+                        <p className="text-[#00FF94]">{(model?.sharpe_24h ?? 0).toFixed(2)}</p>
                       </div>
                       <div>
                         <p className="text-[#A1A1AA]">Predictions</p>
@@ -231,7 +231,7 @@ const MLDashboard = () => {
                     <div key={report.model_id} className="flex items-center justify-between p-3 bg-[#0A0A0A] border border-[#333] rounded-lg">
                       <div>
                         <p className="text-white text-sm">{report.model_name}</p>
-                        <p className="text-xs text-[#A1A1AA]">Score: {report.overall_drift_score.toFixed(3)}</p>
+                        <p className="text-xs text-[#A1A1AA]">Score: {(report?.overall_drift_score ?? 0).toFixed(3)}</p>
                       </div>
                       <span className={`font-medium ${getDriftColor(report.drift_status)}`}>
                         {report.drift_status.replace('_', ' ')}
@@ -360,7 +360,7 @@ const MLDashboard = () => {
                       >
                         <p className="text-white text-sm truncate">{feature.feature}</p>
                         <div className="flex items-center justify-between mt-1">
-                          <span className="text-xs text-[#A1A1AA]">Score: {feature.drift_score.toFixed(3)}</span>
+                          <span className="text-xs text-[#A1A1AA]">Score: {(feature?.drift_score ?? 0).toFixed(3)}</span>
                           <span className={`text-xs ${getDriftColor(feature.status)}`}>
                             {feature.status}
                           </span>
@@ -443,7 +443,7 @@ const MLDashboard = () => {
                     <div className="grid grid-cols-4 gap-4 text-sm">
                       <div>
                         <p className="text-[#A1A1AA]">Drift Score</p>
-                        <p className="text-white font-medium">{report.overall_drift_score.toFixed(3)}</p>
+                        <p className="text-white font-medium">{(report?.overall_drift_score ?? 0).toFixed(3)}</p>
                       </div>
                       <div>
                         <p className="text-[#A1A1AA]">Features Drifted</p>

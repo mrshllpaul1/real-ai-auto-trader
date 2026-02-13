@@ -529,7 +529,7 @@ const PerformanceDashboard = ({ embedded = false }) => {
                     <p className="font-medium text-white">{pos.symbol}</p>
                     <p className="text-xs text-slate-500">
                       {pos.entry_price ? (
-                        <>Entry: ${pos.entry_price.toFixed(4)} → ${pos.(current_price ?? 0).toFixed(4)}</>
+                        <>Entry: ${(pos?.entry_price ?? 0).toFixed(4)} → ${pos.(current_price ?? 0).toFixed(4)}</>
                       ) : (
                         <>Current: ${pos.(current_price ?? 0).toFixed(4)}</>
                       )}

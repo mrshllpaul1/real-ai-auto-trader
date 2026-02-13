@@ -281,11 +281,11 @@ const RiskAnalyzer = ({ embedded = false }) => {
                   <div className="grid grid-cols-4 gap-2 text-sm">
                     <div>
                       <p className="text-[#A1A1AA]">Delta</p>
-                      <p className="text-white">{overview.risk_breakdown?.options?.(net_delta ?? 0).toFixed(2) || 0}</p>
+                      <p className="text-white">{overview.risk_breakdown?.options?.(net_delta ?? 0).toFixed(2)}</p>
                     </div>
                     <div>
                       <p className="text-[#A1A1AA]">Gamma</p>
-                      <p className="text-white">{overview.risk_breakdown?.options?.(net_gamma ?? 0).toFixed(4) || 0}</p>
+                      <p className="text-white">{overview.risk_breakdown?.options?.(net_gamma ?? 0).toFixed(4)}</p>
                     </div>
                     <div>
                       <p className="text-[#A1A1AA]">Theta</p>

@@ -439,7 +439,7 @@ const AILearningLoop = ({ embedded = false }) => {
                   <Target className="text-[#FFB800]" />
                 </div>
                 <div className="text-2xl font-data font-bold text-[#FFB800]">
-                  {backtestStatus?.result?.(final_accuracy ?? 0).toFixed(0) || 0}%
+                  {backtestStatus?.result?.(final_accuracy ?? 0).toFixed(0)}%
                 </div>
                 <div className="text-xs text-[#A1A1AA]">Gem Accuracy</div>
               </CardContent>

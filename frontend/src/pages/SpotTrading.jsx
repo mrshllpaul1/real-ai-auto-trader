@@ -400,7 +400,7 @@ const HoldingsTable = ({ holdings }) => {
             </div>
             <div>
               <div className="text-white font-medium">{holding.symbol}</div>
-              <div className="text-xs text-[#666]">{holding.amount.toFixed(6)}</div>
+              <div className="text-xs text-[#666]">{(holding?.amount ?? 0).toFixed(6)}</div>
             </div>
           </div>
           <div className="text-right">

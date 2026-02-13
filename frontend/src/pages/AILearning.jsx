@@ -141,7 +141,7 @@ const AILearning = ({ embedded = false }) => {
                 <div className="p-4 bg-[#121212] rounded-lg border border-[#007AFF]/20">
                   <div className="text-sm text-[#A1A1AA] mb-1">Overall Accuracy</div>
                   <div className="text-3xl font-data font-bold text-[#007AFF]">
-                    {learningReport.overall_accuracy.toFixed(1)}%
+                    {(learningReport?.overall_accuracy ?? 0).toFixed(1)}%
                   </div>
                 </div>
 
@@ -150,7 +150,7 @@ const AILearning = ({ embedded = false }) => {
                   <div className={`text-3xl font-data font-bold ${
                     learningReport.total_learned_profit_loss >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'
                   }`}>
-                    ${learningReport.total_learned_profit_loss.toFixed(2)}
+                    ${(learningReport?.total_learned_profit_loss ?? 0).toFixed(2)}
                   </div>
                 </div>
               </div>
@@ -209,7 +209,7 @@ const AILearning = ({ embedded = false }) => {
                       <div className="text-right">
                         <div className="text-sm text-[#A1A1AA]">Accuracy</div>
                         <div className="text-xl font-data font-bold text-[#00FF94]">
-                          {indicator.accuracy.toFixed(1)}%
+                          {(indicator?.accuracy ?? 0).toFixed(1)}%
                         </div>
                       </div>
                       <div className="text-right">
@@ -217,13 +217,13 @@ const AILearning = ({ embedded = false }) => {
                         <div className={`text-xl font-data font-bold ${
                           indicator.avg_profit_per_use >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'
                         }`}>
-                          ${indicator.avg_profit_per_use.toFixed(2)}
+                          ${(indicator?.avg_profit_per_use ?? 0).toFixed(2)}
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-sm text-[#A1A1AA]">Score</div>
                         <div className="text-xl font-data font-bold text-[#9D00FF]">
-                          {indicator.effectiveness_score.toFixed(0)}
+                          {(indicator?.effectiveness_score ?? 0).toFixed(0)}
                         </div>
                       </div>
                     </div>

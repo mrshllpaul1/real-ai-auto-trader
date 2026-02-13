@@ -453,7 +453,7 @@ const MLAdvanced = () => {
                     {shapExplanation.feature_interactions?.map((int, i) => (
                       <div key={i} className="p-3 bg-[#0A0A0A] border border-[#333] rounded-lg">
                         <p className="text-sm text-white">{int.feature1} × {int.feature2}</p>
-                        <p className="text-xs text-[#A1A1AA]">Interaction: {int.interaction_strength.toFixed(3)}</p>
+                        <p className="text-xs text-[#A1A1AA]">Interaction: {(int?.interaction_strength ?? 0).toFixed(3)}</p>
                       </div>
                     ))}
                   </div>
@@ -492,7 +492,7 @@ const MLAdvanced = () => {
                           />
                         </div>
                         <span className={`w-16 text-sm text-right ${contrib.direction === 'positive' ? 'text-[#00FF94]' : 'text-red-400'}`}>
-                          {contrib.contribution >= 0 ? '+' : ''}{contrib.contribution.toFixed(2)}
+                          {contrib.contribution >= 0 ? '+' : ''}{(contrib?.contribution ?? 0).toFixed(2)}
                         </span>
                       </div>
                     ))}

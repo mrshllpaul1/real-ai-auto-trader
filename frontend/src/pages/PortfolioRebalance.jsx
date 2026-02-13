@@ -435,7 +435,7 @@ const PortfolioRebalance = ({ embedded = false }) => {
                               {trade.action.toUpperCase()} {trade.asset}
                             </p>
                             <p className="text-sm text-[#A1A1AA]">
-                              {trade.current_pct.toFixed(1)}% → {trade.target_pct.toFixed(1)}%
+                              {(trade?.current_pct ?? 0).toFixed(1)}% → {(trade?.target_pct ?? 0).toFixed(1)}%
                             </p>
                           </div>
                         </div>

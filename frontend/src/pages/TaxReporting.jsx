@@ -325,7 +325,7 @@ const TaxReporting = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-red-400 font-medium">{formatCurrency(opp.unrealized_loss)}</p>
-                      <p className="text-xs text-gray-500">{opp.loss_percent.toFixed(1)}% loss</p>
+                      <p className="text-xs text-gray-500">{(opp?.loss_percent ?? 0).toFixed(1)}% loss</p>
                     </div>
                   </div>
                 ))}

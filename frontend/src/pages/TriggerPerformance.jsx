@@ -220,7 +220,7 @@ const TriggerPerformance = ({ embedded = false }) => {
                       <div className="flex justify-between text-sm">
                         <span className="text-[#A1A1AA]">P&L:</span>
                         <span className={stats.total_pnl >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}>
-                          ${stats.total_pnl.toFixed(2)}
+                          ${(stats?.total_pnl ?? 0).toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -298,7 +298,7 @@ const TriggerPerformance = ({ embedded = false }) => {
                 </div>
                 <div className="text-right">
                   <p className={`font-data font-bold ${trigger.total_pnl_usd >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
-                    ${trigger.total_pnl_usd.toFixed(2)}
+                    ${(trigger?.total_pnl_usd ?? 0).toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -376,7 +376,7 @@ const TriggerPerformance = ({ embedded = false }) => {
                         </td>
                         <td className="p-3 text-right">
                           <span className={`font-data ${trigger.total_pnl_usd >= 0 ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
-                            ${trigger.total_pnl_usd.toFixed(2)}
+                            ${(trigger?.total_pnl_usd ?? 0).toFixed(2)}
                           </span>
                         </td>
                         <td className="p-3 text-center">

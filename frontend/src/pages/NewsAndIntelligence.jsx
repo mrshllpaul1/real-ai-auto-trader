@@ -146,7 +146,7 @@ const NewsAndIntelligence = ({ embedded = false }) => {
                 <div className="p-3 bg-[#121212] rounded-lg">
                   <div className="text-xs text-[#A1A1AA] mb-1">Success Rate</div>
                   <div className="text-2xl font-data font-bold text-[#007AFF]">
-                    {trainingStatus.summary.(training_accuracy ?? 0).toFixed(1) || 0}%
+                    {trainingStatus.summary.(training_accuracy ?? 0).toFixed(1)}%
                   </div>
                 </div>
                 <div className="p-3 bg-[#121212] rounded-lg">
@@ -359,7 +359,7 @@ const NewsAndIntelligence = ({ embedded = false }) => {
                 <div className="flex-1">
                   <div className="text-sm text-[#A1A1AA] mb-2">Confidence</div>
                   <div className="text-3xl font-data font-bold" style={{ color: getSentimentColor(sentiment.sentiment) }}>
-                    {sentiment.(confidence ?? 0).toFixed(1) || 0}%
+                    {sentiment.(confidence ?? 0).toFixed(1)}%
                   </div>
                 </div>
                 <div className="flex-1">
