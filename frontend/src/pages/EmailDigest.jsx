@@ -50,13 +50,16 @@ const EmailDigest = ({ embedded = false }) => {
       errors_per_hour: 50,
       critical_errors_trigger: 5
     },
-    cooldown_minutes: 30
+    cooldown_minutes: 30,
+    push_notifications_enabled: false
   });
   const [alertStatus, setAlertStatus] = useState(null);
   const [alertHistory, setAlertHistory] = useState([]);
   const [savingAlerts, setSavingAlerts] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
   const [newRecipientEmail, setNewRecipientEmail] = useState('');
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushPermission, setPushPermission] = useState('default');
 
   const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const TIMES = Array.from({ length: 24 }, (_, i) => {
