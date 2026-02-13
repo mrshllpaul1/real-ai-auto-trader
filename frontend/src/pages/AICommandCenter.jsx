@@ -410,11 +410,7 @@ const AICommandCenter = ({ embedded = false }) => {
   ];
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <RefreshCw className="w-8 h-8 animate-spin text-purple-400" />
-      </div>
-    );
+    return <PageLoadingSkeleton />;
   }
 
   return (
