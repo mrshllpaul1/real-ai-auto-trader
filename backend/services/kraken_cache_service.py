@@ -261,3 +261,82 @@ class KrakenCacheService:
     async def get_open_orders(self, *args, **kwargs):
         """Pass through - open orders should always be fresh"""
         return await self._kraken.get_open_orders(*args, **kwargs)
+    
+    async def get_portfolio_summary(self) -> Dict[str, Any]:
+        """
+        Get portfolio summary with cached balance and ticker data.
+        Combines balance data with current prices for total value calculation.
+        """
+        cache_key = "portfolio_summary"
+        
+        cached = self._get_cache(cache_key)
+        if cached is not None:
+            logger.debug("💾 Portfolio summary cache HIT")
+            return cached
+        
+        async with self._get_lock(cache_key):
+            cached = self._get_cache(cache_key)
+            if cached is not None:
+                return cached
+            
+            try:
+                # Get balance
+                balance = await self.get_balance()
+                
+                if not balance:
+                    return {"total_usd": 0, "holdings": [], "error": "No balance data"}
+                
+                holdings = []
+                total_usd = 0
+                
+                # Get tickers for all holdings
+                for asset, amount in balance.items():
+                    if amount <= 0:
+                        continue
+                    
+                    # USD/USDT/USDC are 1:1
+                    if asset.upper() in ['USD', 'ZUSD', 'USDT', 'USDC']:
+                        value_usd = float(amount)
+                        price = 1.0
+                    else:
+                        # Try to get ticker
+                        symbol = f"{asset}USD"
+                        ticker = await self.get_ticker(symbol)
+                        if ticker and 'c' in ticker:
+                            price = float(ticker['c'][0]) if isinstance(ticker['c'], list) else float(ticker['c'])
+                            value_usd = float(amount) * price
+                        else:
+                            # Fallback: try USDT pair
+                            symbol = f"{asset}USDT"
+                            ticker = await self.get_ticker(symbol)
+                            if ticker and 'c' in ticker:
+                                price = float(ticker['c'][0]) if isinstance(ticker['c'], list) else float(ticker['c'])
+                                value_usd = float(amount) * price
+                            else:
+                                price = 0
+                                value_usd = 0
+                    
+                    holdings.append({
+                        "asset": asset,
+                        "amount": float(amount),
+                        "price_usd": price,
+                        "value_usd": value_usd
+                    })
+                    total_usd += value_usd
+                
+                # Sort by value
+                holdings.sort(key=lambda x: x['value_usd'], reverse=True)
+                
+                result = {
+                    "total_usd": round(total_usd, 2),
+                    "holdings": holdings,
+                    "asset_count": len(holdings),
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+                
+                self._set_cache(cache_key, result, self.TTL_BALANCE)
+                return result
+                
+            except Exception as e:
+                logger.error(f"Error getting portfolio summary: {e}")
+                return {"total_usd": 0, "holdings": [], "error": str(e)}
