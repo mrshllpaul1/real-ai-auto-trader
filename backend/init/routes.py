@@ -308,6 +308,14 @@ def register_routes(api_router: APIRouter, db=None):
     api_router.include_router(confidence_explain_routes.router, tags=["AI Confidence Explanation"])
     confidence_explain_routes.set_dependencies(db, get_confidence_explainer(db))
     
-    logger.info("✅ All routes registered (including new enhancements)")
+    # ============================================
+    # Consolidated Services API
+    # ============================================
+    from routes import consolidated_services as consolidated_routes
+    from services.consolidated import get_service_registry
+    api_router.include_router(consolidated_routes.router, tags=["Consolidated Services"])
+    consolidated_routes.set_registry(get_service_registry(db))
+    
+    logger.info("✅ All routes registered (including consolidated services)")
     
     return api_router
