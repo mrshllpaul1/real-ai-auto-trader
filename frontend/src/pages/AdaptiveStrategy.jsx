@@ -19,28 +19,6 @@ import { StatsGridSkeleton, ChartSkeleton, CardSkeleton, AIInsightSkeleton } fro
 import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 import { useComponentState, ComponentType } from '../hooks/useSystemState';
 
-// Inline fallback for PageLoadingSkeleton in case of import issues
-const PageLoadingSkeletonFallback = () => (
-  <div className="min-h-screen bg-[#0A0A0A] p-6">
-    <div className="max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <div className="h-8 w-48 bg-[#1F1F1F] rounded-lg animate-pulse mb-2" />
-          <div className="h-4 w-32 bg-[#1F1F1F] rounded animate-pulse" />
-        </div>
-      </div>
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="bg-[#0A0A0A] border border-[#1F1F1F] rounded-xl p-4">
-            <div className="h-4 w-20 bg-[#1F1F1F] rounded animate-pulse mb-2" />
-            <div className="h-8 w-24 bg-[#1F1F1F] rounded animate-pulse" />
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-);
-
 const regimeColors = {
   bull: '#00FF94',
   bear: '#FF0055',
