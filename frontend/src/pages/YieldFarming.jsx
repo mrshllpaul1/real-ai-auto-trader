@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { 
   Sprout, TrendingUp, DollarSign, Shield, AlertTriangle, RefreshCw,
   Filter, Search, ChevronDown, ChevronRight, Plus, Minus, Calculator,
-  ArrowUpRight, Info, ExternalLink, Zap
+  ArrowUpRight, Info, ExternalLink, Zap, Brain
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
+import { AIPredictionCard, TradingSignalsSummary } from '../components/AIPrediction';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.REACT_APP_BACKEND_URL || '');
 
