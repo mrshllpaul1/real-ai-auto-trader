@@ -340,3 +340,9 @@ class KrakenCacheService:
             except Exception as e:
                 logger.error(f"Error getting portfolio summary: {e}")
                 return {"total_usd": 0, "holdings": [], "error": str(e)}
+    
+    async def get_portfolio(self) -> Dict[str, Any]:
+        """
+        Alias for get_portfolio_summary for compatibility with consolidated services.
+        """
+        return await self.get_portfolio_summary()
