@@ -8,7 +8,7 @@ from pydantic import BaseModel, EmailStr
 from typing import List, Optional, Dict, Any
 from services.error_alerting_service import get_error_alerting_service
 
-router = APIRouter(prefix="/api/error-alerting", tags=["Error Alerting"])
+router = APIRouter(prefix="/error-alerting", tags=["Error Alerting"])
 
 
 class AlertConfig(BaseModel):
