@@ -197,19 +197,43 @@ class ErrorMonitoringMiddleware(BaseHTTPMiddleware):
                 return ErrorSeverity.ERROR
             return ErrorSeverity.WARNING
         return ErrorSeverity.INFO
+
+    def _log_request_details(
+        self,
+        label: str,
+        request_id: str,
+        request: Request,
+        param_count: int,
+        content_length_value: str,
+        status_code: Optional[int] = None,
+        duration: Optional[float] = None,
+    ) -> None:
+        message = (
+            f"{label} [{request_id}]: {request.method} {request.url.path} "
+            f"param_count={param_count} content_length={content_length_value}"
+        )
+        if status_code is not None:
+            message += f" status={status_code}"
+        if duration is not None:
+            message += f" duration={duration:.2f}s"
+        logger.info(message)
     
     async def dispatch(self, request: Request, call_next):
         extracted_request_id = request.headers.get(REQUEST_ID_HEADER)
         request_id = extracted_request_id or str(uuid.uuid4())[:8]
         set_request_id(request_id)
         start_time = datetime.utcnow()
-        content_length = request.headers.get('content-length') or "unknown"
+        content_length_value = request.headers.get('content-length') or "unknown"
+        param_count = len(request.query_params)
         
         try:
             if self.log_all_requests:
-                logger.info(
-                    f"Request [{request_id}]: {request.method} {request.url.path} "
-                    f"param_count={len(request.query_params)} content_length={content_length}"
+                self._log_request_details(
+                    "Request",
+                    request_id,
+                    request,
+                    param_count,
+                    content_length_value,
                 )
             response = await call_next(request)
             
@@ -242,9 +266,14 @@ class ErrorMonitoringMiddleware(BaseHTTPMiddleware):
                     )
             
             if self.log_all_requests:
-                logger.info(
-                    f"Response [{request_id}]: {request.method} {request.url.path} "
-                    f"status={response.status_code} duration={duration:.2f}s"
+                self._log_request_details(
+                    "Response",
+                    request_id,
+                    request,
+                    param_count,
+                    content_length_value,
+                    status_code=response.status_code,
+                    duration=duration,
                 )
 
             # Add error ID to response headers
