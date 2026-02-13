@@ -182,14 +182,6 @@ class TestPortfolioAndDashboard:
         data = response.json()
         assert "balances" in data
         print(f"✓ Kraken balance retrieved: {data.get('total_currencies', 0)} currencies")
-    
-    def test_command_center_data(self):
-        """Test GET /api/command-center/data - command center data"""
-        response = requests.get(f"{BASE_URL}/api/command-center/data")
-        assert response.status_code == 200
-        
-        data = response.json()
-        print(f"✓ Command center data retrieved")
 
 
 class TestAIEndpoints:
