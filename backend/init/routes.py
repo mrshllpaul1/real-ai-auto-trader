@@ -72,6 +72,7 @@ def register_routes(api_router: APIRouter, db=None):
     from routes import ml_optimization as ml_optimization_routes
     from routes import ml_monitoring as ml_monitoring_routes
     from routes import training_progress as training_progress_routes
+    from routes import defi_ai as defi_ai_routes
     
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
