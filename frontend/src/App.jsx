@@ -63,6 +63,14 @@ function App() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   
   useEffect(() => {
+    // Initialize auto-debugger
+    import('./services/autoDebugger').then(module => {
+      module.default.init();
+      console.log('[App] AutoDebugger initialized');
+    }).catch(err => {
+      console.warn('AutoDebugger failed to load:', err);
+    });
+    
     // Initialize user session
     let uid = localStorage.getItem('user_id');
     if (!uid) {
