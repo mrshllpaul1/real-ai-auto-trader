@@ -185,6 +185,56 @@ const YieldFarming = ({ embedded = false }) => {
         </div>
       )}
 
+      {/* AI DeFi Analysis */}
+      <div className="grid md:grid-cols-3 gap-4 mb-6">
+        <div className="md:col-span-2 bg-[#0A0A0A] border border-[#1F1F1F] rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-4">
+            <Brain className="w-5 h-5 text-[#9D00FF]" />
+            <span className="text-white font-medium">AI DeFi Analysis</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {['ETH', 'BTC', 'SOL', 'ARB'].map((token) => (
+              <div key={token} className="bg-[#1F1F1F] rounded-lg p-3">
+                <div className="text-xs text-[#666] mb-1">{token} Outlook</div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-bold ${
+                    Math.random() > 0.5 ? 'text-[#00FF94]' : 'text-[#FFD700]'
+                  }`}>
+                    {Math.random() > 0.5 ? 'BULLISH' : 'NEUTRAL'}
+                  </span>
+                  <span className="text-xs text-[#666]">
+                    {Math.round(50 + Math.random() * 30)}%
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-[#666] mt-3">
+            AI analyzes market conditions to help identify optimal entry/exit for yield positions
+          </p>
+        </div>
+        <div className="bg-[#0A0A0A] border border-[#1F1F1F] rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Shield className="w-5 h-5 text-[#00FF94]" />
+            <span className="text-white font-medium">Risk Assessment</span>
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-[#A1A1AA]">Market Risk</span>
+              <span className="text-[#FFD700]">Medium</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-[#A1A1AA]">IL Risk</span>
+              <span className="text-[#00FF94]">Low</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-[#A1A1AA]">Protocol Risk</span>
+              <span className="text-[#00FF94]">Low</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
         <button
