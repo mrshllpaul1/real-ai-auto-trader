@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useComponentState, ComponentType } from '../hooks/useSystemState';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 const API_URL = window.__RUNTIME_CONFIG__?.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_BACKEND_URL;
 const WS_URL = API_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
