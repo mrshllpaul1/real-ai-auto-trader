@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, TrendingUp, Calendar, Target, Sparkles, BarChart3, RefreshCw } from 'lucide-react';
 import api from '../services/api';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 
 export default function TradingJournal() {
   const [stats, setStats] = useState(null);
