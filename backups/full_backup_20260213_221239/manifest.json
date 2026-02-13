@@ -1,0 +1,443 @@
+{
+  "timestamp": "20260213_221239",
+  "backup_dir": "/app/backups/full_backup_20260213_221239",
+  "collections": [
+    {
+      "collection": "training_history",
+      "count": 0,
+      "status": "empty"
+    },
+    {
+      "collection": "backtest_results",
+      "count": 1,
+      "file": "/app/backups/full_backup_20260213_221239/backtest_results_20260213_221239.json.gz",
+      "size_bytes": 1809,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "risk_settings",
+      "count": 7,
+      "file": "/app/backups/full_backup_20260213_221239/risk_settings_20260213_221239.json.gz",
+      "size_bytes": 386,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "ohlcv_data",
+      "count": 0,
+      "status": "empty"
+    },
+    {
+      "collection": "predictions",
+      "count": 0,
+      "status": "empty"
+    },
+    {
+      "collection": "trade_history",
+      "count": 230,
+      "file": "/app/backups/full_backup_20260213_221239/trade_history_20260213_221239.json.gz",
+      "size_bytes": 10906,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "portfolio_snapshots",
+      "count": 0,
+      "status": "empty"
+    },
+    {
+      "collection": "ohlcv_1day",
+      "count": 111352,
+      "file": "/app/backups/full_backup_20260213_221239/ohlcv_1day_20260213_221240.json.gz",
+      "size_bytes": 4806635,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "notification_logs",
+      "count": 5,
+      "file": "/app/backups/full_backup_20260213_221239/notification_logs_20260213_221243.json.gz",
+      "size_bytes": 534,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "ai_training_weights",
+      "count": 1,
+      "file": "/app/backups/full_backup_20260213_221239/ai_training_weights_20260213_221243.json.gz",
+      "size_bytes": 516,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "risk_profiles",
+      "count": 2,
+      "file": "/app/backups/full_backup_20260213_221239/risk_profiles_20260213_221243.json.gz",
+      "size_bytes": 475,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "scheduler_events",
+      "count": 102,
+      "file": "/app/backups/full_backup_20260213_221239/scheduler_events_20260213_221243.json.gz",
+      "size_bytes": 2395,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "sentiment_history",
+      "count": 29,
+      "file": "/app/backups/full_backup_20260213_221239/sentiment_history_20260213_221243.json.gz",
+      "size_bytes": 624,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "triggers",
+      "count": 0,
+      "status": "empty"
+    },
+    {
+      "collection": "gem_success_patterns",
+      "count": 1,
+      "file": "/app/backups/full_backup_20260213_221239/gem_success_patterns_20260213_221243.json.gz",
+      "size_bytes": 255,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "alert_config",
+      "count": 1,
+      "file": "/app/backups/full_backup_20260213_221239/alert_config_20260213_221243.json.gz",
+      "size_bytes": 278,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "profitable_gems_training",
+      "count": 1,
+      "file": "/app/backups/full_backup_20260213_221239/profitable_gems_training_20260213_221243.json.gz",
+      "size_bytes": 283,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "performance_snapshots",
+      "count": 0,
+      "status": "empty"
+    },
+    {
+      "collection": "social_sentiment",
+      "count": 616,
+      "file": "/app/backups/full_backup_20260213_221239/social_sentiment_20260213_221243.json.gz",
+      "size_bytes": 36699,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "alerts",
+      "count": 0,
+      "status": "empty"
+    },
+    {
+      "collection": "notifications",
+      "count": 5,
+      "file": "/app/backups/full_backup_20260213_221239/notifications_20260213_221243.json.gz",
+      "size_bytes": 678,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "training_coin_universe",
+      "count": 633,
+      "file": "/app/backups/full_backup_20260213_221239/training_coin_universe_20260213_221243.json.gz",
+      "size_bytes": 6665,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "kraken_universe",
+      "count": 1482,
+      "file": "/app/backups/full_backup_20260213_221239/kraken_universe_20260213_221243.json.gz",
+      "size_bytes": 62493,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "system_running_states",
+      "count": 6,
+      "file": "/app/backups/full_backup_20260213_221239/system_running_states_20260213_221243.json.gz",
+      "size_bytes": 496,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "historical_training",
+      "count": 200,
+      "file": "/app/backups/full_backup_20260213_221239/historical_training_20260213_221243.json.gz",
+      "size_bytes": 164857,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "ohlcv_4hour",
+      "count": 171799,
+      "file": "/app/backups/full_backup_20260213_221239/ohlcv_4hour_20260213_221244.json.gz",
+      "size_bytes": 6093117,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "auto_positions",
+      "count": 1,
+      "file": "/app/backups/full_backup_20260213_221239/auto_positions_20260213_221249.json.gz",
+      "size_bytes": 580,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "historical_prices",
+      "count": 14600,
+      "file": "/app/backups/full_backup_20260213_221239/historical_prices_20260213_221250.json.gz",
+      "size_bytes": 381582,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "event_history",
+      "count": 0,
+      "status": "empty"
+    },
+    {
+      "collection": "regime_variants",
+      "count": 14,
+      "file": "/app/backups/full_backup_20260213_221239/regime_variants_20260213_221250.json.gz",
+      "size_bytes": 1360,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "training_status",
+      "count": 0,
+      "status": "empty"
+    },
+    {
+      "collection": "market_data_cache",
+      "count": 0,
+      "status": "empty"
+    },
+    {
+      "collection": "parameter_adaptations",
+      "count": 55,
+      "file": "/app/backups/full_backup_20260213_221239/parameter_adaptations_20260213_221250.json.gz",
+      "size_bytes": 3797,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "error_history",
+      "count": 0,
+      "status": "empty"
+    },
+    {
+      "collection": "kraken_universe_sync",
+      "count": 1,
+      "file": "/app/backups/full_backup_20260213_221239/kraken_universe_sync_20260213_221250.json.gz",
+      "size_bytes": 219,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "scheduler_executions",
+      "count": 146,
+      "file": "/app/backups/full_backup_20260213_221239/scheduler_executions_20260213_221250.json.gz",
+      "size_bytes": 2884,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "training_summary",
+      "count": 1,
+      "file": "/app/backups/full_backup_20260213_221239/training_summary_20260213_221250.json.gz",
+      "size_bytes": 318,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "universe_builds",
+      "count": 2,
+      "file": "/app/backups/full_backup_20260213_221239/universe_builds_20260213_221250.json.gz",
+      "size_bytes": 410,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "model_training_status",
+      "count": 6,
+      "file": "/app/backups/full_backup_20260213_221239/model_training_status_20260213_221250.json.gz",
+      "size_bytes": 459,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "ai_portfolios",
+      "count": 1,
+      "file": "/app/backups/full_backup_20260213_221239/ai_portfolios_20260213_221250.json.gz",
+      "size_bytes": 709,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "journal_entries",
+      "count": 0,
+      "status": "empty"
+    },
+    {
+      "collection": "predicted_events",
+      "count": 1063,
+      "file": "/app/backups/full_backup_20260213_221239/predicted_events_20260213_221250.json.gz",
+      "size_bytes": 30596,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "coin_universe",
+      "count": 77,
+      "file": "/app/backups/full_backup_20260213_221239/coin_universe_20260213_221250.json.gz",
+      "size_bytes": 2090,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "order_book_analysis",
+      "count": 616,
+      "file": "/app/backups/full_backup_20260213_221239/order_book_analysis_20260213_221250.json.gz",
+      "size_bytes": 54348,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "market_regimes",
+      "count": 138,
+      "file": "/app/backups/full_backup_20260213_221239/market_regimes_20260213_221250.json.gz",
+      "size_bytes": 6765,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "gem_alerts",
+      "count": 15,
+      "file": "/app/backups/full_backup_20260213_221239/gem_alerts_20260213_221250.json.gz",
+      "size_bytes": 1496,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "cross_asset_correlation",
+      "count": 616,
+      "file": "/app/backups/full_backup_20260213_221239/cross_asset_correlation_20260213_221250.json.gz",
+      "size_bytes": 29752,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "notification_settings",
+      "count": 6,
+      "file": "/app/backups/full_backup_20260213_221239/notification_settings_20260213_221250.json.gz",
+      "size_bytes": 350,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "historical_patterns",
+      "count": 9528,
+      "file": "/app/backups/full_backup_20260213_221239/historical_patterns_20260213_221250.json.gz",
+      "size_bytes": 469046,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "ohlcv_1hour",
+      "count": 181635,
+      "file": "/app/backups/full_backup_20260213_221239/ohlcv_1hour_20260213_221252.json.gz",
+      "size_bytes": 5052714,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "rate_limits",
+      "count": 0,
+      "status": "empty"
+    },
+    {
+      "collection": "ai_trades",
+      "count": 3,
+      "file": "/app/backups/full_backup_20260213_221239/ai_trades_20260213_221256.json.gz",
+      "size_bytes": 361,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "scheduler_config",
+      "count": 1,
+      "file": "/app/backups/full_backup_20260213_221239/scheduler_config_20260213_221256.json.gz",
+      "size_bytes": 278,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "optimal_universe",
+      "count": 10,
+      "file": "/app/backups/full_backup_20260213_221239/optimal_universe_20260213_221256.json.gz",
+      "size_bytes": 1085,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "gem_alert_history",
+      "count": 500,
+      "file": "/app/backups/full_backup_20260213_221239/gem_alert_history_20260213_221256.json.gz",
+      "size_bytes": 17002,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "on_chain_metrics",
+      "count": 616,
+      "file": "/app/backups/full_backup_20260213_221239/on_chain_metrics_20260213_221256.json.gz",
+      "size_bytes": 61660,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "position_entries",
+      "count": 8,
+      "file": "/app/backups/full_backup_20260213_221239/position_entries_20260213_221257.json.gz",
+      "size_bytes": 9069,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "ai_trade_history",
+      "count": 1,
+      "file": "/app/backups/full_backup_20260213_221239/ai_trade_history_20260213_221257.json.gz",
+      "size_bytes": 505,
+      "compressed": true,
+      "status": "success"
+    },
+    {
+      "collection": "position_entries_archive",
+      "count": 3,
+      "file": "/app/backups/full_backup_20260213_221239/position_entries_archive_20260213_221257.json.gz",
+      "size_bytes": 1062,
+      "compressed": true,
+      "status": "success"
+    }
+  ],
+  "total_documents": 496136,
+  "total_size_bytes": 17320598,
+  "success_count": 46,
+  "error_count": 0
+}
