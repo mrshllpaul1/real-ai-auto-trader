@@ -763,10 +763,10 @@ const SpotTrading = ({ embedded = false }) => {
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-white">
-                    ${pairDetails.(price?.last ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: pairDetails.price?.last > 1 ? 2 : 6 })}
+                    ${(pairDetails?.price?.last ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: pairDetails.price?.last > 1 ? 2 : 6 })}
                   </div>
                   <div className={`text-sm ${pairDetails.price?.change_24h >= 0 ? 'text-[#00FF94]' : 'text-[#FF4444]'}`}>
-                    {pairDetails.price?.change_24h >= 0 ? '+' : ''}{pairDetails.(price?.change_24h ?? 0).toFixed(2)}% 24h
+                    {pairDetails.price?.change_24h >= 0 ? '+' : ''}{(pairDetails?.price?.change_24h ?? 0).toFixed(2)}% 24h
                   </div>
                 </div>
               </div>
@@ -774,15 +774,15 @@ const SpotTrading = ({ embedded = false }) => {
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div className="bg-[#1a1a1a] rounded-lg p-2">
                   <div className="text-xs text-[#666]">24h High</div>
-                  <div className="text-sm text-white font-medium">${pairDetails.(price?.high_24h ?? 0).toFixed(2)}</div>
+                  <div className="text-sm text-white font-medium">${(pairDetails?.price?.high_24h ?? 0).toFixed(2)}</div>
                 </div>
                 <div className="bg-[#1a1a1a] rounded-lg p-2">
                   <div className="text-xs text-[#666]">24h Low</div>
-                  <div className="text-sm text-white font-medium">${pairDetails.(price?.low_24h ?? 0).toFixed(2)}</div>
+                  <div className="text-sm text-white font-medium">${(pairDetails?.price?.low_24h ?? 0).toFixed(2)}</div>
                 </div>
                 <div className="bg-[#1a1a1a] rounded-lg p-2">
                   <div className="text-xs text-[#666]">Spread</div>
-                  <div className="text-sm text-white font-medium">{pairDetails.(price?.spread ?? 0).toFixed(4)}%</div>
+                  <div className="text-sm text-white font-medium">{(pairDetails?.price?.spread ?? 0).toFixed(4)}%</div>
                 </div>
               </div>
               
