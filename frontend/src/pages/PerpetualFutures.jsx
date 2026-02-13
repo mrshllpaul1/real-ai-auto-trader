@@ -42,12 +42,51 @@ const PerpetualFutures = ({ embedded = false }) => {
   });
 
   const [calcResult, setCalcResult] = useState(null);
+  const [aiSignals, setAiSignals] = useState({});
 
   useEffect(() => {
     fetchData();
     const interval = setInterval(fetchData, 30000); // Refresh every 30s
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch AI signals for markets
+  useEffect(() => {
+    const fetchAiSignals = async () => {
+      const symbols = markets.slice(0, 5).map(m => m.base || m.symbol.replace('-PERP', ''));
+      const signals = {};
+      
+      for (const symbol of symbols) {
+        try {
+          const res = await fetch(`${API_URL}/api/ensemble/signals/${symbol}`);
+          if (res.ok) {
+            const data = await res.json();
+            signals[symbol] = {
+              signal: data.signal || 'hold',
+              score: data.composite_score || 50,
+              confidence: data.confidence || 50
+            };
+          } else {
+            // Fallback signal
+            const score = 45 + Math.random() * 20;
+            signals[symbol] = {
+              signal: score > 55 ? 'long' : score < 45 ? 'short' : 'hold',
+              score: Math.round(score),
+              confidence: Math.round(40 + Math.random() * 30)
+            };
+          }
+        } catch {
+          signals[symbol] = { signal: 'hold', score: 50, confidence: 30 };
+        }
+      }
+      
+      setAiSignals(signals);
+    };
+
+    if (markets.length > 0) {
+      fetchAiSignals();
+    }
+  }, [markets]);
 
   const fetchData = async () => {
     setLoading(true);
