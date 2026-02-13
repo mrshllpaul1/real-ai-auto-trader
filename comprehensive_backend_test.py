@@ -33,7 +33,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 
 # Use production URL from frontend .env
-BACKEND_URL = "https://cryptoai-enhance.preview.emergentagent.com/api"
+BACKEND_URL = "https://smart-trade-ai-68.preview.emergentagent.com/api"
 print(f"🔗 Testing Comprehensive Backend API at: {BACKEND_URL}")
 
 class ComprehensiveBackendTester:
