@@ -829,6 +829,26 @@ const SpotTrading = ({ embedded = false }) => {
             <AISignalCard signal={pairDetails.ai_signal} />
           )}
           
+          {/* AI Position Sizing */}
+          <AIPositionSizingCard
+            symbol={selectedSymbol}
+            currentPrice={pairDetails?.price || 0}
+            accountBalance={balance?.usd || 1000}
+            aiPrediction={pairDetails?.ai_signal ? {
+              composite: {
+                signal: pairDetails.ai_signal.signal,
+                confidence: pairDetails.ai_signal.confidence,
+                score: pairDetails.ai_signal.score
+              }
+            } : null}
+            onApplySize={(amount, units) => {
+              setOrderForm(prev => ({
+                ...prev,
+                amount_usd: amount.toString()
+              }));
+            }}
+          />
+          
           {/* AI Recommendations */}
           <div className="bg-[#111] border border-[#222] rounded-xl overflow-hidden">
             <button
