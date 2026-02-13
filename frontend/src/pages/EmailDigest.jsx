@@ -13,7 +13,7 @@ import toast from '../utils/toast';
 import { 
   Mail, Clock, Calendar, Send, Eye, History, 
   TrendingUp, PieChart, Bot, Newspaper, Save, RefreshCcw,
-  CheckCircle, AlertCircle
+  CheckCircle, AlertCircle, AlertTriangle, Key, Zap, Bell, Trash2
 } from 'lucide-react';
 
 const EmailDigest = ({ embedded = false }) => {
