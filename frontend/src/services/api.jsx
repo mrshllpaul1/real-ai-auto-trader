@@ -152,6 +152,96 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// ============================================
+// RETRY LOGIC WITH EXPONENTIAL BACKOFF
+// ============================================
+import { reportApiError } from './errorReporting';
+
+const RETRY_CONFIG = {
+  maxRetries: 3,
+  baseDelay: 1000, // 1 second
+  maxDelay: 10000, // 10 seconds
+  retryableStatuses: [408, 429, 500, 502, 503, 504],
+  retryableMethods: ['get', 'head', 'options', 'put', 'delete'],
+};
+
+/**
+ * Calculate delay with exponential backoff and jitter
+ */
+const calculateDelay = (attempt) => {
+  const exponentialDelay = RETRY_CONFIG.baseDelay * Math.pow(2, attempt);
+  const jitter = Math.random() * 1000;
+  return Math.min(exponentialDelay + jitter, RETRY_CONFIG.maxDelay);
+};
+
+/**
+ * Check if request should be retried
+ */
+const shouldRetry = (error, config) => {
+  // Don't retry if max retries exceeded
+  const retryCount = config._retryCount || 0;
+  if (retryCount >= RETRY_CONFIG.maxRetries) return false;
+  
+  // Don't retry non-retryable methods (unless idempotent)
+  if (!RETRY_CONFIG.retryableMethods.includes(config.method?.toLowerCase())) {
+    return false;
+  }
+  
+  // Retry on network errors
+  if (!error.response) return true;
+  
+  // Retry on specific status codes
+  return RETRY_CONFIG.retryableStatuses.includes(error.response.status);
+};
+
+/**
+ * Wait for specified milliseconds
+ */
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Retry wrapper for API calls
+ */
+const withRetry = async (requestFn, config = {}) => {
+  let lastError;
+  const startTime = Date.now();
+  
+  for (let attempt = 0; attempt <= RETRY_CONFIG.maxRetries; attempt++) {
+    try {
+      const response = await requestFn();
+      
+      // Log if this was a retry that succeeded
+      if (attempt > 0) {
+        console.log(`[API Retry] Success after ${attempt} retries: ${config.url}`);
+      }
+      
+      return response;
+    } catch (error) {
+      lastError = error;
+      const retryConfig = { ...config, _retryCount: attempt };
+      
+      if (shouldRetry(error, retryConfig)) {
+        const delay = calculateDelay(attempt);
+        console.warn(
+          `[API Retry] Attempt ${attempt + 1}/${RETRY_CONFIG.maxRetries} for ${config.url} ` +
+          `(${error.response?.status || 'network error'}). Waiting ${delay}ms...`
+        );
+        await wait(delay);
+      } else {
+        // Report error if not retrying
+        reportApiError(error, config.url, attempt);
+        break;
+      }
+    }
+  }
+  
+  // All retries failed
+  const totalTime = Date.now() - startTime;
+  console.error(`[API Retry] All retries failed for ${config.url} after ${totalTime}ms`);
+  reportApiError(lastError, config.url, RETRY_CONFIG.maxRetries);
+  throw lastError;
+};
+
 // Response interceptor with caching and performance logging
 api.interceptors.response.use(
   (response) => {
@@ -171,7 +261,26 @@ api.interceptors.response.use(
     }
     return response;
   },
-  (error) => {
+  async (error) => {
+    const config = error.config || {};
+    
+    // Check if we should retry
+    if (shouldRetry(error, config)) {
+      const retryCount = (config._retryCount || 0) + 1;
+      config._retryCount = retryCount;
+      
+      const delay = calculateDelay(retryCount - 1);
+      console.warn(
+        `[API Retry] Attempt ${retryCount}/${RETRY_CONFIG.maxRetries} for ${config.url} ` +
+        `(${error.response?.status || 'network error'}). Waiting ${delay}ms...`
+      );
+      
+      await wait(delay);
+      return api.request(config);
+    }
+    
+    // Report non-retryable errors
+    reportApiError(error, config.url, config._retryCount || 0);
     console.error('API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }
