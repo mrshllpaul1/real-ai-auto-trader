@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Wallet, TrendingUp, RefreshCw, Play, Square, DollarSign, PieChart } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Brain, Wallet, TrendingUp, RefreshCw, Play, Square, DollarSign, PieChart, Plus, Minus } from 'lucide-react';
 import api, { tradingAPI } from '../services/api';
 import { toast } from 'sonner';
 
