@@ -15,7 +15,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'sonner';
-import { StatsGridSkeleton, ChartSkeleton, CardSkeleton, AIInsightSkeleton, PageLoadingSkeleton } from '../components/LoadingSkeletons';
+import { StatsGridSkeleton, ChartSkeleton, CardSkeleton, AIInsightSkeleton } from '../components/LoadingSkeletons';
+import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
 import { useComponentState, ComponentType } from '../hooks/useSystemState';
 
 // Inline fallback for PageLoadingSkeleton in case of import issues
