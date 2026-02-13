@@ -9,12 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { motion } from 'framer-motion';
 import {
   TrendingUp, TrendingDown, DollarSign, Clock, Target, Percent,
-  BookOpen, RefreshCw, ChevronUp, ChevronDown, Zap, AlertTriangle
+  BookOpen, RefreshCw, ChevronUp, ChevronDown, Zap, AlertTriangle, Brain
 } from 'lucide-react';
 import api from '../services/api';
 import toast from '../utils/toast';
 import TradingPairSelector from '../components/TradingPairSelector';
 import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
+import { AIPredictionCard, useAIPrediction } from '../components/AIPrediction';
 
 const OptionsTrading = ({ embedded = false }) => {
   const [chain, setChain] = useState(null);
