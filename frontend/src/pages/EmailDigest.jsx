@@ -462,6 +462,239 @@ const EmailDigest = ({ embedded = false }) => {
             </div>
           </TabsContent>
 
+          {/* Error Alerts Tab */}
+          <TabsContent value="alerts" className="space-y-6">
+            {/* Resend API Configuration */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Key className="w-5 h-5 text-purple-400" />
+                  Resend API Configuration
+                </CardTitle>
+                <CardDescription>
+                  Configure Resend to receive error alerts via email.{' '}
+                  <a 
+                    href="https://resend.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-purple-400 hover:underline"
+                  >
+                    Get API key from Resend →
+                  </a>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-white">Resend API Key</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="password"
+                      placeholder="re_..."
+                      value={alertConfig.resend_api_key}
+                      onChange={(e) => setAlertConfig(prev => ({ ...prev, resend_api_key: e.target.value }))}
+                      className="bg-slate-900 border-slate-600 font-mono"
+                    />
+                    <Button
+                      onClick={testResendConnection}
+                      disabled={testingConnection || !alertConfig.resend_api_key}
+                      variant="outline"
+                      className="border-purple-500/50 text-purple-400"
+                    >
+                      {testingConnection ? (
+                        <RefreshCcw className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Zap className="w-4 h-4 mr-1" />
+                          Test
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  {alertStatus?.has_api_key && (
+                    <p className="text-sm text-green-400 flex items-center gap-1">
+                      <CheckCircle className="w-3 h-3" />
+                      API key configured: {alertStatus.resend_api_key_masked}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-white">Enable Error Alerts</Label>
+                    <p className="text-sm text-slate-400">Receive email when error thresholds are exceeded</p>
+                  </div>
+                  <Switch
+                    checked={alertConfig.enabled}
+                    onCheckedChange={(checked) => setAlertConfig(prev => ({ ...prev, enabled: checked }))}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recipient Emails */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Mail className="w-5 h-5 text-cyan-400" />
+                  Alert Recipients
+                </CardTitle>
+                <CardDescription>
+                  Add email addresses to receive error alerts
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    type="email"
+                    placeholder="alert@example.com"
+                    value={newRecipientEmail}
+                    onChange={(e) => setNewRecipientEmail(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && addRecipientEmail()}
+                    className="bg-slate-900 border-slate-600"
+                  />
+                  <Button onClick={addRecipientEmail} variant="outline" className="border-cyan-500/50">
+                    Add
+                  </Button>
+                </div>
+                
+                <div className="space-y-2">
+                  {alertConfig.recipient_emails.map((email) => (
+                    <div key={email} className="flex items-center justify-between bg-slate-900/50 p-3 rounded-lg">
+                      <span className="text-white">{email}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeRecipientEmail(email)}
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  {alertConfig.recipient_emails.length === 0 && (
+                    <p className="text-slate-500 text-sm text-center py-4">No recipients added yet</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Alert Thresholds */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <AlertTriangle className="w-5 h-5 text-amber-400" />
+                  Alert Thresholds
+                </CardTitle>
+                <CardDescription>
+                  Configure when to trigger error alerts
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-white">Errors per Hour</Label>
+                    <Input
+                      type="number"
+                      min="10"
+                      max="500"
+                      value={alertConfig.thresholds?.errors_per_hour ?? 50}
+                      onChange={(e) => setAlertConfig(prev => ({
+                        ...prev,
+                        thresholds: { ...prev.thresholds, errors_per_hour: parseInt(e.target.value) || 50 }
+                      }))}
+                      className="bg-slate-900 border-slate-600"
+                    />
+                    <p className="text-xs text-slate-500">Alert when errors exceed this count in 1 hour</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-white">Critical Errors Trigger</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={alertConfig.thresholds?.critical_errors_trigger ?? 5}
+                      onChange={(e) => setAlertConfig(prev => ({
+                        ...prev,
+                        thresholds: { ...prev.thresholds, critical_errors_trigger: parseInt(e.target.value) || 5 }
+                      }))}
+                      className="bg-slate-900 border-slate-600"
+                    />
+                    <p className="text-xs text-slate-500">Alert when critical errors reach this count</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-white">Cooldown (minutes)</Label>
+                  <Select 
+                    value={String(alertConfig.cooldown_minutes)} 
+                    onValueChange={(v) => setAlertConfig(prev => ({ ...prev, cooldown_minutes: parseInt(v) }))}
+                  >
+                    <SelectTrigger className="bg-slate-900 border-slate-600">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="15">15 minutes</SelectItem>
+                      <SelectItem value="30">30 minutes</SelectItem>
+                      <SelectItem value="60">1 hour</SelectItem>
+                      <SelectItem value="120">2 hours</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate-500">Minimum time between alerts</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Alert History */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Bell className="w-5 h-5 text-orange-400" />
+                  Recent Alerts
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {alertHistory.length > 0 ? (
+                  <div className="space-y-2">
+                    {alertHistory.slice(0, 5).map((alert, idx) => (
+                      <div key={idx} className="flex items-center justify-between bg-slate-900/50 p-3 rounded-lg">
+                        <div>
+                          <p className="text-white text-sm">
+                            {alert.triggers?.map(t => t.type.replace('_', ' ')).join(', ') || 'Alert triggered'}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {new Date(alert.sent_at).toLocaleString()}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="text-orange-400">
+                          {alert.recipients?.length || 0} sent
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-slate-500 text-center py-4">No alerts sent yet</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Save Button */}
+            <div className="flex justify-end">
+              <Button
+                onClick={saveAlertConfig}
+                disabled={savingAlerts}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {savingAlerts ? (
+                  <RefreshCcw className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
+                Save Alert Settings
+              </Button>
+            </div>
+          </TabsContent>
+
           {/* Preview Tab */}
           <TabsContent value="preview">
             <Card className="bg-slate-800/50 border-slate-700">
