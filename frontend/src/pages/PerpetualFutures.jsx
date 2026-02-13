@@ -326,8 +326,31 @@ const PerpetualFutures = ({ embedded = false }) => {
                       <td className={`p-4 text-right font-medium ${market['24h_change'] >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
                         {market['24h_change'] >= 0 ? '+' : ''}{market['24h_change']}%
                       </td>
+                      <td className="p-4 text-center">
+                        {(() => {
+                          const symbolKey = market.base || market.symbol.replace('-PERP', '');
+                          const signal = aiSignals[symbolKey];
+                          if (!signal) return <span className="text-[#666]">-</span>;
+                          
+                          const signalColor = signal.score >= 55 ? '#00FF94' : signal.score <= 45 ? '#FF0055' : '#FFD700';
+                          const signalIcon = signal.signal === 'long' || signal.signal === 'buy' 
+                            ? <TrendingUp size={14} /> 
+                            : signal.signal === 'short' || signal.signal === 'sell'
+                            ? <TrendingDown size={14} />
+                            : null;
+                          
+                          return (
+                            <div className="flex items-center justify-center gap-1">
+                              <span style={{ color: signalColor }}>{signalIcon}</span>
+                              <span style={{ color: signalColor }} className="font-bold text-sm">
+                                {signal.signal.toUpperCase()}
+                              </span>
+                              <span className="text-[#666] text-xs">({signal.confidence}%)</span>
+                            </div>
+                          );
+                        })()}
+                      </td>
                       <td className="p-4 text-right text-[#A1A1AA]">${(market['24h_volume'] / 1e6).toFixed(0)}M</td>
-                      <td className="p-4 text-right text-[#A1A1AA]">${(market.open_interest / 1e6).toFixed(0)}M</td>
                       <td className={`p-4 text-right font-medium ${market.funding_rate >= 0 ? 'text-[#00FF94]' : 'text-red-400'}`}>
                         {((market?.funding_rate ?? 0) * 100).toFixed(4)}%
                       </td>
