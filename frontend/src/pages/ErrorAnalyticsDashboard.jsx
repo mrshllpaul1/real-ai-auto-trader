@@ -674,7 +674,53 @@ const ErrorAnalyticsDashboard = () => {
         </Card>
       </motion.div>
 
-      {/* Recent Errors Table */}
+      {/* Deduplication Stats Bar */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.35 }}
+        className="mb-6"
+      >
+        <div className="bg-gradient-to-r from-[#9D00FF]/10 to-[#00FF94]/10 border border-[#9D00FF]/30 rounded-xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <GitMerge size={20} className="text-[#9D00FF]" />
+              <span className="text-white font-medium">Error Grouping</span>
+            </div>
+            <div className="flex items-center gap-4 text-sm">
+              <div>
+                <span className="text-[#A1A1AA]">Total: </span>
+                <span className="text-white font-data">{deduplicationStats.totalErrors}</span>
+              </div>
+              <div>
+                <span className="text-[#A1A1AA]">Unique Groups: </span>
+                <span className="text-[#00FF94] font-data">{deduplicationStats.uniqueGroups}</span>
+              </div>
+              <div>
+                <span className="text-[#A1A1AA]">Dedup Rate: </span>
+                <span className="text-[#9D00FF] font-data">{deduplicationStats.deduplicationRate}%</span>
+              </div>
+              <div>
+                <span className="text-[#A1A1AA]">Avg/Group: </span>
+                <span className="text-white font-data">{deduplicationStats.avgErrorsPerGroup}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setViewMode(viewMode === 'grouped' ? 'individual' : 'grouped')}
+              variant="outline"
+              size="sm"
+              className={`border-[#1F1F1F] ${viewMode === 'grouped' ? 'text-[#9D00FF]' : 'text-[#666]'}`}
+            >
+              {viewMode === 'grouped' ? <Layers size={14} className="mr-1" /> : <Activity size={14} className="mr-1" />}
+              {viewMode === 'grouped' ? 'Grouped' : 'Individual'}
+            </Button>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Errors Section with Search and Filters */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -682,17 +728,33 @@ const ErrorAnalyticsDashboard = () => {
       >
         <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <CardTitle className="flex items-center gap-2 text-white">
                 <AlertTriangle size={20} className="text-[#FF0055]" />
-                Recent Errors
+                {viewMode === 'grouped' ? 'Grouped Errors' : 'All Errors'}
+                <Badge className="bg-[#1F1F1F] text-[#A1A1AA] ml-2">
+                  {viewMode === 'grouped' ? groupedErrors.length : errors.length}
+                </Badge>
               </CardTitle>
-              <div className="flex items-center gap-2">
+              
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Search */}
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#666]" />
+                  <input
+                    type="text"
+                    placeholder="Search errors..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-[#111] border border-[#1F1F1F] rounded-lg pl-9 pr-3 py-1.5 text-white text-sm w-48 focus:border-[#9D00FF] outline-none"
+                  />
+                </div>
+                
                 {/* Severity Filter */}
                 <select
                   value={severityFilter}
                   onChange={(e) => setSeverityFilter(e.target.value)}
-                  className="bg-[#111] border border-[#1F1F1F] rounded-lg px-3 py-1 text-white text-sm"
+                  className="bg-[#111] border border-[#1F1F1F] rounded-lg px-3 py-1.5 text-white text-sm"
                 >
                   <option value="all">All Severities</option>
                   <option value="critical">Critical</option>
@@ -700,107 +762,284 @@ const ErrorAnalyticsDashboard = () => {
                   <option value="medium">Medium</option>
                   <option value="low">Low</option>
                 </select>
+                
+                {/* Sort By */}
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="bg-[#111] border border-[#1F1F1F] rounded-lg px-3 py-1.5 text-white text-sm"
+                >
+                  <option value="count">Sort by Count</option>
+                  <option value="lastSeen">Sort by Recent</option>
+                  <option value="severity">Sort by Severity</option>
+                </select>
+                
+                {/* Sort Order */}
+                <Button
+                  onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+                  variant="outline"
+                  size="sm"
+                  className="border-[#1F1F1F]"
+                >
+                  {sortOrder === 'desc' ? <SortDesc size={14} /> : <SortAsc size={14} />}
+                </Button>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            {errors.length > 0 ? (
-              <div className="space-y-3 max-h-[500px] overflow-y-auto">
-                {errors.map((error, idx) => (
-                  <div
-                    key={error.error_id || idx}
-                    className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                      selectedError?.error_id === error.error_id
-                        ? 'bg-[#1F1F1F] border-[#9D00FF]'
-                        : 'bg-[#111] border-[#1F1F1F] hover:border-[#333]'
-                    }`}
-                    onClick={() => setSelectedError(selectedError?.error_id === error.error_id ? null : error)}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge
-                            className={`${
-                              error.severity === 'critical' ? 'bg-[#FF0055]/20 text-[#FF0055]' :
-                              error.severity === 'high' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' :
-                              error.severity === 'medium' ? 'bg-[#FFB800]/20 text-[#FFB800]' :
-                              'bg-[#00FF94]/20 text-[#00FF94]'
-                            }`}
-                          >
-                            {error.severity?.toUpperCase() || 'UNKNOWN'}
-                          </Badge>
-                          <Badge className="bg-[#1F1F1F] text-[#A1A1AA]">
-                            {error.error_type || error.type || 'unknown'}
-                          </Badge>
-                          <span className="text-xs text-[#666]">
-                            {new Date(error.timestamp).toLocaleString()}
-                          </span>
-                        </div>
-                        <p className="text-white font-medium mb-1 line-clamp-1">
-                          {error.message || 'No message'}
-                        </p>
-                        {error.url && (
-                          <p className="text-xs text-[#666] flex items-center gap-1">
-                            <ExternalLink size={12} />
-                            {error.url}
+            {viewMode === 'grouped' ? (
+              // Grouped View
+              groupedErrors.length > 0 ? (
+                <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                  {groupedErrors.map((group, idx) => (
+                    <div
+                      key={group.fingerprint || idx}
+                      className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                        selectedGroup?.fingerprint === group.fingerprint
+                          ? 'bg-[#1F1F1F] border-[#9D00FF]'
+                          : 'bg-[#111] border-[#1F1F1F] hover:border-[#333]'
+                      }`}
+                      onClick={() => setSelectedGroup(selectedGroup?.fingerprint === group.fingerprint ? null : group)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            {/* Count Badge */}
+                            <Badge className="bg-[#9D00FF]/20 text-[#9D00FF] font-data">
+                              <Hash size={12} className="mr-1" />
+                              {group.count}x
+                            </Badge>
+                            
+                            {/* Severity */}
+                            <Badge
+                              className={`${
+                                group.severity === 'critical' ? 'bg-[#FF0055]/20 text-[#FF0055]' :
+                                group.severity === 'high' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' :
+                                group.severity === 'medium' ? 'bg-[#FFB800]/20 text-[#FFB800]' :
+                                'bg-[#00FF94]/20 text-[#00FF94]'
+                              }`}
+                            >
+                              {group.severity?.toUpperCase() || 'UNKNOWN'}
+                            </Badge>
+                            
+                            {/* Type */}
+                            <Badge className="bg-[#1F1F1F] text-[#A1A1AA]">
+                              {group.type || 'unknown'}
+                            </Badge>
+                            
+                            {/* Time Range */}
+                            <span className="text-xs text-[#666]">
+                              First: {new Date(group.firstSeen).toLocaleString()}
+                            </span>
+                            <span className="text-xs text-[#666]">
+                              Last: {new Date(group.lastSeen).toLocaleString()}
+                            </span>
+                          </div>
+                          
+                          <p className="text-white font-medium mb-1 line-clamp-2">
+                            {group.message || 'No message'}
                           </p>
-                        )}
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCopyError(error);
-                        }}
-                        className="p-2 hover:bg-[#1F1F1F] rounded-lg transition-colors"
-                      >
-                        {copied ? <Check size={16} className="text-[#00FF94]" /> : <Copy size={16} className="text-[#666]" />}
-                      </button>
-                    </div>
-
-                    {/* Expanded Details */}
-                    {selectedError?.error_id === error.error_id && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        className="mt-4 pt-4 border-t border-[#1F1F1F]"
-                      >
-                        {error.stack && (
-                          <div className="mb-3">
-                            <p className="text-xs text-[#666] mb-1">Stack Trace:</p>
-                            <pre className="text-xs text-[#FF0055] bg-[#0A0A0A] p-2 rounded overflow-x-auto max-h-32">
-                              {error.stack}
-                            </pre>
-                          </div>
-                        )}
-                        {error.component_stack && (
-                          <div className="mb-3">
-                            <p className="text-xs text-[#666] mb-1">Component Stack:</p>
-                            <pre className="text-xs text-[#9D00FF] bg-[#0A0A0A] p-2 rounded overflow-x-auto max-h-32">
-                              {error.component_stack}
-                            </pre>
-                          </div>
-                        )}
-                        <div className="grid grid-cols-2 gap-4 text-xs">
-                          <div>
-                            <span className="text-[#666]">Error ID: </span>
-                            <span className="text-white font-mono">{error.error_id}</span>
-                          </div>
-                          <div>
-                            <span className="text-[#666]">User Agent: </span>
-                            <span className="text-white truncate">{error.user_agent?.slice(0, 50)}...</span>
-                          </div>
+                          
+                          {group.pathname && (
+                            <p className="text-xs text-[#666] flex items-center gap-1">
+                              <ExternalLink size={12} />
+                              {group.pathname}
+                            </p>
+                          )}
                         </div>
-                      </motion.div>
-                    )}
-                  </div>
-                ))}
-              </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopyError(group.latestError);
+                            }}
+                            className="p-2 hover:bg-[#1F1F1F] rounded-lg transition-colors"
+                          >
+                            {copied ? <Check size={16} className="text-[#00FF94]" /> : <Copy size={16} className="text-[#666]" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Expanded Group Details */}
+                      <AnimatePresence>
+                        {selectedGroup?.fingerprint === group.fingerprint && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="mt-4 pt-4 border-t border-[#1F1F1F]"
+                          >
+                            {/* Group Summary */}
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                              <div className="bg-[#0A0A0A] rounded-lg p-3">
+                                <p className="text-xs text-[#666] mb-1">Total Occurrences</p>
+                                <p className="text-xl font-data font-bold text-white">{group.count}</p>
+                              </div>
+                              <div className="bg-[#0A0A0A] rounded-lg p-3">
+                                <p className="text-xs text-[#666] mb-1">First Seen</p>
+                                <p className="text-sm text-white">{new Date(group.firstSeen).toLocaleDateString()}</p>
+                              </div>
+                              <div className="bg-[#0A0A0A] rounded-lg p-3">
+                                <p className="text-xs text-[#666] mb-1">Last Seen</p>
+                                <p className="text-sm text-white">{new Date(group.lastSeen).toLocaleDateString()}</p>
+                              </div>
+                              <div className="bg-[#0A0A0A] rounded-lg p-3">
+                                <p className="text-xs text-[#666] mb-1">Fingerprint</p>
+                                <p className="text-xs font-mono text-[#9D00FF] truncate">{group.fingerprint.slice(0, 20)}...</p>
+                              </div>
+                            </div>
+                            
+                            {/* Stack Trace from Latest Error */}
+                            {group.latestError?.stack && (
+                              <div className="mb-3">
+                                <p className="text-xs text-[#666] mb-1">Stack Trace (Latest):</p>
+                                <pre className="text-xs text-[#FF0055] bg-[#0A0A0A] p-2 rounded overflow-x-auto max-h-32">
+                                  {group.latestError.stack}
+                                </pre>
+                              </div>
+                            )}
+                            
+                            {/* Individual Errors List */}
+                            <div>
+                              <p className="text-xs text-[#666] mb-2">All Occurrences ({group.count}):</p>
+                              <div className="max-h-40 overflow-y-auto space-y-1">
+                                {group.errors.slice(0, 10).map((error, i) => (
+                                  <div key={i} className="flex items-center justify-between py-1 px-2 bg-[#0A0A0A] rounded text-xs">
+                                    <span className="text-[#666]">{new Date(error.timestamp).toLocaleString()}</span>
+                                    <span className="text-white truncate max-w-[200px]">{error.url || 'N/A'}</span>
+                                    <span className="text-[#A1A1AA]">{error.user_agent?.slice(0, 30)}...</span>
+                                  </div>
+                                ))}
+                                {group.count > 10 && (
+                                  <p className="text-center text-[#666] text-xs py-2">
+                                    +{group.count - 10} more occurrences
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <CheckCircle size={48} className="mx-auto text-[#00FF94] mb-4" />
+                  <p className="text-white font-medium">No errors found</p>
+                  <p className="text-[#666] text-sm">Your application is running smoothly!</p>
+                </div>
+              )
             ) : (
-              <div className="text-center py-12">
-                <CheckCircle size={48} className="mx-auto text-[#00FF94] mb-4" />
-                <p className="text-white font-medium">No errors found</p>
-                <p className="text-[#666] text-sm">Your application is running smoothly!</p>
-              </div>
+              // Individual View (Original)
+              errors.length > 0 ? (
+                <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                  {errors.filter(e => 
+                    severityFilter === 'all' || e.severity === severityFilter
+                  ).filter(e =>
+                    !searchQuery || 
+                    (e.message || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    (e.pathname || '').toLowerCase().includes(searchQuery.toLowerCase())
+                  ).map((error, idx) => (
+                    <div
+                      key={error.error_id || idx}
+                      className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                        selectedError?.error_id === error.error_id
+                          ? 'bg-[#1F1F1F] border-[#9D00FF]'
+                          : 'bg-[#111] border-[#1F1F1F] hover:border-[#333]'
+                      }`}
+                      onClick={() => setSelectedError(selectedError?.error_id === error.error_id ? null : error)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge
+                              className={`${
+                                error.severity === 'critical' ? 'bg-[#FF0055]/20 text-[#FF0055]' :
+                                error.severity === 'high' ? 'bg-[#FF6B00]/20 text-[#FF6B00]' :
+                                error.severity === 'medium' ? 'bg-[#FFB800]/20 text-[#FFB800]' :
+                                'bg-[#00FF94]/20 text-[#00FF94]'
+                              }`}
+                            >
+                              {error.severity?.toUpperCase() || 'UNKNOWN'}
+                            </Badge>
+                            <Badge className="bg-[#1F1F1F] text-[#A1A1AA]">
+                              {error.error_type || error.type || 'unknown'}
+                            </Badge>
+                            <span className="text-xs text-[#666]">
+                              {new Date(error.timestamp).toLocaleString()}
+                            </span>
+                          </div>
+                          <p className="text-white font-medium mb-1 line-clamp-1">
+                            {error.message || 'No message'}
+                          </p>
+                          {error.url && (
+                            <p className="text-xs text-[#666] flex items-center gap-1">
+                              <ExternalLink size={12} />
+                              {error.url}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyError(error);
+                          }}
+                          className="p-2 hover:bg-[#1F1F1F] rounded-lg transition-colors"
+                        >
+                          {copied ? <Check size={16} className="text-[#00FF94]" /> : <Copy size={16} className="text-[#666]" />}
+                        </button>
+                      </div>
+
+                      {/* Expanded Details */}
+                      <AnimatePresence>
+                        {selectedError?.error_id === error.error_id && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="mt-4 pt-4 border-t border-[#1F1F1F]"
+                          >
+                            {error.stack && (
+                              <div className="mb-3">
+                                <p className="text-xs text-[#666] mb-1">Stack Trace:</p>
+                                <pre className="text-xs text-[#FF0055] bg-[#0A0A0A] p-2 rounded overflow-x-auto max-h-32">
+                                  {error.stack}
+                                </pre>
+                              </div>
+                            )}
+                            {error.component_stack && (
+                              <div className="mb-3">
+                                <p className="text-xs text-[#666] mb-1">Component Stack:</p>
+                                <pre className="text-xs text-[#9D00FF] bg-[#0A0A0A] p-2 rounded overflow-x-auto max-h-32">
+                                  {error.component_stack}
+                                </pre>
+                              </div>
+                            )}
+                            <div className="grid grid-cols-2 gap-4 text-xs">
+                              <div>
+                                <span className="text-[#666]">Error ID: </span>
+                                <span className="text-white font-mono">{error.error_id}</span>
+                              </div>
+                              <div>
+                                <span className="text-[#666]">User Agent: </span>
+                                <span className="text-white truncate">{error.user_agent?.slice(0, 50)}...</span>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <CheckCircle size={48} className="mx-auto text-[#00FF94] mb-4" />
+                  <p className="text-white font-medium">No errors found</p>
+                  <p className="text-[#666] text-sm">Your application is running smoothly!</p>
+                </div>
+              )
             )}
           </CardContent>
         </Card>
