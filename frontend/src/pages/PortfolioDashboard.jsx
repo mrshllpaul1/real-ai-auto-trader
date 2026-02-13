@@ -84,7 +84,44 @@ const PortfolioDashboard = ({ embedded = false }) => {
   };
 
   if (loading) {
-    return <PageLoadingSkeleton />;
+    return (
+      <div className="min-h-screen bg-[#050505] p-4 lg:p-8" data-testid="portfolio-dashboard-loading">
+        {/* Header Skeleton */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 bg-[#1F1F1F] rounded-xl animate-pulse" />
+            <div>
+              <div className="h-8 w-64 bg-[#1F1F1F] rounded animate-pulse mb-2" />
+              <div className="h-4 w-96 bg-[#1F1F1F] rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+        
+        {/* Stats Grid Skeleton */}
+        <div className="mb-8">
+          <StatsGridSkeleton columns={4} />
+        </div>
+        
+        {/* Charts Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <Card className="bg-[#0A0A0A] border-[#1F1F1F]">
+            <CardHeader>
+              <div className="h-6 w-48 bg-[#1F1F1F] rounded animate-pulse" />
+            </CardHeader>
+            <CardContent>
+              <PieChartSkeleton size={250} />
+            </CardContent>
+          </Card>
+          <ChartSkeleton height={350} type="line" />
+        </div>
+        
+        {/* Positions Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <PositionSkeleton count={3} />
+          <PositionSkeleton count={3} />
+        </div>
+      </div>
+    );
   }
 
   const isAllocated = summary?.allocated;
