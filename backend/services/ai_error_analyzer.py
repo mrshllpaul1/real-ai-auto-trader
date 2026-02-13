@@ -255,7 +255,13 @@ class AIErrorAnalyzer:
         """Auto-fix database connection errors"""
         logger.info("🔧 Attempting database reconnection...")
         try:
-            from config.database import reconnect_database
+            # Try to import and reconnect - handle missing module gracefully
+            try:
+                from config.database import reconnect_database
+            except ImportError:
+                logger.warning("Database reconnection module not available")
+                return False
+            
             await reconnect_database()
             return True
         except Exception as e:
