@@ -275,7 +275,7 @@ async def _get_prediction_for_symbol(symbol: str) -> Optional[Dict[str, Any]]:
             logger.warning(f"Could not get prediction for {symbol}: {e}")
     
     # Try database for cached predictions
-    if _db:
+    if _db is not None:
         try:
             cached = await _db.ai_predictions.find_one(
                 {"symbol": symbol},
