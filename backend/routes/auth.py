@@ -148,10 +148,11 @@ async def find_kraken_keys(user_id: str = "default_user", db = Depends(get_datab
             try:
                 decrypted_key = cipher.decrypt(stored["encrypted_key"].encode()).decode()
                 db_source["api_key_preview"] = _mask_key(decrypted_key)
+                del decrypted_key
             except Exception:
                 db_source["api_key_preview"] = "****"
-    except Exception:
-        db_source["error"] = "Could not check database"
+    except Exception as e:
+        db_source["error"] = f"Could not check database: {type(e).__name__}"
     sources.append(db_source)
 
     any_configured = any(s["configured"] for s in sources)

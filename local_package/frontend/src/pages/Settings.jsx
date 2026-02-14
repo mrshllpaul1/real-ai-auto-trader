@@ -517,8 +517,8 @@ const Settings = ({ embedded = false }) => {
                         {krakenKeyInfo.message}
                       </span>
                     </div>
-                    {krakenKeyInfo.sources?.map((source, idx) => (
-                      <div key={idx} className="border-t border-[#1F1F1F] pt-2">
+                    {krakenKeyInfo.sources?.map((source) => (
+                      <div key={source.source} className="border-t border-[#1F1F1F] pt-2">
                         <p className="text-xs text-[#A1A1AA] uppercase tracking-wider mb-1">
                           {source.source === 'environment_variables' ? '📦 Environment Variables' : '🗄️ Database Storage'}
                         </p>
