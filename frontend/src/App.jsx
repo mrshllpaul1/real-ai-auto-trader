@@ -62,6 +62,7 @@ const SuspenseWrapper = ({ children }) => (
 
 function App() {
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
   
   useEffect(() => {
     // Initialize auto-debugger
