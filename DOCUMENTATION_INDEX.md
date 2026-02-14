@@ -74,6 +74,10 @@ This file provides a complete index of all documentation files in this repositor
 ### Execution & Trading
 - [ENHANCED_EXECUTION_ENGINE.md](./ENHANCED_EXECUTION_ENGINE.md) - Trade execution
 - [HISTORICAL_MARKET_DATA_ENHANCEMENT.md](./HISTORICAL_MARKET_DATA_ENHANCEMENT.md) - Market data
+- [UPDATE_HISTORICAL_MARKET_DATA.md](./UPDATE_HISTORICAL_MARKET_DATA.md) - Data updates
+
+### Media & News
+- [ENHANCED_MARKET_MEDIA_INTEGRATION.md](./ENHANCED_MARKET_MEDIA_INTEGRATION.md) - Media integration
 
 ### Performance & Loading
 - [LOADING_TIME_ENHANCEMENTS.md](./LOADING_TIME_ENHANCEMENTS.md) - Loading optimizations
