@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { 
   Settings as SettingsIcon, Key, Shield, MessageCircle, BookOpen, Layout,
-  Volume2, Mail, Share2
+  Volume2, Mail, Share2, Lock
 } from 'lucide-react';
 import { 
   Breadcrumb, 
@@ -26,11 +26,13 @@ const DashboardCustomization = lazy(() => import('./DashboardCustomization'));
 const SoundSettings = lazy(() => import('./SoundSettings'));
 const EmailDigest = lazy(() => import('./EmailDigest'));
 const PortfolioShare = lazy(() => import('./PortfolioShare'));
+const SecuritySettings = lazy(() => import('@/components/SecuritySettings'));
 
-const TABS = ['settings', 'setup', 'budget', 'telegram', 'journal', 'sounds', 'email', 'share', 'guide', 'customize'];
+const TABS = ['settings', 'security', 'setup', 'budget', 'telegram', 'journal', 'sounds', 'email', 'share', 'guide', 'customize'];
 
 const TAB_LABELS = {
   'settings': 'Settings',
+  'security': 'Security & 2FA',
   'setup': 'API Setup',
   'budget': 'Budget',
   'telegram': 'Telegram',
@@ -44,6 +46,7 @@ const TAB_LABELS = {
 
 const TAB_CONFIG = [
   { value: 'settings', icon: SettingsIcon, label: 'Settings', color: 'slate' },
+  { value: 'security', icon: Lock, label: 'Security & 2FA', color: 'red' },
   { value: 'setup', icon: Key, label: 'API Setup', color: 'amber' },
   { value: 'budget', icon: Shield, label: 'Budget', color: 'green' },
   { value: 'telegram', icon: MessageCircle, label: 'Telegram', color: 'blue' },
