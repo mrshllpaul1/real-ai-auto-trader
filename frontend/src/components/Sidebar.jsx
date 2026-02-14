@@ -113,6 +113,7 @@ const NavItem = ({ item, isCollapsed, mobile, isActive }) => {
   // Color mapping for different nav items
   const colorMap = {
     'Command Center': { active: 'cyan', hover: 'cyan' },
+    'Live Dashboard': { active: 'emerald', hover: 'emerald' },
     'Trading': { active: 'emerald', hover: 'emerald' },
     'AI & Strategy': { active: 'violet', hover: 'violet' },
     'Backtest': { active: 'blue', hover: 'blue' },
