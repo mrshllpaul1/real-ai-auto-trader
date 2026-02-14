@@ -15,9 +15,6 @@ import {
   LazyTabContent 
 } from '@/components/HubNavigation';
 
-// Import visual training progress component directly for quick loading
-import VisualTrainingProgress from '@/components/VisualTrainingProgress';
-
 // Lazy load page components
 const AICommandCenter = lazy(() => import('./AICommandCenter'));
 const AdaptiveStrategy = lazy(() => import('./AdaptiveStrategy'));
