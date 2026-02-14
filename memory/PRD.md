@@ -48,6 +48,12 @@ Full-stack AI crypto trading platform with Kraken integration, featuring compreh
 - [x] P2: Cookie hardening — Secure flag + SameSite=lax on all CSRF cookies
 - [x] P2: CORS tightened from wildcard `*` to specific origin
 - [x] P2: Deep frontend UI flow testing — session init, navigation, POST CSRF headers verified
+- [x] Vulnerability fixes: Frontend 6→0 (removed react-scripts/craco, upgraded vite 5→7, eslint 9→10)
+- [x] Vulnerability fixes: Backend 10→2 (upgraded fastapi, starlette, pymongo, motor, cryptography, pillow, protobuf, pyasn1, python-multipart)
+
+## Remaining Vulnerabilities (No Patch Available)
+- diskcache 5.6.3 (CVE-2025-69872) — used in ML caching, no fix released
+- ecdsa 0.19.1 (CVE-2024-23342) — transitive dep of python-jose, no fix released
 
 ## Backlog
-- No remaining items
+- No remaining actionable items
