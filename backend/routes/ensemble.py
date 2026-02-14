@@ -337,39 +337,52 @@ async def get_hidden_gems_from_universe():
 @router.get("/top-predictions")
 async def get_top_predictions():
     """Get ensemble predictions for top universe coins"""
-    if not _ensemble or not _db:
-        raise HTTPException(status_code=503, detail="Services not initialized")
+    if _ensemble is None or _db is None:
+        return {
+            "count": 0,
+            "predictions": [],
+            "best_opportunities": [],
+            "status": "services_initializing"
+        }
     
-    # Get top coins from universe
-    cursor = _db.optimal_universe.find().sort("universe_score", -1).limit(10)
-    top_coins = await cursor.to_list(length=10)
-    
-    predictions = []
-    for coin in top_coins:
-        try:
-            coin_id = coin['coin_id']
-            hist_data = await _market_service.get_historical_data(coin_id, days=90)
-            if hist_data and hist_data.get('prices'):
-                prices = [p[1] for p in hist_data['prices']]
-                result = await _ensemble.get_ensemble_prediction(
-                    coin_id=coin_id,
-                    prices=prices,
-                    current_price=prices[-1],
-                    optimize_weights=True
-                )
-                result['universe_score'] = coin.get('universe_score', 0)
-                predictions.append(result)
-        except:
-            continue
-    
-    # Sort by combined score
-    predictions.sort(
-        key=lambda x: x.get('confidence', 0) + x.get('universe_score', 0),
-        reverse=True
-    )
-    
-    return {
-        "count": len(predictions),
-        "predictions": predictions,
-        "best_opportunities": [p for p in predictions if 'BUY' in p.get('final_signal', '')][:5]
-    }
+    try:
+        # Get top coins from universe
+        cursor = _db.optimal_universe.find().sort("universe_score", -1).limit(10)
+        top_coins = await cursor.to_list(length=10)
+        
+        predictions = []
+        for coin in top_coins:
+            try:
+                coin_id = coin['coin_id']
+                hist_data = await _market_service.get_historical_data(coin_id, days=90)
+                if hist_data and hist_data.get('prices'):
+                    prices = [p[1] for p in hist_data['prices']]
+                    result = await _ensemble.get_ensemble_prediction(
+                        coin_id=coin_id,
+                        prices=prices,
+                        current_price=prices[-1],
+                        optimize_weights=True
+                    )
+                    result['universe_score'] = coin.get('universe_score', 0)
+                    predictions.append(result)
+            except Exception:
+                continue
+        
+        # Sort by combined score
+        predictions.sort(
+            key=lambda x: x.get('confidence', 0) + x.get('universe_score', 0),
+            reverse=True
+        )
+        
+        return {
+            "count": len(predictions),
+            "predictions": predictions,
+            "best_opportunities": [p for p in predictions if 'BUY' in p.get('final_signal', '')][:5]
+        }
+    except Exception as e:
+        return {
+            "count": 0,
+            "predictions": [],
+            "best_opportunities": [],
+            "error": str(e)
+        }
