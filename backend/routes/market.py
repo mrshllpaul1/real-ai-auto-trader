@@ -109,7 +109,7 @@ async def get_global_metrics(
         metrics = await enhanced_service.get_comprehensive_market_data()
         return metrics
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/historical/{coin_id}")
 async def get_historical_data(
@@ -146,7 +146,7 @@ async def get_historical_data(
         
         return data
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/trending")
 async def get_trending_coins(market_service = Depends(get_market_service)):
@@ -155,7 +155,7 @@ async def get_trending_coins(market_service = Depends(get_market_service)):
         trending = await market_service.get_trending_coins()
         return {"trending_coins": trending}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/news")
 async def get_crypto_news(market_service = Depends(get_market_service)):
@@ -164,4 +164,4 @@ async def get_crypto_news(market_service = Depends(get_market_service)):
         news = await market_service.get_crypto_news()
         return {"news": news, "count": len(news)}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")

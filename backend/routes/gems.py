@@ -52,7 +52,7 @@ async def scan_for_gems(request: GemScanRequest):
             'gems': filtered
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/top-gems")

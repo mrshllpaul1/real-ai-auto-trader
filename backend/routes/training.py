@@ -73,7 +73,7 @@ async def train_on_historical_data(
             "note": "Training may take several minutes. Check /status endpoint for progress."
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 class SingleModelTrainingRequest(BaseModel):
@@ -193,7 +193,7 @@ async def train_single_model(
             "progress_endpoint": f"/api/training-progress/task/{task_id}"
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/train-profitable-gems")
@@ -222,7 +222,7 @@ async def train_profitable_gems(
             "note": "This training analyzes ONLY successful gems to learn what makes them profitable."
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/profitable-gems-status")
 async def get_profitable_gems_status(trainer = Depends(get_historical_trainer)):
@@ -230,7 +230,7 @@ async def get_profitable_gems_status(trainer = Depends(get_historical_trainer)):
     try:
         return await trainer.get_profitable_gems_summary()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/profitable-gem-signals")
 async def get_profitable_gem_signals(trainer = Depends(get_historical_trainer)):
@@ -241,7 +241,7 @@ async def get_profitable_gem_signals(trainer = Depends(get_historical_trainer)):
     try:
         return await trainer.get_profitable_gem_signals()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/status")
 async def get_training_status(trainer = Depends(get_historical_trainer)):
@@ -250,7 +250,7 @@ async def get_training_status(trainer = Depends(get_historical_trainer)):
         status = await trainer.get_training_status()
         return status
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/hidden-gems")
 async def get_hidden_gems(
@@ -272,7 +272,7 @@ async def get_hidden_gems(
             "note": "These patterns indicate conditions that preceded major price increases"
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/find-current-gems")
 async def find_current_hidden_gems(
@@ -293,7 +293,7 @@ async def find_current_hidden_gems(
             "warning": "High risk investment. Past patterns do not guarantee future results."
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/patterns/{coin_id}")
 async def get_historical_patterns(
@@ -328,7 +328,7 @@ async def get_historical_patterns(
             "pattern_types": list(set(p.get('pattern_type', 'unknown') for p in patterns))
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/similar-patterns/{coin_id}")
 async def find_similar_patterns(
@@ -359,7 +359,7 @@ async def find_similar_patterns(
             "recommendation": "Use these patterns to inform trading decisions"
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/gem-signals")
 async def get_gem_entry_signals(db = Depends(get_database)):
@@ -405,7 +405,7 @@ async def get_gem_entry_signals(db = Depends(get_database)):
             "interpretation": "Higher avg_multiplier indicates more effective entry signals"
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 
@@ -434,7 +434,7 @@ async def train_enhanced_historical(
             "note": "Training uses Twelve Data API for real OHLCV data. Check /status endpoint for progress."
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/train-fast")
@@ -640,7 +640,7 @@ async def train_fast_parallel(
         }
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/train-all")
@@ -851,7 +851,7 @@ async def train_all_systems(
             "note": f"Training {total_coins} coins. Use WebSocket for real-time updates."
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 class UniverseTrainingRequest(BaseModel):
@@ -951,7 +951,7 @@ async def train_with_full_universe(
             "note": f"Training {len(training_coins)} coins. May take 10-15 minutes. Check /status endpoint."
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/ai-weights")
@@ -992,7 +992,7 @@ async def get_ai_weights(db = Depends(get_database)):
             }
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/update-weights")
@@ -1024,7 +1024,7 @@ async def update_ai_weights(
             "current_weights": trainer.learned_weights
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 

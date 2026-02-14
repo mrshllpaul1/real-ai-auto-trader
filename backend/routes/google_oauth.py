@@ -151,9 +151,9 @@ async def exchange_session(request: SessionRequest, response: Response):
         }
         
     except httpx.RequestError as e:
-        raise HTTPException(status_code=503, detail=f"Auth service unavailable: {str(e)}")
+        raise HTTPException(status_code=503, detail="An internal error occurred. Please try again.")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/me")

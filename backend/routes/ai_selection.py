@@ -66,7 +66,7 @@ async def select_best_coins(request: SelectionRequest):
         }
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/selection-status")
@@ -109,7 +109,7 @@ async def run_weekly_simulation(request: SimulationRequest, background_tasks: Ba
         }
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/simulation-results")

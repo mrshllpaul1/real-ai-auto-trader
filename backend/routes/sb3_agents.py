@@ -121,7 +121,7 @@ async def initialize_manager():
         }
     except Exception as e:
         logger.error(f"Manager initialization error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/create-environment")
@@ -181,7 +181,7 @@ async def create_environment(request: CreateEnvironmentRequest = None):
         }
     except Exception as e:
         logger.error(f"Environment creation error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/create-agent")
@@ -217,7 +217,7 @@ async def create_agent(request: CreateAgentRequest):
         }
     except Exception as e:
         logger.error(f"Agent creation error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/train")
@@ -263,7 +263,7 @@ async def train_agent(request: TrainAgentRequest, background_tasks: BackgroundTa
             "message": "Training started in background. Check /status for progress."
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/predict")
@@ -301,7 +301,7 @@ async def predict_action(request: PredictRequest):
             "timestamp": datetime.utcnow().isoformat()
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/evaluate")
@@ -329,7 +329,7 @@ async def evaluate_agent(request: EvaluateRequest):
             "timestamp": datetime.utcnow().isoformat()
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/agents")
@@ -391,7 +391,7 @@ async def delete_agent(agent_name: str):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/algorithms")

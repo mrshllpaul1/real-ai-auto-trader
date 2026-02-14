@@ -45,7 +45,7 @@ async def create_profile(
             profile.is_public
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/profile/{user_id}")
 async def get_profile(
@@ -61,7 +61,7 @@ async def get_profile(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 # ============= LEADERBOARD =============
 
@@ -76,7 +76,7 @@ async def get_leaderboard(
         traders = await service.get_leaderboard(sort_by, limit)
         return {"traders": traders, "count": len(traders)}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/leaderboard/weekly")
 async def get_weekly_top(
@@ -87,7 +87,7 @@ async def get_weekly_top(
     try:
         return await service.get_weekly_top_performers(limit)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 # ============= FOLLOWING =============
 
@@ -101,7 +101,7 @@ async def follow_trader(
     try:
         return await service.follow_trader(user_id, trader_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.delete("/follow/{trader_id}")
 async def unfollow_trader(
@@ -113,7 +113,7 @@ async def unfollow_trader(
     try:
         return await service.unfollow_trader(user_id, trader_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/following/{user_id}")
 async def get_following(
@@ -125,7 +125,7 @@ async def get_following(
         following = await service.get_following(user_id)
         return {"following": following, "count": len(following)}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/followers/{user_id}")
 async def get_followers(
@@ -137,7 +137,7 @@ async def get_followers(
         followers = await service.get_followers(user_id)
         return {"followers": followers, "count": len(followers)}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 # ============= COPY TRADING =============
 
@@ -152,7 +152,7 @@ async def enable_copy_trading(
     try:
         return await service.enable_copy_trading(user_id, trader_id, settings.dict())
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.delete("/copy/{trader_id}")
 async def disable_copy_trading(
@@ -164,7 +164,7 @@ async def disable_copy_trading(
     try:
         return await service.disable_copy_trading(user_id, trader_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/copy-settings/{user_id}")
 async def get_copy_settings(
@@ -176,7 +176,7 @@ async def get_copy_settings(
         settings = await service.get_copy_settings(user_id)
         return {"settings": settings, "count": len(settings)}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 # ============= STRATEGIES =============
 
@@ -190,7 +190,7 @@ async def share_strategy(
     try:
         return await service.share_strategy(user_id, strategy.dict())
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/strategies")
 async def get_shared_strategies(
@@ -203,7 +203,7 @@ async def get_shared_strategies(
         strategies = await service.get_shared_strategies(sort_by, limit)
         return {"strategies": strategies, "count": len(strategies)}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/strategies/{strategy_id}/like")
 async def like_strategy(
@@ -215,7 +215,7 @@ async def like_strategy(
     try:
         return await service.like_strategy(user_id, strategy_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/strategies/{strategy_id}/copy")
 async def copy_strategy(
@@ -227,7 +227,7 @@ async def copy_strategy(
     try:
         return await service.copy_strategy(user_id, strategy_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 # ============= ACTIVITY FEED =============
 
@@ -242,4 +242,4 @@ async def get_activity_feed(
         activities = await service.get_activity_feed(user_id, limit)
         return {"activities": activities, "count": len(activities)}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")

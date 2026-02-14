@@ -127,7 +127,7 @@ async def create_dca_bot(config: DCAConfig):
         return {"success": True, "bot": bot, "message": f"DCA bot created for {config.symbol}"}
     except Exception as e:
         logger.error(f"Error creating DCA bot: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.delete("/dca/{bot_id}")
@@ -144,7 +144,7 @@ async def delete_dca_bot(bot_id: str):
         raise
     except Exception as e:
         logger.error(f"Error deleting DCA bot: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/dca/{bot_id}/pause")
@@ -155,7 +155,7 @@ async def pause_dca_bot(bot_id: str):
             await _db.dca_bots.update_one({"id": bot_id}, {"$set": {"status": "paused"}})
         return {"success": True, "message": f"DCA bot {bot_id} paused"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/dca/{bot_id}/resume")
@@ -169,7 +169,7 @@ async def resume_dca_bot(bot_id: str):
             )
         return {"success": True, "message": f"DCA bot {bot_id} resumed"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 # ==================== TRAILING STOP ENDPOINTS ====================
@@ -231,7 +231,7 @@ async def create_trailing_stop(config: TrailingStopConfig):
         return {"success": True, "order": order, "message": f"Trailing stop created for {config.symbol}"}
     except Exception as e:
         logger.error(f"Error creating trailing stop: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.delete("/trailing-stops/{order_id}")
@@ -242,7 +242,7 @@ async def cancel_trailing_stop(order_id: str):
             await _db.trailing_stops.delete_one({"id": order_id})
         return {"success": True, "message": f"Trailing stop {order_id} cancelled"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 # ==================== CONDITIONAL ORDERS ENDPOINTS ====================
@@ -302,7 +302,7 @@ async def create_conditional_order(config: ConditionalOrderConfig):
         return {"success": True, "order": order, "message": f"Conditional order created for {config.symbol}"}
     except Exception as e:
         logger.error(f"Error creating conditional order: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.delete("/conditional/{order_id}")
@@ -313,7 +313,7 @@ async def cancel_conditional_order(order_id: str):
             await _db.conditional_orders.delete_one({"id": order_id})
         return {"success": True, "message": f"Conditional order {order_id} cancelled"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 # ==================== ALL ORDERS SUMMARY ====================

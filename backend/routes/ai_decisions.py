@@ -109,7 +109,7 @@ async def get_recent_decisions(
             "fetched_at": datetime.now().isoformat()
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/explain/{coin_id}")
@@ -178,7 +178,7 @@ async def explain_coin_decision(
         
         return explanation
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/factors")
@@ -236,7 +236,7 @@ async def get_decision_factors(
             "data_source": "REAL_MARKET_DATA"
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 def _extract_factors(strategy: dict) -> List[Dict[str, Any]]:

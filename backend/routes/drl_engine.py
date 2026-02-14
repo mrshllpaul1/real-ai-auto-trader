@@ -125,7 +125,7 @@ async def initialize_engine():
         }
     except Exception as e:
         logger.error(f"Engine initialization error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/train")
@@ -159,7 +159,7 @@ async def train_models(request: TrainRequest, background_tasks: BackgroundTasks)
             }
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/signal")
@@ -183,7 +183,7 @@ async def get_trading_signal(request: SignalRequest):
         
         return signal
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/execute")
@@ -205,7 +205,7 @@ async def execute_trade(request: ExecuteRequest):
         
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/hft/metrics")
@@ -252,7 +252,7 @@ async def run_backtest(days: int = 30, background_tasks: BackgroundTasks = None)
             results = await engine.backtester.run_backtest(days)
             return results
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/sentiment/analyze")
@@ -266,7 +266,7 @@ async def analyze_sentiment(texts: List[str]):
         result = await engine.sentiment_analyzer.analyze_multiple(texts)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/components")

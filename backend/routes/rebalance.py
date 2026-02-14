@@ -26,7 +26,7 @@ async def get_target_allocation(
     try:
         return await rebalancer.get_target_allocation(user_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/target/{user_id}")
 async def set_target_allocation(
@@ -40,7 +40,7 @@ async def set_target_allocation(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/portfolio/{user_id}")
 async def get_portfolio(
@@ -51,7 +51,7 @@ async def get_portfolio(
     try:
         return await rebalancer.get_current_portfolio(user_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/calculate/{user_id}")
 async def calculate_rebalance(
@@ -62,7 +62,7 @@ async def calculate_rebalance(
     try:
         return await rebalancer.calculate_rebalance(user_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/execute/{user_id}")
 async def execute_rebalance(
@@ -74,7 +74,7 @@ async def execute_rebalance(
     try:
         return await rebalancer.execute_rebalance(user_id, mode)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/history/{user_id}")
 async def get_rebalance_history(
@@ -87,7 +87,7 @@ async def get_rebalance_history(
         history = await rebalancer.get_rebalance_history(user_id, limit)
         return {"history": history, "count": len(history)}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/auto-config/{user_id}")
 async def get_auto_rebalance_config(
@@ -98,7 +98,7 @@ async def get_auto_rebalance_config(
     try:
         return await rebalancer.get_auto_rebalance_config(user_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/auto-config/{user_id}")
 async def set_auto_rebalance_config(
@@ -115,4 +115,4 @@ async def set_auto_rebalance_config(
             config.threshold_pct
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")

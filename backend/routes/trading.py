@@ -98,7 +98,7 @@ async def execute_trade(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/history/{user_id}")
 async def get_trade_history(
@@ -112,7 +112,7 @@ async def get_trade_history(
         trades = await trading_engine.get_trade_history(user_id, mode, limit)
         return {"trades": trades, "count": len(trades)}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 # Cache for portfolio performance
@@ -160,7 +160,7 @@ async def get_portfolio_performance(
         
         return performance
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/kraken/trades")
 async def get_kraken_trades(limit: int = 50):

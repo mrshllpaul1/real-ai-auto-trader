@@ -32,7 +32,7 @@ async def get_all_news(
             "filtered_by": currency_list
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/sentiment/{coin_id}")
 async def analyze_coin_sentiment(
@@ -52,7 +52,7 @@ async def analyze_coin_sentiment(
         
         return sentiment
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/market-moving")
 async def get_market_moving_news(
@@ -68,7 +68,7 @@ async def get_market_moving_news(
             "impact": "high"
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/cache-update")
 async def update_news_cache(
@@ -93,4 +93,4 @@ async def update_news_cache(
             "items_cached": len(news)
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")

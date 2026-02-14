@@ -157,7 +157,7 @@ async def get_leaderboard(
         }
     except Exception as e:
         logger.error(f"Error getting leaderboard: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 # =============================================================================
@@ -194,7 +194,7 @@ async def create_trader_profile(
         return {"status": "success", "message": "Trader profile created", "profile": profile_data}
     except Exception as e:
         logger.error(f"Error creating trader profile: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/profile/{trader_id}")
@@ -229,7 +229,7 @@ async def get_trader_profile(trader_id: str, db = Depends(get_database)):
         raise
     except Exception as e:
         logger.error(f"Error getting trader profile: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 # =============================================================================
@@ -295,7 +295,7 @@ async def follow_trader(
         raise
     except Exception as e:
         logger.error(f"Error following trader: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/unfollow/{trader_id}")
@@ -319,7 +319,7 @@ async def unfollow_trader(
         raise
     except Exception as e:
         logger.error(f"Error unfollowing trader: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/following")
@@ -347,7 +347,7 @@ async def get_following(user_id: str = "default_user", db = Depends(get_database
         }
     except Exception as e:
         logger.error(f"Error getting following list: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.put("/settings/{trader_id}")
@@ -378,7 +378,7 @@ async def update_copy_settings(
         raise
     except Exception as e:
         logger.error(f"Error updating copy settings: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 # =============================================================================
@@ -415,7 +415,7 @@ async def get_copy_history(
         }
     except Exception as e:
         logger.error(f"Error getting copy history: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/stats")
@@ -446,4 +446,4 @@ async def get_copy_trading_stats(user_id: str = "default_user", db = Depends(get
         }
     except Exception as e:
         logger.error(f"Error getting copy trading stats: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")

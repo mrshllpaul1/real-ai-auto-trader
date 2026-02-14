@@ -168,7 +168,7 @@ async def start_autopilot():
         growth_engine.autopilot_active = True
         return {'success': True, 'message': 'Autopilot started', 'autopilot_active': True}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/stop")
@@ -181,4 +181,4 @@ async def stop_autopilot():
         growth_engine.autopilot_active = False
         return {'success': True, 'message': 'Autopilot stopped', 'autopilot_active': False}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")

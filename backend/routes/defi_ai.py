@@ -85,7 +85,7 @@ async def get_yield_prediction(
         return prediction
     except Exception as e:
         logger.error(f"Error generating yield prediction: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/wallet-prediction/{address}")
@@ -123,7 +123,7 @@ async def get_wallet_prediction(
         }
     except Exception as e:
         logger.error(f"Error generating wallet prediction: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/protocol-analysis/{protocol}")
@@ -154,7 +154,7 @@ async def analyze_protocol(protocol: str):
         }
     except Exception as e:
         logger.error(f"Error analyzing protocol: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/optimize-strategy")
@@ -196,4 +196,4 @@ async def optimize_defi_strategy(
         }
     except Exception as e:
         logger.error(f"Error optimizing strategy: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")

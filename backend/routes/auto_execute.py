@@ -86,7 +86,7 @@ async def start_auto_execution(
             "risk_profile": executor.risk_profile
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/stop")
 async def stop_auto_execution(executor = Depends(get_auto_executor)):
@@ -95,7 +95,7 @@ async def stop_auto_execution(executor = Depends(get_auto_executor)):
         executor.stop_auto_execution()
         return {"message": "Auto-execution stopped", "status": "stopped"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/status")
 async def get_execution_status(executor = Depends(get_auto_executor)):
@@ -103,7 +103,7 @@ async def get_execution_status(executor = Depends(get_auto_executor)):
     try:
         return await executor.get_status()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/execute-now")
 async def execute_now(executor = Depends(get_auto_executor)):
@@ -115,7 +115,7 @@ async def execute_now(executor = Depends(get_auto_executor)):
             **result
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 # ============= RISK PROFILE ENDPOINTS =============
 
@@ -129,7 +129,7 @@ async def get_risk_profile(
         await executor.load_risk_profile(user_id)
         return executor.risk_profile
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/risk-profile")
 async def update_risk_profile(
@@ -146,7 +146,7 @@ async def update_risk_profile(
             "risk_profile": result
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/enable")
 async def enable_auto_execution(
@@ -163,7 +163,7 @@ async def enable_auto_execution(
             "mode": mode
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/disable")
 async def disable_auto_execution(
@@ -175,7 +175,7 @@ async def disable_auto_execution(
         await executor.update_risk_profile(user_id, {'enabled': False})
         return {"message": "Auto-execution disabled", "enabled": False}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 # ============= POSITIONS ENDPOINTS =============
 
@@ -193,7 +193,7 @@ async def get_positions(
             "positions": positions
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/positions/open")
 async def get_open_positions(executor = Depends(get_auto_executor)):
@@ -205,7 +205,7 @@ async def get_open_positions(executor = Depends(get_auto_executor)):
             "positions": positions
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/positions/close")
 async def close_position(
@@ -228,7 +228,7 @@ async def close_position(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 # ============= AI LEARNING ENDPOINTS =============
 
@@ -238,7 +238,7 @@ async def get_ai_status(ai = Depends(get_ai_engine)):
     try:
         return await ai.get_learning_status()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/ai/weights")
 async def get_signal_weights(ai = Depends(get_ai_engine)):
@@ -249,7 +249,7 @@ async def get_signal_weights(ai = Depends(get_ai_engine)):
             "description": "Weights > 1.0 mean signal is performing better than average"
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/ai/performance")
 async def get_ai_performance(ai = Depends(get_ai_engine)):
@@ -257,7 +257,7 @@ async def get_ai_performance(ai = Depends(get_ai_engine)):
     try:
         return await ai.analyze_performance()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/ai/optimize")
 async def optimize_strategy(ai = Depends(get_ai_engine)):
@@ -266,7 +266,7 @@ async def optimize_strategy(ai = Depends(get_ai_engine)):
         result = await ai.optimize_strategy()
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/ai/insights")
 async def get_ai_insights(ai = Depends(get_ai_engine)):
@@ -274,7 +274,7 @@ async def get_ai_insights(ai = Depends(get_ai_engine)):
     try:
         return await ai.generate_ai_insights()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/ai/start-learning")
 async def start_continuous_learning(
@@ -294,7 +294,7 @@ async def start_continuous_learning(
             "learning_interval_seconds": ai.learning_interval
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/ai/stop-learning")
 async def stop_continuous_learning(ai = Depends(get_ai_engine)):
@@ -303,4 +303,4 @@ async def stop_continuous_learning(ai = Depends(get_ai_engine)):
         ai.stop_learning()
         return {"message": "AI learning stopped", "status": "stopped"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")

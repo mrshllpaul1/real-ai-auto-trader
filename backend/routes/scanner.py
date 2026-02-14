@@ -70,7 +70,7 @@ async def start_scanner(
             "status": "starting"
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/stop")
 async def stop_scanner(scanner = Depends(get_scanner)):
@@ -79,7 +79,7 @@ async def stop_scanner(scanner = Depends(get_scanner)):
         scanner.stop_scanner()
         return {"message": "Scanner stopped", "status": "stopped"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/status")
 async def get_scanner_status(scanner = Depends(get_scanner)):
@@ -87,7 +87,7 @@ async def get_scanner_status(scanner = Depends(get_scanner)):
     try:
         return await scanner.get_scanner_status()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/scan-now")
 async def scan_now(scanner = Depends(get_scanner)):
@@ -134,7 +134,7 @@ async def scan_now(scanner = Depends(get_scanner)):
             "all_alerts": alerts
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/alerts")
 async def get_alerts(
@@ -158,7 +158,7 @@ async def get_alerts(
             "alerts": alerts
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/alerts/high")
 async def get_high_alerts(scanner = Depends(get_scanner)):
@@ -173,7 +173,7 @@ async def get_high_alerts(scanner = Depends(get_scanner)):
             "alerts": high_alerts
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/alerts/{coin_id}")
 async def get_coin_alerts(coin_id: str, scanner = Depends(get_scanner)):
@@ -187,7 +187,7 @@ async def get_coin_alerts(coin_id: str, scanner = Depends(get_scanner)):
         
         return coin_alert
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/history")
 async def get_alert_history(
@@ -204,7 +204,7 @@ async def get_alert_history(
             "history": history
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/coins")
 async def get_monitored_coins(scanner = Depends(get_scanner)):
@@ -225,4 +225,4 @@ async def set_monitored_coins(coins: List[str], scanner = Depends(get_scanner)):
             "coins": coins
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")

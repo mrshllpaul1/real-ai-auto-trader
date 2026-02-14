@@ -25,7 +25,7 @@ async def send_email(request: SendEmailRequest):
         )
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/test-gem-alert")
 async def test_gem_alert(request: TestGemEmailRequest):
@@ -68,7 +68,7 @@ async def test_gem_alert(request: TestGemEmailRequest):
             **result
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/settings")
 async def get_email_settings():

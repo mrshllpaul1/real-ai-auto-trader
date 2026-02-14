@@ -44,7 +44,7 @@ async def run_backtest(
         )
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/compare")
 async def compare_strategies(
@@ -60,7 +60,7 @@ async def compare_strategies(
         )
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/history")
 async def get_backtest_history(
@@ -71,7 +71,7 @@ async def get_backtest_history(
     try:
         return await backtester.get_backtest_history(limit)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/presets")
 async def get_strategy_presets():

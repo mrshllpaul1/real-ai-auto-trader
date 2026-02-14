@@ -42,7 +42,7 @@ async def get_notifications(limit: int = 50):
             "notifications": notifications
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/mark-read/{notification_id}")
 async def mark_read(notification_id: str):
@@ -52,7 +52,7 @@ async def mark_read(notification_id: str):
         await service.mark_notification_read(notification_id)
         return {"message": "Notification marked as read"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/mark-all-read")
 async def mark_all_read():
@@ -62,7 +62,7 @@ async def mark_all_read():
         await service.mark_all_read()
         return {"message": "All notifications marked as read"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/settings")
 async def get_settings(user_id: str = 'default'):
@@ -72,7 +72,7 @@ async def get_settings(user_id: str = 'default'):
         settings = await service.get_notification_settings(user_id)
         return settings
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/settings")
 async def update_settings(
@@ -89,7 +89,7 @@ async def update_settings(
             "settings": settings
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/test-push")
 async def test_push(request: TestPushRequest = None):
@@ -110,4 +110,4 @@ async def test_push(request: TestPushRequest = None):
         )
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")

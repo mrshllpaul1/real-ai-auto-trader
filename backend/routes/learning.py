@@ -33,7 +33,7 @@ async def get_strategy_learning_insights(
         insights = await learning_engine.get_learning_insights(strategy_id)
         return insights
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/indicators/performance")
 async def get_indicator_performance(
@@ -59,7 +59,7 @@ async def get_indicator_performance(
                 "note": "Data loading in progress. Refresh in a few seconds."
             }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/report")
 async def get_learning_report(
@@ -88,7 +88,7 @@ async def get_learning_report(
                 "note": "Data loading in progress. Refresh in a few seconds."
             }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/train")
 async def trigger_continuous_learning(
@@ -102,7 +102,7 @@ async def trigger_continuous_learning(
             "status": "success"
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/record-outcome")
 async def record_trade_outcome(
@@ -154,7 +154,7 @@ async def record_trade_outcome(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 

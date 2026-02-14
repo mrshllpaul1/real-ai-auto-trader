@@ -44,7 +44,7 @@ async def allocate_funds(
             'protection': 'Bot will ONLY trade with allocated funds. Your other Kraken assets are untouched.'
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/allocation/{user_id}")
 async def get_allocation(
@@ -56,7 +56,7 @@ async def get_allocation(
         result = await manager.get_allocation(user_id)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/portfolio/{user_id}")
 async def get_bot_portfolio(
@@ -68,7 +68,7 @@ async def get_bot_portfolio(
         portfolio = await manager.get_bot_portfolio(user_id)
         return portfolio
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/value/{user_id}")
 async def get_portfolio_value(
@@ -91,7 +91,7 @@ async def get_portfolio_value(
         value = await manager.calculate_portfolio_value(user_id, current_prices)
         return value
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/withdraw-profits")
 async def withdraw_profits(
@@ -106,7 +106,7 @@ async def withdraw_profits(
         )
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/summary/{user_id}")
 async def get_allocation_summary(
@@ -118,4 +118,4 @@ async def get_allocation_summary(
         summary = await manager.get_allocation_summary(user_id)
         return summary
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")

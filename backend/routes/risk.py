@@ -27,7 +27,7 @@ async def get_risk_settings(
         settings = await risk_manager.get_risk_settings(user_id)
         return settings
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.put("/settings/{user_id}")
 async def update_risk_settings(
@@ -43,4 +43,4 @@ async def update_risk_settings(
         )
         return updated_settings
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")

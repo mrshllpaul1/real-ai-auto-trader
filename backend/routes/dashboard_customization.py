@@ -163,7 +163,7 @@ async def get_dashboard_layout(
         return layout
     except Exception as e:
         logger.error(f"Error getting dashboard layout: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/layout")
@@ -201,7 +201,7 @@ async def save_dashboard_layout(
         return {"status": "success", "layout": layout_data}
     except Exception as e:
         logger.error(f"Error saving dashboard layout: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/layouts")
@@ -228,7 +228,7 @@ async def list_saved_layouts(
         return {"layouts": layouts}
     except Exception as e:
         logger.error(f"Error listing layouts: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.delete("/layout/{layout_id}")
@@ -252,7 +252,7 @@ async def delete_layout(
         raise
     except Exception as e:
         logger.error(f"Error deleting layout: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 # =============================================================================
@@ -289,7 +289,7 @@ async def get_theme(
         return theme
     except Exception as e:
         logger.error(f"Error getting theme: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/theme")
@@ -315,7 +315,7 @@ async def save_theme(
         return {"status": "success", "theme": theme_data}
     except Exception as e:
         logger.error(f"Error saving theme: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/theme/presets")
@@ -437,7 +437,7 @@ async def get_preferences(
         return prefs
     except Exception as e:
         logger.error(f"Error getting preferences: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/preferences")
@@ -463,7 +463,7 @@ async def save_preferences(
         return {"status": "success", "preferences": pref_data}
     except Exception as e:
         logger.error(f"Error saving preferences: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 # =============================================================================
@@ -623,7 +623,7 @@ async def add_widget(
         return {"status": "added", "widget": widget.dict()}
     except Exception as e:
         logger.error(f"Error adding widget: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.delete("/widget/{widget_id}")
@@ -650,4 +650,4 @@ async def remove_widget(
         raise
     except Exception as e:
         logger.error(f"Error removing widget: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")

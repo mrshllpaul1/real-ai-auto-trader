@@ -126,7 +126,7 @@ async def initialize_engine():
         }
     except Exception as e:
         logger.error(f"Engine initialization error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/train")
@@ -174,7 +174,7 @@ async def train_models(request: TrainRequest, background_tasks: BackgroundTasks)
             }
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/predict")
@@ -213,7 +213,7 @@ async def get_prediction(request: PredictRequest):
         
         return signal
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/ensemble/status")
@@ -334,7 +334,7 @@ async def run_simulation(days: int = 30, episodes: int = 10):
             "final_metrics": engine.environment.get_metrics()
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/components")

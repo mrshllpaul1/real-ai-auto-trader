@@ -71,7 +71,7 @@ async def start_orderbook_stream(config: OrderBookConfig = None):
         
     except Exception as e:
         logger.error(f"Failed to start order book stream: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/orderbook/stop")
@@ -208,7 +208,7 @@ async def initialize_rainbow(
         
     except Exception as e:
         logger.error(f"Failed to initialize Rainbow DQN: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/action")
@@ -246,7 +246,7 @@ async def get_action(request: ActionRequest):
         
     except Exception as e:
         logger.error(f"Action selection failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/train/start")

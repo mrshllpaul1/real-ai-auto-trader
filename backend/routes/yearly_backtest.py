@@ -134,7 +134,7 @@ async def run_yearly_backtest(
         
     except Exception as e:
         logger.error(f"Failed to start backtest: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/status/{backtest_id}")
@@ -195,7 +195,7 @@ async def run_quick_yearly_test(year: int = 2025, initial_capital: float = 1000)
         
     except Exception as e:
         logger.error(f"Quick test failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/multi-year")
@@ -224,7 +224,7 @@ async def run_multi_year_backtest_endpoint(request: MultiYearBacktestRequest):
         
     except Exception as e:
         logger.error(f"Multi-year backtest failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/recommended-portfolio")

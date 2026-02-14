@@ -48,7 +48,7 @@ async def clear_cache(prefix: str = None) -> Dict[str, Any]:
         }
     except Exception as e:
         logger.error(f"Failed to clear cache: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/circuit-breakers")
@@ -101,7 +101,7 @@ async def create_database_indexes() -> Dict[str, Any]:
         }
     except Exception as e:
         logger.error(f"Failed to create indexes: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/summary")

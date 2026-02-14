@@ -176,7 +176,7 @@ async def generate_strategies(
         }
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 async def _generate_strategies_background(user_id: str, coin_pairs: List[str]):
@@ -322,7 +322,7 @@ async def get_strategies(
             "count": len(strategies)
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/detail/{strategy_id}")
 async def get_strategy_detail(
@@ -340,7 +340,7 @@ async def get_strategy_detail(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/activate/{strategy_id}")
 async def activate_strategy(
@@ -362,7 +362,7 @@ async def activate_strategy(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/deactivate/{strategy_id}")
 async def deactivate_strategy(
@@ -384,4 +384,4 @@ async def deactivate_strategy(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")

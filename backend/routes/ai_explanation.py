@@ -44,7 +44,7 @@ async def explain_signal(request: SignalExplanationRequest):
         )
         return explanation
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/signal/{coin_id}")

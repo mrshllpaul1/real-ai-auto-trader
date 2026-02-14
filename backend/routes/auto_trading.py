@@ -38,7 +38,7 @@ async def configure_auto_trading(
             'config': config.model_dump()
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/config/{user_id}")
 async def get_auto_trading_config(
@@ -63,7 +63,7 @@ async def get_auto_trading_config(
             'config': config
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/start")
 async def start_auto_trading(
@@ -102,7 +102,7 @@ async def start_auto_trading(
             'mobile_compatible': True
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/stop")
 async def stop_auto_trading(db = Depends(get_database)):
@@ -132,7 +132,7 @@ async def stop_auto_trading(db = Depends(get_database)):
             'status': 'stopped'
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/status")
 async def get_auto_trading_status(db = Depends(get_database)):
@@ -167,4 +167,4 @@ async def get_auto_trading_status(db = Depends(get_database)):
             **status
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")

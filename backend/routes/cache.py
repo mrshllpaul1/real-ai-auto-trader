@@ -46,7 +46,7 @@ async def get_cache_statistics():
             "health": health.get("status", "unknown")
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/health")
@@ -85,7 +85,7 @@ async def clear_all_cache_data():
             "timestamp": "now"
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/clear/expired")
@@ -103,7 +103,7 @@ async def clear_expired_cache_data():
             "timestamp": "now"
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/clear/pattern/{pattern}")
@@ -123,7 +123,7 @@ async def clear_cache_pattern(pattern: str):
             "pattern": pattern
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/keys/count")

@@ -65,7 +65,7 @@ async def get_all_entries():
         }
     except Exception as e:
         logger.error(f"Error fetching entries: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/{symbol}")
@@ -89,7 +89,7 @@ async def get_entry_price(symbol: str):
         raise
     except Exception as e:
         logger.error(f"Error fetching entry for {symbol}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/correct")
@@ -127,7 +127,7 @@ async def correct_entry_price(request: ManualEntryRequest):
         raise
     except Exception as e:
         logger.error(f"Error correcting entry price: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/correct/bulk")
@@ -187,7 +187,7 @@ async def delete_entry(symbol: str):
         raise
     except Exception as e:
         logger.error(f"Error deleting entry: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/{symbol}/history")
@@ -207,7 +207,7 @@ async def get_correction_history(symbol: str):
         }
     except Exception as e:
         logger.error(f"Error fetching history for {symbol}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.post("/sync-from-kraken")
@@ -276,4 +276,4 @@ async def sync_from_kraken_holdings():
         raise
     except Exception as e:
         logger.error(f"Error syncing from Kraken: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")

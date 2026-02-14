@@ -32,7 +32,7 @@ async def create_alert(request: CreateAlertRequest, user_id: str = 'default'):
         alert = await service.create_alert(user_id, request.dict())
         return {"message": "Alert created", "alert": alert}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.get("/")
 async def get_alerts(user_id: str = 'default'):
@@ -42,7 +42,7 @@ async def get_alerts(user_id: str = 'default'):
         alerts = await service.get_user_alerts(user_id)
         return {"alerts": alerts, "count": len(alerts)}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.delete("/{alert_id}")
 async def delete_alert(alert_id: str):
@@ -54,7 +54,7 @@ async def delete_alert(alert_id: str):
             return {"message": "Alert deleted"}
         raise HTTPException(status_code=404, detail="Alert not found")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 @router.post("/check")
 async def check_alerts(prices: dict):
@@ -64,4 +64,4 @@ async def check_alerts(prices: dict):
         triggered = await service.check_alerts(prices)
         return {"triggered": triggered, "count": len(triggered)}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")

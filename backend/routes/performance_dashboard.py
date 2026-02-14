@@ -205,7 +205,7 @@ async def get_performance_dashboard():
         
     except Exception as e:
         logger.error(f"Performance dashboard error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/summary")
@@ -301,7 +301,7 @@ async def record_performance_snapshot():
             }
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
 
 @router.get("/history")

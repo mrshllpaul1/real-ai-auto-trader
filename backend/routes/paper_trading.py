@@ -212,4 +212,4 @@ async def run_quick_test():
         result = await _paper_trader.run_simulation(days_back=7)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
