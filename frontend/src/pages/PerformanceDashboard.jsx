@@ -259,7 +259,7 @@ const PerformanceDashboard = () => {
           </div>
           
           <div className="flex items-center gap-2">
-            {/* WebSocket Status */}
+            {/* Live Data Status */}
             <Badge
               className={`px-2 py-1 ${
                 wsConnected ? 'bg-[#00FF94]/20 text-[#00FF94]' : 'bg-[#FF0055]/20 text-[#FF0055]'
@@ -267,7 +267,7 @@ const PerformanceDashboard = () => {
               title={wsConnected ? 'Real-time updates active' : 'Reconnecting...'}
             >
               {wsConnected ? <Wifi size={12} className="mr-1" /> : <WifiOff size={12} className="mr-1" />}
-              {wsConnected ? 'LIVE' : 'OFFLINE'}
+              {wsConnected ? 'LIVE' : 'POLLING'}
             </Badge>
             
             {/* Health Status */}
