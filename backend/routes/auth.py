@@ -246,7 +246,8 @@ async def get_exchange_credentials(user_id: str, exchange: str, db):
         
         return decrypted
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to decrypt {exchange} credentials: {str(e)}")
+        logger.error(f"Failed to decrypt {exchange} credentials: {e}")
+        raise HTTPException(status_code=500, detail="Failed to decrypt exchange credentials. Encryption key may have changed.")
 
 
 @router.get("/exchanges/status")
