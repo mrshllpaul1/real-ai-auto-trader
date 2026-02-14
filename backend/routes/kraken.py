@@ -216,7 +216,13 @@ async def get_trade_history(limit: int = Query(50, ge=1, le=500)):
             "total_available": history.get("count", 0)
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Kraken API error: {str(e)}")
+        # Return empty history gracefully instead of 500
+        return {
+            "trades": [],
+            "count": 0,
+            "total_available": 0,
+            "error": str(e)
+        }
 
 
 @router.post("/order")
