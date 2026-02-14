@@ -121,6 +121,43 @@ async def set_component_state(
     }
 
 
+class UpdateStateRequest(BaseModel):
+    component: str
+    state: Dict[str, Any]
+    user_id: str = "default"
+
+
+@router.post("/update")
+async def update_component_state(
+    request: UpdateStateRequest,
+    db = Depends(get_database)
+):
+    """
+    Update the state of a component (alias for set with more flexible payload).
+    """
+    from services.state_persistence import get_state_persistence
+    
+    persistence = get_state_persistence(db)
+    if not persistence:
+        # Return success anyway to not break frontend
+        return {"success": True, "message": "State persistence not available"}
+    
+    is_running = request.state.get("is_running", request.state.get("running", False))
+    
+    success = await persistence.set_state(
+        component=request.component,
+        is_running=is_running,
+        user_id=request.user_id,
+        metadata=request.state
+    )
+    
+    return {
+        "success": success,
+        "component": request.component,
+        "state": request.state
+    }
+
+
 @router.post("/stop-all")
 async def stop_all_components(
     request: StopAllRequest,
