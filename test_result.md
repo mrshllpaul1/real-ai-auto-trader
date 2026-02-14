@@ -515,14 +515,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Production deployment fixes - Lightweight error recovery and state persistence"
+    - "8 Enhancements Implementation - UI/UX + Functional + Technical fixes"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
     - agent: "main"
-    - message: "PRODUCTION FIX APPLIED - July 2025. Fixed event loop blocking issues: 1) Simplified error_recovery.py to be non-blocking with memory-only storage. 2) Optimized state_persistence.py with memory-first approach and fire-and-forget DB operations. 3) Updated error_management.py routes to be lightweight. 4) Expanded ETag middleware skip list to prevent processing heavy endpoints. All response times now under 25ms."
+    - message: "8 ENHANCEMENTS IMPLEMENTED - Feb 14, 2026. 1) Command Center Dashboard Upgrade - Added portfolio donut chart, sparkline, coin icons, allocation bars. 2) AI Hub duplicate banner fix - Removed duplicate VisualTrainingProgress from AIHub.jsx and AICommandCenter.jsx. 3) Sidebar polish - Added system health indicator and user profile section at bottom. 4) Global Command Palette (Ctrl+K) - New CommandPalette.jsx component for searching all pages and quick actions. 5) Portfolio sparkline - Mini 24h trend chart on Kraken Portfolio card. 6) Quick Actions panel - 6 quick-action buttons on Command Center. 7) WebSocket error cleanup - Replaced WebSocket with HTTP polling in AIPrediction.jsx and PerformanceDashboard.jsx. 8) API consistency - Added /journal/add alias endpoint for backward compatibility. Please test backend to verify journal/add endpoint and core API health."
 
 agent_communication:
     - agent: "testing"
