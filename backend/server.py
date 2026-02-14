@@ -390,7 +390,15 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import security headers middleware: {e}")
 
-# 2. Error Monitoring
+# 2. Audit Logging (logs sensitive operations)
+try:
+    from middleware.audit_logger import AuditLogMiddleware
+    app.add_middleware(AuditLogMiddleware)
+    logger.info("✅ Audit Logging middleware enabled")
+except ImportError as e:
+    logger.warning(f"Could not import audit logging middleware: {e}")
+
+# 3. Error Monitoring
 try:
     from middleware.error_monitoring import ErrorMonitoringMiddleware
     app.add_middleware(ErrorMonitoringMiddleware, log_all_requests=False)
@@ -398,7 +406,7 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import error monitoring middleware: {e}")
 
-# 3. Rate Limiting
+# 4. Rate Limiting
 try:
     from middleware.rate_limiter import RateLimitMiddleware
     app.add_middleware(RateLimitMiddleware)
@@ -406,7 +414,7 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import rate limiting middleware: {e}")
 
-# 4. Request Validation
+# 5. Request Validation (enhanced with NoSQL injection detection)
 try:
     from middleware.request_validation import ValidationMiddleware
     app.add_middleware(ValidationMiddleware)
@@ -414,7 +422,7 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import validation middleware: {e}")
 
-# 5. ETag Middleware - 40-60% bandwidth reduction for unchanged responses
+# 6. ETag Middleware - 40-60% bandwidth reduction for unchanged responses
 try:
     from middleware.etag_middleware import ETagMiddleware
     app.add_middleware(ETagMiddleware, min_size=100)
@@ -422,17 +430,19 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import ETag middleware: {e}")
 
-# 6. GZIP Compression - Compress responses >500 bytes for 60-80% smaller transfers
+# 7. GZIP Compression - Compress responses >500 bytes for 60-80% smaller transfers
 app.add_middleware(GZipMiddleware, minimum_size=500)
 logger.info("✅ GZIP Compression middleware enabled (min_size=500 bytes)")
 
 # CORS middleware (must be after custom middleware)
+# Tighten allowed methods to only those actually used
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
     allow_origins=CORS_ORIGINS,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["X-Request-ID", "X-RateLimit-Remaining-Minute", "X-RateLimit-Remaining-Hour", "X-Audit-ID"],
 )
 
 
