@@ -37,62 +37,41 @@ const STATUS_COLORS = {
   unknown: '#666666',
 };
 
-// WebSocket hook for real-time performance metrics
+// HTTP Polling hook for real-time performance metrics
+// (WebSocket disabled - Kubernetes ingress doesn't support WS protocol upgrade)
 const usePerformanceWebSocket = (onMetrics) => {
   const [wsConnected, setWsConnected] = useState(false);
-  const wsRef = useRef(null);
-  const reconnectTimeoutRef = useRef(null);
+  const intervalRef = useRef(null);
 
   useEffect(() => {
     const API_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '';
-    const wsUrl = API_URL.replace('https://', 'wss://').replace('http://', 'ws://') + '/api/perf-monitor/ws';
     
-    const connect = () => {
+    const fetchMetrics = async () => {
       try {
-        wsRef.current = new WebSocket(wsUrl);
-        
-        wsRef.current.onopen = () => {
-          console.log('Performance WebSocket connected');
+        const res = await fetch(`${API_URL}/api/performance/summary`);
+        if (res.ok) {
+          const data = await res.json();
+          onMetrics(data);
           setWsConnected(true);
-        };
-        
-        wsRef.current.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            if (data.type === 'performance_metrics' && data.data) {
-              onMetrics(data.data);
-            }
-          } catch (e) {
-            // Ignore non-JSON messages (heartbeat, pong)
-          }
-        };
-        
-        wsRef.current.onclose = () => {
-          console.log('Performance WebSocket closed');
-          setWsConnected(false);
-          // Reconnect after 5 seconds
-          reconnectTimeoutRef.current = setTimeout(connect, 5000);
-        };
-        
-        wsRef.current.onerror = (error) => {
-          console.error('Performance WebSocket error:', error);
-          setWsConnected(false);
-        };
+        }
       } catch (e) {
-        console.error('WebSocket connection failed:', e);
         setWsConnected(false);
       }
     };
     
-    connect();
+    // Initial fetch and polling
+    fetchMetrics();
+    intervalRef.current = setInterval(fetchMetrics, 5000);
     
     return () => {
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
       }
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
+    };
+  }, [onMetrics]);
+
+  return wsConnected;
+};
     };
   }, [onMetrics]);
   
