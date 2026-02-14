@@ -527,10 +527,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "8 Enhancements Frontend Verification"
+    - "Comprehensive full-app testing - all backend APIs and frontend pages"
   stuck_tasks: []
-  test_all: false
-  test_priority: "high_first"
+  test_all: true
+  test_priority: "sequential"
 
   - task: "8 UI Enhancements - Frontend Verification"
     implemented: true
