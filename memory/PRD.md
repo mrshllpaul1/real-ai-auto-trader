@@ -45,7 +45,9 @@ Full-stack AI crypto trading platform with Kraken integration, featuring compreh
 - [x] API key auth implementation
 - [x] Frontend CSRF/session interceptor integration
 - [x] Cleanup: Removed /app/scripts/safe_fix.py
+- [x] P2: Cookie hardening — Secure flag + SameSite=lax on all CSRF cookies
+- [x] P2: CORS tightened from wildcard `*` to specific origin
+- [x] P2: Deep frontend UI flow testing — session init, navigation, POST CSRF headers verified
 
 ## Backlog
-- P2: Additional frontend security testing (deep UI flows)
-- P2: Production HTTPS cookie settings (secure=True)
+- No remaining items
