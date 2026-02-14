@@ -68,6 +68,26 @@ This file provides a complete index of all documentation files in this repositor
 ### Training & Testing
 - [ENHANCED_TESTS_TRAINING.md](./ENHANCED_TESTS_TRAINING.md) - Testing framework
 - [MTF_TRAINING_STATUS_IMPROVEMENTS.md](./MTF_TRAINING_STATUS_IMPROVEMENTS.md) - MTF training
+- [AI_TRAINING_STRENGTHENING.md](./AI_TRAINING_STRENGTHENING.md) - AI training improvements
+- [TRAINING_PREDICTION_SPEED_ENHANCEMENTS.md](./TRAINING_PREDICTION_SPEED_ENHANCEMENTS.md) - Speed optimizations
+
+### Execution & Trading
+- [ENHANCED_EXECUTION_ENGINE.md](./ENHANCED_EXECUTION_ENGINE.md) - Trade execution
+- [HISTORICAL_MARKET_DATA_ENHANCEMENT.md](./HISTORICAL_MARKET_DATA_ENHANCEMENT.md) - Market data
+
+### Performance & Loading
+- [LOADING_TIME_ENHANCEMENTS.md](./LOADING_TIME_ENHANCEMENTS.md) - Loading optimizations
+- [APP_LOAD_SPEED_IMPROVEMENTS.md](./APP_LOAD_SPEED_IMPROVEMENTS.md) - App speed
+
+### Security
+- [SECRET_PROTECTION.md](./SECRET_PROTECTION.md) - Credential security
+- [APP_SECURITY_HARDENING.md](./APP_SECURITY_HARDENING.md) - Security measures
+
+### Recommendations
+- [GENERAL_ENHANCEMENT_RECOMMENDATIONS.md](./GENERAL_ENHANCEMENT_RECOMMENDATIONS.md) - General enhancements
+
+### Dependencies
+- [PANDAS_INTEGRATION.md](./PANDAS_INTEGRATION.md) - Pandas usage
 
 ## 🔍 Finding Documentation
 
