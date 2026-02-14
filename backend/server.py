@@ -495,6 +495,14 @@ async def delayed_init():
         await db.error_history.create_index([("fingerprint", 1)])
         logger.info("✅ Error history indexes created")
         
+        # Create session TTL index (auto-delete expired sessions)
+        await db.active_sessions.create_index(
+            "expires_at",
+            expireAfterSeconds=0  # MongoDB TTL removes docs once expires_at passes
+        )
+        await db.active_sessions.create_index("session_token_hash")
+        logger.info("✅ Session auth indexes created (TTL + token hash)")
+        
     except Exception as e:
         logger.warning(f"⚠️ Performance enhancement initialization warning: {e}")
 
