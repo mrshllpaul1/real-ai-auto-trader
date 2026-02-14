@@ -292,6 +292,15 @@ function AppContent() {
             </div>
           </div>
         </ErrorBoundary>
+  );
+}
+
+function App() {
+  return (
+    <TradingModeProvider>
+      <LoadingProvider>
+        <BrowserRouter>
+          <AppRouter />
         </BrowserRouter>
       </LoadingProvider>
     </TradingModeProvider>
