@@ -227,6 +227,22 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import performance monitoring routes: {e}")
 
+# Import and include WebSocket routes
+try:
+    from routes.websocket import router as websocket_router
+    app.include_router(websocket_router)
+    logger.info("✅ WebSocket routes registered")
+except ImportError as e:
+    logger.warning(f"Could not import WebSocket routes: {e}")
+
+# Import and include AI Explanation routes
+try:
+    from routes.ai_explanation import router as ai_explanation_router
+    app.include_router(ai_explanation_router)
+    logger.info("✅ AI Explanation routes registered")
+except ImportError as e:
+    logger.warning(f"Could not import AI Explanation routes: {e}")
+
 # Add middleware in correct order (last added = first executed)
 # 1. Security Headers (outermost - first to execute)
 try:
