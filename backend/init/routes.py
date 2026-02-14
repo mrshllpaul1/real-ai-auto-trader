@@ -325,6 +325,12 @@ def register_routes(api_router: APIRouter, db=None):
     api_router.include_router(error_tracking_routes.router, tags=["Error Tracking"])
     error_tracking_routes.set_db(db)
     
+    # ============================================
+    # Vulnerability Scanner API
+    # ============================================
+    from routes import vuln_scanner as vuln_scanner_routes
+    api_router.include_router(vuln_scanner_routes.router, tags=["Security"])
+    
     logger.info("✅ All routes registered (including consolidated services)")
     
     return api_router
