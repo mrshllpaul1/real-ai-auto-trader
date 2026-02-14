@@ -44,77 +44,52 @@ class ValidationMiddleware(BaseHTTPMiddleware):
         
         # Check content length
         content_length = request.headers.get('content-length')
-        if content_length and int(content_length) > self.MAX_BODY_SIZE:
-            return JSONResponse(
-                status_code=413,
-                content={
-                    'detail': 'Request body too large',
-                    'max_size_mb': self.MAX_BODY_SIZE / (1024 * 1024)
-                }
-            )
-        
-        # Validate content type for POST/PUT/PATCH
-        if request.method in ['POST', 'PUT', 'PATCH']:
-            content_type = request.headers.get('content-type', '')
-            
-            # Allow JSON and form data
-            valid_types = [
-                'application/json',
-                'application/x-www-form-urlencoded',
-                'multipart/form-data'
-            ]
-            
-            if content_type and not any(ct in content_type for ct in valid_types):
-                logger.debug(f"Unusual content type: {content_type} for {request.url.path}")
+        if content_length:
+            try:
+                if int(content_length) > self.MAX_BODY_SIZE:
+                    return JSONResponse(
+                        status_code=413,
+                        content={
+                            'detail': 'Request body too large',
+                            'max_size_mb': self.MAX_BODY_SIZE / (1024 * 1024)
+                        }
+                    )
+            except ValueError:
+                pass
         
         # Check query parameters for NoSQL injection
-        for param_name, param_value in request.query_params.items():
-            if self._contains_injection(param_value):
-                client_ip = request.client.host if request.client else "unknown"
-                logger.warning(
-                    f"🚨 NOSQL INJECTION BLOCKED | IP={client_ip} | "
-                    f"Path={request.url.path} | Param={param_name} | "
-                    f"Value={param_value[:100]}"
-                )
-                return JSONResponse(
-                    status_code=400,
-                    content={'detail': 'Invalid request parameters'}
-                )
+        try:
+            for param_name, param_value in request.query_params.items():
+                if self._contains_injection(param_value):
+                    client_ip = request.client.host if request.client else "unknown"
+                    logger.warning(
+                        f"NOSQL INJECTION BLOCKED | IP={client_ip} | "
+                        f"Path={request.url.path} | Param={param_name} | "
+                        f"Value={param_value[:100]}"
+                    )
+                    return JSONResponse(
+                        status_code=400,
+                        content={'detail': 'Invalid request parameters detected'}
+                    )
+        except Exception as e:
+            logger.debug(f"Query param validation error: {e}")
         
         # Check URL path segments for injection
-        path_parts = request.url.path.split('/')
-        for part in path_parts:
-            if part.startswith('$'):
-                client_ip = request.client.host if request.client else "unknown"
-                logger.warning(
-                    f"🚨 PATH INJECTION BLOCKED | IP={client_ip} | "
-                    f"Path={request.url.path}"
-                )
-                return JSONResponse(
-                    status_code=400,
-                    content={'detail': 'Invalid request path'}
-                )
-        
-        # For JSON POST/PUT/PATCH, check body for injection patterns
-        if request.method in ['POST', 'PUT', 'PATCH']:
-            content_type = request.headers.get('content-type', '')
-            if 'application/json' in content_type:
-                try:
-                    body = await request.body()
-                    if body:
-                        body_text = body.decode('utf-8', errors='replace')
-                        if self._body_contains_injection(body_text):
-                            client_ip = request.client.host if request.client else "unknown"
-                            logger.warning(
-                                f"🚨 NOSQL INJECTION IN BODY BLOCKED | IP={client_ip} | "
-                                f"Path={request.url.path} | Body={body_text[:200]}"
-                            )
-                            return JSONResponse(
-                                status_code=400,
-                                content={'detail': 'Invalid request body'}
-                            )
-                except Exception:
-                    pass  # Don't block on body read errors
+        try:
+            path_parts = request.url.path.split('/')
+            for part in path_parts:
+                if part.startswith('$'):
+                    client_ip = request.client.host if request.client else "unknown"
+                    logger.warning(
+                        f"PATH INJECTION BLOCKED | IP={client_ip} | "
+                        f"Path={request.url.path}"
+                    )
+                    return JSONResponse(
+                        status_code=400,
+                        content={'detail': 'Invalid request path'}
+                    )
+        except Exception as e:
+            logger.debug(f"Path validation error: {e}")
         
         return await call_next(request)
     
