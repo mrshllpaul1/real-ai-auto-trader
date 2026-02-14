@@ -6,6 +6,49 @@
 
 import { toast } from 'sonner';
 
+// Error Severity Levels
+export const ErrorSeverity = {
+  LOW: 'low',
+  MEDIUM: 'medium',
+  HIGH: 'high',
+  CRITICAL: 'critical',
+};
+
+// Error Categories
+export const ErrorCategory = {
+  UI_CRASH: 'ui_crash',
+  API_ERROR: 'api_error',
+  NETWORK: 'network',
+  VALIDATION: 'validation',
+  AUTH: 'auth',
+};
+
+// Report UI Crash
+export const reportUICrash = (error, errorInfo, componentName) => {
+  const errorId = `crash_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  console.error(`[UI Crash] Component: ${componentName}`, {
+    errorId,
+    error: error?.message,
+    stack: error?.stack,
+    componentStack: errorInfo?.componentStack,
+  });
+  
+  // Track in error stats
+  errorStats.total++;
+  errorStats.byType['UI_CRASH'] = (errorStats.byType['UI_CRASH'] || 0) + 1;
+  
+  errorStats.lastErrors.unshift({
+    timestamp: new Date().toISOString(),
+    endpoint: `component:${componentName}`,
+    type: 'UI_CRASH',
+    message: error?.message,
+    errorId,
+  });
+  
+  return errorId;
+};
+
 // Circuit Breaker State
 const circuitBreakers = new Map();
 
