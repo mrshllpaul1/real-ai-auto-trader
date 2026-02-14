@@ -72,11 +72,6 @@ const usePerformanceWebSocket = (onMetrics) => {
 
   return wsConnected;
 };
-    };
-  }, [onMetrics]);
-  
-  return wsConnected;
-};
 
 const PerformanceDashboard = () => {
   const [loading, setLoading] = useState(true);
