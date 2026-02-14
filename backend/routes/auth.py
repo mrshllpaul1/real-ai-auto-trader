@@ -1,24 +1,37 @@
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import datetime
 from cryptography.fernet import Fernet
 import os
-import base64
+import re
+import logging
+
+from utils.safe_errors import safe_error_response, log_security_event
+from utils.input_sanitizer import sanitize_user_id
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 class KrakenCredentials(BaseModel):
-    api_key: str
-    api_secret: str
+    api_key: str = Field(..., min_length=1, max_length=256)
+    api_secret: str = Field(..., min_length=1, max_length=512)
+
+    @field_validator('api_key', 'api_secret')
+    @classmethod
+    def no_injection(cls, v):
+        if '$' in v and any(op in v for op in ['$gt', '$ne', '$or', '$where']):
+            raise ValueError('Invalid characters in credential')
+        return v
 
 class BinanceCredentials(BaseModel):
-    api_key: str
-    api_secret: str
+    api_key: str = Field(..., min_length=1, max_length=256)
+    api_secret: str = Field(..., min_length=1, max_length=512)
 
 class CryptoComCredentials(BaseModel):
-    api_key: str
-    api_secret: str
+    api_key: str = Field(..., min_length=1, max_length=256)
+    api_secret: str = Field(..., min_length=1, max_length=512)
 
 class CredentialsResponse(BaseModel):
     message: str
