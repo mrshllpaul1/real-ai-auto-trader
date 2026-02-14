@@ -207,8 +207,33 @@ const NavItem = ({ item, isCollapsed, mobile, isActive }) => {
 };
 
 // Enhanced Sidebar content
-const SidebarContent = ({ isCollapsed, mobile, navItems, tradingMode }) => (
-  <div className={`flex flex-col h-full ${mobile ? 'pt-16' : ''}`}>
+const SidebarContent = ({ isCollapsed, mobile, navItems, tradingMode }) => {
+  const [systemHealth, setSystemHealth] = useState('online');
+  
+  useEffect(() => {
+    const checkHealth = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '';
+        const res = await fetch(`${baseUrl}/api/health`, { signal: AbortSignal.timeout(5000) });
+        setSystemHealth(res.ok ? 'online' : 'degraded');
+      } catch {
+        setSystemHealth('offline');
+      }
+    };
+    checkHealth();
+    const interval = setInterval(checkHealth, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const healthConfig = {
+    online: { color: 'bg-emerald-400', label: 'System Online', textColor: 'text-emerald-400' },
+    degraded: { color: 'bg-amber-400', label: 'Degraded', textColor: 'text-amber-400' },
+    offline: { color: 'bg-red-400', label: 'Offline', textColor: 'text-red-400' },
+  };
+  const health = healthConfig[systemHealth];
+
+  return (
+    <div className={`flex flex-col h-full ${mobile ? 'pt-16' : ''}`}>
     {/* Header Section */}
     <div className={`${isCollapsed && !mobile ? 'p-3' : 'p-5'} border-b border-slate-800/80`}>
       <div className="flex items-center justify-between">
@@ -265,30 +290,60 @@ const SidebarContent = ({ isCollapsed, mobile, navItems, tradingMode }) => (
       </ul>
     </nav>
     
-    {/* Footer Section */}
-    {(!isCollapsed || mobile) && (
-      <div className="p-4 border-t border-slate-800/80">
-        <motion.div 
-          whileHover={{ scale: 1.02 }}
-          className="relative overflow-hidden bg-gradient-to-r from-violet-500/10 via-purple-500/10 to-emerald-500/10 rounded-xl p-4 border border-violet-500/20"
-        >
-          {/* Animated background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 to-emerald-500/5 animate-pulse" />
-          
-          <div className="relative flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-violet-500/20">
-              <Sparkles size={16} className="text-violet-400" />
-            </div>
-            <div>
-              <span className="text-xs font-bold text-white block">AI-Powered</span>
-              <p className="text-[10px] text-slate-400">Strategies updated weekly</p>
-            </div>
+    {/* Footer Section - System Health + User Profile */}
+    <div className="p-3 border-t border-slate-800/80 space-y-2">
+      {/* System Health Indicator */}
+      {(!isCollapsed || mobile) ? (
+        <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-800/50 border border-slate-700/30">
+          <div className="relative">
+            <div className={`w-2 h-2 rounded-full ${health.color}`} />
+            {systemHealth === 'online' && (
+              <div className={`absolute inset-0 w-2 h-2 rounded-full ${health.color} animate-ping opacity-50`} />
+            )}
           </div>
-        </motion.div>
-      </div>
-    )}
+          <span className={`text-xs font-medium ${health.textColor}`}>{health.label}</span>
+          <span className="text-[10px] text-slate-600 ml-auto">v2.0</span>
+        </div>
+      ) : (
+        <div className="flex justify-center py-1">
+          <div className="relative">
+            <div className={`w-2.5 h-2.5 rounded-full ${health.color}`} />
+            {systemHealth === 'online' && (
+              <div className={`absolute inset-0 w-2.5 h-2.5 rounded-full ${health.color} animate-ping opacity-50`} />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* User Profile */}
+      {(!isCollapsed || mobile) ? (
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-slate-800/80 to-slate-800/40 border border-slate-700/30 hover:border-slate-600/50 transition-colors cursor-pointer"
+          onClick={() => window.location.href = '/settings'}
+        >
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center shadow-lg">
+            <span className="text-xs font-bold text-white">T</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <span className="text-xs font-semibold text-white block truncate">Trader</span>
+            <span className="text-[10px] text-slate-500">Kraken Connected</span>
+          </div>
+          <ChevronRight size={14} className="text-slate-600 flex-shrink-0" />
+        </div>
+      ) : (
+        <div className="flex justify-center">
+          <motion.div 
+            whileHover={{ scale: 1.1 }}
+            className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center shadow-lg cursor-pointer"
+            onClick={() => window.location.href = '/settings'}
+          >
+            <span className="text-xs font-bold text-white">T</span>
+          </motion.div>
+        </div>
+      )}
+    </div>
   </div>
-);
+  );
+};
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
