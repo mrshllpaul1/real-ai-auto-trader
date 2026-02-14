@@ -182,6 +182,7 @@ function AppContent() {
                   <Routes>
                     {/* Main Hub Routes */}
                     <Route path="/" element={<PageErrorBoundary><SuspenseWrapper><CommandCenter /></SuspenseWrapper></PageErrorBoundary>} />
+                    <Route path="/login" element={<PageErrorBoundary><SuspenseWrapper><LoginPage /></SuspenseWrapper></PageErrorBoundary>} />
                     <Route path="/trading" element={<PageErrorBoundary><SuspenseWrapper><TradingHub /></SuspenseWrapper></PageErrorBoundary>} />
                     <Route path="/ai" element={<PageErrorBoundary><SuspenseWrapper><AIHub /></SuspenseWrapper></PageErrorBoundary>} />
                     <Route path="/backtest" element={<PageErrorBoundary><SuspenseWrapper><BacktestHub /></SuspenseWrapper></PageErrorBoundary>} />
