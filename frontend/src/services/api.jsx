@@ -337,6 +337,33 @@ api.interceptors.response.use(
   },
   async (error) => {
     const config = error.config || {};
+    const status = error.response?.status;
+    
+    // Handle auth/CSRF failures — auto-refresh session and retry once
+    if ((status === 401 || status === 403) && !config._authRetried) {
+      const errorCode = error.response?.data?.detail?.code;
+      
+      if (errorCode === 'CSRF_MISSING' || errorCode === 'CSRF_MISMATCH' || errorCode === 'SESSION_INVALID' || errorCode === 'AUTH_REQUIRED') {
+        console.warn(`[Auth] ${errorCode} — refreshing session and retrying...`);
+        config._authRetried = true;
+        
+        // Reset session and re-init
+        _sessionToken = null;
+        _sessionInitializing = null;
+        await initSession();
+        
+        // Retry the original request with new tokens
+        if (_sessionToken) {
+          config.headers['X-Session-Token'] = _sessionToken;
+        }
+        const csrfToken = getCsrfTokenFromCookie();
+        if (csrfToken) {
+          config.headers['X-CSRF-Token'] = csrfToken;
+        }
+        
+        return api.request(config);
+      }
+    }
     
     // Check if we should retry
     if (shouldRetry(error, config)) {
