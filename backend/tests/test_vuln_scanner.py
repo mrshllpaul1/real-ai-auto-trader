@@ -4,6 +4,8 @@ Tests the new vulnerability scanning feature:
 - GET /api/security/vulnerabilities/latest
 - GET /api/security/vulnerabilities/history
 - POST /api/security/vulnerabilities/scan (requires CSRF)
+
+Includes retry logic for transient Cloudflare 520 errors.
 """
 
 import pytest
@@ -12,6 +14,27 @@ import os
 import time
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+
+
+def retry_request(method, url, max_retries=3, **kwargs):
+    """Retry requests on 520 errors (Cloudflare transient errors)"""
+    for i in range(max_retries):
+        if method == "GET":
+            response = requests.get(url, **kwargs)
+        elif method == "POST":
+            response = requests.post(url, **kwargs)
+        else:
+            raise ValueError(f"Unsupported method: {method}")
+        
+        if response.status_code != 520:
+            return response
+        
+        # Wait before retry
+        print(f"Got 520 error, retrying ({i+1}/{max_retries})...")
+        time.sleep(2)
+    
+    return response
+
 
 class TestVulnScannerEndpoints:
     """Test vulnerability scanner API endpoints"""
@@ -22,13 +45,13 @@ class TestVulnScannerEndpoints:
     
     def test_get_latest_scan_returns_200(self):
         """GET /api/security/vulnerabilities/latest should return 200"""
-        response = requests.get(f"{BASE_URL}/api/security/vulnerabilities/latest")
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        response = retry_request("GET", f"{BASE_URL}/api/security/vulnerabilities/latest")
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text[:500]}"
         print(f"✓ GET /latest returned 200")
     
     def test_get_latest_scan_structure(self):
         """GET /latest should return proper structure (scan result or no-scan message)"""
-        response = requests.get(f"{BASE_URL}/api/security/vulnerabilities/latest")
+        response = retry_request("GET", f"{BASE_URL}/api/security/vulnerabilities/latest")
         assert response.status_code == 200
         data = response.json()
         
@@ -62,13 +85,13 @@ class TestVulnScannerEndpoints:
     
     def test_get_scan_history_returns_200(self):
         """GET /api/security/vulnerabilities/history should return 200"""
-        response = requests.get(f"{BASE_URL}/api/security/vulnerabilities/history")
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        response = retry_request("GET", f"{BASE_URL}/api/security/vulnerabilities/history")
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text[:500]}"
         print(f"✓ GET /history returned 200")
     
     def test_get_scan_history_returns_array(self):
         """GET /history should return an array of scan summaries"""
-        response = requests.get(f"{BASE_URL}/api/security/vulnerabilities/history")
+        response = retry_request("GET", f"{BASE_URL}/api/security/vulnerabilities/history")
         assert response.status_code == 200
         data = response.json()
         
@@ -91,7 +114,7 @@ class TestVulnScannerEndpoints:
     
     def test_get_scan_history_with_limit(self):
         """GET /history?limit=5 should respect limit parameter"""
-        response = requests.get(f"{BASE_URL}/api/security/vulnerabilities/history?limit=5")
+        response = retry_request("GET", f"{BASE_URL}/api/security/vulnerabilities/history?limit=5")
         assert response.status_code == 200
         data = response.json()
         
@@ -105,10 +128,10 @@ class TestVulnScannerEndpoints:
     
     def test_post_scan_requires_csrf(self):
         """POST /api/security/vulnerabilities/scan should require CSRF token (403 without)"""
-        response = requests.post(f"{BASE_URL}/api/security/vulnerabilities/scan")
+        response = retry_request("POST", f"{BASE_URL}/api/security/vulnerabilities/scan")
         
         # Should get 403 CSRF_MISSING or similar error
-        assert response.status_code == 403, f"Expected 403 for missing CSRF, got {response.status_code}: {response.text}"
+        assert response.status_code == 403, f"Expected 403 for missing CSRF, got {response.status_code}: {response.text[:500]}"
         
         # Check error message indicates CSRF issue
         data = response.json()
@@ -125,31 +148,41 @@ class TestVulnScannerEndpoints:
         """POST /scan with valid CSRF token should trigger scan and return results"""
         session = requests.Session()
         
-        # Step 1: Get CSRF token from /api/auth/csrf-token
-        csrf_response = session.get(f"{BASE_URL}/api/auth/csrf-token")
-        assert csrf_response.status_code == 200, f"Failed to get CSRF token: {csrf_response.text}"
+        # Step 1: Get CSRF token from /api/auth/csrf-token (with retry)
+        for i in range(3):
+            csrf_response = session.get(f"{BASE_URL}/api/auth/csrf-token")
+            if csrf_response.status_code != 520:
+                break
+            time.sleep(2)
+        
+        assert csrf_response.status_code == 200, f"Failed to get CSRF token: {csrf_response.text[:500]}"
         
         csrf_data = csrf_response.json()
         csrf_token = csrf_data.get("csrf_token")
         assert csrf_token, f"No csrf_token in response: {csrf_data}"
         
         # Step 2: POST /scan with CSRF token in header
-        # Note: The session already has the csrf_token cookie from step 1
         headers = {"X-CSRF-Token": csrf_token}
         
         print(f"Triggering vulnerability scan (this may take up to 60-120 seconds)...")
         start_time = time.time()
         
-        scan_response = session.post(
-            f"{BASE_URL}/api/security/vulnerabilities/scan",
-            headers=headers,
-            timeout=180  # Scan can take time
-        )
+        # Scan with retry for 520 errors
+        for i in range(3):
+            scan_response = session.post(
+                f"{BASE_URL}/api/security/vulnerabilities/scan",
+                headers=headers,
+                timeout=180
+            )
+            if scan_response.status_code != 520:
+                break
+            print(f"Got 520 error, retrying ({i+1}/3)...")
+            time.sleep(2)
         
         elapsed = time.time() - start_time
         print(f"Scan completed in {elapsed:.1f}s")
         
-        assert scan_response.status_code == 200, f"Expected 200, got {scan_response.status_code}: {scan_response.text}"
+        assert scan_response.status_code == 200, f"Expected 200, got {scan_response.status_code}: {scan_response.text[:500]}"
         
         # Validate response structure
         data = scan_response.json()
@@ -162,7 +195,7 @@ class TestVulnScannerEndpoints:
         print(f"  Backend: {data['backend']['count']} vulns")
         print(f"  Frontend: {data['frontend']['count']} vulns")
         
-        return data  # Return for use in other tests
+        return data
     
     # ===========================================
     # Vulnerability Detection Tests
@@ -170,8 +203,7 @@ class TestVulnScannerEndpoints:
     
     def test_backend_detects_known_vulns(self):
         """Backend scan should detect known vulnerabilities (diskcache, ecdsa)"""
-        # First, ensure we have a scan result
-        response = requests.get(f"{BASE_URL}/api/security/vulnerabilities/latest")
+        response = retry_request("GET", f"{BASE_URL}/api/security/vulnerabilities/latest")
         assert response.status_code == 200
         data = response.json()
         
@@ -180,10 +212,6 @@ class TestVulnScannerEndpoints:
         
         backend = data.get("backend", {})
         vulns = backend.get("vulnerabilities", [])
-        
-        # Expected: 2 known vulns (diskcache CVE-2025-69872, ecdsa CVE-2024-23342)
-        # Note: This is based on the main agent's context - actual results may vary
-        vuln_packages = [v.get("package") for v in vulns]
         
         print(f"Backend vulnerabilities found: {len(vulns)}")
         for v in vulns:
@@ -199,7 +227,7 @@ class TestVulnScannerEndpoints:
     
     def test_frontend_scan_results(self):
         """Frontend scan should return vulnerability info (expected 0 per main agent)"""
-        response = requests.get(f"{BASE_URL}/api/security/vulnerabilities/latest")
+        response = retry_request("GET", f"{BASE_URL}/api/security/vulnerabilities/latest")
         assert response.status_code == 200
         data = response.json()
         
@@ -215,7 +243,6 @@ class TestVulnScannerEndpoints:
             print(f"  - {v.get('package')}: {v.get('title')} (severity: {v.get('severity')})")
         
         # Per main agent: frontend should have 0 vulnerabilities
-        # But we validate structure regardless
         assert isinstance(vulns, list), "vulnerabilities should be a list"
         assert frontend.get("count") == len(vulns), "count should match vulnerabilities length"
         
@@ -229,28 +256,38 @@ class TestVulnScannerEndpoints:
         """Scan results should persist to MongoDB and appear in /history"""
         session = requests.Session()
         
-        # Get CSRF token
-        csrf_response = session.get(f"{BASE_URL}/api/auth/csrf-token")
+        # Get CSRF token with retry
+        for i in range(3):
+            csrf_response = session.get(f"{BASE_URL}/api/auth/csrf-token")
+            if csrf_response.status_code != 520:
+                break
+            time.sleep(2)
+        
         assert csrf_response.status_code == 200
         csrf_token = csrf_response.json().get("csrf_token")
         
-        # Trigger a scan
+        # Trigger a scan with retry
         headers = {"X-CSRF-Token": csrf_token}
         print("Triggering scan for persistence test...")
-        scan_response = session.post(
-            f"{BASE_URL}/api/security/vulnerabilities/scan",
-            headers=headers,
-            timeout=180
-        )
+        
+        for i in range(3):
+            scan_response = session.post(
+                f"{BASE_URL}/api/security/vulnerabilities/scan",
+                headers=headers,
+                timeout=180
+            )
+            if scan_response.status_code != 520:
+                break
+            time.sleep(2)
         
         if scan_response.status_code != 200:
-            pytest.fail(f"Scan failed: {scan_response.status_code} {scan_response.text}")
+            pytest.fail(f"Scan failed: {scan_response.status_code} {scan_response.text[:500]}")
         
         scan_data = scan_response.json()
         scan_started_at = scan_data.get("started_at")
         
-        # Verify it appears in history
-        history_response = requests.get(f"{BASE_URL}/api/security/vulnerabilities/history?limit=10")
+        # Verify it appears in history with retry
+        history_response = retry_request("GET", f"{BASE_URL}/api/security/vulnerabilities/history?limit=10")
         assert history_response.status_code == 200
         history = history_response.json()
         
@@ -270,7 +307,7 @@ class TestVulnScannerEndpoints:
     
     def test_health_endpoint_still_works(self):
         """Verify /api/health still returns 200 (regression test)"""
-        response = requests.get(f"{BASE_URL}/api/health")
+        response = retry_request("GET", f"{BASE_URL}/api/health")
         assert response.status_code == 200, f"Health check failed: {response.status_code}"
         data = response.json()
         assert data.get("status") in ["healthy", "degraded"], f"Unexpected status: {data}"
@@ -284,8 +321,12 @@ class TestCSRFProtectionOnScanEndpoint:
         """POST /scan with mismatched CSRF token should return 403"""
         session = requests.Session()
         
-        # Get a valid CSRF cookie
-        session.get(f"{BASE_URL}/api/auth/csrf-token")
+        # Get a valid CSRF cookie with retry
+        for i in range(3):
+            response = session.get(f"{BASE_URL}/api/auth/csrf-token")
+            if response.status_code != 520:
+                break
+            time.sleep(2)
         
         # Send with wrong token in header
         headers = {"X-CSRF-Token": "wrong-token-value-12345"}
@@ -301,16 +342,25 @@ class TestCSRFProtectionOnScanEndpoint:
         """POST /scan with X-API-Key header should bypass CSRF requirement"""
         session = requests.Session()
         
-        # First create an API key
-        csrf_response = session.get(f"{BASE_URL}/api/auth/csrf-token")
+        # Get CSRF token with retry
+        for i in range(3):
+            csrf_response = session.get(f"{BASE_URL}/api/auth/csrf-token")
+            if csrf_response.status_code != 520:
+                break
+            time.sleep(2)
+        
         csrf_token = csrf_response.json().get("csrf_token")
         
-        # Create API key
-        key_response = session.post(
-            f"{BASE_URL}/api/api-keys/create",
-            headers={"X-CSRF-Token": csrf_token},
-            json={"name": "vuln_scan_test_key", "permissions": ["read", "write"]}
-        )
+        # Create API key with retry
+        for i in range(3):
+            key_response = session.post(
+                f"{BASE_URL}/api/api-keys/create",
+                headers={"X-CSRF-Token": csrf_token},
+                json={"name": "vuln_scan_test_key", "permissions": ["read", "write"]}
+            )
+            if key_response.status_code != 520:
+                break
+            time.sleep(2)
         
         if key_response.status_code not in [200, 201]:
             pytest.skip(f"Could not create API key: {key_response.status_code}")
@@ -319,17 +369,22 @@ class TestCSRFProtectionOnScanEndpoint:
         if not api_key:
             pytest.skip("No api_key in response")
         
-        # Now try POST /scan with API key (no CSRF token)
+        # Now try POST /scan with API key (no CSRF token) with retry
         headers = {"X-API-Key": api_key}
         print("Testing scan with API key bypass (may take time)...")
-        response = requests.post(
-            f"{BASE_URL}/api/security/vulnerabilities/scan",
-            headers=headers,
-            timeout=180
-        )
+        
+        for i in range(3):
+            response = requests.post(
+                f"{BASE_URL}/api/security/vulnerabilities/scan",
+                headers=headers,
+                timeout=180
+            )
+            if response.status_code != 520:
+                break
+            time.sleep(2)
         
         # Should work (200) since API key bypasses CSRF
-        assert response.status_code == 200, f"Expected 200 with API key, got {response.status_code}: {response.text}"
+        assert response.status_code == 200, f"Expected 200 with API key, got {response.status_code}: {response.text[:500]}"
         print(f"✓ POST /scan with X-API-Key bypasses CSRF and succeeds")
 
 
