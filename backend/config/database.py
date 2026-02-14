@@ -84,10 +84,11 @@ async def health_check():
             'pool_stats': pool_stats
         }
     except Exception as e:
+        logger.error(f"Database health check failed: {e}")
         return {
             'status': 'unhealthy',
             'connected': False,
-            'error': str(e)
+            'error': 'Database connection failed'
         }
 
 
