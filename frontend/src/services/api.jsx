@@ -136,17 +136,91 @@ const deduplicateRequest = async (key, requestFn) => {
 // ============================================
 const api = axios.create({
   baseURL: API,
-  timeout: 30000, // Reduced to 30 seconds for faster failure detection
+  timeout: 30000,
+  withCredentials: true, // Send cookies (incl. csrf_token) with every request
 });
 
-// Request interceptor with performance tracking
+// ============================================
+// CSRF + SESSION AUTH MANAGER
+// ============================================
+let _sessionToken = null;
+let _sessionInitializing = null; // dedup concurrent init calls
+
+/**
+ * Read the csrf_token cookie value (set by the backend).
+ */
+function getCsrfTokenFromCookie() {
+  const match = document.cookie.match(/(^|;\s*)csrf_token=([^;]*)/);
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+/**
+ * Bootstrap a session + CSRF cookie.
+ * Called once on app startup; subsequent calls return the cached promise.
+ */
+async function initSession() {
+  if (_sessionToken) return _sessionToken;
+  if (_sessionInitializing) return _sessionInitializing;
+
+  _sessionInitializing = (async () => {
+    try {
+      // 1. Ensure CSRF cookie exists (GET — no CSRF needed)
+      await axios.get(`${API}/auth/csrf-token`, { withCredentials: true });
+
+      // 2. Create session (POST — exempt from CSRF in backend)
+      const userId = localStorage.getItem('user_id') || 'demo_user';
+      const { data } = await axios.post(
+        `${API}/auth/session`,
+        {},
+        {
+          withCredentials: true,
+          headers: { 'X-User-ID': userId },
+        }
+      );
+
+      _sessionToken = data.session_token;
+      console.log('[Auth] Session initialised, expires:', data.expires_at);
+      return _sessionToken;
+    } catch (err) {
+      console.warn('[Auth] Session init failed, falling back to origin-based auth:', err.message);
+      _sessionInitializing = null;
+      return null;
+    }
+  })();
+
+  return _sessionInitializing;
+}
+
+// Eagerly start session init
+initSession();
+
+// Export for components that need to wait for session readiness
+export const ensureSession = initSession;
+
+// Request interceptor — attaches CSRF header + session token + user_id
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
+    // Attach user_id param
     config.params = {
       ...config.params,
-      user_id: localStorage.getItem('user_id') || 'demo_user'
+      user_id: localStorage.getItem('user_id') || 'demo_user',
     };
     config._startTime = Date.now();
+
+    // Attach CSRF header for state-changing requests
+    const method = (config.method || 'get').toLowerCase();
+    if (['post', 'put', 'delete', 'patch'].includes(method)) {
+      const csrfToken = getCsrfTokenFromCookie();
+      if (csrfToken) {
+        config.headers['X-CSRF-Token'] = csrfToken;
+      }
+    }
+
+    // Attach session token if we have one
+    if (_sessionToken) {
+      config.headers['X-Session-Token'] = _sessionToken;
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
