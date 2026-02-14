@@ -368,6 +368,7 @@ const Sidebar = () => {
 
   const navItems = [
     { path: '/', icon: LayoutDashboard, label: 'Command Center' },
+    { path: '/live-dashboard', icon: Radio, label: 'Live Dashboard' },
     { path: '/trading', icon: Wallet, label: 'Trading' },
     { path: '/ai', icon: Brain, label: 'AI & Strategy' },
     { path: '/backtest', icon: BarChart3, label: 'Backtest' },
