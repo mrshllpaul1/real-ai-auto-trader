@@ -122,7 +122,7 @@ class RateLimiter:
         path = request.url.path
         
         # Skip rate limiting for certain paths
-        if any(path.startswith(skip) for skip in RateLimitConfig.SKIP_PATHS):
+        if path in RateLimitConfig.EXACT_SKIP_PATHS or any(path.startswith(skip) for skip in RateLimitConfig.SKIP_PATHS):
             return True, None
         
         user_id = self._get_user_id(request)
