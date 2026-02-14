@@ -6,6 +6,7 @@ This file provides a complete index of all documentation files in this repositor
 
 | Document | Location | Description |
 |----------|----------|-------------|
+| **REPORT_PROGRESS_TOOL.md** | [/REPORT_PROGRESS_TOOL.md](./REPORT_PROGRESS_TOOL.md) | Complete guide to the report_progress tool |
 | **PUSHING_TO_EMERGENT.md** | [/PUSHING_TO_EMERGENT.md](./PUSHING_TO_EMERGENT.md) | How to push changes to the Emergent platform |
 | **README.md** | [/README.md](./README.md) | Main project overview and setup instructions |
 | **API_DOCUMENTATION.md** | [/API_DOCUMENTATION.md](./API_DOCUMENTATION.md) | API endpoints and usage |
@@ -21,6 +22,7 @@ This file provides a complete index of all documentation files in this repositor
 - [LOCAL_SETUP_INSTRUCTIONS.txt](./LOCAL_SETUP_INSTRUCTIONS.txt) - Detailed setup
 
 ### Development
+- [REPORT_PROGRESS_TOOL.md](./REPORT_PROGRESS_TOOL.md) - **Complete guide to report_progress tool**
 - [PUSHING_TO_EMERGENT.md](./PUSHING_TO_EMERGENT.md) - **Git workflow and Emergent integration**
 - [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) - Backend API reference
 
@@ -50,6 +52,7 @@ This file provides a complete index of all documentation files in this repositor
 ### By Task
 
 **I want to...**
+- **Understand report_progress tool** → [REPORT_PROGRESS_TOOL.md](./REPORT_PROGRESS_TOOL.md)
 - **Push code changes** → [PUSHING_TO_EMERGENT.md](./PUSHING_TO_EMERGENT.md)
 - **Set up locally** → [EASY_SETUP.txt](./EASY_SETUP.txt) or [LOCAL_SETUP_INSTRUCTIONS.txt](./LOCAL_SETUP_INSTRUCTIONS.txt)
 - **Deploy the app** → [DEPLOYMENT_READINESS_REPORT.md](./DEPLOYMENT_READINESS_REPORT.md)
@@ -63,7 +66,8 @@ This file provides a complete index of all documentation files in this repositor
 1. Start with [README.md](./README.md)
 2. Follow [LOCAL_SETUP_INSTRUCTIONS.txt](./LOCAL_SETUP_INSTRUCTIONS.txt)
 3. Review [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
-4. Learn Git workflow: [PUSHING_TO_EMERGENT.md](./PUSHING_TO_EMERGENT.md)
+4. Learn report_progress: [REPORT_PROGRESS_TOOL.md](./REPORT_PROGRESS_TOOL.md)
+5. Learn Git workflow: [PUSHING_TO_EMERGENT.md](./PUSHING_TO_EMERGENT.md)
 
 **For DevOps:**
 1. Check [DEPLOYMENT_READINESS_REPORT.md](./DEPLOYMENT_READINESS_REPORT.md)
@@ -81,8 +85,9 @@ All documentation files are in the **root directory** of the repository:
 
 ```
 /home/runner/work/real-ai-auto-trader/real-ai-auto-trader/
-├── PUSHING_TO_EMERGENT.md          ← Git & Emergent workflow
-├── README.md                        ← Main documentation
+├── REPORT_PROGRESS_TOOL.md          ← report_progress guide
+├── PUSHING_TO_EMERGENT.md           ← Git & Emergent workflow
+├── README.md                         ← Main documentation
 ├── API_DOCUMENTATION.md
 ├── LOCAL_SETUP_INSTRUCTIONS.txt
 ├── EASY_SETUP.txt

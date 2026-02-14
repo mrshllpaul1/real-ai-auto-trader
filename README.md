@@ -48,6 +48,7 @@ A real-money AI-powered cryptocurrency auto trading application with hybrid stra
 **Complete Documentation Index**: See [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md) for all available documentation files.
 
 **Key Documents**:
+- 🛠️ [Report Progress Tool Guide](./REPORT_PROGRESS_TOOL.md) - How to use report_progress
 - 🚀 [Local Setup Guide](./LOCAL_SETUP_INSTRUCTIONS.txt) - Development environment setup
 - 📤 [Pushing to Emergent](./PUSHING_TO_EMERGENT.md) - Git workflow and deployment
 - 🔌 [API Documentation](./API_DOCUMENTATION.md) - Backend API reference
