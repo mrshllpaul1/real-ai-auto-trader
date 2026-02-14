@@ -390,7 +390,15 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import security headers middleware: {e}")
 
-# 2. Audit Logging (logs sensitive operations)
+# 2. CSRF Protection (double-submit cookie pattern)
+try:
+    from middleware.csrf_protection import CSRFProtectionMiddleware
+    app.add_middleware(CSRFProtectionMiddleware)
+    logger.info("✅ CSRF Protection middleware enabled")
+except ImportError as e:
+    logger.warning(f"Could not import CSRF protection middleware: {e}")
+
+# 3. Audit Logging (logs sensitive operations)
 try:
     from middleware.audit_logger import AuditLogMiddleware
     app.add_middleware(AuditLogMiddleware)
