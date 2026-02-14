@@ -247,49 +247,49 @@ function AppContent() {
                     <Route path="/journal" element={<Navigate to="/settings" replace />} />
                     <Route path="/guide" element={<Navigate to="/settings" replace />} />
                     <Route path="/dashboard-settings" element={<Navigate to="/settings" replace />} />
-                    
-                    {/* Catch-all redirect */}
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </motion.div>
-              </main>
-            </div>
-            
-            {/* Floating components */}
-            <FloatingCommandHub />
-            <TrainingProgress />
-            
-            {/* Keyboard Shortcuts Modal */}
-            <KeyboardShortcutsModal 
-              isOpen={showShortcuts} 
-              onClose={() => setShowShortcuts(false)} 
+                
+                {/* Catch-all redirect */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </motion.div>
+          </main>
+        </div>
+        
+        {/* Floating components */}
+        <FloatingCommandHub />
+        <TrainingProgress />
+        
+        {/* Keyboard Shortcuts Modal */}
+        <KeyboardShortcutsModal 
+          isOpen={showShortcuts} 
+          onClose={() => setShowShortcuts(false)} 
+        />
+        
+        {/* Command Palette (Ctrl+K) */}
+        <CommandPalette 
+          isOpen={showCommandPalette} 
+          onClose={() => setShowCommandPalette(false)} 
+        />
+        
+        {/* Toast notifications - fixed position with highest z-index */}
+        <div className="fixed top-0 right-0 z-[99999] pointer-events-none" style={{ zIndex: 99999 }}>
+          <div className="pointer-events-auto">
+            <Toaster 
+              position="top-right" 
+              richColors 
+              closeButton 
+              offset="16px"
+              visibleToasts={5}
+              toastOptions={{
+                style: {
+                  zIndex: 99999,
+                }
+              }}
             />
-            
-            {/* Command Palette (Ctrl+K) */}
-            <CommandPalette 
-              isOpen={showCommandPalette} 
-              onClose={() => setShowCommandPalette(false)} 
-            />
-            
-            {/* Toast notifications - fixed position with highest z-index */}
-            <div className="fixed top-0 right-0 z-[99999] pointer-events-none" style={{ zIndex: 99999 }}>
-              <div className="pointer-events-auto">
-                <Toaster 
-                  position="top-right" 
-                  richColors 
-                  closeButton 
-                  offset="16px"
-                  visibleToasts={5}
-                  toastOptions={{
-                    style: {
-                      zIndex: 99999,
-                    }
-                  }}
-                />
-              </div>
-            </div>
           </div>
-        </ErrorBoundary>
+        </div>
+      </div>
+    </ErrorBoundary>
   );
 }
 
