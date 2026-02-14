@@ -93,7 +93,8 @@ async def store_credentials(
 @router.get("/check-credentials")
 async def check_credentials(user_id: str, db = Depends(get_database)):
     """Check if user has stored credentials"""
-    stored = await db.credentials.find_one({"user_id": user_id})
+    clean_user_id = sanitize_user_id(user_id)
+    stored = await db.credentials.find_one({"user_id": clean_user_id})
     return {
         "has_credentials": stored is not None,
         "message": "Credentials found" if stored else "No credentials stored"
@@ -102,8 +103,10 @@ async def check_credentials(user_id: str, db = Depends(get_database)):
 @router.delete("/delete-credentials")
 async def delete_credentials(user_id: str, db = Depends(get_database)):
     """Delete stored credentials"""
-    result = await db.credentials.delete_one({"user_id": user_id})
+    clean_user_id = sanitize_user_id(user_id)
+    result = await db.credentials.delete_one({"user_id": clean_user_id})
     if result.deleted_count > 0:
+        log_security_event("credential_delete", {"exchange": "kraken", "user_id": clean_user_id}, severity="warning")
         return {"message": "Credentials deleted successfully"}
     raise HTTPException(status_code=404, detail="No credentials found")
 
