@@ -503,6 +503,34 @@ async def delayed_init():
         await db.active_sessions.create_index("session_token_hash")
         logger.info("✅ Session auth indexes created (TTL + token hash)")
         
+        # Initialize vulnerability scanner + 24h schedule
+        from services.vuln_scanner import VulnerabilityScannerService
+        from apscheduler.schedulers.asyncio import AsyncIOScheduler
+        from apscheduler.triggers.interval import IntervalTrigger
+        
+        vuln_scanner = VulnerabilityScannerService(db)
+        
+        # Register API route
+        from routes.vuln_scanner import set_scanner
+        set_scanner(vuln_scanner)
+        
+        # Create TTL index for scan history (keep 90 days)
+        await db.vulnerability_scans.create_index(
+            "created_at", expireAfterSeconds=90 * 86400
+        )
+        
+        # Schedule: run first scan in 60s, then every 24h
+        _vuln_scheduler = AsyncIOScheduler(timezone="UTC")
+        _vuln_scheduler.add_job(
+            vuln_scanner.run_full_scan,
+            IntervalTrigger(hours=24),
+            id="vuln_scan_24h",
+            next_run_time=asyncio.get_event_loop().time() and __import__("datetime").datetime.utcnow() + __import__("datetime").timedelta(seconds=60),
+            replace_existing=True,
+        )
+        _vuln_scheduler.start()
+        logger.info("✅ Vulnerability scanner initialized (24h schedule, first scan in 60s)")
+        
     except Exception as e:
         logger.warning(f"⚠️ Performance enhancement initialization warning: {e}")
 
