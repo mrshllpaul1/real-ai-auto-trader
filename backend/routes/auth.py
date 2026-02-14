@@ -143,7 +143,7 @@ async def store_binance_credentials(
         
         return {"message": "Binance credentials stored successfully", "has_credentials": True}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise safe_error_response(e, category="auth", context="store binance credentials")
 
 
 @router.get("/binance/check")
