@@ -73,18 +73,34 @@ class ExchangeService:
         logger.info("📊 Exchange Service initialized")
     
     @property
-    def kraken(self) -> KrakenService:
+    def kraken(self):
         """Lazy load Kraken service"""
         if self._kraken is None:
-            self._kraken = KrakenService()
+            if KrakenService is not None:
+                try:
+                    # KrakenTradeService needs an authenticator
+                    from services.kraken_service import KrakenAuthenticator
+                    import os
+                    api_key = os.environ.get("KRAKEN_API_KEY", "")
+                    api_secret = os.environ.get("KRAKEN_API_SECRET", "")
+                    if api_key and api_secret:
+                        auth = KrakenAuthenticator(api_key, api_secret)
+                        self._kraken = KrakenService(auth)
+                    else:
+                        logger.warning("Kraken API keys not configured")
+                except Exception as e:
+                    logger.warning(f"Could not initialize KrakenService: {e}")
         return self._kraken
     
     @property
-    def cache(self) -> KrakenCacheService:
+    def cache(self):
         """Lazy load cache service"""
         if self._cache is None:
-            # KrakenCacheService expects a KrakenTradeService instance, not db
-            self._cache = KrakenCacheService(self.kraken)
+            if KrakenCacheService is not None and self.kraken is not None:
+                try:
+                    self._cache = KrakenCacheService(self.kraken)
+                except Exception as e:
+                    logger.warning(f"Could not initialize cache: {e}")
         return self._cache
     
     @property
