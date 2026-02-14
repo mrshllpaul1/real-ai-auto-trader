@@ -231,7 +231,8 @@ export const useAIPrediction = (symbol, autoFetch = true) => {
 };
 
 /**
- * Hook to get real-time AI predictions via WebSocket
+ * Hook to get real-time AI predictions via HTTP polling
+ * (WebSocket disabled - Kubernetes ingress doesn't support WS protocol upgrade)
  */
 export const useRealtimeAIPrediction = (symbol, fallbackToPolling = true) => {
   const [prediction, setPrediction] = useState(null);
@@ -243,65 +244,7 @@ export const useRealtimeAIPrediction = (symbol, fallbackToPolling = true) => {
     if (!symbol) return;
     
     const symbolClean = symbol.replace('USD', '').replace('-PERP', '').replace('/USD', '');
-    let ws = null;
     let pollingInterval = null;
-    
-    const connectWebSocket = () => {
-      try {
-        const wsUrl = API_URL.replace('https://', 'wss://').replace('http://', 'ws://') + `/api/ai-signals/ws/${symbolClean}`;
-        ws = new WebSocket(wsUrl);
-        
-        ws.onopen = () => {
-          console.log(`[AI WS] Connected for ${symbolClean}`);
-          setConnected(true);
-          setLoading(false);
-        };
-        
-        ws.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            if (data.type === 'signal_update' && data.data) {
-              setPrediction({
-                composite: {
-                  score: data.data.score ?? 50,
-                  confidence: data.data.confidence ?? 50,
-                  signal: data.data.signal ?? 'hold'
-                },
-                components: data.data.components || {},
-                timestamp: data.timestamp
-              });
-            }
-          } catch (e) {
-            // Non-JSON message
-          }
-        };
-        
-        ws.onclose = () => {
-          console.log(`[AI WS] Disconnected for ${symbolClean}`);
-          setConnected(false);
-          
-          // Fall back to polling if WebSocket disconnects
-          if (fallbackToPolling) {
-            startPolling();
-          }
-        };
-        
-        ws.onerror = () => {
-          setConnected(false);
-          setError('WebSocket connection failed');
-          
-          // Fall back to polling
-          if (fallbackToPolling) {
-            startPolling();
-          }
-        };
-      } catch (e) {
-        setError(e.message);
-        if (fallbackToPolling) {
-          startPolling();
-        }
-      }
-    };
     
     const fetchPrediction = async () => {
       try {
@@ -316,6 +259,7 @@ export const useRealtimeAIPrediction = (symbol, fallbackToPolling = true) => {
             },
             components: data.model_signals || {}
           });
+          setConnected(true);
         }
       } catch (e) {
         // Generate fallback
@@ -333,19 +277,11 @@ export const useRealtimeAIPrediction = (symbol, fallbackToPolling = true) => {
       }
     };
     
-    const startPolling = () => {
-      fetchPrediction();
-      pollingInterval = setInterval(fetchPrediction, 10000); // Poll every 10s
-    };
-    
-    // Try WebSocket first, fall back to polling
-    connectWebSocket();
-    
-    // Initial fetch regardless
+    // Use HTTP polling for reliable updates
     fetchPrediction();
+    pollingInterval = setInterval(fetchPrediction, 10000);
     
     return () => {
-      if (ws) ws.close();
       if (pollingInterval) clearInterval(pollingInterval);
     };
   }, [symbol, fallbackToPolling]);
