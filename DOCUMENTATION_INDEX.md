@@ -50,6 +50,24 @@ This file provides a complete index of all documentation files in this repositor
 - [AUTO_ERROR_CORRECTION.md](./AUTO_ERROR_CORRECTION.md) - Error handling system
 - [PERFORMANCE_RECOMMENDATIONS.md](./PERFORMANCE_RECOMMENDATIONS.md) - Performance guide
 - [BUTTON_ENHANCEMENTS.md](./BUTTON_ENHANCEMENTS.md) - UI button system
+- [MINIMIZE_OVERFITTING.md](./MINIMIZE_OVERFITTING.md) - ML optimization
+- [ENHANCEMENT_UPGRADES_RECOMMENDATIONS.md](./ENHANCEMENT_UPGRADES_RECOMMENDATIONS.md) - Future upgrades
+
+### AI & ML Enhancements
+- [ENHANCED_EVENT_PREDICTION.md](./ENHANCED_EVENT_PREDICTION.md) - Event prediction system
+- [ENHANCED_HIDDEN_GEM_PREDICTION.md](./ENHANCED_HIDDEN_GEM_PREDICTION.md) - Gem finder
+- [ENHANCED_NEWS_SENTIMENT.md](./ENHANCED_NEWS_SENTIMENT.md) - News analysis
+- [ENHANCED_SENTIMENT_ANALYSIS.md](./ENHANCED_SENTIMENT_ANALYSIS.md) - Sentiment system
+- [ENHANCED_AI_COMMAND_HUB.md](./ENHANCED_AI_COMMAND_HUB.md) - AI control center
+
+### Trading Enhancements
+- [ENHANCED_OPTIONS_TRADING.md](./ENHANCED_OPTIONS_TRADING.md) - Options trading
+- [ENHANCED_EVENT_TIMELINE.md](./ENHANCED_EVENT_TIMELINE.md) - Event timeline
+- [ENHANCED_HISTORICAL_MARKET_DATA.md](./ENHANCED_HISTORICAL_MARKET_DATA.md) - Market data
+
+### Training & Testing
+- [ENHANCED_TESTS_TRAINING.md](./ENHANCED_TESTS_TRAINING.md) - Testing framework
+- [MTF_TRAINING_STATUS_IMPROVEMENTS.md](./MTF_TRAINING_STATUS_IMPROVEMENTS.md) - MTF training
 
 ## 🔍 Finding Documentation
 
