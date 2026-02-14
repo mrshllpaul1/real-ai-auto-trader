@@ -11,7 +11,7 @@ from datetime import datetime
 # Try both URLs
 URLS = [
     "http://localhost:8001/api",
-    "https://cryptodash-43.preview.emergentagent.com/api"
+    "https://push-to-emerge.preview.emergentagent.com/api"
 ]
 
 def test_single_endpoint(base_url, endpoint, timeout=10):

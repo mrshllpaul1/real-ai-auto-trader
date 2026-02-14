@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 
 # Backend URL from frontend environment
-BASE_URL = "https://cryptodash-43.preview.emergentagent.com/api"
+BASE_URL = "https://push-to-emerge.preview.emergentagent.com/api"
 USER_ID = "demo_user_test123"
 
 class MLOptimizationTester:

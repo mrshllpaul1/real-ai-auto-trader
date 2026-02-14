@@ -372,8 +372,8 @@ nginx-code-proxy RUNNING   pid 45
 - All environment variables set ✅
 
 **URL:**
-- Deployment: https://cryptodash-43.preview.emergentagent.com ✅
-- Backend API: https://cryptodash-43.preview.emergentagent.com/api ✅
+- Deployment: https://push-to-emerge.preview.emergentagent.com ✅
+- Backend API: https://push-to-emerge.preview.emergentagent.com/api ✅
 
 ---
 

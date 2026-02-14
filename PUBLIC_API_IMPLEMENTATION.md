@@ -161,7 +161,7 @@ Status: `429 Too Many Requests`
 import requests
 
 API_KEY = "sk-your_api_key_here"
-BASE_URL = "https://cryptodash-43.preview.emergentagent.com/api"
+BASE_URL = "https://push-to-emerge.preview.emergentagent.com/api"
 
 def get_portfolio(user_id):
     response = requests.get(
@@ -181,7 +181,7 @@ print(f"Total Value: ${portfolio['total_value']:.2f}")
 
 ```javascript
 const API_KEY = 'sk-your_api_key_here';
-const BASE_URL = 'https://cryptodash-43.preview.emergentagent.com/api';
+const BASE_URL = 'https://push-to-emerge.preview.emergentagent.com/api';
 
 async function getPortfolio(userId) {
   const response = await fetch(`${BASE_URL}/portfolio/summary?user_id=${userId}`, {
@@ -207,7 +207,7 @@ console.log(`Total Value: $${portfolio.total_value}`);
 ## API Documentation Access
 
 ### Swagger UI (Interactive)
-**URL:** https://cryptodash-43.preview.emergentagent.com/api/docs
+**URL:** https://push-to-emerge.preview.emergentagent.com/api/docs
 
 Features:
 - Try endpoints directly in browser
@@ -216,7 +216,7 @@ Features:
 - Example values
 
 ### ReDoc (Clean Documentation)
-**URL:** https://cryptodash-43.preview.emergentagent.com/api/redoc
+**URL:** https://push-to-emerge.preview.emergentagent.com/api/redoc
 
 Features:
 - Beautiful, searchable docs
@@ -225,7 +225,7 @@ Features:
 - Export options
 
 ### OpenAPI JSON Spec
-**URL:** https://cryptodash-43.preview.emergentagent.com/api/openapi.json
+**URL:** https://push-to-emerge.preview.emergentagent.com/api/openapi.json
 
 Use for:
 - Code generation
