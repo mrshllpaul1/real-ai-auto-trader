@@ -2147,3 +2147,19 @@ agent_communication:
     - agent: "main"
     - message: "COMPREHENSIVE HEALTH & SAFETY HARDENING - Feb 14, 2026. Security audit found 12 critical weaknesses. All fixed: 1) 239 instances of detail=str(e) leaking internal errors - ALL replaced with safe generic messages. 2) Global exception handler catches any remaining unhandled errors. 3) NoSQL injection prevention in validation middleware. 4) Auth guards on trade execution endpoints. 5) Audit logging on all sensitive operations (trades, credentials, settings). 6) Deep health check endpoint. 7) .env duplicates cleaned. 8) CORS methods tightened. Please test to verify all critical APIs still work and security improvements are active."
 
+
+  - task: "CSRF Protection + API Key Auth Enforcement"
+    implemented: true
+    working: needs_testing
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: pending
+        - agent: "main"
+        - comment: "Implemented CSRF double-submit cookie pattern + session-based authentication + API key enforcement. New endpoints: POST /api/auth/session, GET /api/auth/csrf-token, POST /api/auth/session/validate, POST /api/auth/session/revoke. Frontend axios interceptor auto-attaches X-CSRF-Token + X-Session-Token headers. Auto-retry on 401/403 with session refresh."
+
+agent_communication:
+    - agent: "main"
+    - message: "CSRF + AUTH IMPLEMENTATION - Feb 14, 2026. Test the following: 1) GET /api/health should still work without auth. 2) POST /api/auth/session should create a session token. 3) GET /api/auth/csrf-token should return csrf token and set cookie. 4) POST to any /api/* endpoint WITHOUT csrf token should return 403 CSRF_MISSING. 5) POST to any /api/* endpoint WITH csrf cookie + X-CSRF-Token header + X-Session-Token should succeed. 6) POST with X-API-Key header should skip CSRF check. 7) Kraken status, ensemble status, tethys status (all GETs) should still work. 8) Session validation endpoint should work."
+
