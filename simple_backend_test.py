@@ -9,7 +9,7 @@ import time
 import json
 
 # Backend URL from environment
-BACKEND_URL = "https://launch-crypto-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://enhance-test.preview.emergentagent.com/api"
 
 def test_endpoint_simple(endpoint, method="GET", data=None, timeout=60):
     """Test endpoint with extended timeout due to system load"""
