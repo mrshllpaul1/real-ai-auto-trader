@@ -64,7 +64,36 @@ const SuspenseWrapper = ({ children }) => (
   </Suspense>
 );
 
-function App() {
+// App Router component to handle auth callback detection
+function AppRouter() {
+  const location = useLocation();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  
+  // Check URL fragment for session_id (OAuth callback)
+  if (location.hash?.includes('session_id=')) {
+    return <AuthCallback />;
+  }
+  
+  // Check if we should show onboarding (passed from AuthCallback)
+  useEffect(() => {
+    if (location.state?.showOnboarding) {
+      setShowOnboarding(true);
+    }
+  }, [location.state]);
+  
+  return (
+    <>
+      <AppContent />
+      <OnboardingTour 
+        isOpen={showOnboarding} 
+        onClose={() => setShowOnboarding(false)}
+        onComplete={() => setShowOnboarding(false)}
+      />
+    </>
+  );
+}
+
+function AppContent() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   
