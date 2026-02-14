@@ -19,15 +19,18 @@ class ValidationMiddleware(BaseHTTPMiddleware):
     # Maximum request body size (10MB)
     MAX_BODY_SIZE = 10 * 1024 * 1024
     
-    # Paths to skip validation
-    SKIP_PATHS = [
+    # Paths to skip validation (exact match or prefix with specific endings)
+    SKIP_PATHS = {
         '/api/health',
+        '/api/health/deep',
         '/api/docs',
         '/api/redoc',
         '/api/openapi.json',
         '/health',
-        '/',
-    ]
+    }
+    
+    # Exact paths to skip
+    EXACT_SKIP = {'/', '/api/'}
     
     # MongoDB operators that should NEVER be in user input
     DANGEROUS_OPERATORS = [
