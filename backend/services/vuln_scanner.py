@@ -56,11 +56,14 @@ class VulnerabilityScannerService:
     def _run_backend_audit(self) -> dict:
         """Run pip-audit and parse output."""
         try:
+            import sys
+            python_bin = sys.executable  # Use same Python as the running server
             proc = subprocess.run(
-                ["python3", "-m", "pip_audit", "--format", "json", "--output", "-"],
+                [python_bin, "-m", "pip_audit", "--format", "json", "--output", "-"],
                 capture_output=True, text=True, timeout=120,
                 cwd="/app/backend",
             )
+            logger.debug(f"pip-audit returncode={proc.returncode} stdout_len={len(proc.stdout)}")
             data = json.loads(proc.stdout) if proc.stdout.strip() else {}
             deps = data.get("dependencies", [])
             vulns = [d for d in deps if d.get("vulns")]
