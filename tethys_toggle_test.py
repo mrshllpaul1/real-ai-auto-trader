@@ -19,7 +19,7 @@ import time
 from datetime import datetime
 
 # Backend URL configuration
-BASE_URL = "https://enhance-test.preview.emergentagent.com/api"
+BASE_URL = "https://cryptodash-43.preview.emergentagent.com/api"
 
 class TethysToggleTester:
     def __init__(self):

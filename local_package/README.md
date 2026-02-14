@@ -156,4 +156,4 @@ TWELVE_DATA_API_KEY=your_key
 
 ## Support
 
-Test URL: https://enhance-test.preview.emergentagent.com
+Test URL: https://cryptodash-43.preview.emergentagent.com

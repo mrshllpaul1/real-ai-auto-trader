@@ -372,8 +372,8 @@ nginx-code-proxy RUNNING   pid 45
 - All environment variables set ✅
 
 **URL:**
-- Deployment: https://enhance-test.preview.emergentagent.com ✅
-- Backend API: https://enhance-test.preview.emergentagent.com/api ✅
+- Deployment: https://cryptodash-43.preview.emergentagent.com ✅
+- Backend API: https://cryptodash-43.preview.emergentagent.com/api ✅
 
 ---
 

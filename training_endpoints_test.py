@@ -19,7 +19,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Any
 
 # Backend URL configuration
-BASE_URL = "https://enhance-test.preview.emergentagent.com/api"
+BASE_URL = "https://cryptodash-43.preview.emergentagent.com/api"
 
 class TrainingEndpointsTester:
     def __init__(self):
