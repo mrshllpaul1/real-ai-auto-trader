@@ -38,7 +38,7 @@ async def set_target_allocation(
     try:
         return await rebalancer.set_target_allocation(user_id, request.allocations)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Invalid request parameters.")
     except Exception as e:
         raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 

@@ -229,7 +229,7 @@ async def promote_model(
         registry.promote_model(model_name, version, stage)
         return {"status": "promoted", "model": model_name, "version": version, "stage": stage}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Invalid request parameters.")
 
 
 # =============================================================================

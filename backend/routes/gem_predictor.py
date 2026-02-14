@@ -285,7 +285,7 @@ async def verify_prediction(prediction_id: str, actual_gains: dict):
         return {"status": "verified", "updated": result.modified_count > 0}
         
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Invalid request parameters.")
 
 
 # Backtester reference
