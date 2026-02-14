@@ -53,13 +53,14 @@ class RateLimitConfig:
         '/api/redoc',
         '/api/openapi.json',
         '/health',
-        '/',
         '/api/training',
         '/api/training-progress',
         '/api/tethys-train',
         '/api/enhanced-mtf-training',
         '/api/learning',
     ]
+    
+    EXACT_SKIP_PATHS = ['/', '/api/']
 
 
 class TokenBucket:
