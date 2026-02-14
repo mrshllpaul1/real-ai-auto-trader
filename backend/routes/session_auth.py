@@ -58,8 +58,8 @@ async def create_session(request: Request, response: Response):
             key="csrf_token",
             value=csrf_token,
             httponly=False,
-            samesite="lax",
-            secure=False,
+            samesite=COOKIE_SAMESITE,
+            secure=COOKIE_SECURE,
             max_age=86400,
             path="/",
         )
@@ -88,8 +88,8 @@ async def get_csrf_token(request: Request, response: Response):
         key="csrf_token",
         value=token,
         httponly=False,
-        samesite="lax",
-        secure=False,
+        samesite=COOKIE_SAMESITE,
+        secure=COOKIE_SECURE,
         max_age=86400,
         path="/",
     )
