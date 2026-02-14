@@ -450,7 +450,7 @@ app.add_middleware(
     allow_origins=CORS_ORIGINS,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
-    expose_headers=["X-Request-ID", "X-RateLimit-Remaining-Minute", "X-RateLimit-Remaining-Hour", "X-Audit-ID"],
+    expose_headers=["X-Request-ID", "X-RateLimit-Remaining-Minute", "X-RateLimit-Remaining-Hour", "X-Audit-ID", "X-CSRF-Token"],
 )
 
 
