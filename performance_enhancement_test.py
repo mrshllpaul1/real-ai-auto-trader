@@ -20,7 +20,7 @@ from typing import Dict, Any, List
 import os
 
 # Get backend URL from environment
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://kraken-security-scan.preview.emergentagent.com')
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://csrf-api-guard.preview.emergentagent.com')
 BASE_URL = f"{BACKEND_URL}/api"
 
 class PerformanceEnhancementTester:

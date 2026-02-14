@@ -13,7 +13,7 @@ import time
 import os
 from typing import Dict, List, Tuple, Any
 
-BACKEND_URL = "https://kraken-security-scan.preview.emergentagent.com"
+BACKEND_URL = "https://csrf-api-guard.preview.emergentagent.com"
 
 class ComprehensiveSecurityTester:
     def __init__(self, base_url: str):

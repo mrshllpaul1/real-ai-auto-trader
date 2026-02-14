@@ -33,7 +33,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 
 # Use production URL from frontend .env
-BACKEND_URL = "https://kraken-security-scan.preview.emergentagent.com/api"
+BACKEND_URL = "https://csrf-api-guard.preview.emergentagent.com/api"
 print(f"🔗 Testing Comprehensive Backend API at: {BACKEND_URL}")
 
 class ComprehensiveBackendTester:

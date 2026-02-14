@@ -372,8 +372,8 @@ nginx-code-proxy RUNNING   pid 45
 - All environment variables set ✅
 
 **URL:**
-- Deployment: https://kraken-security-scan.preview.emergentagent.com ✅
-- Backend API: https://kraken-security-scan.preview.emergentagent.com/api ✅
+- Deployment: https://csrf-api-guard.preview.emergentagent.com ✅
+- Backend API: https://csrf-api-guard.preview.emergentagent.com/api ✅
 
 ---
 

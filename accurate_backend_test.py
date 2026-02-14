@@ -4,7 +4,7 @@ AICryptoTrade Platform - Accurate Backend API Testing
 ====================================================
 Testing the actual implemented API endpoints based on route analysis.
 
-Backend URL: https://kraken-security-scan.preview.emergentagent.com
+Backend URL: https://csrf-api-guard.preview.emergentagent.com
 """
 
 import requests
@@ -15,7 +15,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://kraken-security-scan.preview.emergentagent.com/api"
+BACKEND_URL = "https://csrf-api-guard.preview.emergentagent.com/api"
 print(f"🔗 Testing AICryptoTrade Backend API at: {BACKEND_URL}")
 
 class AccurateAPITester:

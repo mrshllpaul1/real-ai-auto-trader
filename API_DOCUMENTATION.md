@@ -1,7 +1,7 @@
 # AI Crypto Trading Platform - Public API Documentation
 
 **Version:** 1.0.0  
-**Base URL:** `https://kraken-security-scan.preview.emergentagent.com/api`  
+**Base URL:** `https://csrf-api-guard.preview.emergentagent.com/api`  
 **Documentation:** `/api/docs` (Swagger UI)  
 **OpenAPI Spec:** `/api/openapi.json`
 
@@ -12,7 +12,7 @@
 ### 1. Create an API Key
 
 ```bash
-curl -X POST "https://kraken-security-scan.preview.emergentagent.com/api/api-keys/create" \
+curl -X POST "https://csrf-api-guard.preview.emergentagent.com/api/api-keys/create" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "My Trading Bot",
@@ -39,7 +39,7 @@ curl -X POST "https://kraken-security-scan.preview.emergentagent.com/api/api-key
 ### 2. Make Your First API Call
 
 ```bash
-curl -X GET "https://kraken-security-scan.preview.emergentagent.com/api/portfolio/summary" \
+curl -X GET "https://csrf-api-guard.preview.emergentagent.com/api/portfolio/summary" \
   -H "X-API-Key: sk-your_api_key_here"
 ```
 
@@ -238,7 +238,7 @@ import requests
 
 class TradingAPI:
     def __init__(self, api_key):
-        self.base_url = "https://kraken-security-scan.preview.emergentagent.com/api"
+        self.base_url = "https://csrf-api-guard.preview.emergentagent.com/api"
         self.headers = {"X-API-Key": api_key}
     
     def get_portfolio(self, user_id):
@@ -276,7 +276,7 @@ const axios = require('axios');
 
 class TradingAPI {
   constructor(apiKey) {
-    this.baseURL = 'https://kraken-security-scan.preview.emergentagent.com/api';
+    this.baseURL = 'https://csrf-api-guard.preview.emergentagent.com/api';
     this.apiKey = apiKey;
   }
 
