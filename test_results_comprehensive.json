@@ -1,0 +1,2893 @@
+{
+  "timestamp": "2026-02-14T17:29:13.453562",
+  "total_endpoints": 79,
+  "success_rate": 41.77215189873418,
+  "category_stats": {
+    "Core System": {
+      "total": 3,
+      "passed": 2,
+      "failed": 1
+    },
+    "Trading & Portfolio": {
+      "total": 8,
+      "passed": 2,
+      "failed": 6
+    },
+    "Market Data": {
+      "total": 5,
+      "passed": 3,
+      "failed": 2
+    },
+    "AI & Strategy": {
+      "total": 10,
+      "passed": 5,
+      "failed": 5
+    },
+    "Automation": {
+      "total": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    "Backtesting & Analysis": {
+      "total": 5,
+      "passed": 0,
+      "failed": 5
+    },
+    "News & Social": {
+      "total": 8,
+      "passed": 2,
+      "failed": 6
+    },
+    "DeFi & Web3": {
+      "total": 5,
+      "passed": 1,
+      "failed": 4
+    },
+    "Settings & Notifications": {
+      "total": 6,
+      "passed": 2,
+      "failed": 4
+    },
+    "Models & Training": {
+      "total": 7,
+      "passed": 5,
+      "failed": 2
+    },
+    "Features & Extensions": {
+      "total": 7,
+      "passed": 2,
+      "failed": 5
+    },
+    "System Health & Monitoring": {
+      "total": 6,
+      "passed": 2,
+      "failed": 4
+    },
+    "Journal & Records": {
+      "total": 3,
+      "passed": 1,
+      "failed": 2
+    }
+  },
+  "results": [
+    {
+      "category": "Core System",
+      "method": "GET",
+      "endpoint": "/health",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 261.9,
+      "data": {
+        "status": "healthy",
+        "database": "connected",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "category": "Core System",
+      "method": "GET",
+      "endpoint": "/tethys/status",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 74.8,
+      "data": {
+        "agent": "Tethys",
+        "version": "1.0.0",
+        "risk_gateway": {
+          "agent": "Tethys",
+          "version": "1.0.0",
+          "limits": {
+            "max_position_pct": 0.25,
+            "max_total_exposure_pct": 1.0,
+            "max_single_trade_pct": 0.1,
+            "max_daily_loss_pct": 0.05,
+            "max_drawdown_pct": 0.15,
+            "max_consecutive_losses": 5,
+            "max_volatility_multiplier": 3.0,
+            "volatility_lookback": 24,
+            "circuit_breaker_loss_pct": 0.1,
+            "circuit_breaker_duration_hours": 24,
+            "max_price_change_pct": 0.2,
+            "min_liquidity_usd": 1000
+          },
+          "state": {
+            "portfolio_value": 0.0,
+            "peak_value": 0.0,
+            "daily_pnl_pct": 0.0,
+            "current_drawdown_pct": 0.0,
+            "consecutive_losses": 0,
+            "circuit_breaker_active": false,
+            "positions": {}
+          },
+          "recent_violations": []
+        },
+        "audit_summary": {
+          "session_id": "Tethys_20260214_170849",
+          "agent": "Tethys",
+          "total_decisions": 0,
+          "executed_trades": 0,
+          "blocked_by_risk": 0,
+          "avg_confidence": 0,
+          "avg_uncertainty": 0
+        },
+        "uncertainty": {
+          "status": "no_data",
+          "agent": "Tethys"
+        },
+        "persisted_states": {
+          "tethys_trading": false,
+          "tethys_autopilot": false,
+          "auto_trading": false,
+          "real_trading_enabled": false
+        }
+      }
+    },
+    {
+      "category": "Core System",
+      "method": "GET",
+      "endpoint": "/consolidated/full-status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 82.4,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Trading & Portfolio",
+      "method": "GET",
+      "endpoint": "/trading/portfolio",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 61.4,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Trading & Portfolio",
+      "method": "GET",
+      "endpoint": "/trading/positions",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 70.6,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Trading & Portfolio",
+      "method": "GET",
+      "endpoint": "/trading/history",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 61.2,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Trading & Portfolio",
+      "method": "GET",
+      "endpoint": "/kraken/status",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 451.0,
+      "data": {
+        "connected": true,
+        "authenticated": true,
+        "trading_enabled": false,
+        "timestamp": "2026-02-14T17:29:06.996857",
+        "btc_price": 69820.1,
+        "has_usd_balance": true,
+        "isolated_budget": 0
+      }
+    },
+    {
+      "category": "Trading & Portfolio",
+      "method": "GET",
+      "endpoint": "/kraken/portfolio",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 73.6,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Trading & Portfolio",
+      "method": "GET",
+      "endpoint": "/kraken/pairs",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 193.8,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Trading & Portfolio",
+      "method": "GET",
+      "endpoint": "/spot-trading/positions",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 61.8,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Trading & Portfolio",
+      "method": "GET",
+      "endpoint": "/paper-trading/portfolio",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 58.0,
+      "data": {
+        "balance": 500.0,
+        "positions": {},
+        "positions_count": 0,
+        "positions_value": 0,
+        "total_value": 500.0,
+        "initial_balance": 500.0,
+        "pnl": 0.0,
+        "trades_executed": 0
+      }
+    },
+    {
+      "category": "Market Data",
+      "method": "GET",
+      "endpoint": "/market/prices",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 480.3,
+      "data": {
+        "bitcoin": {
+          "price": 69841.30300482876,
+          "price_change_24h": 1.42,
+          "price_change_7d": 1.43,
+          "market_cap": 1396076732756.6365,
+          "volume_24h": 34888740598.9104,
+          "data_sources": [
+            "coinstats"
+          ],
+          "aggregated": true
+        },
+        "ethereum": {
+          "price": 2085.8908912662496,
+          "price_change_24h": 1.44,
+          "price_change_7d": 1.86,
+          "market_cap": 251751319645.6433,
+          "volume_24h": 20189598331.051582,
+          "data_sources": [
+            "coinstats"
+          ],
+          "aggregated": true
+        }
+      }
+    },
+    {
+      "category": "Market Data",
+      "method": "GET",
+      "endpoint": "/market/trending",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 149.8,
+      "data": {
+        "trending_coins": [
+          {
+            "id": "pi-network",
+            "name": "Pi Network",
+            "symbol": "PI",
+            "market_cap_rank": 53
+          },
+          {
+            "id": "pudgy-penguins",
+            "name": "Pudgy Penguins",
+            "symbol": "PENGU",
+            "market_cap_rank": 103
+          },
+          {
+            "id": "bitcoin",
+            "name": "Bitcoin",
+            "symbol": "BTC",
+            "market_cap_rank": 1
+          },
+          {
+            "id": "pippin",
+            "name": "pippin",
+            "symbol": "PIPPIN",
+            "market_cap_rank": 89
+          },
+          {
+            "id": "solana",
+            "name": "Solana",
+            "symbol": "SOL",
+            "market_cap_rank": 7
+          },
+          {
+            "id": "bittensor",
+            "name": "Bittensor",
+            "symbol": "TAO",
+            "market_cap_rank": 43
+          },
+          {
+            "id": "virtual-protocol",
+            "name": "Virtuals Protocol",
+            "symbol": "VIRTUAL",
+            "market_cap_rank": 108
+          },
+          {
+            "id": "aster-2",
+            "name": "Aster",
+            "symbol": "ASTER",
+            "market_cap_rank": 45
+          },
+          {
+            "id": "layerzero",
+            "name": "LayerZero",
+            "symbol": "ZRO",
+            "market_cap_rank": 118
+          },
+          {
+            "id": "bitlayer-bitvm",
+            "name": "Bitlayer",
+            "symbol": "BTR",
+            "market_cap_rank": 415
+          }
+        ]
+      }
+    },
+    {
+      "category": "Market Data",
+      "method": "GET",
+      "endpoint": "/market/global",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 540.5,
+      "data": {
+        "global_metrics": {
+          "total_market_cap": 2398137900821.9565,
+          "total_volume_24h": 85412128915.51,
+          "bitcoin_dominance": 58.232763063473,
+          "ethereum_dominance": 10.500241300446,
+          "active_cryptocurrencies": 8862,
+          "active_exchanges": 923
+        },
+        "sources": [
+          "coinmarketcap",
+          "coinstats",
+          "coingecko"
+        ],
+        "last_updated": "2026-02-14T17:29:08.950153"
+      }
+    },
+    {
+      "category": "Market Data",
+      "method": "GET",
+      "endpoint": "/ohlcv/supported-pairs",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 55.2,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Market Data",
+      "method": "GET",
+      "endpoint": "/enhanced-data/market-depth/BTC",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 64.7,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "AI & Strategy",
+      "method": "GET",
+      "endpoint": "/ensemble/status",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 51.8,
+      "data": {
+        "ensemble_initialized": true,
+        "optimizer_initialized": true,
+        "deep_learning_available": false,
+        "model_weights": {
+          "lstm": 0.25,
+          "technical": 0.2,
+          "pattern": 0.15,
+          "momentum": 0.15,
+          "trend": 0.1,
+          "volatility": 0.1,
+          "sentiment": 0.05
+        },
+        "universe_rebuild_status": {
+          "running": false,
+          "started_at": null,
+          "progress": 0,
+          "progress_message": "",
+          "coins_analyzed": 0,
+          "total_coins": 0,
+          "result": null,
+          "comparison": null,
+          "error": null
+        },
+        "timestamp": "2026-02-14T17:29:09.128768"
+      }
+    },
+    {
+      "category": "AI & Strategy",
+      "method": "GET",
+      "endpoint": "/ensemble/signals/BTC",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 49.7,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "AI & Strategy",
+      "method": "GET",
+      "endpoint": "/tethys/status",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 50.4,
+      "data": {
+        "agent": "Tethys",
+        "version": "1.0.0",
+        "risk_gateway": {
+          "agent": "Tethys",
+          "version": "1.0.0",
+          "limits": {
+            "max_position_pct": 0.25,
+            "max_total_exposure_pct": 1.0,
+            "max_single_trade_pct": 0.1,
+            "max_daily_loss_pct": 0.05,
+            "max_drawdown_pct": 0.15,
+            "max_consecutive_losses": 5,
+            "max_volatility_multiplier": 3.0,
+            "volatility_lookback": 24,
+            "circuit_breaker_loss_pct": 0.1,
+            "circuit_breaker_duration_hours": 24,
+            "max_price_change_pct": 0.2,
+            "min_liquidity_usd": 1000
+          },
+          "state": {
+            "portfolio_value": 0.0,
+            "peak_value": 0.0,
+            "daily_pnl_pct": 0.0,
+            "current_drawdown_pct": 0.0,
+            "consecutive_losses": 0,
+            "circuit_breaker_active": false,
+            "positions": {}
+          },
+          "recent_violations": []
+        },
+        "audit_summary": {
+          "session_id": "Tethys_20260214_170849",
+          "agent": "Tethys",
+          "total_decisions": 0,
+          "executed_trades": 0,
+          "blocked_by_risk": 0,
+          "avg_confidence": 0,
+          "avg_uncertainty": 0
+        },
+        "uncertainty": {
+          "status": "no_data",
+          "agent": "Tethys"
+        },
+        "persisted_states": {
+          "tethys_trading": false,
+          "tethys_autopilot": false,
+          "auto_trading": false,
+          "real_trading_enabled": false
+        }
+      }
+    },
+    {
+      "category": "AI & Strategy",
+      "method": "GET",
+      "endpoint": "/tethys/metrics",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 431.0,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "AI & Strategy",
+      "method": "GET",
+      "endpoint": "/ai-portfolio/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 72.9,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "AI & Strategy",
+      "method": "GET",
+      "endpoint": "/adaptive-strategy/status",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 71.9,
+      "data": {
+        "is_monitoring": false,
+        "current_regime": null,
+        "total_regime_variants": 0,
+        "predicted_events_count": 0,
+        "adaptation_history_count": 0,
+        "regime_history_count": 0
+      }
+    },
+    {
+      "category": "AI & Strategy",
+      "method": "GET",
+      "endpoint": "/advanced-ai/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 55.1,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "AI & Strategy",
+      "method": "GET",
+      "endpoint": "/ai-decisions/recent",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 58.2,
+      "data": {
+        "decisions": [],
+        "count": 0,
+        "gem_candidates": [],
+        "fetched_at": "2026-02-14T17:29:09.912004"
+      }
+    },
+    {
+      "category": "AI & Strategy",
+      "method": "GET",
+      "endpoint": "/ai-explain/available-models",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 56.4,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "AI & Strategy",
+      "method": "GET",
+      "endpoint": "/confidence-explain/summary",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 70.7,
+      "data": {
+        "symbol": "SUMMARY",
+        "confidence": 0.65,
+        "signal": "hold",
+        "explanation": "The AI model is neutral on SUMMARY with moderate confidence (65%). Key factors driving this prediction: Price above upper Bollinger Band (49900.0% above), potential pullback expected; Balanced order book (10% imbalance); Normal social volume (1.1x).",
+        "summary": "HOLD (65%) - Primary driver: Bollinger Bands",
+        "key_drivers": [
+          {
+            "category": "technical",
+            "feature": "Bollinger Bands",
+            "contribution": 0.06,
+            "direction": "bearish",
+            "explanation": "Price above upper Bollinger Band (49900.0% above), potential pullback expected",
+            "raw_contribution": -0.6
+          },
+          {
+            "category": "market_structure",
+            "feature": "Order Book",
+            "contribution": 0.0075,
+            "direction": "neutral",
+            "explanation": "Balanced order book (10% imbalance)",
+            "raw_contribution": 0.05
+          },
+          {
+            "category": "sentiment",
+            "feature": "Social Volume",
+            "contribution": 0.006,
+            "direction": "neutral",
+            "explanation": "Normal social volume (1.1x)",
+            "raw_contribution": 0.05
+          },
+          {
+            "category": "on_chain",
+            "feature": "Active Addresses",
+            "contribution": 0.005000000000000001,
+            "direction": "neutral",
+            "explanation": "Stable network activity (5.0% change)",
+            "raw_contribution": 0.05
+          },
+          {
+            "category": "technical",
+            "feature": "Price Momentum",
+            "contribution": 0.0048,
+            "direction": "neutral",
+            "explanation": "Weak momentum (2.0%), no clear directional bias",
+            "raw_contribution": 0.04
+          }
+        ],
+        "breakdown": {
+          "technical": {
+            "contribution": -0.055,
+            "weight": 0.118,
+            "bullish_signals": 0,
+            "bearish_signals": 1,
+            "neutral_signals": 4,
+            "dominant_direction": "bearish"
+          },
+          "sentiment": {
+            "contribution": 0.012,
+            "weight": 0.15,
+            "bullish_signals": 0,
+            "bearish_signals": 0,
+            "neutral_signals": 3,
+            "dominant_direction": "neutral"
+          },
+          "on_chain": {
+            "contribution": 0.005,
+            "weight": 0.11,
+            "bullish_signals": 0,
+            "bearish_signals": 0,
+            "neutral_signals": 2,
+            "dominant_direction": "neutral"
+          },
+          "market_structure": {
+            "contribution": 0.007,
+            "weight": 0.115,
+            "bullish_signals": 0,
+            "bearish_signals": 0,
+            "neutral_signals": 2,
+            "dominant_direction": "neutral"
+          }
+        },
+        "contributions": [
+          {
+            "category": "technical",
+            "features": [
+              {
+                "name": "RSI",
+                "value": 50,
+                "contribution": 0.0,
+                "direction": "neutral",
+                "explanation": "RSI at 50 is in neutral territory, neither overbought nor oversold",
+                "importance": 0.15
+              },
+              {
+                "name": "MACD",
+                "value": 0,
+                "contribution": 0,
+                "direction": "neutral",
+                "explanation": "MACD at crossover point, momentum indeterminate",
+                "importance": 0.12
+              },
+              {
+                "name": "Bollinger Bands",
+                "value": 50000,
+                "contribution": -0.6,
+                "direction": "bearish",
+                "explanation": "Price above upper Bollinger Band (49900.0% above), potential pullback expected",
+                "importance": 0.1
+              },
+              {
+                "name": "Volume Trend",
+                "value": 1.2,
+                "contribution": 0,
+                "direction": "neutral",
+                "explanation": "Normal volume levels (1.2x)",
+                "importance": 0.1
+              },
+              {
+                "name": "Price Momentum",
+                "value": 0.02,
+                "contribution": 0.04,
+                "direction": "neutral",
+                "explanation": "Weak momentum (2.0%), no clear directional bias",
+                "importance": 0.12
+              }
+            ]
+          },
+          {
+            "category": "sentiment",
+            "features": [
+              {
+                "name": "News Sentiment",
+                "value": 0.55,
+                "contribution": 0.025,
+                "direction": "neutral",
+                "explanation": "Mixed news sentiment (55%), no strong narrative",
+                "importance": 0.18
+              },
+              {
+                "name": "Fear & Greed Index",
+                "value": 45,
+                "contribution": 0.01,
+                "direction": "neutral",
+                "explanation": "Fear & Greed at 45, market sentiment balanced",
+                "importance": 0.15
+              },
+              {
+                "name": "Social Volume",
+                "value": 1.1,
+                "contribution": 0.05,
+                "direction": "neutral",
+                "explanation": "Normal social volume (1.1x)",
+                "importance": 0.12
+              }
+            ]
+          },
+          {
+            "category": "on_chain",
+            "features": [
+              {
+                "name": "Exchange Flow",
+                "value": -0.01,
+                "contribution": 0,
+                "direction": "neutral",
+                "explanation": "Balanced exchange flows (-1.0%)",
+                "importance": 0.12
+              },
+              {
+                "name": "Active Addresses",
+                "value": 0.05,
+                "contribution": 0.05,
+                "direction": "neutral",
+                "explanation": "Stable network activity (5.0% change)",
+                "importance": 0.1
+              }
+            ]
+          },
+          {
+            "category": "market_structure",
+            "features": [
+              {
+                "name": "Order Book",
+                "value": 0.1,
+                "contribution": 0.05,
+                "direction": "neutral",
+                "explanation": "Balanced order book (10% imbalance)",
+                "importance": 0.15
+              },
+              {
+                "name": "Bid-Ask Spread",
+                "value": 0.002,
+                "contribution": 0,
+                "direction": "neutral",
+                "explanation": "Normal spread (0.200%)",
+                "importance": 0.08
+              }
+            ]
+          }
+        ],
+        "agreement_score": 91.67,
+        "insights": [],
+        "risk_factors": [],
+        "confidence_level": "high",
+        "timestamp": "2026-02-14T17:29:10.026401+00:00"
+      }
+    },
+    {
+      "category": "Automation",
+      "method": "GET",
+      "endpoint": "/auto-trading/status",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 54.0,
+      "data": {
+        "initialized": false,
+        "running": false,
+        "persisted_running": false,
+        "message": "Auto-trading not initialized"
+      }
+    },
+    {
+      "category": "Automation",
+      "method": "GET",
+      "endpoint": "/auto-exec/status",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 65.7,
+      "data": {
+        "running": false,
+        "enabled": false,
+        "mode": "paper",
+        "daily_trades_used": 0,
+        "daily_trades_limit": 5,
+        "open_positions": 0,
+        "open_positions_details": [],
+        "total_closed_trades": 0,
+        "total_profit_pct": 0,
+        "win_rate": 0,
+        "recent_trades": [],
+        "risk_profile": {
+          "enabled": false,
+          "mode": "paper",
+          "min_score": 60,
+          "min_alert_level": "HIGH",
+          "max_position_size_usd": 100,
+          "max_daily_trades": 5,
+          "max_open_positions": 3,
+          "stop_loss_pct": 10,
+          "take_profit_pct": 50,
+          "allowed_signals": [
+            "MACD_BULLISH",
+            "BOLLINGER_SQUEEZE",
+            "OVERSOLD_ACCUMULATION",
+            "DEEP_VALUE",
+            "TREND_REVERSAL",
+            "EXTREME_VOLUME"
+          ],
+          "blacklisted_coins": [],
+          "preferred_coins": []
+        }
+      }
+    },
+    {
+      "category": "Automation",
+      "method": "GET",
+      "endpoint": "/master/status",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 51.0,
+      "data": {
+        "is_active": false,
+        "mode": "auto_small",
+        "portfolio_value": 0.0,
+        "small_trade_threshold": 100.0,
+        "pending_signals": [],
+        "pending_count": 0,
+        "stats": {
+          "total_signals": 0,
+          "executed_trades": 0,
+          "auto_executed": 0,
+          "confirmed_executed": 0,
+          "rejected": 0,
+          "total_pnl": 0.0,
+          "win_rate": 0.0,
+          "started_at": null
+        },
+        "risk_status": {
+          "daily_pnl_pct": 0.0,
+          "current_drawdown_pct": 0,
+          "peak_portfolio": 0.0,
+          "trades_this_hour": 0,
+          "limits": {
+            "max_position_pct": 10.0,
+            "max_daily_loss_pct": 5.0,
+            "max_drawdown_pct": 15.0,
+            "min_confidence": 60.0
+          }
+        },
+        "recent_trades": [],
+        "persisted_running": false
+      }
+    },
+    {
+      "category": "Automation",
+      "method": "GET",
+      "endpoint": "/growth/status",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 55.3,
+      "data": {
+        "autopilot_active": false,
+        "current_value": 341.03,
+        "initial_value": 500.0,
+        "total_pnl": -158.97000000000003,
+        "total_pnl_pct": -31.794,
+        "target_value": 100000.0,
+        "progress_pct": 0.34103,
+        "positions_count": 0,
+        "trades_executed": 0,
+        "engine_initialized": true
+      }
+    },
+    {
+      "category": "Automation",
+      "method": "GET",
+      "endpoint": "/scheduler/status",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 127.1,
+      "data": {
+        "running": true,
+        "jobs": [
+          {
+            "id": "stop_loss_check",
+            "name": "Stop-Loss/Take-Profit Monitor",
+            "next_run": "2026-02-14T17:30:03.557138+00:00",
+            "trigger": "interval[0:05:00]"
+          },
+          {
+            "id": "portfolio_snapshot",
+            "name": "Portfolio Snapshot",
+            "next_run": "2026-02-14T23:05:03.557314+00:00",
+            "trigger": "interval[6:00:00]"
+          },
+          {
+            "id": "auto_retrain_models",
+            "name": "Daily Model Auto-Retrain",
+            "next_run": "2026-02-15T02:00:00+00:00",
+            "trigger": "cron[hour='2']"
+          },
+          {
+            "id": "new_coin_sync",
+            "name": "Daily New Coin Sync",
+            "next_run": "2026-02-15T03:00:00+00:00",
+            "trigger": "cron[hour='3']"
+          }
+        ],
+        "job_count": 4,
+        "scheduled_jobs": {
+          "stop_loss_check": {
+            "name": "Stop-Loss/Take-Profit Monitor",
+            "trigger": "interval[0:05:00]",
+            "next_run": "2026-02-14T17:30:03.557138+00:00"
+          },
+          "portfolio_snapshot": {
+            "name": "Portfolio Snapshot",
+            "trigger": "interval[6:00:00]",
+            "next_run": "2026-02-14T23:05:03.557314+00:00"
+          },
+          "auto_retrain_models": {
+            "name": "Daily Model Auto-Retrain",
+            "trigger": "cron[hour='2']",
+            "next_run": "2026-02-15T02:00:00+00:00"
+          },
+          "new_coin_sync": {
+            "name": "Daily New Coin Sync",
+            "trigger": "cron[hour='3']",
+            "next_run": "2026-02-15T03:00:00+00:00"
+          }
+        }
+      }
+    },
+    {
+      "category": "Automation",
+      "method": "GET",
+      "endpoint": "/weekly-scheduler/status",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 57.5,
+      "data": {
+        "running": true,
+        "enabled": true,
+        "config": {
+          "enabled": true,
+          "run_day": 6,
+          "run_hour": 0,
+          "run_minute": 0,
+          "main_coins_count": 10,
+          "gem_coins_count": 1,
+          "auto_execute": false,
+          "paper_trade": true,
+          "position_size_pct": 9,
+          "use_isolated_budget": true
+        },
+        "last_run": null,
+        "next_run": "2026-02-15T00:00:00+00:00",
+        "latest_selection": null
+      }
+    },
+    {
+      "category": "Backtesting & Analysis",
+      "method": "GET",
+      "endpoint": "/backtest/results",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 53.5,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Backtesting & Analysis",
+      "method": "GET",
+      "endpoint": "/backtest-engine/status",
+      "status_code": 405,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 57.0,
+      "data": {
+        "detail": "Method Not Allowed"
+      }
+    },
+    {
+      "category": "Backtesting & Analysis",
+      "method": "GET",
+      "endpoint": "/yearly-backtest/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 53.2,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Backtesting & Analysis",
+      "method": "GET",
+      "endpoint": "/risk/metrics",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 62.0,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Backtesting & Analysis",
+      "method": "GET",
+      "endpoint": "/risk-analyzer/portfolio-risk",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 50.7,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "News & Social",
+      "method": "GET",
+      "endpoint": "/news/latest",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 70.8,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "News & Social",
+      "method": "GET",
+      "endpoint": "/events/upcoming",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 76.5,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "News & Social",
+      "method": "GET",
+      "endpoint": "/event-triggers/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 67.4,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "News & Social",
+      "method": "GET",
+      "endpoint": "/sentiment/market",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 54.5,
+      "data": {
+        "market_score": 50.0,
+        "market_label": "neutral",
+        "confidence": 20.0,
+        "coin_sentiments": {
+          "bitcoin": {
+            "coin_id": "bitcoin",
+            "score": 50,
+            "label": "neutral",
+            "confidence": 20,
+            "summary": "No recent news found",
+            "key_factors": [
+              "No recent news available"
+            ],
+            "news_count": 0,
+            "recent_headlines": [],
+            "bullish_signals": [],
+            "bearish_signals": [],
+            "analyzed_at": "2026-02-14T17:17:58.080312"
+          },
+          "ethereum": {
+            "coin_id": "ethereum",
+            "score": 50,
+            "label": "neutral",
+            "confidence": 20,
+            "summary": "No recent news found",
+            "key_factors": [
+              "No recent news available"
+            ],
+            "news_count": 0,
+            "recent_headlines": [],
+            "bullish_signals": [],
+            "bearish_signals": [],
+            "analyzed_at": "2026-02-14T17:17:58.065401"
+          },
+          "binancecoin": {
+            "coin_id": "binancecoin",
+            "score": 50,
+            "label": "neutral",
+            "confidence": 20,
+            "summary": "No recent news found",
+            "key_factors": [
+              "No recent news available"
+            ],
+            "news_count": 0,
+            "recent_headlines": [],
+            "bullish_signals": [],
+            "bearish_signals": [],
+            "analyzed_at": "2026-02-14T17:17:58.069831"
+          },
+          "solana": {
+            "coin_id": "solana",
+            "score": 50,
+            "label": "neutral",
+            "confidence": 20,
+            "summary": "No recent news found",
+            "key_factors": [
+              "No recent news available"
+            ],
+            "news_count": 0,
+            "recent_headlines": [],
+            "bullish_signals": [],
+            "bearish_signals": [],
+            "analyzed_at": "2026-02-14T17:17:58.058367"
+          },
+          "ripple": {
+            "coin_id": "ripple",
+            "score": 50,
+            "label": "neutral",
+            "confidence": 20,
+            "summary": "No recent news found",
+            "key_factors": [
+              "No recent news available"
+            ],
+            "news_count": 0,
+            "recent_headlines": [],
+            "bullish_signals": [],
+            "bearish_signals": [],
+            "analyzed_at": "2026-02-14T17:17:58.096341"
+          }
+        },
+        "analyzed_at": "2026-02-14T17:29:10.997280"
+      }
+    },
+    {
+      "category": "News & Social",
+      "method": "GET",
+      "endpoint": "/social-sentiment/overview",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 63.1,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "News & Social",
+      "method": "GET",
+      "endpoint": "/social/feed",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 55.0,
+      "data": {
+        "feed": [],
+        "count": 0,
+        "offset": 0,
+        "has_more": false,
+        "message": "No shared trades yet. Share your first trade to appear in the feed."
+      }
+    },
+    {
+      "category": "News & Social",
+      "method": "GET",
+      "endpoint": "/social-trading/traders",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 66.6,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "News & Social",
+      "method": "GET",
+      "endpoint": "/paper-leaderboard/rankings",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 105.6,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "DeFi & Web3",
+      "method": "GET",
+      "endpoint": "/defi-wallet/portfolio",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 54.7,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "DeFi & Web3",
+      "method": "GET",
+      "endpoint": "/yield-farming/opportunities",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 61.6,
+      "data": {
+        "opportunities": [
+          {
+            "vault_id": "gmx-glp",
+            "name": "GLP Vault",
+            "protocol": "GMX",
+            "chain": "arbitrum",
+            "token": "GLP",
+            "tokens_accepted": [
+              "ETH",
+              "USDC",
+              "BTC"
+            ],
+            "apy": 35.2,
+            "apy_breakdown": {
+              "eth_rewards": 20.5,
+              "esGMX": 14.7
+            },
+            "tvl": 450000000,
+            "risk_level": "high",
+            "strategy": "Perpetuals liquidity provision",
+            "auto_compound": true,
+            "min_deposit": 100,
+            "withdrawal_fee": 0.3
+          },
+          {
+            "vault_id": "uni-eth-usdc",
+            "name": "ETH/USDC LP",
+            "protocol": "Uniswap V3",
+            "chain": "ethereum",
+            "token": "UNI-V3-LP",
+            "tokens_accepted": [
+              "ETH",
+              "USDC"
+            ],
+            "apy": 25.5,
+            "apy_breakdown": {
+              "fees": 25.5
+            },
+            "tvl": 500000000,
+            "risk_level": "medium",
+            "strategy": "Concentrated liquidity",
+            "auto_compound": false,
+            "min_deposit": 500,
+            "impermanent_loss_risk": "medium",
+            "withdrawal_fee": 0
+          },
+          {
+            "vault_id": "pancake-cake",
+            "name": "CAKE Staking",
+            "protocol": "PancakeSwap",
+            "chain": "bsc",
+            "token": "CAKE",
+            "apy": 22.5,
+            "apy_breakdown": {
+              "staking": 22.5
+            },
+            "tvl": 800000000,
+            "risk_level": "high",
+            "strategy": "Single-sided CAKE staking",
+            "auto_compound": true,
+            "min_deposit": 10,
+            "withdrawal_fee": 0
+          },
+          {
+            "vault_id": "pendle-steth",
+            "name": "stETH Yield",
+            "protocol": "Pendle",
+            "chain": "ethereum",
+            "token": "PT-stETH",
+            "apy": 12.5,
+            "apy_breakdown": {
+              "fixed_yield": 12.5
+            },
+            "tvl": 200000000,
+            "risk_level": "medium",
+            "strategy": "Fixed yield tokenization",
+            "auto_compound": false,
+            "min_deposit": 100,
+            "maturity_date": "2026-12-31"
+          },
+          {
+            "vault_id": "yearn-eth",
+            "name": "ETH Vault",
+            "protocol": "Yearn",
+            "chain": "ethereum",
+            "token": "yvETH",
+            "apy": 8.2,
+            "apy_breakdown": {
+              "strategy_yield": 8.2
+            },
+            "tvl": 150000000,
+            "risk_level": "medium",
+            "strategy": "Auto-compounding multi-strategy",
+            "auto_compound": true,
+            "min_deposit": 0.1,
+            "withdrawal_fee": 0
+          },
+          {
+            "vault_id": "curve-3pool",
+            "name": "3pool LP",
+            "protocol": "Curve + Convex",
+            "chain": "ethereum",
+            "token": "3CRV",
+            "tokens_accepted": [
+              "DAI",
+              "USDC",
+              "USDT"
+            ],
+            "apy": 6.8,
+            "apy_breakdown": {
+              "base": 1.5,
+              "crv": 3.2,
+              "cvx": 2.1
+            },
+            "tvl": 1800000000,
+            "risk_level": "low",
+            "strategy": "Stablecoin LP with boosted rewards",
+            "auto_compound": true,
+            "min_deposit": 100,
+            "withdrawal_fee": 0.04
+          },
+          {
+            "vault_id": "venus-bnb",
+            "name": "BNB Lending",
+            "protocol": "Venus",
+            "chain": "bsc",
+            "token": "BNB",
+            "apy": 5.5,
+            "apy_breakdown": {
+              "lending": 3.2,
+              "xvs": 2.3
+            },
+            "tvl": 500000000,
+            "risk_level": "medium",
+            "strategy": "BNB lending with XVS rewards",
+            "auto_compound": true,
+            "min_deposit": 0.1,
+            "withdrawal_fee": 0
+          },
+          {
+            "vault_id": "aave-usdc-eth",
+            "name": "USDC Lending",
+            "protocol": "Aave V3",
+            "chain": "ethereum",
+            "token": "USDC",
+            "apy": 4.5,
+            "apy_breakdown": {
+              "base": 3.2,
+              "rewards": 1.3
+            },
+            "tvl": 2500000000,
+            "risk_level": "low",
+            "strategy": "Single-sided stablecoin lending",
+            "auto_compound": true,
+            "min_deposit": 100,
+            "withdrawal_fee": 0,
+            "deposit_fee": 0
+          },
+          {
+            "vault_id": "reth-rocket",
+            "name": "rETH Staking",
+            "protocol": "Rocket Pool",
+            "chain": "ethereum",
+            "token": "ETH",
+            "apy": 4.1,
+            "apy_breakdown": {
+              "staking_rewards": 4.1
+            },
+            "tvl": 2000000000,
+            "risk_level": "medium",
+            "strategy": "Decentralized ETH staking",
+            "auto_compound": true,
+            "min_deposit": 0.01,
+            "withdrawal_fee": 0
+          },
+          {
+            "vault_id": "lido-steth",
+            "name": "stETH Staking",
+            "protocol": "Lido",
+            "chain": "ethereum",
+            "token": "ETH",
+            "apy": 3.8,
+            "apy_breakdown": {
+              "staking_rewards": 3.8
+            },
+            "tvl": 15000000000,
+            "risk_level": "medium",
+            "strategy": "Liquid ETH staking",
+            "auto_compound": false,
+            "min_deposit": 0.01,
+            "withdrawal_fee": 0
+          }
+        ],
+        "total": 10,
+        "filters": {
+          "chain": "all",
+          "min_apy": 0,
+          "risk_level": "all"
+        }
+      }
+    },
+    {
+      "category": "DeFi & Web3",
+      "method": "GET",
+      "endpoint": "/web3-wallet/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 62.0,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "DeFi & Web3",
+      "method": "GET",
+      "endpoint": "/defi-ai/predictions",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 61.2,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "DeFi & Web3",
+      "method": "GET",
+      "endpoint": "/onchain/whale-movements",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 59.6,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Settings & Notifications",
+      "method": "GET",
+      "endpoint": "/alerts/active",
+      "status_code": 405,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 52.8,
+      "data": {
+        "detail": "Method Not Allowed"
+      }
+    },
+    {
+      "category": "Settings & Notifications",
+      "method": "GET",
+      "endpoint": "/notifications/recent",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 55.8,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Settings & Notifications",
+      "method": "GET",
+      "endpoint": "/sound-settings/config",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 61.8,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Settings & Notifications",
+      "method": "GET",
+      "endpoint": "/dashboard/layouts",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 59.8,
+      "data": {
+        "layouts": [
+          {
+            "layout_id": "default",
+            "name": "Default Layout",
+            "is_active": true,
+            "is_default": true
+          }
+        ]
+      }
+    },
+    {
+      "category": "Settings & Notifications",
+      "method": "GET",
+      "endpoint": "/budget/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 56.6,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Settings & Notifications",
+      "method": "GET",
+      "endpoint": "/telegram/status",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 68.7,
+      "data": {
+        "bot_configured": false,
+        "user_configured": false,
+        "enabled": false,
+        "chat_id": null,
+        "alert_types": []
+      }
+    },
+    {
+      "category": "Models & Training",
+      "method": "GET",
+      "endpoint": "/training/status",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 51.4,
+      "data": {
+        "trained": true,
+        "summary": {
+          "coins_trained": [
+            "bitcoin",
+            "ethereum",
+            "solana"
+          ],
+          "total_patterns": 175,
+          "successful_patterns": 130,
+          "hidden_gems_found": 0,
+          "avg_gem_multiplier": 0,
+          "training_accuracy": 74.28571428571429,
+          "data_source": "REAL_MARKET_DATA_ONLY",
+          "simulated_data_used": false,
+          "started_at": "2026-02-14T17:22:56.019762",
+          "coin_summaries": [
+            {
+              "coin": "bitcoin",
+              "patterns": 54,
+              "success_rate": 75.92592592592592,
+              "hidden_gems": 0
+            },
+            {
+              "coin": "ethereum",
+              "patterns": 58,
+              "success_rate": 68.96551724137932,
+              "hidden_gems": 0
+            },
+            {
+              "coin": "solana",
+              "patterns": 63,
+              "success_rate": 77.77777777777779,
+              "hidden_gems": 0
+            }
+          ],
+          "completed_at": "2026-02-14T17:23:48.157810"
+        },
+        "coins_trained": [
+          "bitcoin",
+          "ethereum",
+          "solana"
+        ],
+        "total_patterns": 175,
+        "hidden_gems_found": 0,
+        "training_accuracy": 74.28571428571429,
+        "completed_at": "2026-02-14T17:23:48.157810"
+      }
+    },
+    {
+      "category": "Models & Training",
+      "method": "GET",
+      "endpoint": "/training-progress/active",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 131.8,
+      "data": {
+        "active_count": 0,
+        "tasks": []
+      }
+    },
+    {
+      "category": "Models & Training",
+      "method": "GET",
+      "endpoint": "/training-history/recent",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 62.7,
+      "data": {
+        "summary": {
+          "running": 0,
+          "completed": 0,
+          "failed": 0
+        },
+        "sessions": []
+      }
+    },
+    {
+      "category": "Models & Training",
+      "method": "GET",
+      "endpoint": "/model-benchmark/results",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 49.2,
+      "data": {
+        "message": "No benchmark results available. Run a benchmark first.",
+        "has_results": false
+      }
+    },
+    {
+      "category": "Models & Training",
+      "method": "GET",
+      "endpoint": "/ml-monitoring/dashboard",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 58.7,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Models & Training",
+      "method": "GET",
+      "endpoint": "/ml-optimization/experiments",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 135.0,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Models & Training",
+      "method": "GET",
+      "endpoint": "/mtf-training/status",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 55.1,
+      "data": {
+        "status": "idle",
+        "last_trained": null,
+        "coins_trained": 0,
+        "accuracy": 0.0
+      }
+    },
+    {
+      "category": "Features & Extensions",
+      "method": "GET",
+      "endpoint": "/scanner/gems",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 54.5,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Features & Extensions",
+      "method": "GET",
+      "endpoint": "/marketplace/strategies",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 85.0,
+      "data": {
+        "strategies": [],
+        "total": 0,
+        "filters": {
+          "category": null,
+          "sort_by": "subscribers",
+          "price_filter": "all"
+        },
+        "message": "No strategies published yet. Be the first to publish a strategy!"
+      }
+    },
+    {
+      "category": "Features & Extensions",
+      "method": "GET",
+      "endpoint": "/tax/summary",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 51.1,
+      "data": {
+        "year": 2026,
+        "summary": {
+          "total_proceeds": 0,
+          "total_cost_basis": 0,
+          "net_gain_loss": 0,
+          "short_term_gains": 0,
+          "long_term_gains": 0,
+          "total_fees": 0,
+          "estimated_tax": 0.0
+        },
+        "stats": {
+          "total_trades": 0,
+          "disposals": 0,
+          "acquisitions": 0
+        },
+        "warning": "This is an estimate. Consult a tax professional for accurate filing."
+      }
+    },
+    {
+      "category": "Features & Extensions",
+      "method": "GET",
+      "endpoint": "/portfolio-share/public",
+      "status_code": 405,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 55.2,
+      "data": {
+        "detail": "Method Not Allowed"
+      }
+    },
+    {
+      "category": "Features & Extensions",
+      "method": "GET",
+      "endpoint": "/achievements/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 53.3,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Features & Extensions",
+      "method": "GET",
+      "endpoint": "/export/formats",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 48.3,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Features & Extensions",
+      "method": "GET",
+      "endpoint": "/copy-trading/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 54.9,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "System Health & Monitoring",
+      "method": "GET",
+      "endpoint": "/performance/summary",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 78.8,
+      "data": {
+        "status": "ok",
+        "cache": {
+          "hits": 11,
+          "misses": 18,
+          "evictions": 0,
+          "sets": 18,
+          "deletes": 0,
+          "total_requests": 29,
+          "hit_rate_percent": 37.93,
+          "current_size": 3,
+          "max_size": 10000,
+          "utilization_percent": 0.03
+        },
+        "circuit_breakers": {
+          "kraken_auth": {
+            "name": "kraken_auth",
+            "state": "closed",
+            "failures": 0,
+            "successes": 0,
+            "retry_after": 0,
+            "total_calls": 18,
+            "successful_calls": 18,
+            "failed_calls": 0,
+            "rejected_calls": 0,
+            "state_changes": 0
+          },
+          "kraken_public": {
+            "name": "kraken_public",
+            "state": "closed",
+            "failures": 0,
+            "successes": 0,
+            "retry_after": 0,
+            "total_calls": 36,
+            "successful_calls": 36,
+            "failed_calls": 0,
+            "rejected_calls": 0,
+            "state_changes": 0
+          }
+        },
+        "database": {
+          "current_connections": 12,
+          "available_connections": 807,
+          "total_created": 704,
+          "pool_config": {
+            "min_pool_size": 10,
+            "max_pool_size": 100,
+            "max_idle_time_ms": 30000
+          }
+        }
+      }
+    },
+    {
+      "category": "System Health & Monitoring",
+      "method": "GET",
+      "endpoint": "/perf-dashboard/overview",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 83.0,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "System Health & Monitoring",
+      "method": "GET",
+      "endpoint": "/error-tracking/summary",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 58.4,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "System Health & Monitoring",
+      "method": "GET",
+      "endpoint": "/error-alerting/status",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 55.6,
+      "data": {
+        "initialized": true,
+        "enabled": false,
+        "has_api_key": false,
+        "recipient_count": 0,
+        "thresholds": {
+          "errors_per_hour": 50,
+          "critical_errors_trigger": 5,
+          "error_rate_increase_pct": 200
+        }
+      }
+    },
+    {
+      "category": "System Health & Monitoring",
+      "method": "GET",
+      "endpoint": "/monitoring/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 57.0,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "System Health & Monitoring",
+      "method": "GET",
+      "endpoint": "/backup/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 59.0,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Journal & Records",
+      "method": "GET",
+      "endpoint": "/journal/entries",
+      "status_code": 200,
+      "success": true,
+      "has_valid_json": true,
+      "response_time_ms": 50.0,
+      "data": {
+        "entries": [
+          {
+            "user_id": "default",
+            "trade_type": "spot",
+            "coin_id": "bitcoin",
+            "symbol": "BTC/USD",
+            "action": "buy",
+            "amount_usd": 100.0,
+            "price": 50000.0,
+            "quantity": 0.002,
+            "is_paper": true,
+            "is_gem": false,
+            "timestamp": "2026-02-14T17:08:59.132321",
+            "date": "2026-02-14",
+            "ai_insights": {
+              "reasoning": null,
+              "confidence": null,
+              "factors": []
+            },
+            "performance": null,
+            "tags": [],
+            "notes": null
+          },
+          {
+            "user_id": "default",
+            "trade_type": "spot",
+            "coin_id": "bitcoin",
+            "symbol": "BTC/USD",
+            "action": "sell",
+            "amount_usd": 50.0,
+            "price": 51000.0,
+            "quantity": 0.001,
+            "is_paper": true,
+            "is_gem": false,
+            "timestamp": "2026-02-14T17:08:49.359178",
+            "date": "2026-02-14",
+            "ai_insights": {
+              "reasoning": null,
+              "confidence": null,
+              "factors": []
+            },
+            "performance": null,
+            "tags": [],
+            "notes": "Test trade via original journal/record endpoint"
+          },
+          {
+            "user_id": "default",
+            "trade_type": "spot",
+            "coin_id": "bitcoin",
+            "symbol": "BTC/USD",
+            "action": "buy",
+            "amount_usd": 100.0,
+            "price": 50000.0,
+            "quantity": 0.002,
+            "is_paper": true,
+            "is_gem": false,
+            "timestamp": "2026-02-14T17:08:49.215412",
+            "date": "2026-02-14",
+            "ai_insights": {
+              "reasoning": null,
+              "confidence": null,
+              "factors": []
+            },
+            "performance": null,
+            "tags": [],
+            "notes": "Test trade via new journal/add endpoint"
+          }
+        ],
+        "total": 3,
+        "limit": 50,
+        "offset": 0
+      }
+    },
+    {
+      "category": "Journal & Records",
+      "method": "POST",
+      "endpoint": "/journal/add",
+      "status_code": 422,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 49.7,
+      "data": {
+        "detail": [
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "trade_type"
+            ],
+            "msg": "Field required",
+            "input": {
+              "coin_id": "bitcoin",
+              "action": "buy",
+              "amount": 100,
+              "price": 50000
+            },
+            "url": "https://errors.pydantic.dev/2.12/v/missing"
+          },
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "symbol"
+            ],
+            "msg": "Field required",
+            "input": {
+              "coin_id": "bitcoin",
+              "action": "buy",
+              "amount": 100,
+              "price": 50000
+            },
+            "url": "https://errors.pydantic.dev/2.12/v/missing"
+          },
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "amount_usd"
+            ],
+            "msg": "Field required",
+            "input": {
+              "coin_id": "bitcoin",
+              "action": "buy",
+              "amount": 100,
+              "price": 50000
+            },
+            "url": "https://errors.pydantic.dev/2.12/v/missing"
+          },
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "quantity"
+            ],
+            "msg": "Field required",
+            "input": {
+              "coin_id": "bitcoin",
+              "action": "buy",
+              "amount": 100,
+              "price": 50000
+            },
+            "url": "https://errors.pydantic.dev/2.12/v/missing"
+          }
+        ]
+      }
+    },
+    {
+      "category": "Journal & Records",
+      "method": "POST",
+      "endpoint": "/journal/record",
+      "status_code": 422,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 49.8,
+      "data": {
+        "detail": [
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "trade_type"
+            ],
+            "msg": "Field required",
+            "input": {
+              "coin_id": "bitcoin",
+              "action": "sell",
+              "amount": 50,
+              "price": 51000
+            },
+            "url": "https://errors.pydantic.dev/2.12/v/missing"
+          },
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "symbol"
+            ],
+            "msg": "Field required",
+            "input": {
+              "coin_id": "bitcoin",
+              "action": "sell",
+              "amount": 50,
+              "price": 51000
+            },
+            "url": "https://errors.pydantic.dev/2.12/v/missing"
+          },
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "amount_usd"
+            ],
+            "msg": "Field required",
+            "input": {
+              "coin_id": "bitcoin",
+              "action": "sell",
+              "amount": 50,
+              "price": 51000
+            },
+            "url": "https://errors.pydantic.dev/2.12/v/missing"
+          },
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "quantity"
+            ],
+            "msg": "Field required",
+            "input": {
+              "coin_id": "bitcoin",
+              "action": "sell",
+              "amount": 50,
+              "price": 51000
+            },
+            "url": "https://errors.pydantic.dev/2.12/v/missing"
+          }
+        ]
+      }
+    }
+  ],
+  "failed_endpoints": [
+    {
+      "category": "Core System",
+      "method": "GET",
+      "endpoint": "/consolidated/full-status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 82.4,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Trading & Portfolio",
+      "method": "GET",
+      "endpoint": "/trading/portfolio",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 61.4,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Trading & Portfolio",
+      "method": "GET",
+      "endpoint": "/trading/positions",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 70.6,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Trading & Portfolio",
+      "method": "GET",
+      "endpoint": "/trading/history",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 61.2,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Trading & Portfolio",
+      "method": "GET",
+      "endpoint": "/kraken/portfolio",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 73.6,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Trading & Portfolio",
+      "method": "GET",
+      "endpoint": "/kraken/pairs",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 193.8,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Trading & Portfolio",
+      "method": "GET",
+      "endpoint": "/spot-trading/positions",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 61.8,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Market Data",
+      "method": "GET",
+      "endpoint": "/ohlcv/supported-pairs",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 55.2,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Market Data",
+      "method": "GET",
+      "endpoint": "/enhanced-data/market-depth/BTC",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 64.7,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "AI & Strategy",
+      "method": "GET",
+      "endpoint": "/ensemble/signals/BTC",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 49.7,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "AI & Strategy",
+      "method": "GET",
+      "endpoint": "/tethys/metrics",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 431.0,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "AI & Strategy",
+      "method": "GET",
+      "endpoint": "/ai-portfolio/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 72.9,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "AI & Strategy",
+      "method": "GET",
+      "endpoint": "/advanced-ai/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 55.1,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "AI & Strategy",
+      "method": "GET",
+      "endpoint": "/ai-explain/available-models",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 56.4,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Backtesting & Analysis",
+      "method": "GET",
+      "endpoint": "/backtest/results",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 53.5,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Backtesting & Analysis",
+      "method": "GET",
+      "endpoint": "/backtest-engine/status",
+      "status_code": 405,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 57.0,
+      "data": {
+        "detail": "Method Not Allowed"
+      }
+    },
+    {
+      "category": "Backtesting & Analysis",
+      "method": "GET",
+      "endpoint": "/yearly-backtest/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 53.2,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Backtesting & Analysis",
+      "method": "GET",
+      "endpoint": "/risk/metrics",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 62.0,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Backtesting & Analysis",
+      "method": "GET",
+      "endpoint": "/risk-analyzer/portfolio-risk",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 50.7,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "News & Social",
+      "method": "GET",
+      "endpoint": "/news/latest",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 70.8,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "News & Social",
+      "method": "GET",
+      "endpoint": "/events/upcoming",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 76.5,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "News & Social",
+      "method": "GET",
+      "endpoint": "/event-triggers/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 67.4,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "News & Social",
+      "method": "GET",
+      "endpoint": "/social-sentiment/overview",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 63.1,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "News & Social",
+      "method": "GET",
+      "endpoint": "/social-trading/traders",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 66.6,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "News & Social",
+      "method": "GET",
+      "endpoint": "/paper-leaderboard/rankings",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 105.6,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "DeFi & Web3",
+      "method": "GET",
+      "endpoint": "/defi-wallet/portfolio",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 54.7,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "DeFi & Web3",
+      "method": "GET",
+      "endpoint": "/web3-wallet/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 62.0,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "DeFi & Web3",
+      "method": "GET",
+      "endpoint": "/defi-ai/predictions",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 61.2,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "DeFi & Web3",
+      "method": "GET",
+      "endpoint": "/onchain/whale-movements",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 59.6,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Settings & Notifications",
+      "method": "GET",
+      "endpoint": "/alerts/active",
+      "status_code": 405,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 52.8,
+      "data": {
+        "detail": "Method Not Allowed"
+      }
+    },
+    {
+      "category": "Settings & Notifications",
+      "method": "GET",
+      "endpoint": "/notifications/recent",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 55.8,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Settings & Notifications",
+      "method": "GET",
+      "endpoint": "/sound-settings/config",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 61.8,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Settings & Notifications",
+      "method": "GET",
+      "endpoint": "/budget/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 56.6,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Models & Training",
+      "method": "GET",
+      "endpoint": "/ml-monitoring/dashboard",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 58.7,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Models & Training",
+      "method": "GET",
+      "endpoint": "/ml-optimization/experiments",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 135.0,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Features & Extensions",
+      "method": "GET",
+      "endpoint": "/scanner/gems",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 54.5,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Features & Extensions",
+      "method": "GET",
+      "endpoint": "/portfolio-share/public",
+      "status_code": 405,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 55.2,
+      "data": {
+        "detail": "Method Not Allowed"
+      }
+    },
+    {
+      "category": "Features & Extensions",
+      "method": "GET",
+      "endpoint": "/achievements/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 53.3,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Features & Extensions",
+      "method": "GET",
+      "endpoint": "/export/formats",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 48.3,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Features & Extensions",
+      "method": "GET",
+      "endpoint": "/copy-trading/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 54.9,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "System Health & Monitoring",
+      "method": "GET",
+      "endpoint": "/perf-dashboard/overview",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 83.0,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "System Health & Monitoring",
+      "method": "GET",
+      "endpoint": "/error-tracking/summary",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 58.4,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "System Health & Monitoring",
+      "method": "GET",
+      "endpoint": "/monitoring/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 57.0,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "System Health & Monitoring",
+      "method": "GET",
+      "endpoint": "/backup/status",
+      "status_code": 404,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 59.0,
+      "data": {
+        "detail": "Not Found"
+      }
+    },
+    {
+      "category": "Journal & Records",
+      "method": "POST",
+      "endpoint": "/journal/add",
+      "status_code": 422,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 49.7,
+      "data": {
+        "detail": [
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "trade_type"
+            ],
+            "msg": "Field required",
+            "input": {
+              "coin_id": "bitcoin",
+              "action": "buy",
+              "amount": 100,
+              "price": 50000
+            },
+            "url": "https://errors.pydantic.dev/2.12/v/missing"
+          },
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "symbol"
+            ],
+            "msg": "Field required",
+            "input": {
+              "coin_id": "bitcoin",
+              "action": "buy",
+              "amount": 100,
+              "price": 50000
+            },
+            "url": "https://errors.pydantic.dev/2.12/v/missing"
+          },
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "amount_usd"
+            ],
+            "msg": "Field required",
+            "input": {
+              "coin_id": "bitcoin",
+              "action": "buy",
+              "amount": 100,
+              "price": 50000
+            },
+            "url": "https://errors.pydantic.dev/2.12/v/missing"
+          },
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "quantity"
+            ],
+            "msg": "Field required",
+            "input": {
+              "coin_id": "bitcoin",
+              "action": "buy",
+              "amount": 100,
+              "price": 50000
+            },
+            "url": "https://errors.pydantic.dev/2.12/v/missing"
+          }
+        ]
+      }
+    },
+    {
+      "category": "Journal & Records",
+      "method": "POST",
+      "endpoint": "/journal/record",
+      "status_code": 422,
+      "success": false,
+      "has_valid_json": true,
+      "response_time_ms": 49.8,
+      "data": {
+        "detail": [
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "trade_type"
+            ],
+            "msg": "Field required",
+            "input": {
+              "coin_id": "bitcoin",
+              "action": "sell",
+              "amount": 50,
+              "price": 51000
+            },
+            "url": "https://errors.pydantic.dev/2.12/v/missing"
+          },
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "symbol"
+            ],
+            "msg": "Field required",
+            "input": {
+              "coin_id": "bitcoin",
+              "action": "sell",
+              "amount": 50,
+              "price": 51000
+            },
+            "url": "https://errors.pydantic.dev/2.12/v/missing"
+          },
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "amount_usd"
+            ],
+            "msg": "Field required",
+            "input": {
+              "coin_id": "bitcoin",
+              "action": "sell",
+              "amount": 50,
+              "price": 51000
+            },
+            "url": "https://errors.pydantic.dev/2.12/v/missing"
+          },
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "quantity"
+            ],
+            "msg": "Field required",
+            "input": {
+              "coin_id": "bitcoin",
+              "action": "sell",
+              "amount": 50,
+              "price": 51000
+            },
+            "url": "https://errors.pydantic.dev/2.12/v/missing"
+          }
+        ]
+      }
+    }
+  ]
+}
