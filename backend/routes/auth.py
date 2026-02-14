@@ -66,11 +66,13 @@ async def store_credentials(
 ):
     """Store encrypted Kraken API credentials"""
     try:
+        clean_user_id = sanitize_user_id(user_id)
+        
         encrypted_key = cipher.encrypt(credentials.api_key.encode()).decode()
         encrypted_secret = cipher.encrypt(credentials.api_secret.encode()).decode()
         
         stored = {
-            "user_id": user_id,
+            "user_id": clean_user_id,
             "encrypted_key": encrypted_key,
             "encrypted_secret": encrypted_secret,
             "created_at": datetime.now().isoformat(),
@@ -78,14 +80,15 @@ async def store_credentials(
         }
         
         await db.credentials.replace_one(
-            {"user_id": user_id},
+            {"user_id": clean_user_id},
             stored,
             upsert=True
         )
         
+        log_security_event("credential_store", {"exchange": "kraken", "user_id": clean_user_id}, severity="info")
         return {"message": "Credentials stored successfully", "has_credentials": True}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise safe_error_response(e, category="auth", context="store kraken credentials")
 
 @router.get("/check-credentials")
 async def check_credentials(user_id: str, db = Depends(get_database)):
