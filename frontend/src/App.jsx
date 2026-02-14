@@ -164,26 +164,23 @@ function AppContent() {
   }, []);
 
   return (
-    <TradingModeProvider>
-      <LoadingProvider>
-        <BrowserRouter>
-          <ErrorBoundary>
-          <div className="app-root relative">
-            {/* Main layout */}
-            <div className="flex min-h-screen bg-[#0A0A0A]">
-              <Sidebar />
-              <main className="flex-1 overflow-auto">
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                  className="min-h-screen"
-                >
-                  <Routes>
-                    {/* Main Hub Routes */}
-                    <Route path="/" element={<PageErrorBoundary><SuspenseWrapper><CommandCenter /></SuspenseWrapper></PageErrorBoundary>} />
-                    <Route path="/login" element={<PageErrorBoundary><SuspenseWrapper><LoginPage /></SuspenseWrapper></PageErrorBoundary>} />
-                    <Route path="/trading" element={<PageErrorBoundary><SuspenseWrapper><TradingHub /></SuspenseWrapper></PageErrorBoundary>} />
+    <ErrorBoundary>
+      <div className="app-root relative">
+        {/* Main layout */}
+        <div className="flex min-h-screen bg-[#0A0A0A]">
+          <Sidebar />
+          <main className="flex-1 overflow-auto">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="min-h-screen"
+            >
+              <Routes>
+                {/* Main Hub Routes */}
+                <Route path="/" element={<PageErrorBoundary><SuspenseWrapper><CommandCenter /></SuspenseWrapper></PageErrorBoundary>} />
+                <Route path="/login" element={<PageErrorBoundary><SuspenseWrapper><LoginPage /></SuspenseWrapper></PageErrorBoundary>} />
+                <Route path="/trading" element={<PageErrorBoundary><SuspenseWrapper><TradingHub /></SuspenseWrapper></PageErrorBoundary>} />
                     <Route path="/ai" element={<PageErrorBoundary><SuspenseWrapper><AIHub /></SuspenseWrapper></PageErrorBoundary>} />
                     <Route path="/backtest" element={<PageErrorBoundary><SuspenseWrapper><BacktestHub /></SuspenseWrapper></PageErrorBoundary>} />
                     <Route path="/news" element={<PageErrorBoundary><SuspenseWrapper><NewsHub /></SuspenseWrapper></PageErrorBoundary>} />
