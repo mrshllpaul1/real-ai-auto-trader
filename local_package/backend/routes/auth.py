@@ -48,7 +48,7 @@ except ValueError:
 @router.post("/store-credentials")
 async def store_credentials(
     credentials: KrakenCredentials,
-    user_id: str,
+    user_id: str = "default_user",
     db = Depends(get_database)
 ):
     """Store encrypted Kraken API credentials"""
@@ -75,7 +75,7 @@ async def store_credentials(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/check-credentials")
-async def check_credentials(user_id: str, db = Depends(get_database)):
+async def check_credentials(user_id: str = "default_user", db = Depends(get_database)):
     """Check if user has stored credentials"""
     stored = await db.credentials.find_one({"user_id": user_id})
     return {
@@ -84,12 +84,92 @@ async def check_credentials(user_id: str, db = Depends(get_database)):
     }
 
 @router.delete("/delete-credentials")
-async def delete_credentials(user_id: str, db = Depends(get_database)):
+async def delete_credentials(user_id: str = "default_user", db = Depends(get_database)):
     """Delete stored credentials"""
     result = await db.credentials.delete_one({"user_id": user_id})
     if result.deleted_count > 0:
         return {"message": "Credentials deleted successfully"}
     raise HTTPException(status_code=404, detail="No credentials found")
+
+
+# =============================================================================
+# KRAKEN API KEY FINDER
+# =============================================================================
+
+def _mask_key(key: str) -> str:
+    """Mask an API key, showing only first 4 and last 4 characters"""
+    if not key or len(key) <= 8:
+        return "****"
+    return f"{key[:4]}...{key[-4:]}"
+
+
+@router.get("/kraken/find-keys")
+async def find_kraken_keys(user_id: str = "default_user", db = Depends(get_database)):
+    """
+    Find where Kraken API keys are configured.
+
+    Checks both environment variables and database-stored credentials.
+    Returns masked key previews (never full keys) to help identify which keys are set.
+    """
+    sources = []
+
+    # Check environment variables
+    env_api_key = os.getenv("KRAKEN_API_KEY")
+    env_api_secret = os.getenv("KRAKEN_API_SECRET")
+
+    env_source = {
+        "source": "environment_variables",
+        "configured": bool(env_api_key and env_api_secret),
+        "api_key_set": bool(env_api_key),
+        "api_secret_set": bool(env_api_secret),
+    }
+    if env_api_key:
+        env_source["api_key_preview"] = _mask_key(env_api_key)
+    if env_api_secret:
+        env_source["api_secret_preview"] = _mask_key(env_api_secret)
+    sources.append(env_source)
+
+    # Check database-stored credentials
+    db_source = {
+        "source": "database",
+        "configured": False,
+        "api_key_set": False,
+        "api_secret_set": False,
+    }
+    try:
+        stored = await db.credentials.find_one({"user_id": user_id})
+        if stored and stored.get("encrypted_key") and stored.get("encrypted_secret"):
+            db_source["configured"] = True
+            db_source["api_key_set"] = True
+            db_source["api_secret_set"] = True
+            db_source["stored_at"] = stored.get("created_at")
+            db_source["updated_at"] = stored.get("updated_at")
+            # Try to show masked preview of decrypted key
+            try:
+                decrypted_key = cipher.decrypt(stored["encrypted_key"].encode()).decode()
+                db_source["api_key_preview"] = _mask_key(decrypted_key)
+            except Exception:
+                db_source["api_key_preview"] = "****"
+    except Exception:
+        db_source["error"] = "Could not check database"
+    sources.append(db_source)
+
+    any_configured = any(s["configured"] for s in sources)
+
+    return {
+        "found": any_configured,
+        "sources": sources,
+        "active_source": (
+            "environment_variables" if sources[0]["configured"]
+            else "database" if sources[1]["configured"]
+            else None
+        ),
+        "message": (
+            "Kraken API keys found"
+            if any_configured
+            else "No Kraken API keys configured. Add them in Settings or set KRAKEN_API_KEY and KRAKEN_API_SECRET environment variables."
+        ),
+    }
 
 
 # =============================================================================
