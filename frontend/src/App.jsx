@@ -25,6 +25,7 @@ const Web3Wallet = lazy(() => import("./pages/Web3Wallet"));
 const AIExplainability = lazy(() => import("./pages/AIExplainability"));
 const ErrorAnalyticsDashboard = lazy(() => import("./pages/ErrorAnalyticsDashboard"));
 const PerformanceMonitorDashboard = lazy(() => import("./pages/PerformanceDashboard"));
+const LiveDashboard = lazy(() => import("./components/LivePerformanceDashboard"));
 
 // Keep individual pages for direct access (backwards compatibility)
 import SpotTrading from "./pages/SpotTrading";
