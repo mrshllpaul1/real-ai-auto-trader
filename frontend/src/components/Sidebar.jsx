@@ -5,7 +5,7 @@ import {
   Brain, Newspaper, Zap, Radar, Bot, FlaskConical, BookOpen, GraduationCap,
   Menu, X, ChevronLeft, Key, Wallet, TestTube, Cpu, MessageCircle, Layers,
   Target, Gem, Calendar, Shield, Award, Gauge, Briefcase, PieChart, Wand2, Waves,
-  Users, Activity, Layout, Sprout, LineChart, DollarSign, ChevronRight, Bug
+  Users, Activity, Layout, Sprout, LineChart, DollarSign, ChevronRight, Bug, Radio
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NotificationCenter from './NotificationCenter';
