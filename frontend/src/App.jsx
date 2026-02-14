@@ -108,6 +108,11 @@ function App() {
   // Handle keyboard shortcut actions
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Ctrl+K or Cmd+K for Command Palette
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowCommandPalette(prev => !prev);
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === '/') {
         e.preventDefault();
         setShowShortcuts(true);
@@ -118,6 +123,7 @@ function App() {
       }
       if (e.key === 'Escape') {
         setShowShortcuts(false);
+        setShowCommandPalette(false);
       }
     };
     document.addEventListener('keydown', handleKeyDown);
