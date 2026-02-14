@@ -1,16 +1,21 @@
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Dict
+import logging
+
+from utils.safe_errors import safe_error_response
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 class AllocationRequest(BaseModel):
-    user_id: str
+    user_id: str = Field(..., min_length=1, max_length=100)
     allocations: Dict[str, float]  # {'USD': 1000, 'BTC': 0.1}
 
 class WithdrawRequest(BaseModel):
-    user_id: str
-    amount: float
+    user_id: str = Field(..., min_length=1, max_length=100)
+    amount: float = Field(..., gt=0)
 
 async def get_database():
     from server import db
