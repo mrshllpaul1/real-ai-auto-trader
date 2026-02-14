@@ -54,6 +54,15 @@ async def record_trade(request: RecordTradeRequest):
     return await journal_service.record_trade(**request.dict())
 
 
+@router.post("/add")
+async def add_trade(request: RecordTradeRequest):
+    """Alias for /record - backward compatibility"""
+    if journal_service is None:
+        raise HTTPException(status_code=500, detail="Journal service not initialized")
+    
+    return await journal_service.record_trade(**request.dict())
+
+
 @router.get("/entries")
 async def get_journal_entries(
     limit: int = 50,
