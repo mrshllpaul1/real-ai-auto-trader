@@ -232,9 +232,6 @@ const TethysTab = ({ tethysStatus, onToggleTethys }) => (
 // Learning Tab
 const LearningTab = ({ learningStatus, onTrain }) => (
   <div className="space-y-6">
-    {/* Visual Training Progress for Learning Tab */}
-    <VisualTrainingProgress embedded={false} pollInterval={3000} showControls={true} />
-    
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       <Card className="bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border-orange-500/20">
         <CardContent className="pt-4 text-center">
