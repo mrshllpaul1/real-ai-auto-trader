@@ -70,7 +70,7 @@ async def get_pool_stats():
         }
     except Exception as e:
         logger.error(f"Failed to get pool stats: {e}")
-        return {'error': str(e)}
+        return {'error': 'Failed to retrieve pool statistics'}
 
 
 async def health_check():
