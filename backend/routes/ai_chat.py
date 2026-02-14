@@ -221,7 +221,7 @@ async def execute_trade_command(request: TradeExecutionRequest):
                 "source": "ai_chat",
                 "action": action,
                 "coin": coin,
-                "error": str(e),
+                "error": "An internal error occurred",
                 "attempted_at": datetime.utcnow(),
                 "success": False
             })

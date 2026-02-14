@@ -129,7 +129,7 @@ async def get_batch_predictions(request: BatchPredictionRequest):
                 )
                 results.append(result)
         except Exception as e:
-            results.append({"coin_id": coin_id, "error": str(e)})
+            results.append({"coin_id": coin_id, "error": "An internal error occurred"})
     
     # Sort by confidence
     results.sort(key=lambda x: x.get('confidence', 0), reverse=True)
@@ -384,5 +384,5 @@ async def get_top_predictions():
             "count": 0,
             "predictions": [],
             "best_opportunities": [],
-            "error": str(e)
+            "error": "An internal error occurred"
         }

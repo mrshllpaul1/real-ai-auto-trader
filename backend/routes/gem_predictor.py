@@ -101,7 +101,7 @@ async def run_training_task():
         _training_status["result"] = result
         _training_status["last_run"] = datetime.utcnow().isoformat()
     except Exception as e:
-        _training_status["result"] = {"error": str(e)}
+        _training_status["result"] = {"error": "An internal error occurred"}
     finally:
         _training_status["running"] = False
 
@@ -335,7 +335,7 @@ async def run_backtest_task(target_accuracy: float, max_iterations: int):
         _backtest_status["message"] = result.get("message", "Backtest complete")
         
     except Exception as e:
-        _backtest_status["result"] = {"error": str(e)}
+        _backtest_status["result"] = {"error": "An internal error occurred"}
         _backtest_status["message"] = f"Error: {str(e)}"
     finally:
         _backtest_status["running"] = False

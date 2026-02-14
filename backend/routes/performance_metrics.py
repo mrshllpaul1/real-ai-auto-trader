@@ -122,20 +122,20 @@ async def get_performance_summary() -> Dict[str, Any]:
         cache = get_cache_manager()
         summary["cache"] = cache.get_stats()
     except Exception as e:
-        summary["cache"] = {"error": str(e)}
+        summary["cache"] = {"error": "An internal error occurred"}
     
     # Circuit breaker stats
     try:
         from utils.circuit_breaker import get_all_circuit_breakers
         summary["circuit_breakers"] = get_all_circuit_breakers()
     except Exception as e:
-        summary["circuit_breakers"] = {"error": str(e)}
+        summary["circuit_breakers"] = {"error": "An internal error occurred"}
     
     # Database pool stats
     try:
         from config.database import get_pool_stats
         summary["database"] = await get_pool_stats()
     except Exception as e:
-        summary["database"] = {"error": str(e)}
+        summary["database"] = {"error": "An internal error occurred"}
     
     return summary

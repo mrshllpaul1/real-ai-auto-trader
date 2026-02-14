@@ -100,7 +100,7 @@ async def send_telegram_message(chat_id: str, text: str, parse_mode: str = "HTML
                 return {"success": False, "error": response.text}
     except Exception as e:
         logger.error(f"Error sending Telegram message: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "An internal error occurred"}
 
 
 def escape_html(text: str) -> str:

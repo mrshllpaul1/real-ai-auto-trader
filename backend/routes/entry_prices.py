@@ -154,7 +154,7 @@ async def correct_entry_prices_bulk(request: BulkEntryRequest):
             else:
                 results.append(result)
         except Exception as e:
-            errors.append({"symbol": entry.symbol, "error": str(e)})
+            errors.append({"symbol": entry.symbol, "error": "An internal error occurred"})
     
     return {
         "status": "completed",

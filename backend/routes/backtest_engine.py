@@ -899,7 +899,7 @@ async def run_backtest(backtest_id: str, config: BacktestConfig, db):
         
     except Exception as e:
         logger.error(f"Backtest error: {e}")
-        _running_backtests[backtest_id] = {"status": "failed", "error": str(e)}
+        _running_backtests[backtest_id] = {"status": "failed", "error": "An internal error occurred"}
 
 
 # =============================================================================

@@ -221,7 +221,7 @@ async def get_trade_history(limit: int = Query(50, ge=1, le=500)):
             "trades": [],
             "count": 0,
             "total_available": 0,
-            "error": str(e)
+            "error": "An internal error occurred"
         }
 
 
@@ -345,7 +345,7 @@ async def get_auto_trader_status():
     except Exception as e:
         return {
             "initialized": True,
-            "error": str(e),
+            "error": "An internal error occurred",
             "timestamp": datetime.utcnow().isoformat()
         }
 

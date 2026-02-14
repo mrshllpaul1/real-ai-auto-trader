@@ -508,7 +508,7 @@ async def get_enhanced_data_status():
         except Exception as e:
             status["services"]["kraken_universe"] = {
                 "status": "error",
-                "error": str(e)
+                "error": "An internal error occurred"
             }
     else:
         status["services"]["kraken_universe"] = {"status": "not_initialized"}
@@ -524,7 +524,7 @@ async def get_enhanced_data_status():
         except Exception as e:
             status["services"]["onchain_metrics"] = {
                 "status": "error",
-                "error": str(e)
+                "error": "An internal error occurred"
             }
     else:
         status["services"]["onchain_metrics"] = {"status": "not_initialized"}
@@ -541,7 +541,7 @@ async def get_enhanced_data_status():
         except Exception as e:
             status["services"]["multitimeframe"] = {
                 "status": "error",
-                "error": str(e)
+                "error": "An internal error occurred"
             }
     else:
         status["services"]["multitimeframe"] = {"status": "not_initialized"}

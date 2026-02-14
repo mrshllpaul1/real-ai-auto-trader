@@ -162,7 +162,7 @@ async def explain_multiple_symbols(
             logger.error(f"Error explaining {symbol}: {e}")
             results.append({
                 "symbol": symbol,
-                "error": str(e)
+                "error": "An internal error occurred"
             })
     
     return {

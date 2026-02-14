@@ -81,7 +81,7 @@ async def get_engine_status():
         logger.error(f"Error getting engine status: {e}")
         return {
             "initialized": False, 
-            "error": str(e),
+            "error": "An internal error occurred",
             "models": {
                 "ensemble": {"trained": False},
                 "time_series": {"trained": False},
@@ -231,7 +231,7 @@ async def get_ensemble_status():
             "feature_importance": engine.ensemble.feature_importance
         }
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": "An internal error occurred"}
 
 
 @router.get("/time-series/status")
@@ -252,7 +252,7 @@ async def get_time_series_status():
             "training_history": engine.time_series.training_history
         }
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": "An internal error occurred"}
 
 
 @router.get("/finrl/status")
@@ -272,7 +272,7 @@ async def get_finrl_status():
             "action_dim": engine.finrl_agent.action_dim
         }
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": "An internal error occurred"}
 
 
 @router.get("/environment/config")
@@ -293,7 +293,7 @@ async def get_environment_config():
             "current_metrics": env.get_metrics() if env.portfolio_history else {}
         }
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": "An internal error occurred"}
 
 
 @router.post("/environment/simulate")

@@ -93,7 +93,7 @@ async def get_crypto_prices(
         fallback = {
             coin: {
                 "price": FALLBACK_PRICES.get(coin, {}).get("price", 0),
-                "error": str(e),
+                "error": "An internal error occurred",
                 "source": "fallback"
             } 
             for coin in coin_list

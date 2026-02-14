@@ -46,7 +46,7 @@ async def run_expansion_task(target_count: int):
         _expansion_status["result"] = result
         _expansion_status["last_run"] = datetime.utcnow().isoformat()
     except Exception as e:
-        _expansion_status["result"] = {"error": str(e)}
+        _expansion_status["result"] = {"error": "An internal error occurred"}
     finally:
         _expansion_status["running"] = False
 

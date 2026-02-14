@@ -800,7 +800,7 @@ async def get_recent_spot_trades(limit: int = Query(20, ge=1, le=100)):
         }
     except Exception as e:
         logger.error(f"Error fetching trades: {e}")
-        return {"trades": [], "count": 0, "error": str(e)}
+        return {"trades": [], "count": 0, "error": "An internal error occurred"}
 
 
 @router.get("/trade-history/kraken")
@@ -917,7 +917,7 @@ async def get_all_entry_prices():
         }
     except Exception as e:
         logger.error(f"Error fetching entry prices: {e}")
-        return {"entries": [], "error": str(e)}
+        return {"entries": [], "error": "An internal error occurred"}
 
 
 @router.get("/entry-prices/{symbol}")

@@ -87,7 +87,7 @@ async def get_manager_status():
         logger.error(f"Error getting manager status: {e}")
         return {
             "initialized": False, 
-            "error": str(e),
+            "error": "An internal error occurred",
             "agents": {},
             "environment_ready": False,
             "training_history": [],
@@ -353,7 +353,7 @@ async def list_agents():
         
         return {"agents": agents_info}
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": "An internal error occurred"}
 
 
 @router.get("/training-history/{agent_name}")
@@ -372,7 +372,7 @@ async def get_training_history(agent_name: str):
             "total_sessions": len(history)
         }
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": "An internal error occurred"}
 
 
 @router.delete("/agent/{agent_name}")
@@ -497,4 +497,4 @@ async def get_environment_metrics():
             }
         }
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": "An internal error occurred"}

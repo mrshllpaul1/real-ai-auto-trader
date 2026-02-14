@@ -83,7 +83,7 @@ async def _run_training(symbols: List[str] = None):
         _training_status["result"] = result
         _training_status["message"] = "Training complete"
     except Exception as e:
-        _training_status["result"] = {"error": str(e)}
+        _training_status["result"] = {"error": "An internal error occurred"}
         _training_status["message"] = f"Training failed: {str(e)}"
     finally:
         _training_status["running"] = False
@@ -175,7 +175,7 @@ async def train_models(request: TrainRequest, background_tasks: BackgroundTasks)
                 message="ML/DL training complete"
             )
         except Exception as e:
-            _training_status["result"] = {"error": str(e)}
+            _training_status["result"] = {"error": "An internal error occurred"}
             _training_status["message"] = f"Training failed: {str(e)}"
             await progress_manager.fail_task(task_id, str(e))
         finally:

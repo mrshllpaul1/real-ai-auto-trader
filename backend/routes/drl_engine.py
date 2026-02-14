@@ -88,7 +88,7 @@ async def get_engine_status():
         logger.error(f"Error getting engine status: {e}")
         return {
             "initialized": False, 
-            "error": str(e),
+            "error": "An internal error occurred",
             "lstm_trained": False,
             "dqn_epsilon": 1.0,
             "dqn_memory_size": 0,
@@ -218,7 +218,7 @@ async def get_hft_metrics():
         
         return engine.hft_engine.get_metrics()
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": "An internal error occurred"}
 
 
 @router.get("/backtest/status")
@@ -234,7 +234,7 @@ async def get_backtest_status():
             "latest_results": engine.backtester.get_latest_results()
         }
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": "An internal error occurred"}
 
 
 @router.post("/backtest/run")

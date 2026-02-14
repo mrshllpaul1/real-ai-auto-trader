@@ -886,7 +886,7 @@ async def execute_all_signals():
             errors.append({
                 "coin": signal["coin"],
                 "action": signal["action"],
-                "error": str(e)
+                "error": "An internal error occurred"
             })
     
     return {

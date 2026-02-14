@@ -61,7 +61,7 @@ async def get_recent_errors(limit: int = 20, db = Depends(get_database)):
             "total": len(manager.get_recent_errors(limit))
         }
     except Exception as e:
-        return {"errors": [], "error": str(e)}
+        return {"errors": [], "error": "An internal error occurred"}
 
 
 @router.get("/patterns")
@@ -91,7 +91,7 @@ async def get_error_patterns(hours: int = 24, db = Depends(get_database)):
             "analysis_period_hours": hours
         }
     except Exception as e:
-        return {"patterns": [], "error": str(e)}
+        return {"patterns": [], "error": "An internal error occurred"}
 
 
 @router.get("/health-check")
@@ -134,7 +134,7 @@ async def get_recovery_statistics(db = Depends(get_database)):
         manager = get_error_recovery_manager(db)
         return manager.get_stats()
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": "An internal error occurred"}
 
 
 @router.get("/alerts")

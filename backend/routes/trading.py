@@ -201,7 +201,7 @@ async def get_kraken_trades(limit: int = 50):
         }
     except Exception as e:
         print(f"Error fetching Kraken trades: {e}")
-        return {"trades": [], "count": 0, "error": str(e)}
+        return {"trades": [], "count": 0, "error": "An internal error occurred"}
 
 @router.get("/kraken/orders")
 async def get_kraken_closed_orders(limit: int = 50):
@@ -245,7 +245,7 @@ async def get_kraken_closed_orders(limit: int = 50):
         }
     except Exception as e:
         print(f"Error fetching Kraken orders: {e}")
-        return {"orders": [], "count": 0, "error": str(e)}
+        return {"orders": [], "count": 0, "error": "An internal error occurred"}
 
 async def get_market_service():
     """Get the initialized market service from services"""
@@ -508,4 +508,4 @@ async def get_kraken_portfolio():
     
     except Exception as e:
         print(f"Error fetching Kraken portfolio: {e}")
-        return {"error": str(e), "holdings": [], "total_value_usd": 0}
+        return {"error": "An internal error occurred", "holdings": [], "total_value_usd": 0}

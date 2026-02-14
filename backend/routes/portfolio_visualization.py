@@ -793,7 +793,7 @@ async def get_kraken_portfolio():
     except Exception as e:
         return {
             "connected": False,
-            "error": str(e),
+            "error": "An internal error occurred",
             "total_value_usd": 0,
             "holdings": []
         }

@@ -54,7 +54,7 @@ async def _run_simulation_background(request: SimulationRequest):
         _simulation_status["message"] = "Simulation complete!"
         
     except Exception as e:
-        _simulation_status["result"] = {"error": str(e)}
+        _simulation_status["result"] = {"error": "An internal error occurred"}
         _simulation_status["message"] = f"Simulation failed: {str(e)}"
     finally:
         _simulation_status["running"] = False

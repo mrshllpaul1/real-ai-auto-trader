@@ -425,7 +425,7 @@ async def get_pnl_chart_data(days: int = Query(30, ge=1, le=365)):
         return {
             "data": [],
             "is_sample": False,
-            "error": str(e),
+            "error": "An internal error occurred",
             "message": "Error fetching P&L data. Please try again.",
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
