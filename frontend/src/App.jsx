@@ -1,10 +1,12 @@
 import React, { useEffect, lazy, Suspense, useState, useCallback } from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import ErrorBoundary, { PageErrorBoundary } from "./components/ErrorBoundary";
 import { PageLoadingSkeleton } from "./components/LoadingSkeleton";
 import KeyboardShortcutsModal from "./components/KeyboardShortcutsModal";
 import CommandPalette from "./components/CommandPalette";
+import AuthCallback from "./components/AuthCallback";
+import OnboardingTour from "./components/OnboardingTour";
 
 // Hub Pages (lazy loaded with prefetch hints)
 const CommandCenter = lazy(() => import(/* webpackPrefetch: true */ "./pages/CommandCenter"));
@@ -15,6 +17,7 @@ const NewsHub = lazy(() => import("./pages/NewsHub"));
 const ScannerHub = lazy(() => import("./pages/ScannerHub"));
 const DeFiHub = lazy(() => import("./pages/DeFiHub"));
 const SettingsHub = lazy(() => import("./pages/SettingsHub"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
 
 // New Enhancement Pages (P0, P1, Quick Wins)
 const PaperLeaderboard = lazy(() => import("./pages/PaperLeaderboard"));
