@@ -13,6 +13,7 @@ from typing import Set
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
+from config.app_config import COOKIE_SECURE, COOKIE_SAMESITE
 
 logger = logging.getLogger(__name__)
 
@@ -116,8 +117,8 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
                 key=CSRF_COOKIE_NAME,
                 value=token,
                 httponly=False,   # JS must read this for double-submit
-                samesite="lax",
-                secure=False,     # Set True in production behind HTTPS
+                samesite=COOKIE_SAMESITE,
+                secure=COOKIE_SECURE,
                 max_age=86400,    # 24 hours
                 path="/",
             )
