@@ -316,6 +316,13 @@ def register_routes(api_router: APIRouter, db=None):
     api_router.include_router(consolidated_routes.router, tags=["Consolidated Services"])
     consolidated_routes.set_registry(get_service_registry(db))
     
+    # ============================================
+    # Error Tracking API
+    # ============================================
+    from routes import error_tracking as error_tracking_routes
+    api_router.include_router(error_tracking_routes.router, tags=["Error Tracking"])
+    error_tracking_routes.set_db(db)
+    
     logger.info("✅ All routes registered (including consolidated services)")
     
     return api_router
