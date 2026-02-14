@@ -114,7 +114,7 @@ class TestVulnScannerEndpoints:
         data = response.json()
         detail = data.get("detail", "")
         if isinstance(detail, dict):
-            error_code = detail.get("error_code", "")
+            error_code = detail.get("code", detail.get("error_code", ""))
             assert "CSRF" in error_code.upper(), f"Expected CSRF error, got: {detail}"
         else:
             assert "csrf" in str(detail).lower() or "CSRF" in str(detail), f"Expected CSRF error, got: {detail}"
