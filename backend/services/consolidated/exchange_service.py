@@ -113,15 +113,21 @@ class ExchangeService:
     # === Portfolio Methods ===
     async def get_portfolio(self) -> Dict[str, Any]:
         """Get current portfolio from cache or fresh"""
-        return await self.cache.get_portfolio()
+        if self.cache:
+            return await self.cache.get_portfolio()
+        return {"error": "Cache service not available"}
     
     async def get_portfolio_summary(self) -> Dict[str, Any]:
         """Get portfolio summary"""
-        return await self.cache.get_portfolio_summary()
+        if self.cache:
+            return await self.cache.get_portfolio_summary()
+        return {"error": "Cache service not available"}
     
     async def get_balance(self) -> Dict[str, float]:
         """Get account balances"""
-        return await self.kraken.get_balance()
+        if self.kraken:
+            return await self.kraken.get_balance()
+        return {"error": "Kraken service not available"}
     
     # === Market Data Methods ===
     async def get_ticker(self, symbol: str) -> Dict[str, Any]:
