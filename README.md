@@ -43,6 +43,16 @@ A real-money AI-powered cryptocurrency auto trading application with hybrid stra
 - **Animations**: Framer Motion
 - **Fonts**: Chivo (headings), JetBrains Mono (data), Inter (body)
 
+## 📖 Documentation
+
+**Complete Documentation Index**: See [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md) for all available documentation files.
+
+**Key Documents**:
+- 🚀 [Local Setup Guide](./LOCAL_SETUP_INSTRUCTIONS.txt) - Development environment setup
+- 📤 [Pushing to Emergent](./PUSHING_TO_EMERGENT.md) - Git workflow and deployment
+- 🔌 [API Documentation](./API_DOCUMENTATION.md) - Backend API reference
+- 🚢 [Deployment Guide](./DEPLOYMENT_READINESS_REPORT.md) - Production deployment
+
 ## 📋 Prerequisites
 
 - **Kraken API Keys** (for real trading)
