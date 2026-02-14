@@ -94,6 +94,10 @@ class ConnectionManager:
 # Global connection manager
 ws_manager = ConnectionManager()
 
+def get_ws_manager():
+    """Get the global WebSocket manager instance."""
+    return ws_manager
+
 
 # Broadcast functions for different data types
 async def broadcast_price_update(prices: dict):
