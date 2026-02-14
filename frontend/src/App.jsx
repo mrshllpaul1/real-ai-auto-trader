@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ErrorBoundary, { PageErrorBoundary } from "./components/ErrorBoundary";
 import { PageLoadingSkeleton } from "./components/LoadingSkeleton";
 import KeyboardShortcutsModal from "./components/KeyboardShortcutsModal";
+import CommandPalette from "./components/CommandPalette";
 
 // Hub Pages (lazy loaded with prefetch hints)
 const CommandCenter = lazy(() => import(/* webpackPrefetch: true */ "./pages/CommandCenter"));
