@@ -263,24 +263,35 @@ const AutomatedTradingSection = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {alerts.map((alert, index) => (
-                  <div
-                    key={index}
-                    className={`p-3 rounded-lg border ${
-                      alert.priority === 'high' ? 'bg-[#FF0055]/10 border-[#FF0055]/30' :
-                      alert.priority === 'critical' ? 'bg-[#FF9500]/10 border-[#FF9500]/30' :
-                      'bg-[#121212] border-[#1F1F1F]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-white">{alert.title}</span>
-                      <span className="text-xs text-[#A1A1AA]">
-                        {new Date(alert.created_at).toLocaleString()}
-                      </span>
+                {alerts.map((alert, index) => {
+                  // Handle different alert formats
+                  const alertLevel = alert.alert_level || alert.priority || 'LOW';
+                  const title = alert.title || `${alert.symbol || 'Alert'} - ${alertLevel}`;
+                  const message = alert.message || (alert.matching_signals 
+                    ? alert.matching_signals.map(s => s.description).join(', ')
+                    : `Price: $${alert.current_price?.toFixed(2) || 'N/A'}`);
+                  const timestamp = alert.created_at || alert.scanned_at || alert.timestamp;
+                  
+                  return (
+                    <div
+                      key={index}
+                      className={`p-3 rounded-lg border ${
+                        alertLevel === 'HIGH' || alertLevel === 'high' ? 'bg-[#FF0055]/10 border-[#FF0055]/30' :
+                        alertLevel === 'CRITICAL' || alertLevel === 'critical' ? 'bg-[#FF9500]/10 border-[#FF9500]/30' :
+                        alertLevel === 'MEDIUM' ? 'bg-[#FFB800]/10 border-[#FFB800]/30' :
+                        'bg-[#121212] border-[#1F1F1F]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold text-white">{title}</span>
+                        <span className="text-xs text-[#A1A1AA]">
+                          {timestamp ? new Date(timestamp).toLocaleString() : 'Just now'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-[#A1A1AA] whitespace-pre-line">{message}</p>
                     </div>
-                    <p className="text-sm text-[#A1A1AA] whitespace-pre-line">{alert.message}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
