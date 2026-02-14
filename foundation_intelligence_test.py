@@ -25,7 +25,7 @@ from datetime import datetime
 import os
 
 # Get backend URL from environment
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://crypto-pulse-dash.preview.emergentagent.com')
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://kraken-security-scan.preview.emergentagent.com')
 BASE_URL = f"{BACKEND_URL}/api"
 
 class FoundationIntelligenceTest:

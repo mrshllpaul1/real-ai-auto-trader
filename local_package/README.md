@@ -156,4 +156,4 @@ TWELVE_DATA_API_KEY=your_key
 
 ## Support
 
-Test URL: https://crypto-pulse-dash.preview.emergentagent.com
+Test URL: https://kraken-security-scan.preview.emergentagent.com

@@ -21,7 +21,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Any
 
 # Backend URL configuration
-BASE_URL = "https://crypto-pulse-dash.preview.emergentagent.com/api"
+BASE_URL = "https://kraken-security-scan.preview.emergentagent.com/api"
 
 class YearlyBacktestTester:
     def __init__(self):

@@ -11,7 +11,7 @@ import json
 from typing import Dict, List, Tuple
 
 # Backend URL from environment
-BACKEND_URL = "https://crypto-pulse-dash.preview.emergentagent.com/api"
+BACKEND_URL = "https://kraken-security-scan.preview.emergentagent.com/api"
 
 class OptimizedBackendTester:
     def __init__(self):
