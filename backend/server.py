@@ -3,12 +3,15 @@ AI Crypto Trading API - Main Entry Point
 Lightweight server that delegates to modular initialization
 """
 
-from fastapi import FastAPI, APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, APIRouter, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import JSONResponse
 import logging
 import asyncio
 import os
+import uuid
+import traceback
 
 # Configuration imports
 from config.app_config import APP_TITLE, APP_DESCRIPTION, APP_VERSION, CORS_ORIGINS, LOG_FORMAT, LOG_LEVEL
