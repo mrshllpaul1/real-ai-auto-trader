@@ -44,6 +44,12 @@ This file provides a complete index of all documentation files in this repositor
 
 ### Status Reports
 - [USER_REPORTED_ISSUES_STATUS.md](./USER_REPORTED_ISSUES_STATUS.md) - Issue tracker
+- [BUG_FIXES_CHANGELOG.md](./BUG_FIXES_CHANGELOG.md) - Bug fix history
+
+### System Documentation
+- [AUTO_ERROR_CORRECTION.md](./AUTO_ERROR_CORRECTION.md) - Error handling system
+- [PERFORMANCE_RECOMMENDATIONS.md](./PERFORMANCE_RECOMMENDATIONS.md) - Performance guide
+- [BUTTON_ENHANCEMENTS.md](./BUTTON_ENHANCEMENTS.md) - UI button system
 
 ## 🔍 Finding Documentation
 
