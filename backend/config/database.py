@@ -131,7 +131,7 @@ async def reconnect_database():
         
         # Update global references
         client = new_client
-        db = new_client[DATABASE_NAME]
+        db = new_client[DB_NAME]
         
         logger.info("✅ Database reconnection successful")
         return True
