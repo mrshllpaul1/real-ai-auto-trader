@@ -23,10 +23,8 @@ APP_VERSION = "1.0.0"
 # CORS settings
 CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*').split(',')
 
-# Cookie security — auto-detect HTTPS from known origins
-_any_origin = os.environ.get('CORS_ORIGINS', '') + os.environ.get('REACT_APP_BACKEND_URL', '')
-IS_HTTPS = _any_origin.startswith('https://') or 'https://' in _any_origin
-COOKIE_SECURE = IS_HTTPS
+# Cookie security
+COOKIE_SECURE = os.environ.get('COOKIE_SECURE', 'false').lower() == 'true'
 COOKIE_SAMESITE = "lax"
 
 # Logging configuration
