@@ -243,6 +243,15 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import AI Explanation routes: {e}")
 
+# Import and include Google OAuth routes
+try:
+    from routes.google_oauth import router as google_oauth_router, set_dependencies as set_oauth_deps
+    set_oauth_deps(db)
+    app.include_router(google_oauth_router)
+    logger.info("✅ Google OAuth routes registered")
+except ImportError as e:
+    logger.warning(f"Could not import Google OAuth routes: {e}")
+
 # Add middleware in correct order (last added = first executed)
 # 1. Security Headers (outermost - first to execute)
 try:
