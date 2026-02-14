@@ -11,7 +11,7 @@ from typing import Dict, List, Tuple
 import statistics
 
 # Backend URL from environment configuration
-BASE_URL = "https://push-to-emerge.preview.emergentagent.com/api"
+BASE_URL = "https://crypto-pulse-dash.preview.emergentagent.com/api"
 
 class PerformanceTester:
     def __init__(self):

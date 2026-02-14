@@ -372,8 +372,8 @@ nginx-code-proxy RUNNING   pid 45
 - All environment variables set ✅
 
 **URL:**
-- Deployment: https://push-to-emerge.preview.emergentagent.com ✅
-- Backend API: https://push-to-emerge.preview.emergentagent.com/api ✅
+- Deployment: https://crypto-pulse-dash.preview.emergentagent.com ✅
+- Backend API: https://crypto-pulse-dash.preview.emergentagent.com/api ✅
 
 ---
 

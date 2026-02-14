@@ -4,7 +4,7 @@ AICryptoTrade Platform - Comprehensive Backend API Testing
 =========================================================
 Testing ALL 120+ API endpoints across 13 categories as specified in review request.
 
-Backend URL: https://push-to-emerge.preview.emergentagent.com
+Backend URL: https://crypto-pulse-dash.preview.emergentagent.com
 """
 
 import requests
@@ -15,7 +15,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://push-to-emerge.preview.emergentagent.com/api"
+BACKEND_URL = "https://crypto-pulse-dash.preview.emergentagent.com/api"
 print(f"🔗 Testing AICryptoTrade Backend API at: {BACKEND_URL}")
 
 class AICryptoTradeTester:

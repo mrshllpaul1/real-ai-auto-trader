@@ -11,7 +11,7 @@ from typing import Dict, Any
 import time
 
 # Backend URL from review request
-BACKEND_URL = "https://push-to-emerge.preview.emergentagent.com"
+BACKEND_URL = "https://crypto-pulse-dash.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 def make_request(method: str, url: str, **kwargs) -> Dict[str, Any]:

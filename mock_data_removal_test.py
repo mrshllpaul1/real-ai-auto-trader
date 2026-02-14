@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Dict, List, Any
 
 # Backend URL configuration
-BASE_URL = "https://push-to-emerge.preview.emergentagent.com/api"
+BASE_URL = "https://crypto-pulse-dash.preview.emergentagent.com/api"
 
 class MockDataRemovalTester:
     def __init__(self):

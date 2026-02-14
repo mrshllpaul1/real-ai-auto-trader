@@ -156,4 +156,4 @@ TWELVE_DATA_API_KEY=your_key
 
 ## Support
 
-Test URL: https://push-to-emerge.preview.emergentagent.com
+Test URL: https://crypto-pulse-dash.preview.emergentagent.com
