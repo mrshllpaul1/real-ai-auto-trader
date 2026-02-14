@@ -125,6 +125,12 @@ const SettingsHub = () => {
             </LazyTabContent>
           </TabsContent>
 
+          <TabsContent value="security" className="mt-0">
+            <LazyTabContent isActive={activeTab === 'security'}>
+              <SecuritySettings />
+            </LazyTabContent>
+          </TabsContent>
+
           <TabsContent value="setup" className="mt-0">
             <LazyTabContent isActive={activeTab === 'setup'}>
               <Setup embedded={true} />
