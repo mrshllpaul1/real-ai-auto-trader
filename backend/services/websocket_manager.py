@@ -1,219 +1,136 @@
 """
-WebSocket Manager for Real-time Training Progress
-Provides real-time updates instead of polling.
+WebSocket Manager for Real-Time Updates
+======================================
+Handles real-time communication for prices, signals, and training status.
 """
 
+from fastapi import WebSocket, WebSocketDisconnect
+from typing import Dict, List, Set
 import asyncio
 import json
-from typing import Dict, Set, Any
-from fastapi import WebSocket, WebSocketDisconnect
-from datetime import datetime, timezone
+from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class ConnectionManager:
-    """Manages WebSocket connections for real-time progress updates"""
+    """Manages WebSocket connections and broadcasts."""
     
     def __init__(self):
-        self.active_connections: Set[WebSocket] = set()
+        # Active connections by channel
+        self.connections: Dict[str, Set[WebSocket]] = {
+            'prices': set(),
+            'portfolio': set(),
+            'signals': set(),
+            'training': set(),
+            'alerts': set(),
+            'all': set(),  # Receives all updates
+        }
         self._lock = asyncio.Lock()
     
-    async def connect(self, websocket: WebSocket):
-        """Accept new WebSocket connection"""
+    async def connect(self, websocket: WebSocket, channels: List[str] = None):
+        """Accept connection and subscribe to channels."""
         await websocket.accept()
+        
+        if channels is None:
+            channels = ['all']
+        
         async with self._lock:
-            self.active_connections.add(websocket)
-        logger.info(f"WebSocket connected. Total connections: {len(self.active_connections)}")
+            for channel in channels:
+                if channel in self.connections:
+                    self.connections[channel].add(websocket)
+                    
+        logger.info(f"WebSocket connected to channels: {channels}")
+        return True
     
     async def disconnect(self, websocket: WebSocket):
-        """Remove WebSocket connection"""
+        """Remove connection from all channels."""
         async with self._lock:
-            self.active_connections.discard(websocket)
-        logger.info(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
+            for channel in self.connections.values():
+                channel.discard(websocket)
+        logger.info("WebSocket disconnected")
     
-    async def broadcast(self, message: Dict[str, Any]):
-        """Send message to all connected clients"""
-        if not self.active_connections:
-            return
-        
-        message_json = json.dumps(message, default=str)
-        disconnected = set()
-        
-        async with self._lock:
-            for connection in self.active_connections:
-                try:
-                    await connection.send_text(message_json)
-                except Exception as e:
-                    logger.warning(f"Failed to send to WebSocket: {e}")
-                    disconnected.add(connection)
-            
-            # Remove disconnected clients
-            self.active_connections -= disconnected
-    
-    async def send_progress_update(
-        self,
-        task_id: str,
-        task_type: str,
-        progress: int,
-        message: str,
-        current_item: str = "",
-        items_processed: int = 0,
-        total_items: int = 0,
-        status: str = "running",
-        result: Dict = None
-    ):
-        """Send a progress update to all clients"""
-        await self.broadcast({
-            "type": "progress_update",
-            "task_id": task_id,
-            "task_type": task_type,
-            "status": status,
-            "progress": progress,
-            "message": message,
-            "current_item": current_item,
-            "items_processed": items_processed,
-            "total_items": total_items,
-            "result": result,
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        })
-
-
-class PerformanceWebSocketManager:
-    """Manages WebSocket connections for real-time performance monitoring"""
-    
-    def __init__(self):
-        self.active_connections: Set[WebSocket] = set()
-        self._lock = asyncio.Lock()
-        self._metrics_cache: Dict[str, Any] = {}
-        self._running = False
-        self._broadcast_task = None
-    
-    async def connect(self, websocket: WebSocket):
-        """Accept new WebSocket connection"""
-        await websocket.accept()
-        async with self._lock:
-            self.active_connections.add(websocket)
-        logger.info(f"Performance WS connected. Total: {len(self.active_connections)}")
-        
-        # Send current cached metrics immediately
-        if self._metrics_cache:
-            try:
-                await websocket.send_json(self._metrics_cache)
-            except Exception:
-                pass
-    
-    async def disconnect(self, websocket: WebSocket):
-        """Remove WebSocket connection"""
-        async with self._lock:
-            self.active_connections.discard(websocket)
-        logger.info(f"Performance WS disconnected. Total: {len(self.active_connections)}")
-    
-    async def broadcast_metrics(self, metrics: Dict[str, Any]):
-        """Broadcast performance metrics to all connected clients"""
-        self._metrics_cache = {
-            "type": "performance_metrics",
-            "data": metrics,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+    async def broadcast_to_channel(self, channel: str, data: dict):
+        """Broadcast message to all connections in a channel."""
+        message = {
+            'channel': channel,
+            'data': data,
+            'timestamp': datetime.utcnow().isoformat(),
         }
         
-        if not self.active_connections:
-            return
+        # Send to specific channel and 'all' channel
+        targets = self.connections.get(channel, set()) | self.connections.get('all', set())
         
-        message_json = json.dumps(self._metrics_cache, default=str)
         disconnected = set()
-        
-        async with self._lock:
-            for connection in self.active_connections:
-                try:
-                    await connection.send_text(message_json)
-                except Exception as e:
-                    logger.debug(f"Failed to send performance metrics: {e}")
-                    disconnected.add(connection)
-            
-            self.active_connections -= disconnected
-    
-    async def start_metrics_broadcast(self, interval: float = 2.0):
-        """Start broadcasting metrics at regular intervals"""
-        if self._running:
-            return
-        
-        self._running = True
-        
-        async def broadcast_loop():
-            while self._running:
-                try:
-                    # Collect and broadcast metrics
-                    metrics = await self._collect_metrics()
-                    await self.broadcast_metrics(metrics)
-                except Exception as e:
-                    logger.error(f"Error in metrics broadcast: {e}")
-                
-                await asyncio.sleep(interval)
-        
-        self._broadcast_task = asyncio.create_task(broadcast_loop())
-        logger.info("Performance metrics broadcast started")
-    
-    async def stop_metrics_broadcast(self):
-        """Stop the metrics broadcast loop"""
-        self._running = False
-        if self._broadcast_task:
-            self._broadcast_task.cancel()
+        for connection in targets:
             try:
-                await self._broadcast_task
-            except asyncio.CancelledError:
-                pass
-        logger.info("Performance metrics broadcast stopped")
+                await connection.send_json(message)
+            except Exception as e:
+                logger.warning(f"Failed to send to connection: {e}")
+                disconnected.add(connection)
+        
+        # Clean up disconnected
+        if disconnected:
+            async with self._lock:
+                for channel_set in self.connections.values():
+                    channel_set -= disconnected
     
-    async def _collect_metrics(self) -> Dict[str, Any]:
-        """Collect current performance metrics"""
-        import psutil
-        import time
-        
-        # System metrics
-        cpu_percent = psutil.cpu_percent(interval=None)
-        memory = psutil.virtual_memory()
-        
-        # Simulated API latency tracking (in real impl, track actual API calls)
-        # For now, generate realistic mock data
-        import random
-        base_latency = 100 + random.random() * 50
-        
-        return {
-            "avg_response_time": round(base_latency, 1),
-            "p95_response_time": round(base_latency * 2.2, 1),
-            "p99_response_time": round(base_latency * 3.8, 1),
-            "requests_per_minute": random.randint(30, 60),
-            "error_rate": round(random.random() * 0.5, 2),
-            "uptime": 99.97,
-            "active_connections": len(self.active_connections),
-            "memory_usage": round(memory.percent, 1),
-            "cpu_usage": round(cpu_percent, 1),
-            "cache_hit_rate": round(85 + random.random() * 10, 1),
-            "system": {
-                "cpu_count": psutil.cpu_count(),
-                "memory_total_gb": round(memory.total / (1024**3), 2),
-                "memory_available_gb": round(memory.available / (1024**3), 2)
-            }
-        }
+    async def send_personal(self, websocket: WebSocket, data: dict):
+        """Send message to specific connection."""
+        try:
+            await websocket.send_json({
+                'data': data,
+                'timestamp': datetime.utcnow().isoformat(),
+            })
+        except Exception as e:
+            logger.warning(f"Failed to send personal message: {e}")
+    
+    def get_connection_count(self) -> Dict[str, int]:
+        """Get count of connections per channel."""
+        return {channel: len(conns) for channel, conns in self.connections.items()}
 
 
-# Singleton instances
-_ws_manager = None
-_performance_ws_manager = None
-
-def get_ws_manager() -> ConnectionManager:
-    """Get the singleton WebSocket manager"""
-    global _ws_manager
-    if _ws_manager is None:
-        _ws_manager = ConnectionManager()
-    return _ws_manager
+# Global connection manager
+ws_manager = ConnectionManager()
 
 
-def get_performance_ws_manager() -> PerformanceWebSocketManager:
-    """Get the singleton Performance WebSocket manager"""
-    global _performance_ws_manager
-    if _performance_ws_manager is None:
-        _performance_ws_manager = PerformanceWebSocketManager()
-    return _performance_ws_manager
+# Broadcast functions for different data types
+async def broadcast_price_update(prices: dict):
+    """Broadcast price updates to subscribers."""
+    await ws_manager.broadcast_to_channel('prices', {
+        'type': 'price_update',
+        'prices': prices,
+    })
+
+
+async def broadcast_signal(signal: dict):
+    """Broadcast AI trading signal."""
+    await ws_manager.broadcast_to_channel('signals', {
+        'type': 'ai_signal',
+        'signal': signal,
+    })
+
+
+async def broadcast_training_progress(progress: dict):
+    """Broadcast training progress updates."""
+    await ws_manager.broadcast_to_channel('training', {
+        'type': 'training_progress',
+        'progress': progress,
+    })
+
+
+async def broadcast_portfolio_update(portfolio: dict):
+    """Broadcast portfolio changes."""
+    await ws_manager.broadcast_to_channel('portfolio', {
+        'type': 'portfolio_update',
+        'portfolio': portfolio,
+    })
+
+
+async def broadcast_alert(alert: dict):
+    """Broadcast alert notification."""
+    await ws_manager.broadcast_to_channel('alerts', {
+        'type': 'alert',
+        'alert': alert,
+    })
