@@ -198,7 +198,7 @@ async def store_crypto_com_credentials(
         
         return {"message": "Crypto.com credentials stored successfully", "has_credentials": True}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise safe_error_response(e, category="auth", context="store crypto.com credentials")
 
 
 @router.get("/crypto-com/check")
