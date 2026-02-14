@@ -9,6 +9,7 @@ from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, Field
 from typing import Optional
 from config.database import db
+from config.app_config import COOKIE_SECURE, COOKIE_SAMESITE
 
 logger = logging.getLogger(__name__)
 
