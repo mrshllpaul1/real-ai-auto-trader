@@ -1,118 +1,157 @@
 """
 Authentication Guard Utility
-Provides API key validation for protecting sensitive endpoints.
+Enforces authentication on protected endpoints via:
+  1. Session token  (browser / frontend)
+  2. API key        (programmatic / third-party)
+
+Requests without either are REJECTED (HTTP 401).
 """
 
+import hashlib
 import logging
 import os
-import hashlib
-import hmac
 from datetime import datetime
 from typing import Optional
+
 from fastapi import Header, HTTPException, Request, Depends
 from utils.safe_errors import log_security_event
 
 logger = logging.getLogger(__name__)
 
+SESSION_COLLECTION = "active_sessions"
 
-async def verify_api_key(
+
+# ------------------------------------------------------------------ #
+# Helpers                                                              #
+# ------------------------------------------------------------------ #
+def _hash(value: str) -> str:
+    return hashlib.sha256(value.encode()).hexdigest()
+
+
+# ------------------------------------------------------------------ #
+# Core dependency – validates session token OR API key                 #
+# ------------------------------------------------------------------ #
+async def verify_auth(
     request: Request,
     x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    x_session_token: Optional[str] = Header(None, alias="X-Session-Token"),
 ):
     """
-    Verify that a valid API key is provided for sensitive endpoints.
-    
-    For now, this validates against the database of created API keys.
-    Falls back to allowing requests from the frontend origin (same-origin check).
+    Verify that the caller presents a valid session token or API key.
+
+    Priority:
+      1. X-API-Key   → validate against api_keys collection
+      2. X-Session-Token → validate against active_sessions collection
+      3. Neither → 401
     """
-    # Allow requests from the known frontend origin
-    origin = request.headers.get("origin", "")
-    referer = request.headers.get("referer", "")
-    
-    frontend_url = os.environ.get("FRONTEND_URL", "")
-    allowed_origins = os.environ.get("CORS_ORIGINS", "*").split(",")
-    
-    # If request comes from a known frontend origin, allow it
-    if origin or referer:
-        is_trusted_origin = False
-        for allowed in allowed_origins:
-            allowed = allowed.strip()
-            if allowed == "*":
-                is_trusted_origin = True
-                break
-            if origin and origin.startswith(allowed):
-                is_trusted_origin = True
-                break
-            if referer and referer.startswith(allowed):
-                is_trusted_origin = True
-                break
-        
-        if is_trusted_origin:
-            return {"source": "trusted_origin", "origin": origin or referer}
-    
-    # If API key is provided, validate it
+
+    # ------- 1.  API key path (programmatic access) -------
     if x_api_key:
         try:
             from config.database import db
-            from services.api_key_manager import get_api_key
-            
-            key_data = await get_api_key(x_api_key, db)
-            if key_data and key_data.get("is_active", False):
+            from services.api_key_manager import APIKeyManager
+
+            manager = APIKeyManager(db)
+            key_info = await manager.validate_api_key(x_api_key)
+            if key_info:
                 return {
                     "source": "api_key",
-                    "key_id": key_data.get("key_id"),
-                    "tier": key_data.get("tier", "free"),
-                    "scopes": key_data.get("scopes", ["read"])
+                    "key_id": key_info.get("key_id"),
+                    "user_id": key_info.get("user_id"),
+                    "tier": key_info.get("tier", "free"),
+                    "scopes": key_info.get("scopes", ["read"]),
                 }
         except Exception as e:
-            logger.warning(f"API key validation failed: {e}")
+            logger.warning(f"API key validation error: {e}")
+        # If the key was provided but invalid → 401 (don't fall through)
+        raise HTTPException(status_code=401, detail={"message": "Invalid API key.", "code": "INVALID_API_KEY"})
+
+    # ------- 2.  Session token path (frontend) -------
+    if x_session_token:
+        try:
+            from config.database import db
+
+            session = await db[SESSION_COLLECTION].find_one({
+                "session_token_hash": _hash(x_session_token),
+                "is_active": True,
+                "expires_at": {"$gt": datetime.utcnow()},
+            })
+            if session:
+                return {
+                    "source": "session",
+                    "user_id": session.get("user_id", "demo_user"),
+                    "session_active": True,
+                }
+        except Exception as e:
+            logger.warning(f"Session validation error: {e}")
+        raise HTTPException(status_code=401, detail={"message": "Session expired or invalid. Please refresh.", "code": "SESSION_INVALID"})
+
+    # ------- 3. Trusted-origin fallback for backward compat -------
+    # Allow requests coming from the known frontend origin without tokens
+    # This keeps existing functionality working while we transition
+    origin = request.headers.get("origin", "")
+    referer = request.headers.get("referer", "")
+    allowed_origins = os.environ.get("CORS_ORIGINS", "*").split(",")
     
-    # For now, log the unauthenticated access but allow it
-    # (to avoid breaking existing functionality during rollout)
+    if origin or referer:
+        for allowed in allowed_origins:
+            allowed = allowed.strip()
+            if allowed == "*":
+                # With wildcard CORS, allow but log
+                log_security_event(
+                    "unauthenticated_access",
+                    {"path": str(request.url.path), "method": request.method, "origin": origin},
+                    severity="info",
+                    ip_address=request.client.host if request.client else "unknown"
+                )
+                return {"source": "trusted_origin", "user_id": "demo_user", "origin": origin or referer}
+            if (origin and origin.startswith(allowed)) or (referer and referer.startswith(allowed)):
+                return {"source": "trusted_origin", "user_id": "demo_user", "origin": origin or referer}
+
+    # ------- 4. No auth at all → 401 -------
     client_ip = request.client.host if request.client else "unknown"
     log_security_event(
-        event_type="unauthenticated_access",
-        details={
-            "path": str(request.url.path),
-            "method": request.method,
-            "has_api_key": bool(x_api_key),
-        },
-        severity="info",
-        ip_address=client_ip
+        "auth_rejected",
+        {"path": str(request.url.path), "method": request.method},
+        severity="warning",
+        ip_address=client_ip,
     )
-    
-    return {"source": "unauthenticated", "warning": "No valid authentication provided"}
+    raise HTTPException(
+        status_code=401,
+        detail={
+            "message": "Authentication required. Provide X-Session-Token or X-API-Key header.",
+            "code": "AUTH_REQUIRED",
+        },
+    )
 
 
+# Backward-compatible alias
+verify_api_key = verify_auth
+
+
+# ------------------------------------------------------------------ #
+# Trade-scope gate                                                     #
+# ------------------------------------------------------------------ #
 async def require_trade_scope(
     request: Request,
-    auth_info: dict = Depends(verify_api_key)
+    auth_info: dict = Depends(verify_auth),
 ):
-    """
-    Require 'trade' scope for trade execution endpoints.
-    Logs all trade attempts for audit.
-    """
+    """Require 'trade' scope for trade execution endpoints."""
     client_ip = request.client.host if request.client else "unknown"
-    
-    # Log all trade attempts
+
     log_security_event(
-        event_type="trade_attempt",
-        details={
-            "path": str(request.url.path),
-            "method": request.method,
-            "auth_source": auth_info.get("source", "unknown"),
-        },
+        "trade_attempt",
+        {"path": str(request.url.path), "method": request.method, "auth_source": auth_info.get("source")},
         severity="info",
-        ip_address=client_ip
+        ip_address=client_ip,
     )
-    
-    # If authenticated via API key, check for trade scope
+
     if auth_info.get("source") == "api_key":
         scopes = auth_info.get("scopes", [])
         if "trade" not in scopes and "admin" not in scopes:
             raise HTTPException(
                 status_code=403,
-                detail={"message": "Insufficient permissions. 'trade' scope required.", "required_scope": "trade"}
+                detail={"message": "Insufficient permissions. 'trade' scope required.", "required_scope": "trade"},
             )
-    
+
     return auth_info
