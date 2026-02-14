@@ -41,8 +41,10 @@ class ValidationMiddleware(BaseHTTPMiddleware):
     ]
     
     async def dispatch(self, request: Request, call_next):
-        # Skip validation for certain paths
-        if any(request.url.path.startswith(skip) for skip in self.SKIP_PATHS):
+        path = request.url.path
+        
+        # Skip validation for health/docs paths
+        if path in self.EXACT_SKIP or any(path.startswith(skip) for skip in self.SKIP_PATHS):
             return await call_next(request)
         
         # Check content length
