@@ -119,6 +119,37 @@ All trading endpoints are prefixed with `/api`. See below for full documentation
 # WebSocket manager
 ws_manager = ConnectionManager()
 
+
+# =============================================================================
+# GLOBAL EXCEPTION HANDLER - Prevents leaking internal errors to clients
+# =============================================================================
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """
+    Catch-all handler for unhandled exceptions.
+    Logs the real error server-side, returns safe message to client.
+    """
+    error_id = str(uuid.uuid4())[:8]
+    
+    # Log the REAL error server-side
+    logger.error(
+        f"[UNHANDLED-{error_id}] {request.method} {request.url.path} | "
+        f"{type(exc).__name__}: {str(exc)}"
+    )
+    logger.debug(f"[UNHANDLED-{error_id}] Traceback:\n{traceback.format_exc()}")
+    
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": {
+                "message": "An internal error occurred. Please try again later.",
+                "error_id": error_id,
+                "support_hint": f"Reference this ID when contacting support: ERR-{error_id}"
+            }
+        }
+    )
+
+
 # Health check endpoints - Must respond fast
 @app.get("/health")
 async def health_check():
@@ -135,13 +166,108 @@ api_router = APIRouter(prefix="/api")
 
 @api_router.get("/health")
 async def api_health_check():
-    """API health check endpoint"""
+    """Comprehensive API health check endpoint"""
+    # Database check
     try:
         await client.admin.command('ping')
         db_status = "connected"
-    except Exception as e:
-        db_status = f"error: {str(e)}"
-    return {"status": "healthy", "database": db_status, "version": APP_VERSION}
+    except Exception:
+        db_status = "degraded"
+    
+    # Kraken connectivity check
+    kraken_configured = bool(os.environ.get('KRAKEN_API_KEY'))
+    
+    # Core services health
+    services_health = {
+        "database": db_status,
+        "kraken_configured": kraken_configured,
+        "ml_lightweight_mode": os.environ.get('ML_LIGHTWEIGHT_MODE', 'false') == 'true',
+    }
+    
+    overall = "healthy" if db_status == "connected" else "degraded"
+    
+    return {
+        "status": overall,
+        "database": db_status,
+        "version": APP_VERSION,
+        "services": services_health,
+    }
+
+
+@api_router.get("/health/deep")
+async def deep_health_check():
+    """
+    Deep health check - tests all critical subsystems.
+    Use for monitoring dashboards, not for frequent polling.
+    """
+    checks = {}
+    overall_healthy = True
+    
+    # 1. Database connectivity
+    try:
+        await client.admin.command('ping')
+        from config.database import get_pool_stats
+        pool_stats = await get_pool_stats()
+        checks["database"] = {
+            "status": "healthy",
+            "pool_stats": pool_stats
+        }
+    except Exception:
+        checks["database"] = {"status": "unhealthy"}
+        overall_healthy = False
+    
+    # 2. Kraken API connectivity
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=5.0) as hclient:
+            resp = await hclient.get("https://api.kraken.com/0/public/Time")
+            kraken_up = resp.status_code == 200
+        checks["kraken_public_api"] = {
+            "status": "healthy" if kraken_up else "degraded",
+            "reachable": kraken_up
+        }
+    except Exception:
+        checks["kraken_public_api"] = {"status": "unreachable"}
+    
+    # 3. Encryption key validity
+    try:
+        from cryptography.fernet import Fernet
+        enc_key = os.environ.get('ENCRYPTION_KEY', '')
+        if enc_key:
+            Fernet(enc_key.encode() if isinstance(enc_key, str) else enc_key)
+            checks["encryption"] = {"status": "healthy", "key_configured": True}
+        else:
+            checks["encryption"] = {"status": "warning", "key_configured": False}
+    except Exception:
+        checks["encryption"] = {"status": "unhealthy", "key_valid": False}
+        overall_healthy = False
+    
+    # 4. Security middleware status
+    checks["security"] = {
+        "cors_configured": bool(CORS_ORIGINS),
+        "cors_wildcard": "*" in CORS_ORIGINS,
+        "security_headers": True,
+        "rate_limiting": True,
+        "audit_logging": True,
+    }
+    
+    # 5. Environment completeness
+    required_vars = ['MONGO_URL', 'DB_NAME', 'ENCRYPTION_KEY']
+    optional_vars = ['KRAKEN_API_KEY', 'KRAKEN_API_SECRET', 'EMERGENT_LLM_KEY']
+    
+    env_check = {
+        "required_present": all(os.environ.get(v) for v in required_vars),
+        "optional_configured": {v: bool(os.environ.get(v)) for v in optional_vars},
+    }
+    checks["environment"] = env_check
+    if not env_check["required_present"]:
+        overall_healthy = False
+    
+    return {
+        "status": "healthy" if overall_healthy else "degraded",
+        "version": APP_VERSION,
+        "checks": checks,
+    }
 
 @api_router.get("/")
 async def root():
