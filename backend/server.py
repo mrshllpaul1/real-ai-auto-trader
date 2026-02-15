@@ -405,6 +405,15 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import ML Analytics routes: {e}")
 
+# Import and include ML Data Population routes
+try:
+    from routes.ml_data_population import router as ml_data_router, set_dependencies as set_ml_data_deps
+    set_ml_data_deps(db)
+    app.include_router(ml_data_router)
+    logger.info("✅ ML Data Population routes registered")
+except ImportError as e:
+    logger.warning(f"Could not import ML Data Population routes: {e}")
+
 # Add middleware in correct order (last added = first executed)
 # 1. Security Headers (outermost - first to execute)
 try:
