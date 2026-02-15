@@ -141,9 +141,41 @@ async def ai_signals_multi_websocket(websocket: WebSocket):
 
 
 @router.get("/ai-signals/{symbol}")
-async def get_ai_signal(symbol: str):
+async def get_ai_signal(symbol: str, record_for_calibration: bool = True):
     """REST endpoint to get current AI signal for a symbol"""
-    return generate_ai_signal(symbol)
+    signal_data = generate_ai_signal(symbol)
+    
+    # Record prediction for live calibration
+    if record_for_calibration:
+        try:
+            from services.live_calibration import get_live_calibration
+            from server import db
+            calibration_service = get_live_calibration(db)
+            if calibration_service:
+                action = signal_data["signal"]
+                # Map signal to action
+                if action in ["STRONG_BUY", "BUY"]:
+                    action = "BUY"
+                elif action in ["STRONG_SELL", "SELL"]:
+                    action = "SELL"
+                else:
+                    action = "HOLD"
+                
+                await calibration_service.record_prediction(
+                    coin_id=symbol.replace("USD", "").replace("USDT", ""),
+                    predicted_action=action,
+                    confidence=signal_data["confidence"] / 100.0,
+                    model_name="ai_signal_generator",
+                    metadata={
+                        "score": signal_data["score"],
+                        "components": signal_data["components"],
+                        "price_target": signal_data["price_target"]
+                    }
+                )
+        except Exception as e:
+            logger.warning(f"Failed to record signal for calibration: {e}")
+    
+    return signal_data
 
 
 @router.get("/ai-signals/batch")
