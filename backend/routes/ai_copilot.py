@@ -207,7 +207,7 @@ I can help you with:
 - Review your trade ideas
 - Suggest improvements
 
-Try asking: "What's the current market sentiment?" or "Help me set up a stop loss for my BTC trade.""""
+Try asking: What is the current market sentiment? or Help me set up a stop loss for my BTC trade."""
     
     else:
         response = """I'm here to help with your trading! You can ask me about:
