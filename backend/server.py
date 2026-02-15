@@ -423,6 +423,15 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import Live Calibration routes: {e}")
 
+# Import and include Sentiment Training routes
+try:
+    from routes.sentiment_training import router as sentiment_training_router, set_dependencies as set_sentiment_deps
+    set_sentiment_deps(db)
+    app.include_router(sentiment_training_router)
+    logger.info("✅ Sentiment Training routes registered")
+except ImportError as e:
+    logger.warning(f"Could not import Sentiment Training routes: {e}")
+
 # Add middleware in correct order (last added = first executed)
 # 1. Security Headers (outermost - first to execute)
 try:
