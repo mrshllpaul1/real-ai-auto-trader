@@ -81,42 +81,6 @@ android-sdk/
 # Cache files
 frontend/node_modules/.cache/
 
-# IMPORTANT: .env files are NOT ignored
-# They are required for Emergent deployment
-# DO NOT ADD *.env or .env.* patterns here!
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
 # Environment files
 *.env
 *.env.*
