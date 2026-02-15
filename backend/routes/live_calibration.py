@@ -316,3 +316,88 @@ async def webhook_trade_closed(data: Dict[str, Any]):
     )
     
     return result
+
+
+@router.post("/bulk-generate")
+async def bulk_generate_trades(
+    num_trades: int = 500,
+    include_outcomes: bool = True
+):
+    """Generate bulk trade data for calibration testing."""
+    import random
+    
+    service = get_calibration_service()
+    
+    MODELS = {
+        "tethys_ensemble": 0.73,
+        "lstm_predictor": 0.68,
+        "xgboost_classifier": 0.71,
+        "gem_ml_dl": 0.65,
+        "mtf_analyzer": 0.70,
+        "sentiment_analyzer": 0.58,
+        "whale_tracker": 0.75,
+    }
+    
+    COINS = ["BTC", "ETH", "SOL", "XRP", "ADA", "DOT", "LINK", "AVAX", "MATIC", "ATOM"]
+    ACTIONS = ["BUY", "SELL", "HOLD"]
+    
+    predictions = []
+    
+    for i in range(num_trades):
+        model_name = random.choice(list(MODELS.keys()))
+        base_accuracy = MODELS[model_name]
+        coin = random.choice(COINS)
+        action = random.choice(ACTIONS)
+        
+        # Generate confidence with beta distribution for realistic spread
+        confidence = random.betavariate(2, 2) * 0.65 + 0.30
+        confidence = round(confidence, 3)
+        
+        trade_id = f"bulk_{datetime.utcnow().timestamp()}_{i}"
+        
+        prediction_id = await service.record_prediction(
+            coin_id=coin,
+            predicted_action=action,
+            confidence=confidence,
+            model_name=model_name,
+            trade_id=trade_id,
+            entry_price=random.uniform(100, 100000)
+        )
+        
+        predictions.append({
+            "prediction_id": prediction_id,
+            "confidence": confidence,
+            "base_accuracy": base_accuracy
+        })
+    
+    outcomes_recorded = 0
+    correct_count = 0
+    
+    if include_outcomes:
+        for pred in predictions:
+            confidence = pred["confidence"]
+            base_accuracy = pred["base_accuracy"]
+            
+            # Well-calibrated: accuracy correlates with confidence
+            actual_prob = confidence * base_accuracy / 0.7 + random.uniform(-0.05, 0.05)
+            actual_prob = max(0.1, min(0.95, actual_prob))
+            
+            is_correct = random.random() < actual_prob
+            if is_correct:
+                correct_count += 1
+            
+            pnl = random.uniform(1, 15) if is_correct else random.uniform(-8, -1)
+            
+            await service.record_outcome(
+                prediction_id=pred["prediction_id"],
+                is_correct=is_correct,
+                pnl_percent=round(pnl, 2)
+            )
+            outcomes_recorded += 1
+    
+    return {
+        "predictions_generated": len(predictions),
+        "outcomes_recorded": outcomes_recorded,
+        "accuracy": round(correct_count / len(predictions) * 100, 2) if predictions else 0,
+        "message": f"Generated {num_trades} trades for calibration"
+    }
