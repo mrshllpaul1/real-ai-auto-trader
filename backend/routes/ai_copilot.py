@@ -185,7 +185,7 @@ Want me to help calculate position size for a specific trade?"""
 - **Greed (55-75):** Consider taking profits
 - **Extreme Greed (75-100):** High risk of correction
 
-Remember: "Be fearful when others are greedy, greedy when others are fearful.""""
+Remember: Be fearful when others are greedy, greedy when others are fearful."""
     
     elif any(word in message_lower for word in ["help", "what can you", "capabilities"]):
         response = """🤖 **I'm Tethys AI, your trading copilot!**
