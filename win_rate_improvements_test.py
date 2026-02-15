@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any
 
 # Backend URL configuration
-BASE_URL = "https://csrf-api-guard.preview.emergentagent.com/api"
+BASE_URL = "https://feature-enhancer-7.preview.emergentagent.com/api"
 
 class WinRateImprovementsTester:
     def __init__(self):

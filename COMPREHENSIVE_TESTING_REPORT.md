@@ -372,8 +372,8 @@ nginx-code-proxy RUNNING   pid 45
 - All environment variables set ✅
 
 **URL:**
-- Deployment: https://csrf-api-guard.preview.emergentagent.com ✅
-- Backend API: https://csrf-api-guard.preview.emergentagent.com/api ✅
+- Deployment: https://feature-enhancer-7.preview.emergentagent.com ✅
+- Backend API: https://feature-enhancer-7.preview.emergentagent.com/api ✅
 
 ---
 

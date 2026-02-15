@@ -9,7 +9,7 @@ import time
 import json
 
 # Backend URL from environment
-BACKEND_URL = "https://csrf-api-guard.preview.emergentagent.com/api"
+BACKEND_URL = "https://feature-enhancer-7.preview.emergentagent.com/api"
 
 def test_endpoint_simple(endpoint, method="GET", data=None, timeout=60):
     """Test endpoint with extended timeout due to system load"""

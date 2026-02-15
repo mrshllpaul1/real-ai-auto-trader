@@ -241,7 +241,7 @@ class ErrorAlertingService:
                 
                 <div style="margin-top: 20px; padding: 15px; background: #1F1F1F; border-radius: 8px;">
                     <p style="margin: 0; color: #A1A1AA;">
-                        <a href="https://csrf-api-guard.preview.emergentagent.com/error-analytics" 
+                        <a href="https://feature-enhancer-7.preview.emergentagent.com/error-analytics" 
                            style="color: #00FF94; text-decoration: none;">
                             View Error Analytics Dashboard →
                         </a>

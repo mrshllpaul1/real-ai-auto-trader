@@ -6,7 +6,7 @@ NoSQL Injection Test - Direct Testing
 import httpx
 import asyncio
 
-BACKEND_URL = "https://csrf-api-guard.preview.emergentagent.com"
+BACKEND_URL = "https://feature-enhancer-7.preview.emergentagent.com"
 
 async def test_nosql_injection_detailed():
     """Detailed NoSQL injection testing"""

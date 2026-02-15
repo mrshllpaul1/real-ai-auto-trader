@@ -22,7 +22,7 @@ from typing import Dict, List, Tuple, Any
 from pathlib import Path
 
 # Backend URL from environment
-BACKEND_URL = "https://csrf-api-guard.preview.emergentagent.com"
+BACKEND_URL = "https://feature-enhancer-7.preview.emergentagent.com"
 
 class SecurityTester:
     def __init__(self, base_url: str):

@@ -15,7 +15,7 @@ import os
 import re
 
 # Use public URL for testing
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://csrf-api-guard.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://feature-enhancer-7.preview.emergentagent.com')
 
 
 class TestHealthEndpoints:

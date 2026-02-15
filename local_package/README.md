@@ -156,4 +156,4 @@ TWELVE_DATA_API_KEY=your_key
 
 ## Support
 
-Test URL: https://csrf-api-guard.preview.emergentagent.com
+Test URL: https://feature-enhancer-7.preview.emergentagent.com

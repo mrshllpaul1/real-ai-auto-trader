@@ -509,7 +509,7 @@ class CSRFSessionTester:
 def main():
     """Main testing function"""
     # Use the production backend URL from frontend .env
-    backend_url = "https://csrf-api-guard.preview.emergentagent.com"
+    backend_url = "https://feature-enhancer-7.preview.emergentagent.com"
     
     print(f"Testing CSRF Protection and Session Authentication at: {backend_url}")
     print()

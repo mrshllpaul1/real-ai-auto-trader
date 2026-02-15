@@ -5,7 +5,7 @@
     "minor": [
       {
         "endpoint": "CORS Access-Control-Allow-Origin",
-        "issue": "Response shows 'access-control-allow-origin: *' but this appears to be from Cloudflare proxy layer, not the app. Backend config shows CORS_ORIGINS=https://csrf-api-guard.preview.emergentagent.com",
+        "issue": "Response shows 'access-control-allow-origin: *' but this appears to be from Cloudflare proxy layer, not the app. Backend config shows CORS_ORIGINS=https://feature-enhancer-7.preview.emergentagent.com",
         "priority": "LOW"
       }
     ]
@@ -101,5 +101,5 @@
       "sameSite": "Lax"
     }
   },
-  "cors_note": "CORS_ORIGINS set to https://csrf-api-guard.preview.emergentagent.com in backend/.env. HTTP response shows * but this is from Cloudflare proxy, not the app config."
+  "cors_note": "CORS_ORIGINS set to https://feature-enhancer-7.preview.emergentagent.com in backend/.env. HTTP response shows * but this is from Cloudflare proxy, not the app config."
 }
