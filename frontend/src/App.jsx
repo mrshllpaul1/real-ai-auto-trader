@@ -246,6 +246,11 @@ function AppContent() {
                     <Route path="/web3-wallet" element={<PageErrorBoundary><SuspenseWrapper><Web3Wallet /></SuspenseWrapper></PageErrorBoundary>} />
                     <Route path="/ai-explain" element={<PageErrorBoundary><SuspenseWrapper><AIExplainability /></SuspenseWrapper></PageErrorBoundary>} />
                     
+                    {/* AI Enhancement Routes */}
+                    <Route path="/nl-strategy" element={<PageErrorBoundary><SuspenseWrapper><NaturalLanguageStrategy /></SuspenseWrapper></PageErrorBoundary>} />
+                    <Route path="/ai-copilot" element={<PageErrorBoundary><SuspenseWrapper><AICopilot /></SuspenseWrapper></PageErrorBoundary>} />
+                    <Route path="/ml-analytics" element={<PageErrorBoundary><SuspenseWrapper><MLAnalytics /></SuspenseWrapper></PageErrorBoundary>} />
+                    
                     <Route path="/setup" element={<Navigate to="/settings" replace />} />
                     <Route path="/budget" element={<Navigate to="/settings" replace />} />
                     <Route path="/telegram" element={<Navigate to="/settings" replace />} />
