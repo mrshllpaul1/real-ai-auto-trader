@@ -100,7 +100,13 @@ async def start_training(
 ):
     """Start Rainbow DQN training"""
     global _db
-    
+
+    if not _db:
+        raise HTTPException(status_code=503, detail="Database not initialized. Please wait for system startup.")
+
+    if background_tasks is None:
+        raise HTTPException(status_code=503, detail="Background task system not available. Please try again.")
+
     config = config or TrainConfig()
     
     # Use threading to truly run in background without blocking event loop
@@ -165,6 +171,7 @@ async def get_training_status():
         return {
             'is_training': False,
             'is_active': False,
+            'database_connected': bool(_db),
             'current_episode': 0,
             'total_episodes': 0,
             'progress_pct': 0,

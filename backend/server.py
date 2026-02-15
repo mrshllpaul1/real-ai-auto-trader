@@ -3,7 +3,7 @@ AI Crypto Trading API - Main Entry Point
 Lightweight server that delegates to modular initialization
 """
 
-from fastapi import FastAPI, APIRouter, WebSocket, WebSocketDisconnect, Request
+from fastapi import FastAPI, APIRouter, WebSocket, WebSocketDisconnect, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
@@ -12,6 +12,8 @@ import asyncio
 import os
 import uuid
 import traceback
+
+from health import check_database_connection
 
 # Configuration imports
 from config.app_config import APP_TITLE, APP_DESCRIPTION, APP_VERSION, CORS_ORIGINS, LOG_FORMAT, LOG_LEVEL
@@ -152,9 +154,11 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # Health check endpoints - Must respond fast
 @app.get("/health")
-async def health_check():
+async def health_check(response: Response):
     """Health check endpoint for deployment"""
-    return {"status": "healthy", "version": APP_VERSION}
+    db_status = await check_database_connection(client)
+    _apply_health_status(response, db_status["status"])
+    return {"status": db_status["status"], "database": db_status["database"], "version": APP_VERSION}
 
 @app.get("/")
 async def root_health():
@@ -165,15 +169,11 @@ async def root_health():
 api_router = APIRouter(prefix="/api")
 
 @api_router.get("/health")
-async def api_health_check():
+async def api_health_check(response: Response):
     """Comprehensive API health check endpoint"""
-    # Database check
-    try:
-        await client.admin.command('ping')
-        db_status = "connected"
-    except Exception:
-        db_status = "degraded"
-    
+    db_result = await check_database_connection(client)
+    db_status = db_result["database"]
+
     # Kraken connectivity check
     kraken_configured = bool(os.environ.get('KRAKEN_API_KEY'))
     
@@ -184,14 +184,22 @@ async def api_health_check():
         "ml_lightweight_mode": os.environ.get('ML_LIGHTWEIGHT_MODE', 'false') == 'true',
     }
     
-    overall = "healthy" if db_status == "connected" else "degraded"
-    
+    overall = db_result["status"]
+    _apply_health_status(response, overall)
+
     return {
         "status": overall,
         "database": db_status,
         "version": APP_VERSION,
         "services": services_health,
     }
+
+
+def _apply_health_status(response: Response, status: str):
+    """Set HTTP status code based on health status string (expected: 'healthy' or 'unhealthy')."""
+    if status not in {"healthy", "unhealthy"}:
+        logger.warning('Unexpected health status value: %s (expected "healthy" or "unhealthy")', status)
+    response.status_code = 200 if status == "healthy" else 503
 
 
 @api_router.get("/health/deep")

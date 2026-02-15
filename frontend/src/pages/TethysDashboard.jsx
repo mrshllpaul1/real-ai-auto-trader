@@ -12,8 +12,9 @@ import {
 import { toast } from 'sonner';
 import { useComponentState, ComponentType } from '../hooks/useSystemState';
 import { PageLoadingSkeleton } from '../components/LoadingSkeleton';
+import { getBackendUrl } from '../services/backendUrl';
 
-const API_URL = window.__RUNTIME_CONFIG__?.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_BACKEND_URL;
+const API_URL = getBackendUrl();
 const WS_URL = API_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
 
 // Mobile-optimized Tethys Dashboard for Galaxy S22 (1080x2340)

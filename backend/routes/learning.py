@@ -19,9 +19,17 @@ async def get_database():
     return db
 
 async def get_learning_engine():
-    from services.learning_engine import AILearningEngine
     from server import db
-    return AILearningEngine(db)
+    if not db:
+        raise HTTPException(status_code=503, detail="Database not initialized. Please wait for system startup.")
+    try:
+        from services.learning_engine import AILearningEngine
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail=f"Learning engine module unavailable: {exc}")
+    try:
+        return AILearningEngine(db)
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"Failed to create learning engine: {exc}")
 
 @router.get("/insights/{strategy_id}")
 async def get_strategy_learning_insights(
@@ -101,6 +109,8 @@ async def trigger_continuous_learning(
             "message": "Continuous learning update completed",
             "status": "success"
         }
+    except AttributeError as e:
+        raise HTTPException(status_code=503, detail=f"Learning engine missing required method: {e}")
     except Exception as e:
         raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
 
