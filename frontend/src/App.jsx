@@ -30,6 +30,11 @@ const ErrorAnalyticsDashboard = lazy(() => import("./pages/ErrorAnalyticsDashboa
 const PerformanceMonitorDashboard = lazy(() => import("./pages/PerformanceDashboard"));
 const LiveDashboardPage = lazy(() => import("./pages/LiveDashboardPage"));
 
+// AI Enhancement Pages
+const NaturalLanguageStrategy = lazy(() => import("./pages/NaturalLanguageStrategy"));
+const AICopilot = lazy(() => import("./pages/AICopilot"));
+const MLAnalytics = lazy(() => import("./pages/MLAnalytics"));
+
 // Keep individual pages for direct access (backwards compatibility)
 import SpotTrading from "./pages/SpotTrading";
 import PositionManagement from "./pages/PositionManagement";
