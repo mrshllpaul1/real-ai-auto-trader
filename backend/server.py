@@ -381,6 +381,30 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import Google OAuth routes: {e}")
 
+# Import and include Natural Language Strategy routes
+try:
+    from routes.natural_language_strategy import router as nl_strategy_router
+    app.include_router(nl_strategy_router)
+    logger.info("✅ Natural Language Strategy routes registered")
+except ImportError as e:
+    logger.warning(f"Could not import Natural Language Strategy routes: {e}")
+
+# Import and include AI Copilot routes
+try:
+    from routes.ai_copilot import router as ai_copilot_router
+    app.include_router(ai_copilot_router)
+    logger.info("✅ AI Copilot routes registered")
+except ImportError as e:
+    logger.warning(f"Could not import AI Copilot routes: {e}")
+
+# Import and include ML Analytics routes
+try:
+    from routes.ml_analytics_api import router as ml_analytics_router
+    app.include_router(ml_analytics_router)
+    logger.info("✅ ML Analytics routes registered")
+except ImportError as e:
+    logger.warning(f"Could not import ML Analytics routes: {e}")
+
 # Add middleware in correct order (last added = first executed)
 # 1. Security Headers (outermost - first to execute)
 try:
