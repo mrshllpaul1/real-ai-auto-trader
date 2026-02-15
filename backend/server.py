@@ -414,6 +414,15 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import ML Data Population routes: {e}")
 
+# Import and include Live Calibration routes
+try:
+    from routes.live_calibration import router as live_calibration_router, set_dependencies as set_live_cal_deps
+    set_live_cal_deps(db)
+    app.include_router(live_calibration_router)
+    logger.info("✅ Live Calibration routes registered")
+except ImportError as e:
+    logger.warning(f"Could not import Live Calibration routes: {e}")
+
 # Add middleware in correct order (last added = first executed)
 # 1. Security Headers (outermost - first to execute)
 try:
