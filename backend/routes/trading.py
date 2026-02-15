@@ -86,6 +86,35 @@ async def execute_trade(
                 "amount": order.amount,
                 "timestamp": result['created_at']
             })
+            
+            # Record for live calibration (ML Analytics integration)
+            try:
+                from services.live_calibration import get_live_calibration
+                calibration_service = get_live_calibration(db)
+                if calibration_service:
+                    # Get signal confidence from strategy or default
+                    signal_confidence = 0.65  # Default confidence
+                    signal_model = "tethys_ensemble"  # Default model
+                    
+                    # Try to get from strategy metadata
+                    strategy = await db.strategies.find_one({"_id": order.strategy_id})
+                    if strategy:
+                        signal_confidence = strategy.get("last_signal_confidence", signal_confidence)
+                        signal_model = strategy.get("signal_model", signal_model)
+                    
+                    await calibration_service.record_trade_with_signal(
+                        trade_id=result['trade_id'],
+                        coin_id=order.coin_pair.split('/')[0],
+                        action=order.action,
+                        confidence=signal_confidence,
+                        model_name=signal_model,
+                        entry_price=current_price,
+                        amount=order.amount,
+                        metadata={"strategy_id": order.strategy_id, "mode": order.mode}
+                    )
+            except Exception as cal_err:
+                logger.warning(f"Live calibration recording failed: {cal_err}")
+                
         except Exception as e:
             print(f"Warning: Could not record trade for learning: {str(e)}")
         
