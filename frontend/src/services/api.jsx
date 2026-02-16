@@ -455,6 +455,7 @@ export const authAPI = {
   storeCredentials: (api_key, api_secret) =>
     api.post('/auth/store-credentials', { api_key, api_secret }),
   checkCredentials: () => cachedGet('/auth/check-credentials'),
+  findKrakenKeys: () => api.get('/auth/kraken/find-keys'),
 };
 
 // Trading APIs

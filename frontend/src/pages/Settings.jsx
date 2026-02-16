@@ -17,6 +17,8 @@ const Settings = ({ embedded = false }) => {
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
   const [hasCredentials, setHasCredentials] = useState(false);
+  const [krakenKeyInfo, setKrakenKeyInfo] = useState(null);
+  const [findingKeys, setFindingKeys] = useState(false);
   
   // Binance credentials
   const [binanceApiKey, setBinanceApiKey] = useState('');
@@ -164,6 +166,20 @@ const Settings = ({ embedded = false }) => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const findKrakenKeys = async () => {
+    setFindingKeys(true);
+    try {
+      const response = await authAPI.findKrakenKeys();
+      setKrakenKeyInfo(response.data);
+    } catch (error) {
+      toast.error('Failed to find keys', {
+        description: error.response?.data?.detail || 'Could not check key configuration',
+      });
+    } finally {
+      setFindingKeys(false);
     }
   };
 
@@ -478,6 +494,53 @@ const Settings = ({ embedded = false }) => {
                 >
                   {loading ? 'Saving...' : hasCredentials ? 'Update Kraken Credentials' : 'Save Kraken Credentials'}
                 </Button>
+
+                <Button
+                  onClick={findKrakenKeys}
+                  variant="outline"
+                  className="w-full border-[#5741D9]/50 text-[#5741D9] hover:bg-[#5741D9]/10 font-bold rounded-full"
+                  disabled={findingKeys}
+                  data-testid="find-kraken-keys-btn"
+                >
+                  {findingKeys ? 'Searching...' : '🔍 Find My Kraken API Keys'}
+                </Button>
+
+                {krakenKeyInfo && (
+                  <div className="bg-[#121212] border border-[#1F1F1F] rounded-lg p-4 space-y-3" data-testid="kraken-key-info">
+                    <div className="flex items-center gap-2">
+                      {krakenKeyInfo.found ? (
+                        <CheckCircle size={16} className="text-[#00FF94]" />
+                      ) : (
+                        <XCircle size={16} className="text-[#FF0055]" />
+                      )}
+                      <span className={`text-sm font-bold ${krakenKeyInfo.found ? 'text-[#00FF94]' : 'text-[#FF0055]'}`}>
+                        {krakenKeyInfo.message}
+                      </span>
+                    </div>
+                    {krakenKeyInfo.sources?.map((source) => (
+                      <div key={source.source} className="border-t border-[#1F1F1F] pt-2">
+                        <p className="text-xs text-[#A1A1AA] uppercase tracking-wider mb-1">
+                          {source.source === 'environment_variables' ? '📦 Environment Variables' : '🗄️ Database Storage'}
+                        </p>
+                        {source.configured ? (
+                          <div className="space-y-1">
+                            <p className="text-sm text-[#E0E0E0]">
+                              API Key: <span className="font-mono text-[#00FF94]">{source.api_key_preview || '****'}</span>
+                            </p>
+                            <p className="text-sm text-[#E0E0E0]">
+                              API Secret: <span className="font-mono text-[#00FF94]">{source.api_secret_preview || '****'}</span>
+                            </p>
+                            {source.updated_at && (
+                              <p className="text-xs text-[#A1A1AA]">Last updated: {source.updated_at}</p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-[#A1A1AA]">Not configured</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
