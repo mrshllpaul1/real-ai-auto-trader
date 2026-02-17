@@ -78,7 +78,9 @@ class EnhancedMTFTrainingService:
             "last_trained": None,
             "coins_trained": 0,
             "accuracy": 0.0,
-            "features_used": []
+            "features_used": [],
+            "progress": 0,
+            "current_phase": "idle"
         }
         self._models: Dict[str, Any] = {}
         
@@ -952,7 +954,9 @@ class EnhancedMTFTrainingService:
                 "last_trained": datetime.now(timezone.utc).isoformat(),
                 "coins_trained": len(X_train),
                 "accuracy": float(accuracy),
-                "features_used": result["features_used"]
+                "features_used": result["features_used"],
+                "progress": 100,
+                "current_phase": "completed"
             }
             
             logger.info(f"✅ Enhanced MTF training completed! Accuracy: {accuracy * 100:.1f}%")
@@ -963,11 +967,16 @@ class EnhancedMTFTrainingService:
             import traceback
             traceback.print_exc()
             
-            self._training_status = {
+            current_progress = self._training_status.get("progress", 0)
+            failure_status = dict(self._training_status)
+            failure_status.update({
                 "status": "failed",
                 "error": str(e),
-                "training_id": training_id
-            }
+                "training_id": training_id,
+                "progress": current_progress,
+                "current_phase": "failed"
+            })
+            self._training_status = failure_status
             return {
                 "training_id": training_id,
                 "status": "failed",
