@@ -12,6 +12,23 @@ from datetime import datetime, timezone, timedelta
 from collections import deque
 import json
 
+# Hyperparameters for online reward updates
+BASE_LEARNING_RATE = 0.05   # Initial step size for fresh feedback
+MIN_LEARNING_RATE = 0.005   # Floor to keep learning signal alive
+MOMENTUM_BETA = 0.9         # Smooth gradients across noisy feedback
+NORMALIZATION_SCALE = 10.0  # Compresses typical 0-10 inputs to ~[-0.8, 0.8] via tanh to prevent gradient spikes
+DECAY_RATE = 0.05           # Per-sample decay for adaptive LR
+
+# Feature-specific normalization/validation rules
+FEATURE_RULES = {
+    "profit_pct": {"min": -200, "max": 200, "scale": 50.0},
+    "hold_time_hours": {"min": 0, "max": 168, "scale": 48.0},
+    "entry_timing_score": {"min": 0, "max": 1, "scale": 1.0},
+    "exit_timing_score": {"min": 0, "max": 1, "scale": 1.0},
+    "risk_reward_ratio": {"min": 0, "max": 10, "scale": 5.0},
+    "position_size_score": {"min": 0, "max": 1, "scale": 1.0},
+}
+
 logger = logging.getLogger(__name__)
 
 
@@ -66,44 +83,114 @@ class RewardModel:
         
         # Training data
         self.training_data: List[Tuple[Dict, float]] = []
+        self.sample_count = 0
+        
+        # Adaptive learning controls
+        self.base_learning_rate = BASE_LEARNING_RATE
+        self.min_learning_rate = MIN_LEARNING_RATE
+        self.momentum_beta = MOMENTUM_BETA
+        self.gradient_momentum: Dict[str, float] = {}
+        self.last_effective_lr = self.base_learning_rate
+        self.last_update_at = None
+        self.normalization_scale = NORMALIZATION_SCALE
+        self.decay_rate = DECAY_RATE
+        self._lr_cache_count = -1
         
     def predict_reward(self, trade_features: Dict) -> float:
         """Predict human rating for a trade"""
-        reward = 0
-        
-        for feature, weight in self.feature_weights.items():
-            value = trade_features.get(feature, 0)
-            adjustment = self.learned_adjustments.get(feature, 0)
-            reward += (weight + adjustment) * value
-        
-        # Normalize to 1-5 scale
-        return max(1, min(5, 2.5 + reward))
+        normalized_features = {
+            feature: self._normalize_feature_value(feature, trade_features.get(feature, 0))
+            for feature in self.feature_weights
+        }
+        return self._predict_from_normalized_features(normalized_features)
     
     def update_from_feedback(self, trade_features: Dict, human_rating: float):
         """Update model based on human feedback"""
-        self.training_data.append((trade_features, human_rating))
+        normalized_features = {
+            feature: self._normalize_feature_value(feature, value)
+            for feature, value in trade_features.items()
+        }
+        self.training_data.append((normalized_features, human_rating))
+        self.sample_count += 1
         
         # Simple online learning update
-        predicted = self.predict_reward(trade_features)
+        predicted = self._predict_from_normalized_features(normalized_features)
         error = human_rating - predicted
         
-        learning_rate = 0.01
+        learning_rate = self._get_effective_learning_rate()
         
         for feature in self.feature_weights:
-            if feature in trade_features:
-                value = trade_features[feature]
+            if feature in normalized_features:
+                value = normalized_features[feature]
                 gradient = error * value
+                
+                prev_momentum = self.gradient_momentum.get(feature, 0.0)
+                momentum = self.momentum_beta * prev_momentum + (1 - self.momentum_beta) * gradient
+                self.gradient_momentum[feature] = momentum
                 
                 if feature not in self.learned_adjustments:
                     self.learned_adjustments[feature] = 0
                 
-                self.learned_adjustments[feature] += learning_rate * gradient
+                self.learned_adjustments[feature] += learning_rate * momentum
+        
+        self.last_update_at = datetime.now(timezone.utc)
     
     def get_weights(self) -> Dict:
         """Get current effective weights"""
         return {
             feature: self.feature_weights[feature] + self.learned_adjustments.get(feature, 0)
             for feature in self.feature_weights
+        }
+    
+    def _normalize_feature_value(self, feature: str, value: float) -> float:
+        """Scale feature values with tanh to keep updates stable; clamps per-feature ranges first"""
+        rules = FEATURE_RULES.get(feature, {})
+        safe_val = 0 if value is None else value
+        if isinstance(safe_val, (float, np.floating)) and np.isnan(safe_val):
+            safe_val = 0
+        min_val = rules.get("min")
+        max_val = rules.get("max")
+        if min_val is not None:
+            safe_val = max(min_val, safe_val)
+        if max_val is not None:
+            safe_val = min(max_val, safe_val)
+        
+        scale = rules.get("scale", self.normalization_scale)
+        if scale <= 0:
+            scale = self.normalization_scale
+        
+        return float(np.tanh(safe_val / scale))
+    
+    def _get_effective_learning_rate(self) -> float:
+        """Use a decaying learning rate with a safety floor to stabilize training"""
+        if self.sample_count == self._lr_cache_count and self.last_effective_lr is not None:
+            return self.last_effective_lr
+        decay = 1 / (1 + self.decay_rate * self.sample_count)
+        self.last_effective_lr = max(self.min_learning_rate, self.base_learning_rate * decay)
+        self._lr_cache_count = self.sample_count
+        return self.last_effective_lr
+    
+    def _predict_from_normalized_features(self, normalized_features: Dict) -> float:
+        """Predict rating using already normalized feature values"""
+        reward = 0
+        for feature, weight in self.feature_weights.items():
+            value = normalized_features.get(feature, 0)
+            adjustment = self.learned_adjustments.get(feature, 0)
+            reward += (weight + adjustment) * value
+        return max(1, min(5, 2.5 + reward))
+    
+    def get_training_signal(self) -> Dict[str, Any]:
+        """Expose training health for monitoring and curriculum building"""
+        adjustments = list(self.learned_adjustments.values())
+        if adjustments:
+            avg_adjustment = float(np.mean(np.abs(adjustments)))
+        else:
+            avg_adjustment = 0.0
+        return {
+            "samples": self.sample_count,
+            "effective_learning_rate": self.last_effective_lr,
+            "avg_adjustment_magnitude": avg_adjustment,
+            "last_update_at": self.last_update_at.isoformat() if self.last_update_at else None
         }
 
 
@@ -296,6 +383,7 @@ class RLHFTrainer:
             **self.stats,
             "pending_trades": len(self.pending_trades),
             "reward_model_weights": self.reward_model.get_weights(),
+            "reward_model_training": self.reward_model.get_training_signal(),
             "recent_ratings": [r.to_dict() for r in self.ratings[-10:]]
         }
     
