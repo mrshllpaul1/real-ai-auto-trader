@@ -8,6 +8,8 @@ import asyncio
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
+import numpy as np
+import talib
 
 from services.coindesk_service import get_cryptocompare_service
 
@@ -84,6 +86,144 @@ class HistoricalDataDownloader:
         self.db = db
         self.crypto_service = get_cryptocompare_service()
         self.collection_name = "historical_ohlcv"
+    
+    def _compute_technical_indicators(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Compute technical indicators for the historical data.
+        
+        Args:
+            data: List of OHLCV candles
+        
+        Returns:
+            List of candles with added technical indicators
+        """
+        if not data or len(data) < 50:  # Need at least 50 data points for indicators
+            return data
+        
+        try:
+            # Convert to numpy arrays for TA-Lib
+            closes = np.array([float(d.get("close", 0)) for d in data])
+            highs = np.array([float(d.get("high", 0)) for d in data])
+            lows = np.array([float(d.get("low", 0)) for d in data])
+            opens = np.array([float(d.get("open", 0)) for d in data])
+            volumes = np.array([float(d.get("volume_from", 0)) for d in data])
+            
+            # Compute RSI (14-period)
+            rsi = talib.RSI(closes, timeperiod=14)
+            
+            # Compute MACD
+            macd, macd_signal, macd_hist = talib.MACD(closes, fastperiod=12, slowperiod=26, signalperiod=9)
+            
+            # Compute Moving Averages
+            sma_7 = talib.SMA(closes, timeperiod=7)
+            sma_14 = talib.SMA(closes, timeperiod=14)
+            sma_20 = talib.SMA(closes, timeperiod=20)
+            sma_30 = talib.SMA(closes, timeperiod=30)
+            sma_50 = talib.SMA(closes, timeperiod=50)
+            
+            ema_7 = talib.EMA(closes, timeperiod=7)
+            ema_14 = talib.EMA(closes, timeperiod=14)
+            ema_20 = talib.EMA(closes, timeperiod=20)
+            ema_30 = talib.EMA(closes, timeperiod=30)
+            ema_50 = talib.EMA(closes, timeperiod=50)
+            
+            # Compute Bollinger Bands
+            bb_upper, bb_middle, bb_lower = talib.BBANDS(closes, timeperiod=20, nbdevup=2, nbdevdn=2, matype=0)
+            
+            # Compute ATR (Average True Range)
+            atr = talib.ATR(highs, lows, closes, timeperiod=14)
+            
+            # Compute returns and volatility
+            returns = np.zeros(len(closes))
+            returns[1:] = (closes[1:] - closes[:-1]) / closes[:-1] * 100  # Percentage returns
+            
+            # Rolling volatility (7-day and 14-day standard deviation of returns)
+            volatility_7d = np.zeros(len(closes))
+            volatility_14d = np.zeros(len(closes))
+            
+            for i in range(7, len(returns)):
+                volatility_7d[i] = np.std(returns[i-7:i])
+            
+            for i in range(14, len(returns)):
+                volatility_14d[i] = np.std(returns[i-14:i])
+            
+            # Price momentum (1d, 7d, 14d, 30d)
+            momentum_1d = np.zeros(len(closes))
+            momentum_7d = np.zeros(len(closes))
+            momentum_14d = np.zeros(len(closes))
+            momentum_30d = np.zeros(len(closes))
+            
+            for i in range(1, len(closes)):
+                momentum_1d[i] = (closes[i] - closes[i-1]) / closes[i-1] * 100
+            
+            for i in range(7, len(closes)):
+                momentum_7d[i] = (closes[i] - closes[i-7]) / closes[i-7] * 100
+            
+            for i in range(14, len(closes)):
+                momentum_14d[i] = (closes[i] - closes[i-14]) / closes[i-14] * 100
+            
+            for i in range(30, len(closes)):
+                momentum_30d[i] = (closes[i] - closes[i-30]) / closes[i-30] * 100
+            
+            # Volume surge ratio (current volume / 7-day average volume)
+            volume_surge = np.zeros(len(volumes))
+            for i in range(7, len(volumes)):
+                avg_volume = np.mean(volumes[i-7:i])
+                volume_surge[i] = volumes[i] / avg_volume if avg_volume > 0 else 1.0
+            
+            # VWAP (Volume-Weighted Average Price) - simplified daily calculation
+            typical_price = (highs + lows + closes) / 3
+            vwap = np.zeros(len(closes))
+            for i in range(len(closes)):
+                if volumes[i] > 0:
+                    vwap[i] = typical_price[i]  # Simplified: just using typical price
+                else:
+                    vwap[i] = closes[i]
+            
+            # Add computed indicators to each candle
+            for i, candle in enumerate(data):
+                # Convert NaN to None for MongoDB storage
+                candle["rsi"] = float(rsi[i]) if not np.isnan(rsi[i]) else None
+                candle["macd"] = float(macd[i]) if not np.isnan(macd[i]) else None
+                candle["macd_signal"] = float(macd_signal[i]) if not np.isnan(macd_signal[i]) else None
+                candle["macd_hist"] = float(macd_hist[i]) if not np.isnan(macd_hist[i]) else None
+                
+                candle["sma_7"] = float(sma_7[i]) if not np.isnan(sma_7[i]) else None
+                candle["sma_14"] = float(sma_14[i]) if not np.isnan(sma_14[i]) else None
+                candle["sma_20"] = float(sma_20[i]) if not np.isnan(sma_20[i]) else None
+                candle["sma_30"] = float(sma_30[i]) if not np.isnan(sma_30[i]) else None
+                candle["sma_50"] = float(sma_50[i]) if not np.isnan(sma_50[i]) else None
+                
+                candle["ema_7"] = float(ema_7[i]) if not np.isnan(ema_7[i]) else None
+                candle["ema_14"] = float(ema_14[i]) if not np.isnan(ema_14[i]) else None
+                candle["ema_20"] = float(ema_20[i]) if not np.isnan(ema_20[i]) else None
+                candle["ema_30"] = float(ema_30[i]) if not np.isnan(ema_30[i]) else None
+                candle["ema_50"] = float(ema_50[i]) if not np.isnan(ema_50[i]) else None
+                
+                candle["bb_upper"] = float(bb_upper[i]) if not np.isnan(bb_upper[i]) else None
+                candle["bb_middle"] = float(bb_middle[i]) if not np.isnan(bb_middle[i]) else None
+                candle["bb_lower"] = float(bb_lower[i]) if not np.isnan(bb_lower[i]) else None
+                
+                candle["atr"] = float(atr[i]) if not np.isnan(atr[i]) else None
+                
+                candle["returns_pct"] = float(returns[i]) if not np.isnan(returns[i]) else None
+                candle["volatility_7d"] = float(volatility_7d[i]) if not np.isnan(volatility_7d[i]) else None
+                candle["volatility_14d"] = float(volatility_14d[i]) if not np.isnan(volatility_14d[i]) else None
+                
+                candle["momentum_1d"] = float(momentum_1d[i]) if not np.isnan(momentum_1d[i]) else None
+                candle["momentum_7d"] = float(momentum_7d[i]) if not np.isnan(momentum_7d[i]) else None
+                candle["momentum_14d"] = float(momentum_14d[i]) if not np.isnan(momentum_14d[i]) else None
+                candle["momentum_30d"] = float(momentum_30d[i]) if not np.isnan(momentum_30d[i]) else None
+                
+                candle["volume_surge"] = float(volume_surge[i]) if not np.isnan(volume_surge[i]) else None
+                candle["vwap"] = float(vwap[i]) if not np.isnan(vwap[i]) else None
+            
+            return data
+            
+        except Exception as e:
+            print(f"Error computing technical indicators: {e}")
+            # Return data without indicators if computation fails
+            return data
         
     async def download_coin_history(
         self,
@@ -114,9 +254,12 @@ class HistoricalDataDownloader:
             if not data:
                 return {"error": f"No data found for {coin_symbol}"}
             
+            # Compute technical indicators for the data
+            data_with_indicators = self._compute_technical_indicators(data)
+            
             # Prepare documents for MongoDB
             documents = []
-            for candle in data:
+            for candle in data_with_indicators:
                 doc = {
                     "symbol": coin_symbol.upper(),
                     "timestamp": candle["timestamp"],
@@ -127,6 +270,35 @@ class HistoricalDataDownloader:
                     "close": candle["close"],
                     "volume_from": candle["volume_from"],
                     "volume_to": candle["volume_to"],
+                    # Technical Indicators
+                    "rsi": candle.get("rsi"),
+                    "macd": candle.get("macd"),
+                    "macd_signal": candle.get("macd_signal"),
+                    "macd_hist": candle.get("macd_hist"),
+                    "sma_7": candle.get("sma_7"),
+                    "sma_14": candle.get("sma_14"),
+                    "sma_20": candle.get("sma_20"),
+                    "sma_30": candle.get("sma_30"),
+                    "sma_50": candle.get("sma_50"),
+                    "ema_7": candle.get("ema_7"),
+                    "ema_14": candle.get("ema_14"),
+                    "ema_20": candle.get("ema_20"),
+                    "ema_30": candle.get("ema_30"),
+                    "ema_50": candle.get("ema_50"),
+                    "bb_upper": candle.get("bb_upper"),
+                    "bb_middle": candle.get("bb_middle"),
+                    "bb_lower": candle.get("bb_lower"),
+                    "atr": candle.get("atr"),
+                    "returns_pct": candle.get("returns_pct"),
+                    "volatility_7d": candle.get("volatility_7d"),
+                    "volatility_14d": candle.get("volatility_14d"),
+                    "momentum_1d": candle.get("momentum_1d"),
+                    "momentum_7d": candle.get("momentum_7d"),
+                    "momentum_14d": candle.get("momentum_14d"),
+                    "momentum_30d": candle.get("momentum_30d"),
+                    "volume_surge": candle.get("volume_surge"),
+                    "vwap": candle.get("vwap"),
+                    # Metadata
                     "source": "cryptocompare",
                     "updated_at": datetime.now(timezone.utc)
                 }
@@ -144,14 +316,19 @@ class HistoricalDataDownloader:
             # Create index for efficient queries
             await collection.create_index([("symbol", 1), ("timestamp", 1)])
             
+            # Count how many records have valid indicators (non-null RSI as proxy)
+            records_with_indicators = sum(1 for doc in documents if doc.get("rsi") is not None)
+            
             return {
                 "symbol": coin_symbol.upper(),
                 "records_stored": len(documents),
+                "records_with_indicators": records_with_indicators,
                 "date_range": {
                     "from": data[0]["date"] if data else None,
                     "to": data[-1]["date"] if data else None
                 },
                 "source": "cryptocompare",
+                "indicators_computed": True,
                 "status": "success"
             }
             
