@@ -3,6 +3,9 @@ const STATIC_CACHE = 'tethys-static-v4';
 const DYNAMIC_CACHE = 'tethys-dynamic-v4';
 const API_CACHE = 'tethys-api-v4';
 
+// API base URL - defaults to same origin, can be overridden via message
+let API_BASE = self.location.origin + '/api';
+
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -246,6 +249,12 @@ self.addEventListener('message', (event) => {
   
   if (event.data && event.data.type === 'KEEP_ALIVE') {
     event.ports[0].postMessage({ alive: true, timestamp: Date.now() });
+  }
+  
+  // Allow client to set API base URL
+  if (event.data && event.data.type === 'SET_API_BASE') {
+    API_BASE = event.data.url;
+    console.log('[SW] API_BASE set to:', API_BASE);
   }
   
   if (event.data && event.data.type === 'START_BACKGROUND') {

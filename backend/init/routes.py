@@ -76,6 +76,10 @@ def register_routes(api_router: APIRouter, db=None):
     from routes import ai_signals_ws as ai_signals_ws_routes
     from routes import session_auth as session_auth_routes
     
+    # AI Error Management & Auto-Correction
+    from routes import ai_error_management as ai_error_routes
+    api_router.include_router(ai_error_routes.router, tags=["AI Error Management"])
+    
     # Include routers
     api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
     api_router.include_router(session_auth_routes.router, tags=["Authentication"])  # Session / CSRF (own /auth prefix)

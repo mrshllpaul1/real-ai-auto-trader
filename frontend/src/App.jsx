@@ -111,6 +111,43 @@ function AppContent() {
       console.warn('AutoDebugger failed to load:', err);
     });
     
+    // Initialize background loader and preload critical data
+    import('./services/backgroundLoader').then(module => {
+      const backgroundLoader = module.default();
+      
+      // Configure service worker with API base URL
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'SET_API_BASE',
+          url: import.meta.env.VITE_BACKEND_URL || window.location.origin + '/api'
+        });
+      }
+      
+      // Preload critical data
+      backgroundLoader.preloadCriticalData();
+      
+      // Add resource hints for API endpoints
+      backgroundLoader.addResourceHints([
+        { rel: 'dns-prefetch', href: import.meta.env.VITE_BACKEND_URL || window.location.origin },
+        { rel: 'preconnect', href: import.meta.env.VITE_BACKEND_URL || window.location.origin },
+      ]);
+      
+      // Start background sync for real-time data
+      backgroundLoader.startBackgroundSync('prices', async () => {
+        const { default: api } = await import('./services/api');
+        return api.get('/market/prices');
+      }, { interval: 30000, priority: 1 }); // 30s interval, HIGH priority
+      
+      backgroundLoader.startBackgroundSync('positions', async () => {
+        const { default: api } = await import('./services/api');
+        return api.get('/portfolio/visualization/summary');
+      }, { interval: 60000, priority: 2 }); // 60s interval, MEDIUM priority
+      
+      console.log('[App] BackgroundLoader initialized');
+    }).catch(err => {
+      console.warn('BackgroundLoader failed to load:', err);
+    });
+    
     // Initialize user session
     let uid = localStorage.getItem('user_id');
     if (!uid) {
