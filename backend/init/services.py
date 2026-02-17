@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 # Global service references
 _services: Dict[str, Any] = {}
 _initialized = False
+# Keep at least this many curated events seeded; frontend requests up to 200 for headroom
+MIN_HISTORICAL_EVENTS = 150
 
 
 def get_service(name: str) -> Any:
@@ -467,6 +469,63 @@ async def _init_phase6_scheduling(db):
     events_db = get_historical_events_db(db, coindesk_service, correlation_engine)
     _services['correlation_engine'] = correlation_engine
     _services['events_db'] = events_db
+
+    async def ensure_historical_events_ready():
+        """Seed curated historical events if the database contains fewer than MIN_HISTORICAL_EVENTS entries."""
+        if not events_db:
+            return
+        try:
+            stats = await events_db.get_stats()
+            current_total_events = stats.get("total_events", 0)
+            if current_total_events >= MIN_HISTORICAL_EVENTS:
+                logger.info(
+                    "ℹ️ Historical events already populated (%s >= threshold %s)",
+                    current_total_events,
+                    MIN_HISTORICAL_EVENTS,
+                )
+                return
+
+            seed_result = await events_db.seed_major_events()
+            if seed_result is None:
+                logger.warning(
+                    "⚠️ Historical events auto-seed returned no result (existing events: %s) – check database connectivity",
+                    current_total_events,
+                )
+                return
+
+            inserted = seed_result.get("inserted", 0)
+            updated = seed_result.get("updated", 0)
+            total_seeded = seed_result.get("total_events", 0)
+            required_events = min(MIN_HISTORICAL_EVENTS, total_seeded or MIN_HISTORICAL_EVENTS)
+            # Upsert-based seeding is idempotent; concurrent startup calls should not create duplicates
+            if inserted + updated == 0:
+                logger.warning(
+                    "⚠️ Historical events auto-seed made no database changes (existing: %s, curated total: %s)",
+                    current_total_events,
+                    total_seeded,
+                )
+                return
+
+            post_seed_stats = await events_db.get_stats()
+            post_total_events = post_seed_stats.get("total_events", 0)
+            if post_total_events < required_events:
+                logger.warning(
+                    "⚠️ Historical events remain below threshold after auto-seed (total: %s, required: %s)",
+                    post_total_events,
+                    required_events,
+                )
+                return
+
+            logger.info(
+                "🌐 Seeded historical events database with %s curated events (%s inserted, %s updated)",
+                total_seeded,
+                inserted,
+                updated,
+            )
+        except Exception:
+            logger.exception("⚠️ Auto-seed of historical events failed")
+
+    await ensure_historical_events_ready()
     
     # Event Triggers
     trigger_service = get_event_trigger_service(
