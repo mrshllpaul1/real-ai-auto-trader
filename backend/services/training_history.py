@@ -195,7 +195,8 @@ class TrainingHistoryService:
             "completed": 0,
             "failed": 0,
             "running": 0,
-            "avg_duration_seconds": 0
+            "avg_duration_seconds": 0,
+            "success_rate": 0
         }
         
         total_duration = 0
@@ -218,6 +219,10 @@ class TrainingHistoryService:
         
         if completed_count > 0:
             stats["avg_duration_seconds"] = round(total_duration / completed_count, 1)
+        
+        if stats["total_sessions"] > 0:
+            # Success rate here represents completed trainings out of all sessions
+            stats["success_rate"] = round(stats["completed"] / stats["total_sessions"] * 100, 1)
         
         # Get best result
         best = await self.collection.find_one(
