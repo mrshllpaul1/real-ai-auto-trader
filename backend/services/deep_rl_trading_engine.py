@@ -49,6 +49,24 @@ try:
     )
     from tensorflow.keras.optimizers import Adam
     from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+    
+    # Enable GPU optimization and mixed precision if available
+    try:
+        gpus = tf.config.list_physical_devices('GPU')
+        if gpus:
+            # Enable memory growth to prevent TF from allocating all GPU memory
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+            logger.info(f"Deep RL: GPU acceleration enabled - {len(gpus)} GPU(s) found")
+            
+            # Enable mixed precision for faster training on compatible GPUs
+            tf.keras.mixed_precision.set_global_policy('mixed_float16')
+            logger.info("Deep RL: Mixed precision training enabled (float16)")
+        else:
+            logger.info("Deep RL: No GPU found - using CPU")
+    except Exception as e:
+        logger.warning(f"Deep RL: Could not configure GPU optimization: {e}")
+    
     TF_AVAILABLE = True
 except ImportError:
     TF_AVAILABLE = False
@@ -254,21 +272,45 @@ class LSTMTimeSeriesPredictor:
         
         return result
     
-    def predict(self, recent_data: np.ndarray) -> Dict[str, Any]:
-        """Predict next 5 time steps"""
+    def predict(self, recent_data: np.ndarray, batch_size: int = 1) -> Dict[str, Any]:
+        """
+        Predict next 5 time steps.
+        
+        Args:
+            recent_data: Recent data for prediction
+            batch_size: Number of predictions to make at once (for batching optimization)
+        """
         if not self.is_trained or self.model is None:
             return {"error": "Model not trained"}
         
         if self.scaler:
             recent_data = self.scaler.transform(recent_data)
         
-        X = recent_data[-self.sequence_length:].reshape(1, self.sequence_length, -1)
-        predictions = self.model.predict(X, verbose=0)[0]
+        # Support batch predictions for better GPU utilization
+        if batch_size > 1:
+            # Prepare multiple samples if available
+            actual_batch_size = min(batch_size, len(recent_data) - self.sequence_length + 1)
+            if actual_batch_size <= 0:
+                return {"error": "Insufficient data for batch prediction"}
+            
+            X_list = []
+            for i in range(actual_batch_size):
+                X_list.append(recent_data[i:i+self.sequence_length])
+            X = np.array(X_list)
+        else:
+            X = recent_data[-self.sequence_length:].reshape(1, self.sequence_length, -1)
+        
+        predictions = self.model.predict(X, verbose=0)
+        
+        # Return the latest prediction (last batch item if multiple predictions)
+        actual_num_predictions = predictions.shape[0]
+        pred = predictions[-1] if actual_num_predictions > 1 else predictions[0]
         
         return {
-            "predictions": predictions.tolist(),
-            "direction": "bullish" if predictions[-1] > predictions[0] else "bearish",
-            "confidence": float(abs(predictions[-1] - predictions[0]) / (predictions[0] + 1e-8))
+            "predictions": pred.tolist(),
+            "direction": "bullish" if pred[-1] > pred[0] else "bearish",
+            "confidence": float(abs(pred[-1] - pred[0]) / (pred[0] + 1e-8)),
+            "num_predictions": actual_num_predictions
         }
 
 
@@ -381,6 +423,8 @@ class DQNTradingAgent:
         target_q = self.target_model.predict(next_states, verbose=0)
         
         current_q = self.model.predict(states, verbose=0)
+        # Pre-compute predicted Q values once for all states (batch optimization)
+        predicted_q = current_q.copy()
         
         for i in range(self.batch_size):
             if dones[i]:
@@ -388,8 +432,8 @@ class DQNTradingAgent:
             else:
                 current_q[i][actions[i]] = rewards[i] + self.gamma * target_q[i][next_actions[i]]
             
-            # Update priority
-            td_error = abs(current_q[i][actions[i]] - self.model.predict(states[i:i+1], verbose=0)[0][actions[i]])
+            # Update priority (vectorized - no redundant predict call)
+            td_error = abs(current_q[i][actions[i]] - predicted_q[i][actions[i]])
             self.priorities[indices[i]] = td_error + 1e-6
         
         loss = self.model.fit(states, current_q, epochs=1, verbose=0).history['loss'][0]

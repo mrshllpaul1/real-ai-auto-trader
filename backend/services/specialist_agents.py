@@ -10,6 +10,7 @@ Includes market regime detection and dynamic agent switching.
 """
 
 import numpy as np
+import pandas as pd
 import logging
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime, timezone, timedelta
@@ -208,15 +209,12 @@ class MarketRegimeDetector:
         return np.clip(score, -100, 100)
     
     def _ema(self, prices: np.ndarray, period: int) -> float:
-        """Calculate EMA"""
+        """Calculate EMA using vectorized pandas computation"""
         if len(prices) < period:
             return np.mean(prices)
         
-        multiplier = 2 / (period + 1)
-        ema = prices[-period]
-        for price in prices[-period+1:]:
-            ema = (price * multiplier) + (ema * (1 - multiplier))
-        return ema
+        # Use pandas ewm for efficient vectorized EMA calculation
+        return pd.Series(prices[-period:]).ewm(span=period, adjust=False).mean().iloc[-1]
     
     def _classify_regime(
         self, 
